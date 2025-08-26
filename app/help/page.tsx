@@ -83,7 +83,7 @@ const documentationSections: DocumentationSection[] = [
   {
     id: "getting-started",
     title: "Getting Started",
-    description: "Learn the basics of using Secure Environment Manager",
+    description: "Learn the basics of using XtraSecurity",
     icon: <Play className="h-5 w-5" />,
     articles: [
       {
@@ -92,7 +92,7 @@ const documentationSections: DocumentationSection[] = [
         description: "Get up and running in 5 minutes",
         content: `# Quick Start Guide
 
-Welcome to Secure Environment Manager! This guide will help you get started quickly.
+Welcome to XtraSecurity! This guide will help you get started quickly.
 
 ## Step 1: Create Your First Project
 1. Navigate to the Dashboard
@@ -135,7 +135,7 @@ Welcome to Secure Environment Manager! This guide will help you get started quic
         description: "Step-by-step guide to project creation",
         content: `# Creating Your First Project
 
-Projects are the foundation of organizing your secrets in Secure Environment Manager.
+Projects are the foundation of organizing your secrets in XtraSecurity.
 
 ## What is a Project?
 A project represents a logical grouping of secrets, typically corresponding to an application, service, or environment.
@@ -503,7 +503,7 @@ export default function HelpPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Help & Documentation</h1>
-            <p className="text-muted-foreground">Find answers, guides, and get support for Secure Environment Manager</p>
+            <p className="text-muted-foreground">Find answers, guides, and get support for XtraSecurity</p>
           </div>
           <Dialog open={isSupportOpen} onOpenChange={setIsSupportOpen}>
             <DialogTrigger asChild>
@@ -788,7 +788,7 @@ export default function HelpPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {[
                     {
-                      title: "Getting Started with Secure Environment Manager",
+                      title: "Getting Started with XtraSecurity",
                       duration: "8:32",
                       description: "Complete walkthrough of setting up your first project",
                       thumbnail: "/placeholder.svg?height=180&width=320",

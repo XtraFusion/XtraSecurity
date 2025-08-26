@@ -1,12 +1,14 @@
+
 import type React from "react"
 import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
 import "./globals.css"
+import Provider from "@/lib/provider"
 
 export const metadata: Metadata = {
-  title: "Secure Environment Manager",
+  title: "XtraSecurity",
   description: "Professional environment and secrets management platform",
   generator: "v0.app",
 }
@@ -27,10 +29,14 @@ html {
 }
         `}</style>
       </head>
+
       <body>
+      <Provider>
+
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
           {children}
         </ThemeProvider>
+      </Provider>
       </body>
     </html>
   )

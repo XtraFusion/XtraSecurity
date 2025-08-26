@@ -84,6 +84,7 @@ export default function DashboardPage() {
   })
 
   useEffect(() => {
+  
     if (!isAuthenticated()) {
       router.push("/login")
       return

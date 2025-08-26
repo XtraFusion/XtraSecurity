@@ -4,7 +4,7 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* Updated color palette to blues and teals for secure environment manager */
+  /* Updated color palette to blues and teals for XtraSecurity */
   --background: oklch(0.98 0.01 200); /* Light cyan background */
   --foreground: oklch(0.35 0.02 220); /* Dark slate text */
   --card: oklch(1 0 0); /* Pure white cards */

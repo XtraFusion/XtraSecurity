@@ -7,6 +7,8 @@ export default function HomePage() {
   const router = useRouter()
 
   useEffect(() => {
+
+  
     // Check if user is authenticated
     const isAuthenticated = localStorage.getItem("isAuthenticated")
 

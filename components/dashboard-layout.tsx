@@ -35,6 +35,7 @@ import { useTheme } from "next-themes"
 import { logout, getCurrentUser } from "@/lib/auth"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
+import TeamSwitcher from "./workspace-switcher"
 
 interface DashboardLayoutProps {
   children: React.ReactNode
@@ -68,13 +69,16 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
         <Shield className="h-8 w-8 text-primary" />
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">Secure Environment</span>
-          <span className="text-xs text-muted-foreground">Manager</span>
+          <span className="font-semibold text-sm">XtraSecurity</span>
+         
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-1">
+         <div className="w-full mb-6">
+         <TeamSwitcher/>
+          </div>
         {navigation.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
           return (
@@ -168,7 +172,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               </SheetTrigger>
             </Sheet>
             <Shield className="h-6 w-6 text-primary flex-shrink-0" />
-            <span className="font-semibold truncate">Secure Environment Manager</span>
+            <span className="font-semibold truncate">XtraSecurity</span>
           </div>
         </div>
 
