@@ -9,28 +9,67 @@ datasource db {
 }
 
 model User {
-  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  id            String     @id @default(auto()) @map("_id") @db.ObjectId
   name          String?
-  email         String?  @unique
+  email         String?    @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
   sessions      Session[]
+  projects      Project[]
+  createdAt     DateTime   @default(now())
+  updatedAt     DateTime   @updatedAt
+  role          String // e.g. "admin", "member"
+  teamUsers     TeamUser[] // Explicit relation table
+}
+
+model Team {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String
+  createdAt    DateTime      @default(now())
+  members      TeamUser[] // Explicit relation table
+  teamProjects TeamProject[] // Explicit relation table
+  roles        String[] // array of roles/permissions per user
+}
+
+// Explicit relation table for User-Team many-to-many
+model TeamUser {
+  id       String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId   String   @db.ObjectId
+  userId   String   @db.ObjectId
+  role     String // User's role in this specific team
+  joinedAt DateTime @default(now())
+  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, userId])
+}
+
+// Explicit relation table for Team-Project many-to-many
+model TeamProject {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String  @db.ObjectId
+  projectId String  @db.ObjectId
+  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([teamId, projectId])
 }
 
 model Account {
-  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId             String  @db.ObjectId
-  type               String
-  provider           String
-  providerAccountId  String
-  refresh_token      String?
-  access_token       String?
-  expires_at         Int?
-  token_type         String?
-  scope              String?
-  id_token           String?
-  session_state      String?
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -53,4 +92,47 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Project {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String
+  userId       String        @db.ObjectId
+  branch       Branch[]
+  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  secret       Secret[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  teamProjects TeamProject[] // Explicit relation table
+}
+
+model Branch {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  createdBy   String   @db.ObjectId
+  projectId   String   @db.ObjectId
+  createdAt   DateTime @default(now())
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  versionNo   String
+  permissions String[] // array of roles/user IDs
+}
+
+model Secret {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  key              String
+  value            String
+  description      String
+  environment_type String
+  version          String
+  projectId        String    @db.ObjectId
+  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type             String
+  history          Json // JSON array of secret versions
+  lastUpdated      DateTime  @updatedAt
+  updatedBy        String // userId
+  permission       String[] // array of roles/user IDs
+  expiryDate       DateTime?
+  rotationPolicy   String // e.g. "auto", "manual", "interval"
 }

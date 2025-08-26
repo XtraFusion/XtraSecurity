@@ -229,6 +229,9 @@ export default function ProjectPage() {
 
   const [project, setProject] = useState<Project | null>(null)
   const [selectedBranch, setSelectedBranch] = useState("main")
+  const [newBranch, setNewBranch] = useState<any>("");
+  const [compareResult, setCompareResult] = useState("");
+  const [branches,setBranches]=useState<any>([]);
   const [searchQuery, setSearchQuery] = useState("")
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set())
   const [copiedSecret, setCopiedSecret] = useState<string | null>(null)
@@ -257,6 +260,30 @@ export default function ProjectPage() {
       setProject(mockProject)
       setIsLoading(false)
     }
+    const handleCreate = () => {
+    if (newBranch.trim() && !branches.includes(newBranch)) {
+      setBranches([...branches, newBranch]);
+      setNewBranch("");
+    }
+  };
+
+  // Delete Branch
+  const handleDelete = (branch:any) => {
+    if (branch !== "main") {
+      setBranches(branches.filter((b:any) => b !== branch));
+    } else {
+      alert("Main branch cannot be deleted!");
+    }
+  };
+
+  // Compare Branches
+  const handleCompare = (branch1:any, branch2:any) => {
+    if (branch1 === branch2) {
+      setCompareResult("Both branches are the same.");
+    } else {
+      setCompareResult(`Showing comparison between ${branch1} and ${branch2}.`);
+    }
+  };
 
     loadProject()
   }, [router, projectId])
@@ -522,6 +549,7 @@ export default function ProjectPage() {
           <ChevronRight className="h-4 w-4 flex-shrink-0" />
           <span className="text-foreground font-medium truncate">{project.name}</span>
         </nav>
+        
 
         {/* Project Header */}
         <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -529,6 +557,7 @@ export default function ProjectPage() {
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">{project.name}</h1>
             <p className="text-muted-foreground">{project.description}</p>
           </div>
+          
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
             <Select value={selectedBranch} onValueChange={setSelectedBranch}>
               <SelectTrigger className="w-full sm:w-48">

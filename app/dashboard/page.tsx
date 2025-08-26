@@ -87,7 +87,7 @@ export default function DashboardPage() {
   
     if (!isAuthenticated()) {
       router.push("/login")
-      return
+      return;
     }
 
     const currentUser = getCurrentUser()
