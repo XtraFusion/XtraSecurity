@@ -8,37 +8,58 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Plus, Search, Folder, ChevronRight } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { isAuthenticated } from "@/lib/auth"
-import Link from "next/link"
+import Link from "next/link";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog"
+import { Label } from "@radix-ui/react-menubar"
+import { Textarea } from "@/components/ui/textarea"
+
 
 interface Project {
   id: string
   name: string
   description: string
-  secretCount: number
+  secretsCount: number
   lastUpdated: string
+  activeBranches: string[]
+  status: "active" | "inactive" | "archived"
 }
+
 
 const mockProjects: Project[] = [
   {
     id: "1",
     name: "Production API",
     description: "Main production environment for our API services",
-    secretCount: 3,
+    secretsCount: 3,
     lastUpdated: "2024-01-15T10:30:00Z",
+    activeBranches: ["main"],
+    status: "active", 
   },
   {
     id: "2",
+
     name: "Staging Environment",
     description: "Deployment environment for testing before production",
-    secretCount: 1,
+    secretsCount: 1,
     lastUpdated: "2024-01-14T16:45:00Z",
+    activeBranches: ["main"],
+    status: "active",
   },
   {
     id: "3",
     name: "Development Sandbox",
     description: "For developers to experiment and build new features",
-    secretCount: 1,
+    secretsCount: 1,
     lastUpdated: "2024-01-15T10:30:00Z",
+    activeBranches: ["main"],
+    status: "active",
   },
 ]
 
@@ -46,8 +67,31 @@ export default function ProjectsPage() {
   const router = useRouter()
   const [projects, setProjects] = useState<Project[]>([])
   const [searchQuery, setSearchQuery] = useState("")
-  const [isLoading, setIsLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true);
+  const [newProject, setNewProject] = useState({
+      name: "",
+      description: "",
+    });
+    const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  
+  const handleCreateProject = () => {
+    if (!newProject.name.trim()) return;
+    setIsCreateModalOpen(true);
 
+    const project: Project = {
+      id: Date.now().toString(),
+      name: newProject.name,
+      description: newProject.description,
+      secretsCount: 0,
+      lastUpdated: new Date().toISOString(),
+      activeBranches: ["main"],
+      status: "active",
+    }
+
+    setProjects([project, ...projects])
+    setNewProject({ name: "", description: "" })
+    setIsCreateModalOpen(false)
+  }
   useEffect(() => {
     if (!isAuthenticated()) {
       router.push("/login")
@@ -110,15 +154,54 @@ export default function ProjectsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-4">
           <div>
             <h1 className="text-2xl font-bold">Projects</h1>
             <p className="text-muted-foreground">A list of all your projects.</p>
           </div>
-          <Button>
-            <Plus className="mr-2 h-4 w-4" />
-            New Project
-          </Button>
+         <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                New Projects
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>Add a new project to manage environment variables and secrets.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project-name">Project Name</Label>
+                  <Input
+                    id="project-name"
+                    placeholder="Enter project name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="project-description">Description</Label>
+                  <Textarea
+                    id="project-description"
+                    placeholder="Enter project description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  />
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="w-full sm:w-auto">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateProject} className="w-full sm:w-auto">
+                    Create Project
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
 
         <div className="relative">
@@ -130,7 +213,7 @@ export default function ProjectsPage() {
             className="pl-10"
           />
         </div>
-
+   
         {filteredProjects.length > 0 ? (
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {filteredProjects.map((project) => (
@@ -149,7 +232,7 @@ export default function ProjectsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>{project.secretCount} secrets</span>
+                    <span>{project.secretsCount} secrets</span>
                     <span>Updated {formatDate(project.lastUpdated)}</span>
                   </div>
                   <Button asChild variant="outline" className="w-full mt-4">
@@ -165,10 +248,48 @@ export default function ProjectsPage() {
         ) : (
           <div className="text-center py-16">
             <p className="text-muted-foreground mb-4">No projects found.</p>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Create your first project
-            </Button>
+        <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+            <DialogTrigger asChild>
+              <Button className="flex items-center gap-2 w-full sm:w-auto">
+                <Plus className="h-4 w-4" />
+                New Project
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+              <DialogHeader>
+                <DialogTitle>Create New Project</DialogTitle>
+                <DialogDescription>Add a new project to manage environment variables and secrets.</DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="project-name">Project Name</Label>
+                  <Input
+                    id="project-name"
+                    placeholder="Enter project name"
+                    value={newProject.name}
+                    onChange={(e) => setNewProject({ ...newProject, name: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="project-description">Description</Label>
+                  <Textarea
+                    id="project-description"
+                    placeholder="Enter project description"
+                    value={newProject.description}
+                    onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                  />
+                </div>
+                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                  <Button variant="outline" onClick={() => setIsCreateModalOpen(false)} className="w-full sm:w-auto">
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateProject} className="w-full sm:w-auto">
+                    Create Project
+                  </Button>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
           </div>
         )}
       </div>

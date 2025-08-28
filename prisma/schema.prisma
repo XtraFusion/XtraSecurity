@@ -18,9 +18,11 @@ model User {
   sessions      Session[]
   projects      Project[]
   createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @updatedAt
-  role          String // e.g. "admin", "member"
+  updatedAt     DateTime   @default(now()) @updatedAt
+  role          String     @default("user") // e.g. "admin", "member"
   teamUsers     TeamUser[] // Explicit relation table
+
+  @@map("users")
 }
 
 model Team {
@@ -110,7 +112,7 @@ model Project {
 model Branch {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   name        String
-  description String
+  description String               
   createdBy   String   @db.ObjectId
   projectId   String   @db.ObjectId
   createdAt   DateTime @default(now())

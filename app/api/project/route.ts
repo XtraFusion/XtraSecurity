@@ -1,120 +1,321 @@
-import prisma from "../../../lib/db"
+import { NextRequest, NextResponse } from "next/server";
+import prisma from "@/lib/db";
+import { getCurrentUser } from "@/lib/auth";
+import type { User } from "@/lib/auth";
 
-export async function GET(req: Request) {
-  const { searchParams } = new URL(req.url)
-  const id = searchParams.get("id")
-
-  if (!id) {
-    const data =  await prisma.project.findMany();
-    return new Response(JSON.stringify(data), {
-      status: 200,
-      headers: { "Content-Type": "application/json" },
-    })
+// Helper function to check authentication
+function getAuthFromRequest(request: NextRequest): { authenticated: boolean; user?: User } {
+  try {
+    const currentUser = getCurrentUser();
+    if (!currentUser) {
+      return { authenticated: false };
+    }
+    return { authenticated: true, user: currentUser };
+  } catch (error) {
+    return { authenticated: false };
   }
-
-  const project = await prisma.project.findUnique({
-    where: { id }, // ✅ works if your `id` is a String in Prisma schema
-  })
-
-  if (!project) {
-    return new Response(JSON.stringify({ error: "Project not found" }), {
-      status: 404,
-      headers: { "Content-Type": "application/json" },
-    })
-  }
-
-  return new Response(JSON.stringify(project), {
-    status: 200,
-    headers: { "Content-Type": "application/json" },
-  })
 }
 
+// GET /api/project - Get all projects or a specific project by ID
+export async function GET(request: NextRequest) {
+  try {
+    const auth = getAuthFromRequest(request);
+    if (!auth.authenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-
-export  async function POST(req: Request) {
-  const { name, description, userId } = await req.json()
-
-  if (!name || !description || !userId) {
-    return new Response(JSON.stringify({ error: "Missing fields" }), {
-      status: 400,
-      headers: { "Content-Type": "application/json" },
-    })
-  }
-
-  const project = await prisma.project.create({
-    data: {
-      name,
-      description,
-      userId,
-    },
-  })
-
-  return new Response(JSON.stringify(project), {
-    status: 201,
-    headers: { "Content-Type": "application/json" },
-  })
-}
-
-
-export async function DELETE(req:Request){
-    const { searchParams } = new URL(req.url)
-    const id = searchParams.get("id")
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
 
     if (!id) {
-        return new Response(JSON.stringify({ error: "Missing project ID" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        })
+      // Get all projects accessible to the user
+      const projects = await prisma.project.findMany({
+        where: {
+          OR: [
+            { userId: auth.user.email },
+            {
+              teamProjects: {
+                some: {
+                  team: {
+                    members: {
+                      some: {
+                        userId: auth.user.email
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        },
+        include: {
+          branch: true,
+          teamProjects: {
+            include: {
+              team: true
+            }
+          }
+        }
+      });
+      return NextResponse.json(projects);
     }
 
-    const project = await prisma.project.delete({
-        where: { id },
-    })
+    // Get specific project with access check
+    const project = await prisma.project.findFirst({
+      where: {
+        id,
+        OR: [
+          { userId: auth.user.email },
+          {
+            teamProjects: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: auth.user.email
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      },
+      include: {
+        branch: true,
+        teamProjects: {
+          include: {
+            team: true
+          }
+        }
+      }
+    });
 
     if (!project) {
-        return new Response(JSON.stringify({ error: "Project not found" }), {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-        })
+      return NextResponse.json(
+        { error: "Project not found or access denied" },
+        { status: 404 }
+      );
     }
 
-    return new Response(JSON.stringify({ message: "Project deleted successfully" }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-    })
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error("Error fetching projects:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch projects" },
+      { status: 500 }
+    );
+  }
 }
 
-export async function PUT(req:Request){
+// POST /api/project - Create a new project
+export async function POST(request: NextRequest) {
+  try {
+    const auth = getAuthFromRequest(request);
+    if (!auth.authenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
-    const { searchParams } = new URL(req.url)
-    const id = searchParams.get("id")
-    const { name, description, userId } = await req.json()
+    const body = await request.json();
+    const { name, description, teamIds = [] } = body;
 
-    if (!id || !name || !description || !userId) {
-        return new Response(JSON.stringify({ error: "Missing fields" }), {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-        })
+    if (!name || !description) {
+      return NextResponse.json(
+        { error: "Name and description are required" },
+        { status: 400 }
+      );
+    }
+
+    // Create project with initial main branch
+    const project = await prisma.project.create({
+      data: {
+        name,
+        description,
+        userId: auth.user.email,
+        branch: {
+          create: {
+            name: "main",
+            description: "Main branch",
+            createdBy: auth.user.email,
+            versionNo: "1",
+            permissions: [auth.user.email]
+          }
+        },
+        teamProjects: {
+          create: teamIds.map((teamId: string) => ({
+            teamId
+          }))
+        }
+      },
+      include: {
+        branch: true,
+        teamProjects: {
+          include: {
+            team: true
+          }
+        }
+      }
+    });
+
+    return NextResponse.json(project, { status: 201 });
+  } catch (error) {
+    console.error("Error creating project:", error);
+    return NextResponse.json(
+      { error: "Failed to create project" },
+      { status: 500 }
+    );
+  }
+}
+
+// DELETE /api/project - Delete a project
+export async function DELETE(request: NextRequest) {
+  try {
+    const auth = getAuthFromRequest(request);
+    if (!auth.authenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { error: "Project ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user has permission to delete the project
+    const project = await prisma.project.findFirst({
+      where: {
+        id,
+        userId: auth.user.email // Only creator can delete
+      }
+    });
+
+    if (!project) {
+      return NextResponse.json(
+        { error: "Project not found or permission denied" },
+        { status: 404 }
+      );
+    }
+
+    // Delete project and all related data (cascading delete handled by Prisma)
+    await prisma.project.delete({
+      where: { id }
+    });
+
+    return NextResponse.json(
+      { message: "Project deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Error deleting project:", error);
+    return NextResponse.json(
+      { error: "Failed to delete project" },
+      { status: 500 }
+    );
+  }
+}
+
+// PUT /api/project - Update a project
+export async function PUT(request: NextRequest) {
+  try {
+    const auth = getAuthFromRequest(request);
+    if (!auth.authenticated || !auth.user) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+    const body = await request.json();
+    const { name, description, teamIds } = body;
+
+    if (!id || !name || !description) {
+      return NextResponse.json(
+        { error: "Project ID, name, and description are required" },
+        { status: 400 }
+      );
+    }
+
+    // Check if user has permission to update the project
+    const existingProject = await prisma.project.findFirst({
+      where: {
+        id,
+        OR: [
+          { userId: auth.user.email },
+          {
+            teamProjects: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: auth.user.email,
+                      role: "admin" // Only team admins can update
+                    }
+                  }
+                }
+              }
+            }
+          }
+        ]
+      }
+    });
+
+    if (!existingProject) {
+      return NextResponse.json(
+        { error: "Project not found or permission denied" },
+        { status: 404 }
+      );
+    }
+
+    // Update project
+    const updateData: any = {
+      name,
+      description
+    };
+
+    // Update team associations if provided
+    if (teamIds) {
+      // Only project owner can update team associations
+      if (existingProject.userId !== auth.user.email) {
+        return NextResponse.json(
+          { error: "Only project owner can update team associations" },
+          { status: 403 }
+        );
+      }
+
+      // Delete existing team associations and create new ones
+      await prisma.teamProject.deleteMany({
+        where: { projectId: id }
+      });
+
+      updateData.teamProjects = {
+        create: teamIds.map((teamId: string) => ({
+          teamId
+        }))
+      };
     }
 
     const project = await prisma.project.update({
-        where: { id },
-        data: {
-            name,
-            description,
-            userId,
-        },
-    })
+      where: { id },
+      data: updateData,
+      include: {
+        branch: true,
+        teamProjects: {
+          include: {
+            team: true
+          }
+        }
+      }
+    });
 
-    if (!project) {
-        return new Response(JSON.stringify({ error: "Project not found" }), {
-            status: 404,
-            headers: { "Content-Type": "application/json" },
-        })
-    }
-
-    return new Response(JSON.stringify(project), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-    })
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error("Error updating project:", error);
+    return NextResponse.json(
+      { error: "Failed to update project" },
+      { status: 500 }
+    );
+  }
 }

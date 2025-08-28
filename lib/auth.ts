@@ -3,12 +3,14 @@
 export interface User {
   email: string
   name: string
+  userId:string
   role: "admin" | "developer" | "viewer"
 }
 
 export const mockUser: User = {
   email: "admin@example.com",
   name: "Admin User",
+  userId: "user-123",
   role: "admin",
 }
 

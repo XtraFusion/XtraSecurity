@@ -21,6 +21,8 @@ import { DashboardLayout } from "@/components/dashboard-layout"
 import { DashboardSkeleton } from "@/components/loading-skeleton"
 import { getCurrentUser, isAuthenticated } from "@/lib/auth"
 import type { User } from "@/lib/auth"
+import { useAuth } from "@/hooks/useAuth"
+import { useSession } from "next-auth/react"
 
 interface Project {
   id: string
@@ -72,11 +74,17 @@ const mockProjects: Project[] = [
 ]
 
 export default function DashboardPage() {
-  const router = useRouter()
-  const [user, setUser] = useState<User | null>(null)
+  const router = useRouter();
+    const { data: session, status } = useSession();
+
+    const [user, setUser] = useState<User | null>(null)
+  useEffect(()=>{
+    console.log(session,status)
+    setUser(session?.user)
+  },[status])
   const [projects, setProjects] = useState<Project[]>([])
-  const [searchQuery, setSearchQuery] = useState("")
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState("")
   const [isLoading, setIsLoading] = useState(true)
   const [newProject, setNewProject] = useState({
     name: "",
@@ -164,7 +172,8 @@ export default function DashboardPage() {
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Welcome back, {user.name}</h1>
-            <p className="text-muted-foreground mt-1">Manage your environment variables and secrets</p>
+            <p className="text-muted-foreground mt-1">{user.email}Manage your environment variables and secrets</p>
+
           </div>
           <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
             <DialogTrigger asChild>

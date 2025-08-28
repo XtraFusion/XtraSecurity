@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -24,6 +24,10 @@ export default function LoginPage() {
   const { theme, setTheme } = useTheme()
   const [step, setStep] = useState<"login" | "verify">("login")
   const [verificationCode, setVerificationCode] = useState("")
+
+  useEffect(()=>{
+ const role = localStorage.getItem("userRole")
+  },[])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -74,6 +78,7 @@ export default function LoginPage() {
         // Store auth state (in real app, use proper auth management)
         localStorage.setItem("isAuthenticated", "true")
         localStorage.setItem("userEmail", email)
+        localStorage.setItem("userId", "")
         if (rememberMe) {
           localStorage.setItem("rememberMe", "true")
         }
