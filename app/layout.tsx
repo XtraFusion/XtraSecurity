@@ -31,7 +31,9 @@ html {
         `}</style>
       </head>
 
-      <body>
+      <body style={{
+        pointerEvents:"fill"
+      }}>
       <Provider>
         <UserProvider  >
 

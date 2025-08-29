@@ -1,11 +1,11 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useContext, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,7 +13,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
   Home,
   FolderOpen,
@@ -30,15 +30,16 @@ import {
   HelpCircle,
   Bell,
   Zap,
-} from "lucide-react"
-import { useTheme } from "next-themes"
-import { logout, getCurrentUser } from "@/lib/auth"
-import { usePathname } from "next/navigation"
-import Link from "next/link"
-import TeamSwitcher from "./workspace-switcher"
+} from "lucide-react";
+import { useTheme } from "next-themes";
+import { logout, getCurrentUser } from "@/lib/auth";
+import { usePathname } from "next/navigation";
+import Link from "next/link";
+import TeamSwitcher from "./workspace-switcher";
+import { UserContext } from "@/hooks/useUser";
 
 interface DashboardLayoutProps {
-  children: React.ReactNode
+  children: React.ReactNode;
 }
 
 const navigation = [
@@ -51,17 +52,20 @@ const navigation = [
   { name: "Audit Logs", href: "/audit", icon: FileText },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Help", href: "/help", icon: HelpCircle },
-]
+];
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
-  const [sidebarOpen, setSidebarOpen] = useState(false)
-  const { theme, setTheme } = useTheme()
-  const pathname = usePathname()
-  const user = getCurrentUser()
-
-  const handleLogout = () => {
-    logout()
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const pathname = usePathname();
+  const userContext = useContext(UserContext);
+  if (!userContext) {
+    return;
   }
+  const { user } = userContext;
+  const handleLogout = () => {
+    logout();
+  };
 
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={`flex flex-col h-full ${mobile ? "w-full" : "w-64"}`}>
@@ -70,17 +74,17 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <Shield className="h-8 w-8 text-primary" />
         <div className="flex flex-col">
           <span className="font-semibold text-sm">XtraSecurity</span>
-         
         </div>
       </div>
 
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-1">
-         <div className="w-full mb-6">
-         <TeamSwitcher/>
-          </div>
+        <div className="w-full mb-6">
+          <TeamSwitcher />
+        </div>
         {navigation.map((item) => {
-          const isActive = pathname === item.href || pathname.startsWith(item.href + "/")
+          const isActive =
+            pathname === item.href || pathname.startsWith(item.href + "/");
           return (
             <Link
               key={item.name}
@@ -95,7 +99,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <item.icon className="h-4 w-4" />
               {item.name}
             </Link>
-          )
+          );
         })}
       </nav>
 
@@ -103,15 +107,22 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       <div className="p-4 border-t border-border">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="w-full justify-start gap-3 h-auto p-3 hover:bg-accent transition-colors">
+            <Button
+              variant="ghost"
+              className="w-full justify-start gap-3 h-auto p-3 hover:bg-accent transition-colors"
+            >
               <Avatar className="h-8 w-8">
                 <AvatarFallback className="bg-primary text-primary-foreground">
                   {user?.name?.charAt(0) || "U"}
                 </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start text-sm min-w-0">
-                <span className="font-medium truncate w-full">{user?.name || "User"}</span>
-                <span className="text-xs text-muted-foreground truncate w-full">{user?.email}</span>
+                <span className="font-medium truncate w-full">
+                  {user?.name || "User"}
+                </span>
+                <span className="text-xs text-muted-foreground truncate w-full">
+                  {user?.email}
+                </span>
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -126,12 +137,21 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {theme === "dark" ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+            <DropdownMenuItem
+              onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+            >
+              {theme === "dark" ? (
+                <Sun className="mr-2 h-4 w-4" />
+              ) : (
+                <Moon className="mr-2 h-4 w-4" />
+              )}
               Toggle theme
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+            <DropdownMenuItem
+              onClick={handleLogout}
+              className="text-destructive"
+            >
               <LogOut className="mr-2 h-4 w-4" />
               Log out
             </DropdownMenuItem>
@@ -139,7 +159,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         </DropdownMenu>
       </div>
     </div>
-  )
+  );
 
   return (
     <div className="min-h-screen bg-background">
@@ -180,5 +200,5 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <main className="p-4 sm:p-6 max-w-7xl mx-auto">{children}</main>
       </div>
     </div>
-  )
+  );
 }

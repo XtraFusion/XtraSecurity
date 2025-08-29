@@ -2,25 +2,16 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 // Helper function to check authentication
-function getAuthFromRequest(request: NextRequest): { authenticated: boolean; user?: User } {
-  try {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      return { authenticated: false };
-    }
-    return { authenticated: true, user: currentUser };
-  } catch (error) {
-    return { authenticated: false };
-  }
-}
 
 // GET /api/secret - Get all secrets or filter by projectId
 export async function GET(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -31,8 +22,8 @@ export async function GET(request: NextRequest) {
     const secrets = await prisma.secret.findMany({
       where: query,
       include: {
-        project: true
-      }
+        project: true,
+      },
     });
 
     return NextResponse.json(secrets);
@@ -48,12 +39,13 @@ export async function GET(request: NextRequest) {
 // POST /api/secret - Create a new secret
 export async function POST(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const body = await request.json();
+    console.log(body);
     const {
       key,
       value,
@@ -63,7 +55,7 @@ export async function POST(request: NextRequest) {
       type,
       permission = [],
       expiryDate,
-      rotationPolicy = "manual"
+      rotationPolicy = "manual",
     } = body;
 
     // Validate required fields
@@ -90,14 +82,14 @@ export async function POST(request: NextRequest) {
             value,
             description,
             updatedAt: new Date(),
-            updatedBy: auth.user.email
-          }
+            updatedBy: session.user.id,
+          },
         ],
-        updatedBy: auth.user.email,
+        updatedBy: session.user.id,
         permission,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
-        rotationPolicy
-      }
+        rotationPolicy,
+      },
     });
 
     return NextResponse.json(newSecret, { status: 201 });
@@ -113,8 +105,8 @@ export async function POST(request: NextRequest) {
 // PUT /api/secret - Update a secret
 export async function PUT(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -128,7 +120,7 @@ export async function PUT(request: NextRequest) {
       type,
       permission,
       expiryDate,
-      rotationPolicy
+      rotationPolicy,
     } = body;
 
     if (!id) {
@@ -140,20 +132,17 @@ export async function PUT(request: NextRequest) {
 
     // Get existing secret
     const existingSecret = await prisma.secret.findUnique({
-      where: { id }
+      where: { id },
     });
 
     if (!existingSecret) {
-      return NextResponse.json(
-        { error: "Secret not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "Secret not found" }, { status: 404 });
     }
 
     // Parse existing history and add new version
     const history = existingSecret.history as any[];
     const newVersion = (parseInt(existingSecret.version) + 1).toString();
-    
+
     const updatedSecret = await prisma.secret.update({
       where: { id },
       data: {
@@ -169,15 +158,17 @@ export async function PUT(request: NextRequest) {
             value: value || existingSecret.value,
             description: description || existingSecret.description,
             updatedAt: new Date(),
-            updatedBy: auth.user.email
+            updatedBy: session.user.email,
           },
-          ...history
+          ...history,
         ],
-        updatedBy: auth.user.email,
+        updatedBy: session.user.email,
         permission: permission || existingSecret.permission,
-        expiryDate: expiryDate ? new Date(expiryDate) : existingSecret.expiryDate,
-        rotationPolicy: rotationPolicy || existingSecret.rotationPolicy
-      }
+        expiryDate: expiryDate
+          ? new Date(expiryDate)
+          : existingSecret.expiryDate,
+        rotationPolicy: rotationPolicy || existingSecret.rotationPolicy,
+      },
     });
 
     return NextResponse.json(updatedSecret);
@@ -193,8 +184,8 @@ export async function PUT(request: NextRequest) {
 // DELETE /api/secret - Delete a secret
 export async function DELETE(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -209,7 +200,7 @@ export async function DELETE(request: NextRequest) {
     }
 
     await prisma.secret.delete({
-      where: { id }
+      where: { id },
     });
 
     return NextResponse.json(

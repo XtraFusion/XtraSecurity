@@ -1,10 +1,12 @@
 // Authentication utilities and state management
 
+import { useGlobalContext } from "@/hooks/useUser";
+
 export interface User {
-  email: string
-  name: string
-  userId:string
-  role: "admin" | "developer" | "viewer"
+  email: string;
+  name: string;
+  userId: string;
+  role: "admin" | "developer" | "viewer";
 }
 
 export const mockUser: User = {
@@ -12,26 +14,28 @@ export const mockUser: User = {
   name: "Admin User",
   userId: "user-123",
   role: "admin",
-}
+};
+
 
 export function isAuthenticated(): boolean {
-  if (typeof window === "undefined") return false
-  return localStorage.getItem("isAuthenticated") === "true"
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("isAuthenticated") === "true";
 }
 
 export function getCurrentUser(): User | null {
-  if (typeof window === "undefined") return null
-  const email = localStorage.getItem("userEmail")
-  if (!email) return null
+  const {user}= useGlobalContext();
 
-  // In a real app, fetch user data from API
-  return { ...mockUser, email }
+  if (typeof window === "undefined") return null;
+  if (user.email) {
+    return { ...user };
+  }
+  return null;
 }
 
 export function logout(): void {
-  if (typeof window === "undefined") return
-  localStorage.removeItem("isAuthenticated")
-  localStorage.removeItem("userEmail")
-  localStorage.removeItem("rememberMe")
-  window.location.href = "/login"
+  if (typeof window === "undefined") return;
+  localStorage.removeItem("isAuthenticated");
+  localStorage.removeItem("userEmail");
+  localStorage.removeItem("rememberMe");
+  window.location.href = "/login";
 }

@@ -1,56 +1,9 @@
-"use client";
-
-import { useState, useEffect } from "react";
-import { useRouter, useParams } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+"use client"
+import React, { useState, useEffect } from 'react';
 import {
   Search,
   Plus,
   GitBranch,
-  MoreHorizontal,
   Eye,
   EyeOff,
   Edit,
@@ -60,10 +13,20 @@ import {
   Check,
   ChevronRight,
   Home,
-} from "lucide-react";
-import { DashboardLayout } from "@/components/dashboard-layout";
-import { isAuthenticated } from "@/lib/auth";
-import Link from "next/link";
+  MoreVertical,
+  Clock,
+  User
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Select } from '@/components/ui/select';
+import { Modal } from '@/components/ui/modal';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useParams } from 'next/navigation';
 
 interface SecretVersion {
   version: number;
@@ -79,11 +42,15 @@ interface Secret {
   key: string;
   value: string;
   description: string;
-  environment: "development" | "staging" | "production";
+  environment_type: "development" | "staging" | "production";
   lastUpdated: string;
-  updatedBy: string;
+  updatedBy?: string;
   version: number;
-  versions?: SecretVersion[]; // Added version history
+  history?: SecretVersion[];
+  permission: string[];
+  expiryDate: Date;
+  rotationPolicy: string;
+  type: string;
 }
 
 interface Project {
@@ -91,7 +58,7 @@ interface Project {
   name: string;
   description: string;
   branches: string[];
-  secrets: Record<string, Secret[]>; // branch -> secrets
+  secrets: Record<string, Secret[]>;
 }
 
 const mockProject: Project = {
@@ -106,11 +73,11 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/prod",
         description: "Main database connection string",
-        environment: "production",
+        environment_type: "production",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "admin@example.com",
         version: 3,
-        versions: [
+        history: [
           {
             version: 3,
             value: "postgresql://user:pass@localhost:5432/prod",
@@ -127,63 +94,25 @@ const mockProject: Project = {
             updatedAt: "2024-01-14T14:20:00Z",
             changeReason: "Migrated to new database server",
           },
-          {
-            version: 1,
-            value: "postgresql://user:pass@localhost:5432/prod_old",
-            description: "Main database connection string",
-            updatedBy: "dev@example.com",
-            updatedAt: "2024-01-10T09:15:00Z",
-            changeReason: "Initial setup",
-          },
         ],
+        permission: ["admin@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        rotationPolicy: "auto",
+        type: "Database"
       },
       {
         id: "2",
         key: "API_SECRET_KEY",
         value: "sk_live_abcd1234567890",
         description: "Secret key for API authentication",
-        environment: "production",
+        environment_type: "production",
         lastUpdated: "2024-01-14T16:45:00Z",
         updatedBy: "admin@example.com",
         version: 1,
-        versions: [
-          {
-            version: 1,
-            value: "sk_live_abcd1234567890",
-            description: "Secret key for API authentication",
-            updatedBy: "admin@example.com",
-            updatedAt: "2024-01-14T16:45:00Z",
-            changeReason: "Initial API key generation",
-          },
-        ],
-      },
-      {
-        id: "3",
-        key: "REDIS_URL",
-        value: "redis://localhost:6379",
-        description: "Redis cache connection",
-        environment: "production",
-        lastUpdated: "2024-01-13T09:15:00Z",
-        updatedBy: "dev@example.com",
-        version: 2,
-        versions: [
-          {
-            version: 2,
-            value: "redis://localhost:6379",
-            description: "Redis cache connection",
-            updatedBy: "dev@example.com",
-            updatedAt: "2024-01-13T09:15:00Z",
-            changeReason: "Updated cache settings",
-          },
-          {
-            version: 1,
-            value: "redis://localhost:6378",
-            description: "Redis cache connection",
-            updatedBy: "dev@example.com",
-            updatedAt: "2024-01-12T08:00:00Z",
-            changeReason: "Initial cache setup",
-          },
-        ],
+        permission: ["admin@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        rotationPolicy: "manual",
+        type: "API Key"
       },
     ],
     staging: [
@@ -192,28 +121,14 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/staging",
         description: "Staging database connection string",
-        environment: "staging",
+        environment_type: "staging",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "admin@example.com",
         version: 2,
-        versions: [
-          {
-            version: 2,
-            value: "postgresql://user:pass@localhost:5432/staging",
-            description: "Staging database connection string",
-            updatedBy: "admin@example.com",
-            updatedAt: "2024-01-15T10:30:00Z",
-            changeReason: "Updated connection pool settings",
-          },
-          {
-            version: 1,
-            value: "postgresql://user:pass@localhost:5432/staging_v1",
-            description: "Staging database connection string",
-            updatedBy: "admin@example.com",
-            updatedAt: "2024-01-14T14:20:00Z",
-            changeReason: "Initial staging setup",
-          },
-        ],
+        permission: ["admin@example.com", "dev@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        rotationPolicy: "manual",
+        type: "Database"
       },
     ],
     dev: [
@@ -222,96 +137,55 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/dev",
         description: "Development database connection string",
-        environment: "development",
+        environment_type: "development",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "dev@example.com",
         version: 1,
-        versions: [
-          {
-            version: 1,
-            value: "postgresql://user:pass@localhost:5432/dev",
-            description: "Development database connection string",
-            updatedBy: "dev@example.com",
-            updatedAt: "2024-01-15T10:30:00Z",
-            changeReason: "Initial development setup",
-          },
-        ],
+        permission: ["dev@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        rotationPolicy: "manual",
+        type: "Database"
       },
     ],
   },
 };
 
-export default function ProjectPage() {
-  const router = useRouter();
-  const params = useParams();
-  const projectId = params.id as string;
-
+const VaultManager: React.FC = () => {
+  const { id: projectId } = useParams<{ id: string }>();
   const [project, setProject] = useState<Project | null>(null);
   const [selectedBranch, setSelectedBranch] = useState("main");
-  const [newBranch, setNewBranch] = useState<any>("");
-  const [compareResult, setCompareResult] = useState("");
-  const [branches, setBranches] = useState<any>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
   const [copiedSecret, setCopiedSecret] = useState<string | null>(null);
   const [isAddSecretOpen, setIsAddSecretOpen] = useState(false);
   const [isEditSecretOpen, setIsEditSecretOpen] = useState(false);
   const [editingSecret, setEditingSecret] = useState<Secret | null>(null);
+  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
+  const [historySecret, setHistorySecret] = useState<Secret | null>(null);
   const [notification, setNotification] = useState<{
-    type: "success" | "error";
+    type: "success" | "warning" | "danger";
     message: string;
   } | null>(null);
   const [newSecret, setNewSecret] = useState({
     key: "",
     value: "",
     description: "",
-    environment: "development" as const,
+    environment_type: "development" as const,
+    permission: [] as string[],
+    expiryDate: "",
+    type: "",
+    rotationPolicy: "manual" as const,
   });
-  
-  const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
-  const [historySecret, setHistorySecret] = useState<Secret | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login");
-      return;
-    }
-
     const loadProject = async () => {
       await new Promise((resolve) => setTimeout(resolve, 800));
       setProject(mockProject);
       setIsLoading(false);
     };
-    const handleCreate = () => {
-      if (newBranch.trim() && !branches.includes(newBranch)) {
-        setBranches([...branches, newBranch]);
-        setNewBranch("");
-      }
-    };
-
-    // Delete Branch
-    const handleDelete = (branch: any) => {
-      if (branch !== "main") {
-        setBranches(branches.filter((b: any) => b !== branch));
-      } else {
-        alert("Main branch cannot be deleted!");
-      }
-    };
-
-    // Compare Branches
-    const handleCompare = (branch1: any, branch2: any) => {
-      if (branch1 === branch2) {
-        setCompareResult("Both branches are the same.");
-      } else {
-        setCompareResult(
-          `Showing comparison between ${branch1} and ${branch2}.`
-        );
-      }
-    };
-
     loadProject();
-  }, [router, projectId]);
+  }, [projectId]);
 
   useEffect(() => {
     if (notification) {
@@ -326,6 +200,23 @@ export default function ProjectPage() {
       secret.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
       secret.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const branchOptions = project?.branches.map(branch => ({
+    value: branch,
+    label: branch
+  })) || [];
+
+  const environmentOptions = [
+    { value: "development", label: "Development" },
+    { value: "staging", label: "Staging" },
+    { value: "production", label: "Production" }
+  ];
+
+  const rotationOptions = [
+    { value: "manual", label: "Manual" },
+    { value: "auto", label: "Automatic" },
+    { value: "interval", label: "Interval-based" }
+  ];
 
   const toggleSecretVisibility = (secretId: string) => {
     const newVisible = new Set(visibleSecrets);
@@ -344,7 +235,7 @@ export default function ProjectPage() {
       setTimeout(() => setCopiedSecret(null), 2000);
     } catch (err) {
       setNotification({
-        type: "error",
+        type: "danger",
         message: "Failed to copy to clipboard",
       });
     }
@@ -358,10 +249,15 @@ export default function ProjectPage() {
       key: newSecret.key,
       value: newSecret.value,
       description: newSecret.description,
-      environment: newSecret.environment,
+      environment_type: newSecret.environment_type,
       lastUpdated: new Date().toISOString(),
-      updatedBy: "admin@example.com",
       version: 1,
+      permission: newSecret.permission,
+      expiryDate: newSecret.expiryDate
+        ? new Date(newSecret.expiryDate)
+        : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
+      rotationPolicy: newSecret.rotationPolicy,
+      type: newSecret.type
     };
 
     const updatedProject = {
@@ -377,7 +273,11 @@ export default function ProjectPage() {
       key: "",
       value: "",
       description: "",
-      environment: "development",
+      environment_type: "development",
+      permission: [],
+      expiryDate: "",
+      type: "",
+      rotationPolicy: "manual",
     });
     setIsAddSecretOpen(false);
     setNotification({ type: "success", message: "Secret added successfully" });
@@ -405,8 +305,8 @@ export default function ProjectPage() {
     };
 
     setProject(updatedProject);
-    setEditingSecret(null);
     setIsEditSecretOpen(false);
+    setEditingSecret(null);
     setNotification({
       type: "success",
       message: "Secret updated successfully",
@@ -434,51 +334,6 @@ export default function ProjectPage() {
     });
   };
 
-  const handleRollbackSecret = (
-    secret: Secret,
-    targetVersion: SecretVersion
-  ) => {
-    if (!project) return;
-
-    const updatedSecret = {
-      ...secret,
-      value: targetVersion.value,
-      description: targetVersion.description,
-      lastUpdated: new Date().toISOString(),
-      version: secret.version + 1,
-      versions: [
-        {
-          version: secret.version + 1,
-          value: targetVersion.value,
-          description: targetVersion.description,
-          updatedBy: "admin@example.com",
-          updatedAt: new Date().toISOString(),
-          changeReason: `Rolled back to version ${targetVersion.version}`,
-        },
-        ...(secret.versions || []),
-      ],
-    };
-
-    const updatedSecrets = project.secrets[selectedBranch].map((s) =>
-      s.id === secret.id ? updatedSecret : s
-    );
-
-    const updatedProject = {
-      ...project,
-      secrets: {
-        ...project.secrets,
-        [selectedBranch]: updatedSecrets,
-      },
-    };
-
-    setProject(updatedProject);
-    setIsHistoryModalOpen(false);
-    setNotification({
-      type: "success",
-      message: `Secret rolled back to version ${targetVersion.version}`,
-    });
-  };
-
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
@@ -489,655 +344,408 @@ export default function ProjectPage() {
     });
   };
 
-  const getEnvironmentColor = (environment: string) => {
+  const getEnvironmentBadge = (environment: string) => {
     switch (environment) {
       case "production":
-        return "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300";
+        return <Badge variant="danger">{environment}</Badge>;
       case "staging":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
+        return <Badge variant="warning">{environment}</Badge>;
       case "development":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
+        return <Badge variant="success">{environment}</Badge>;
       default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
+        return <Badge variant="secondary">{environment}</Badge>;
     }
   };
 
   if (isLoading) {
     return (
-      <DashboardLayout>
-        <div className="space-y-6">
-          {/* Breadcrumb skeleton */}
-          <div className="flex items-center space-x-2">
-            <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-4 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-4 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
-          </div>
-
-          {/* Header skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div className="space-y-2">
-              <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="h-10 bg-muted rounded w-48 animate-pulse"></div>
-              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
-            </div>
-          </div>
-
-          {/* Search skeleton */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="h-10 bg-muted rounded w-80 animate-pulse"></div>
-            <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
-          </div>
-
-          {/* Table skeleton */}
-          <Card>
-            <CardHeader>
-              <div className="h-6 bg-muted rounded w-64 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-4 border rounded"
-                  >
-                    <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-24 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-28 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-4 animate-pulse"></div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+      <div className="space-y-6">
+        {/* Loading skeleton */}
+        <div className="space-y-4">
+          <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
+          <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
         </div>
-      </DashboardLayout>
+        <Card>
+          <CardContent className="p-6">
+            <div className="space-y-4">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
     );
   }
 
   if (!project) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="text-center">
-            <div className="text-muted-foreground">Project not found</div>
-            <Button className="mt-4" onClick={() => router.push("/dashboard")}>
-              Back to Dashboard
-            </Button>
-          </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-center">
+          <div className="text-muted-foreground mb-4">Project not found</div>
+          <Button onClick={() => window.history.back()}>
+            Back to Dashboard
+          </Button>
         </div>
-      </DashboardLayout>
+      </div>
     );
   }
 
   return (
-    <DashboardLayout>
-      <div className="space-y-6">
-        {/* Notification */}
-        {notification && (
-          <Alert
-            className={`${
-              notification.type === "error"
-                ? "border-destructive"
-                : "border-green-500"
-            } animate-in slide-in-from-top-2 duration-300`}
-          >
-            <AlertDescription>{notification.message}</AlertDescription>
-          </Alert>
-        )}
+    <div className="space-y-6">
+      {/* Notification */}
+      {notification && (
+        <Alert variant={notification.type}>
+          <AlertDescription>{notification.message}</AlertDescription>
+        </Alert>
+      )}
 
-        {/* Breadcrumb */}
-        <nav className="flex items-center space-x-2 text-sm text-muted-foreground overflow-x-auto">
-          <Link
-            href="/dashboard"
-            className="hover:text-foreground flex items-center gap-1 whitespace-nowrap"
-          >
-            <Home className="h-4 w-4" />
-            Dashboard
-          </Link>
-          <ChevronRight className="h-4 w-4 flex-shrink-0" />
-          <Link
-            href="/projects"
-            className="hover:text-foreground whitespace-nowrap"
-          >
-            Projects
-          </Link>
-          <ChevronRight className="h-4 w-4 flex-shrink-0" />
-          <span className="text-foreground font-medium truncate">
-            {project.name}
-          </span>
-        </nav>
+      {/* Breadcrumb */}
+      <nav className="flex items-center space-x-2 text-sm text-muted-foreground">
+        <Home className="h-4 w-4" />
+        <span>Dashboard</span>
+        <ChevronRight className="h-4 w-4" />
+        <span>Projects</span>
+        <ChevronRight className="h-4 w-4" />
+        <span className="text-foreground font-medium">{project.name}</span>
+      </nav>
 
-        {/* Project Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-          <div className="space-y-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground truncate">
-              {project.name}
-            </h1>
-            <p className="text-muted-foreground">{project.description}</p>
-          </div>
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-            <Select value={selectedBranch} onValueChange={setSelectedBranch}>
-              <SelectTrigger className="w-full sm:w-48">
-                <div className="flex items-center gap-2">
-                  <GitBranch className="h-4 w-4" />
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
-              <SelectContent>
-                {project.branches.map((branch) => (
-                  <SelectItem key={branch} value={branch}>
-                    {branch}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <Dialog open={isAddSecretOpen} onOpenChange={setIsAddSecretOpen}>
-              <DialogTrigger asChild>
-                <Button className="flex items-center gap-2 w-full sm:w-auto">
-                  <Plus className="h-4 w-4" />
-                  Add Secret
-                </Button>
-              </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                  <DialogTitle>Add New Secret</DialogTitle>
-                  <DialogDescription>
-                    Add a new environment variable or secret to {selectedBranch}{" "}
-                    branch.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="secret-key">Key</Label>
-                    <Input
-                      id="secret-key"
-                      placeholder="e.g., DATABASE_URL"
-                      value={newSecret.key}
-                      onChange={(e) =>
-                        setNewSecret({ ...newSecret, key: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="secret-value">Value</Label>
-                    <Textarea
-                      id="secret-value"
-                      placeholder="Enter the secret value"
-                      value={newSecret.value}
-                      onChange={(e) =>
-                        setNewSecret({ ...newSecret, value: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="secret-description">Description</Label>
-                    <Input
-                      id="secret-description"
-                      placeholder="Brief description of this secret"
-                      value={newSecret.description}
-                      onChange={(e) =>
-                        setNewSecret({
-                          ...newSecret,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="secret-environment">Environment</Label>
-                    <Select
-                      value={newSecret.environment}
-                      onValueChange={(value) =>
-                        setNewSecret({
-                          ...newSecret,
-                          environment: value as any,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="development">Development</SelectItem>
-                        <SelectItem value="staging">Staging</SelectItem>
-                        <SelectItem value="production">Production</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsAddSecretOpen(false)}
-                      className="w-full sm:w-auto"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddSecret}
-                      className="w-full sm:w-auto"
-                    >
-                      Add Secret
-                    </Button>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
+      {/* Project Header */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-3xl font-bold bg-vault-gradient bg-clip-text text-transparent">{project.name}</h1>
+          <p className="text-muted-foreground">{project.description}</p>
         </div>
 
-        {/* Search and Stats */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="relative flex-1 max-w-md">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search secrets..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+          <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-2 shadow-card">
+            <GitBranch className="h-4 w-4 text-primary" />
+            <Select
+              value={selectedBranch}
+              onValueChange={setSelectedBranch}
+              options={branchOptions}
+              className="border-0 bg-transparent"
             />
           </div>
-          <div className="flex items-center gap-4 text-sm text-muted-foreground">
-            <span>
-              {filteredSecrets.length} secrets in {selectedBranch}
-            </span>
+          <Button onClick={() => setIsAddSecretOpen(true)} className="bg-accent-gradient hover:bg-accent-hover">
+            <Plus className="h-4 w-4 mr-2" />
+            Add Secret
+          </Button>
+        </div>
+      </div>
+
+      {/* Search and Stats */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="relative flex-1 max-w-md">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+          <Input
+            placeholder="Search secrets..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-10"
+          />
+        </div>
+        <div className="flex items-center gap-4 text-sm text-muted-foreground">
+          <span className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-primary"></div>
+            {filteredSecrets.length} secrets in {selectedBranch}
+          </span>
+        </div>
+      </div>
+
+      {/* Secrets Grid */}
+      <div className="grid gap-4">
+        {filteredSecrets.length > 0 ? (
+          filteredSecrets.map((secret) => (
+            <Card key={secret.id} className="group hover:shadow-vault transition-all duration-200">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="font-mono font-semibold text-foreground truncate">
+                        {secret.key}
+                      </h3>
+                      {getEnvironmentBadge(secret.environment_type)}
+                      <Badge variant="outline">{secret.type}</Badge>
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
+                      {secret.description}
+                    </p>
+
+                    <div className="flex items-center gap-2 mb-3">
+                      <code className="bg-muted px-3 py-1 rounded text-sm font-mono max-w-xs truncate">
+                        {visibleSecrets.has(secret.id) ? secret.value : "••••••••••••••••"}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => toggleSecretVisibility(secret.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        {visibleSecrets.has(secret.id) ? (
+                          <EyeOff className="h-4 w-4" />
+                        ) : (
+                          <Eye className="h-4 w-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => copyToClipboard(secret.value, secret.id)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        {copiedSecret === secret.id ? (
+                          <Check className="h-4 w-4 text-success" />
+                        ) : (
+                          <Copy className="h-4 w-4" />
+                        )}
+                      </Button>
+                    </div>
+
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                      <div className="flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDate(secret.lastUpdated)}
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <User className="h-3 w-3" />
+                        {secret.updatedBy}
+                      </div>
+                      <div>v{secret.version}</div>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setEditingSecret(secret);
+                        setIsEditSecretOpen(true);
+                      }}
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setHistorySecret(secret);
+                        setIsHistoryModalOpen(true);
+                      }}
+                    >
+                      <History className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => handleDeleteSecret(secret.id)}
+                    >
+                      <Trash2 className="h-4 w-4 text-danger" />
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          ))
+        ) : (
+          <Card>
+            <CardContent className="p-12 text-center">
+              <div className="text-muted-foreground mb-4">
+                {searchQuery
+                  ? "No secrets found matching your search."
+                  : "No secrets in this branch yet."}
+              </div>
+              {!searchQuery && (
+                <Button onClick={() => setIsAddSecretOpen(true)}>
+                  Add your first secret
+                </Button>
+              )}
+            </CardContent>
+          </Card>
+        )}
+      </div>
+
+      {/* Add Secret Modal */}
+      <Modal
+        isOpen={isAddSecretOpen}
+        onClose={() => setIsAddSecretOpen(false)}
+        title="Add New Secret"
+        description={`Add a new environment variable or secret to ${selectedBranch} branch.`}
+        className="max-w-lg"
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="secret-key">Key</Label>
+            <Input
+              id="secret-key"
+              placeholder="e.g., DATABASE_URL"
+              value={newSecret.key}
+              onChange={(e) => setNewSecret({ ...newSecret, key: e.target.value })}
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="secret-value">Value</Label>
+            <Textarea
+              id="secret-value"
+              placeholder="Enter the secret value"
+              value={newSecret.value}
+              onChange={(e) => setNewSecret({ ...newSecret, value: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="secret-type">Type</Label>
+            <Input
+              id="secret-type"
+              placeholder="e.g., API Key, Database, Certificate"
+              value={newSecret.type}
+              onChange={(e) => setNewSecret({ ...newSecret, type: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="secret-description">Description</Label>
+            <Input
+              id="secret-description"
+              placeholder="Brief description of this secret"
+              value={newSecret.description}
+              onChange={(e) => setNewSecret({ ...newSecret, description: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="secret-environment">Environment</Label>
+            <Select
+              value={newSecret.environment_type}
+              onValueChange={(value) => setNewSecret({ ...newSecret, environment_type: value as any })}
+              options={environmentOptions}
+            />
+          </div>
+
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsAddSecretOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddSecret}>
+              Add Secret
+            </Button>
           </div>
         </div>
+      </Modal>
 
-        {/* Secrets Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Environment Variables & Secrets</CardTitle>
-            <CardDescription>
-              Manage environment variables and secrets for the {selectedBranch}{" "}
-              branch
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {filteredSecrets.length > 0 ? (
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead className="min-w-[150px]">Key</TableHead>
-                      <TableHead className="min-w-[200px]">Value</TableHead>
-                      <TableHead className="min-w-[120px]">
-                        Environment
-                      </TableHead>
-                      <TableHead className="min-w-[150px]">
-                        Last Updated
-                      </TableHead>
-                      <TableHead className="w-[50px]">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {filteredSecrets.map((secret) => (
-                      <TableRow key={secret.id} className="group">
-                        <TableCell className="font-mono font-medium">
-                          {secret.key}
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex items-center gap-2">
-                            <code className="bg-muted px-2 py-1 rounded text-sm max-w-xs truncate">
-                              {visibleSecrets.has(secret.id)
-                                ? secret.value
-                                : "••••••••"}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleSecretVisibility(secret.id)}
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              {visibleSecrets.has(secret.id) ? (
-                                <EyeOff className="h-3 w-3" />
-                              ) : (
-                                <Eye className="h-3 w-3" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                copyToClipboard(secret.value, secret.id)
-                              }
-                              className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                            >
-                              {copiedSecret === secret.id ? (
-                                <Check className="h-3 w-3 text-green-600" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <Badge
-                            className={getEnvironmentColor(secret.environment)}
-                          >
-                            {secret.environment}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          <div>
-                            <div>{formatDate(secret.lastUpdated)}</div>
-                            <div className="text-xs">by {secret.updatedBy}</div>
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="h-6 w-6 p-0"
-                              >
-                                <MoreHorizontal className="h-3 w-3" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setEditingSecret(secret);
-                                  setIsEditSecretOpen(true);
-                                }}
-                              >
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setHistorySecret(secret);
-                                  setIsHistoryModalOpen(true);
-                                }}
-                              >
-                                <History className="mr-2 h-4 w-4" />
-                                View History
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteSecret(secret.id)}
-                                className="text-destructive"
-                              >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            ) : (
-              <div className="text-center py-8">
-                <div className="text-muted-foreground mb-4">
-                  {searchQuery
-                    ? "No secrets found matching your search."
-                    : "No secrets in this branch yet."}
-                </div>
-                {!searchQuery && (
-                  <Button
-                    onClick={() => setIsAddSecretOpen(true)}
-                    className="w-full sm:w-auto"
-                  >
-                    Add your first secret
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* Edit Secret Modal */}
+      <Modal
+        isOpen={isEditSecretOpen}
+        onClose={() => {
+          setIsEditSecretOpen(false);
+          setEditingSecret(null);
+        }}
+        title="Edit Secret"
+        description="Update the secret value and description."
+        className="max-w-lg"
+      >
+        {editingSecret && (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-key">Key</Label>
+              <Input
+                id="edit-key"
+                value={editingSecret.key}
+                onChange={(e) => setEditingSecret({ ...editingSecret, key: e.target.value })}
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="edit-value">Value</Label>
+              <Textarea
+                id="edit-value"
+                value={editingSecret.value}
+                onChange={(e) => setEditingSecret({ ...editingSecret, value: e.target.value })}
+              />
+            </div>
 
-        {/* Edit Secret Dialog */}
-        <Dialog open={isEditSecretOpen} onOpenChange={setIsEditSecretOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Edit Secret</DialogTitle>
-              <DialogDescription>
-                Update the secret value and description.
-              </DialogDescription>
-            </DialogHeader>
-            {editingSecret && (
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="edit-key">Key</Label>
-                  <Input
-                    id="edit-key"
-                    value={editingSecret.key}
-                    onChange={(e) =>
-                      setEditingSecret({
-                        ...editingSecret,
-                        key: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-value">Value</Label>
-                  <Textarea
-                    id="edit-value"
-                    value={editingSecret.value}
-                    onChange={(e) =>
-                      setEditingSecret({
-                        ...editingSecret,
-                        value: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-description">Description</Label>
-                  <Input
-                    id="edit-description"
-                    value={editingSecret.description}
-                    onChange={(e) =>
-                      setEditingSecret({
-                        ...editingSecret,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="edit-environment">Environment</Label>
-                  <Select
-                    value={editingSecret.environment}
-                    onValueChange={(value) =>
-                      setEditingSecret({
-                        ...editingSecret,
-                        environment: value as any,
-                      })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="development">Development</SelectItem>
-                      <SelectItem value="staging">Staging</SelectItem>
-                      <SelectItem value="production">Production</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsEditSecretOpen(false)}
-                    className="w-full sm:w-auto"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleEditSecret}
-                    className="w-full sm:w-auto"
-                  >
-                    Update Secret
-                  </Button>
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Input
+                id="edit-description"
+                value={editingSecret.description}
+                onChange={(e) => setEditingSecret({ ...editingSecret, description: e.target.value })}
+              />
+            </div>
 
-        {/* Version History Dialog */}
-        <Dialog open={isHistoryModalOpen} onOpenChange={setIsHistoryModalOpen}>
-          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Version History</DialogTitle>
-              <DialogDescription>
-                {historySecret &&
-                  `View and manage version history for ${historySecret.key}`}
-              </DialogDescription>
-            </DialogHeader>
-            {historySecret && historySecret.versions && (
-              <div className="space-y-4">
-                <div className="text-sm text-muted-foreground">
-                  Current version: {historySecret.version} •{" "}
-                  {historySecret.versions.length} total versions
-                </div>
-                <div className="space-y-3">
-                  {historySecret.versions.map((version, index) => (
-                    <Card
-                      key={version.version}
-                      className={
-                        version.version === historySecret.version
-                          ? "border-primary"
-                          : ""
-                      }
-                    >
-                      <CardHeader className="pb-3">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Badge
-                              variant={
-                                version.version === historySecret.version
-                                  ? "default"
-                                  : "secondary"
-                              }
-                            >
-                              Version {version.version}
-                            </Badge>
-                            {version.version === historySecret.version && (
-                              <Badge variant="outline" className="text-xs">
-                                Current
-                              </Badge>
-                            )}
-                          </div>
-                          <div className="text-sm text-muted-foreground">
-                            {formatDate(version.updatedAt)}
-                          </div>
-                        </div>
-                        <div className="text-sm">
-                          <div className="font-medium">
-                            Updated by: {version.updatedBy}
-                          </div>
-                          {version.changeReason && (
-                            <div className="text-muted-foreground mt-1">
-                              Reason: {version.changeReason}
-                            </div>
-                          )}
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        <div>
-                          <Label className="text-xs font-medium text-muted-foreground">
-                            VALUE
-                          </Label>
-                          <div className="flex items-center gap-2 mt-1">
-                            <code className="bg-muted px-2 py-1 rounded text-sm flex-1 break-all">
-                              {visibleSecrets.has(
-                                `${historySecret.id}-v${version.version}`
-                              )
-                                ? version.value
-                                : "••••••••"}
-                            </code>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => {
-                                const key = `${historySecret.id}-v${version.version}`;
-                                const newVisible = new Set(visibleSecrets);
-                                if (newVisible.has(key)) {
-                                  newVisible.delete(key);
-                                } else {
-                                  newVisible.add(key);
-                                }
-                                setVisibleSecrets(newVisible);
-                              }}
-                              className="h-6 w-6 p-0"
-                            >
-                              {visibleSecrets.has(
-                                `${historySecret.id}-v${version.version}`
-                              ) ? (
-                                <EyeOff className="h-3 w-3" />
-                              ) : (
-                                <Eye className="h-3 w-3" />
-                              )}
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() =>
-                                copyToClipboard(
-                                  version.value,
-                                  `${historySecret.id}-v${version.version}`
-                                )
-                              }
-                              className="h-6 w-6 p-0"
-                            >
-                              {copiedSecret ===
-                              `${historySecret.id}-v${version.version}` ? (
-                                <Check className="h-3 w-3 text-green-600" />
-                              ) : (
-                                <Copy className="h-3 w-3" />
-                              )}
-                            </Button>
-                          </div>
-                        </div>
-                        {version.description && (
-                          <div>
-                            <Label className="text-xs font-medium text-muted-foreground">
-                              DESCRIPTION
-                            </Label>
-                            <div className="text-sm mt-1">
-                              {version.description}
-                            </div>
-                          </div>
+            <div className="flex justify-end gap-2 pt-4">
+              <Button variant="outline" onClick={() => {
+                setIsEditSecretOpen(false);
+                setEditingSecret(null);
+              }}>
+                Cancel
+              </Button>
+              <Button onClick={handleEditSecret}>
+                Update Secret
+              </Button>
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* History Modal */}
+      <Modal
+        isOpen={isHistoryModalOpen}
+        onClose={() => {
+          setIsHistoryModalOpen(false);
+          setHistorySecret(null);
+        }}
+        title="Version History"
+        description={historySecret ? `View and manage version history for ${historySecret.key}` : ""}
+        className="max-w-2xl"
+      >
+        {historySecret && historySecret.history && (
+          <div className="space-y-4">
+            <div className="text-sm text-muted-foreground">
+              Current version: {historySecret.version} • {historySecret.history.length} total versions
+            </div>
+            
+            <div className="space-y-3 max-h-96 overflow-y-auto">
+              {historySecret.history.map((version) => (
+                <Card key={version.version} className={version.version === historySecret.version ? "border-primary" : ""}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Badge variant={version.version === historySecret.version ? "default" : "secondary"}>
+                          Version {version.version}
+                        </Badge>
+                        {version.version === historySecret.version && (
+                          <Badge variant="outline">Current</Badge>
                         )}
-                        {version.version !== historySecret.version && (
-                          <div className="flex justify-end pt-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() =>
-                                handleRollbackSecret(historySecret, version)
-                              }
-                              className="text-xs"
-                            >
-                              Rollback to this version
-                            </Button>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            )}
-          </DialogContent>
-        </Dialog>
-      </div>
-    </DashboardLayout>
+                      </div>
+                      <div className="text-sm text-muted-foreground">
+                        {formatDate(version.updatedAt)}
+                      </div>
+                    </div>
+                    
+                    <div className="text-sm mb-2">
+                      <div>Updated by: {version.updatedBy}</div>
+                      {version.changeReason && (
+                        <div className="text-muted-foreground">Reason: {version.changeReason}</div>
+                      )}
+                    </div>
+
+                    <div className="bg-muted rounded p-2 font-mono text-sm">
+                      {visibleSecrets.has(`${historySecret.id}-v${version.version}`) 
+                        ? version.value 
+                        : "••••••••••••••••"}
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          </div>
+        )}
+      </Modal>
+    </div>
   );
-}
+};
+export default VaultManager;

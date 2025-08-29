@@ -2,27 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
-// Helper function to check authentication
-function getAuthFromRequest(request: NextRequest): { authenticated: boolean; user?: User } {
-  try {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      return { authenticated: false };
-    }
-    return { authenticated: true, user: currentUser };
-  } catch (error) {
-    return { authenticated: false };
-  }
-}
 
 // GET /api/project - Get all projects or a specific project by ID
 export async function GET(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getServerSession(authOptions);
+if (!session?.user?.email) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -32,14 +23,14 @@ export async function GET(request: NextRequest) {
       const projects = await prisma.project.findMany({
         where: {
           OR: [
-            { userId: auth.user.email },
+            { userId: session.user.id },
             {
               teamProjects: {
                 some: {
                   team: {
                     members: {
                       some: {
-                        userId: auth.user.email
+                        userId: session.user.id
                       }
                     }
                   }
@@ -57,6 +48,7 @@ export async function GET(request: NextRequest) {
           }
         }
       });
+      console.log(projects)
       return NextResponse.json(projects);
     }
 
@@ -65,14 +57,14 @@ export async function GET(request: NextRequest) {
       where: {
         id,
         OR: [
-          { userId: auth.user.email },
+          { userId: session.user.id },
           {
             teamProjects: {
               some: {
                 team: {
                   members: {
                     some: {
-                      userId: auth.user.email
+                      userId: session.user.id
                     }
                   }
                 }
@@ -111,47 +103,49 @@ export async function GET(request: NextRequest) {
 // POST /api/project - Create a new project
 export async function POST(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    console.log(session.user)
 
-    const body = await request.json();
-    const { name, description, teamIds = [] } = body;
-
-    if (!name || !description) {
+    const newProject = await request.json();
+    
+    if (!newProject.name || !newProject.description) {
       return NextResponse.json(
         { error: "Name and description are required" },
         { status: 400 }
       );
     }
 
-    // Create project with initial main branch
+    // Create project with the data from frontend and initialize required fields
     const project = await prisma.project.create({
       data: {
-        name,
-        description,
-        userId: auth.user.email,
+        name: newProject.name,
+        description: newProject.description,
+        userId: session.user.id,
+        createdAt: new Date(),
+        updatedAt: new Date(),
         branch: {
           create: {
             name: "main",
-            description: "Main branch",
-            createdBy: auth.user.email,
+            description: "Initial main branch",
+            createdBy: session.user.id,
             versionNo: "1",
-            permissions: [auth.user.email]
+            permissions: [session.user.email],
+            createdAt: new Date()
           }
-        },
-        teamProjects: {
-          create: teamIds.map((teamId: string) => ({
-            teamId
-          }))
         }
       },
       include: {
         branch: true,
-        teamProjects: {
-          include: {
-            team: true
+        secret: true,
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true
           }
         }
       }
@@ -170,10 +164,11 @@ export async function POST(request: NextRequest) {
 // DELETE /api/project - Delete a project
 export async function DELETE(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getServerSession(authOptions);
+if (!session?.user?.email) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -189,7 +184,7 @@ export async function DELETE(request: NextRequest) {
     const project = await prisma.project.findFirst({
       where: {
         id,
-        userId: auth.user.email // Only creator can delete
+        userId: session.user.email // Only creator can delete
       }
     });
 
@@ -221,10 +216,11 @@ export async function DELETE(request: NextRequest) {
 // PUT /api/project - Update a project
 export async function PUT(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+    const session = await getServerSession(authOptions);
+if (!session?.user?.email) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
+
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -243,14 +239,14 @@ export async function PUT(request: NextRequest) {
       where: {
         id,
         OR: [
-          { userId: auth.user.email },
+          { userId: session.user.email },
           {
             teamProjects: {
               some: {
                 team: {
                   members: {
                     some: {
-                      userId: auth.user.email,
+                      userId: session.user.email,
                       role: "admin" // Only team admins can update
                     }
                   }
@@ -278,7 +274,7 @@ export async function PUT(request: NextRequest) {
     // Update team associations if provided
     if (teamIds) {
       // Only project owner can update team associations
-      if (existingProject.userId !== auth.user.email) {
+      if (existingProject.userId !== session.user.email) {
         return NextResponse.json(
           { error: "Only project owner can update team associations" },
           { status: 403 }
