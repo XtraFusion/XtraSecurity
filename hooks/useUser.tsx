@@ -40,13 +40,26 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
   //fetch all projects
   async function fetchProjects(id:string) {
-    const response = await axios.get(`/api/project?id=${id}`);
-    if (response.status === 200) {
-      console.log("Fetched projects:", response.data);
-      return response.data
+    if(id){
+
+      const response = await axios.get(`/api/project?id=${id}`);
+      if (response.status === 200) {
+        console.log("Fetched projects:", response.data);
+        return response.data
+      }
+      else{
+        return [];
+      }
+
     }
     else{
-      return [];
+      const response = await axios.get(`/api/project`);
+      if (response.status === 200) {
+        return response.data
+      }
+      else{
+        return [];
+      }
     }
   }
 
@@ -62,8 +75,44 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  //fetch secret
+  const fetchSecrets = async(projectId:string)=>{
+    const response = await axios.get(`/api/secret?projectId=${projectId}`);
+    if (response.status === 200) {
+      return response.data;
+    }
+    return [];
+  }
+
+
+
+
+
+
+
+  //branch
+  //create branch 
+
+
+
+  //fetch branch
+const fetchBranch = async (projectId: string) => {
+  const response = await axios.get(`/api/branch?projectId=${projectId}`);
+  if (response.status === 200) {
+    return response.data;
+  }
+  return [];
+};
+
+  //delete branch
+
+
+
+
+  //end of branch
+
   return (
-    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createProject,fetchProjects,createSecret}}>
+    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createProject,fetchProjects,createSecret,fetchSecrets,fetchBranch}}>
       {children}
     </UserContext.Provider>
   );

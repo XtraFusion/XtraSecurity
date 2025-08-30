@@ -32,7 +32,8 @@ import {
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DashboardSkeleton } from "@/components/loading-skeleton";
-import { getCurrentUser, isAuthenticated } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
+
 import type { User } from "@/lib/auth";
 import { useSession } from "next-auth/react";
 import { UserContext } from "@/hooks/useUser";
@@ -107,11 +108,15 @@ export default function DashboardPage() {
     description: "",
   });
 
-  useEffect(() => {
-    if (!isAuthenticated()) {
+  useEffect(()=>{
+ if (!session?.user?.email && status!="loading") {
       router.push("/login");
       return;
     }
+  },[status,session])
+
+  useEffect(() => {
+   
 
     const loadData = async () => {
       const projectsList = await fetchProjects();

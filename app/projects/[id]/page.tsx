@@ -1,5 +1,5 @@
-"use client"
-import React, { useState, useEffect } from 'react';
+"use client";
+import React, { useState, useEffect } from "react";
 import {
   Search,
   Plus,
@@ -15,18 +15,31 @@ import {
   Home,
   MoreVertical,
   Clock,
-  User
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Select } from '@/components/ui/select';
-import { Modal } from '@/components/ui/modal';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { useParams } from 'next/navigation';
+  User,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Modal } from "@/components/ui/modal";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useParams } from "next/navigation";
+import { useGlobalContext } from "@/hooks/useUser";
 
 interface SecretVersion {
   version: number;
@@ -98,7 +111,7 @@ const mockProject: Project = {
         permission: ["admin@example.com"],
         expiryDate: new Date("2024-12-31"),
         rotationPolicy: "auto",
-        type: "Database"
+        type: "Database",
       },
       {
         id: "2",
@@ -112,7 +125,7 @@ const mockProject: Project = {
         permission: ["admin@example.com"],
         expiryDate: new Date("2024-12-31"),
         rotationPolicy: "manual",
-        type: "API Key"
+        type: "API Key",
       },
     ],
     staging: [
@@ -128,7 +141,7 @@ const mockProject: Project = {
         permission: ["admin@example.com", "dev@example.com"],
         expiryDate: new Date("2024-12-31"),
         rotationPolicy: "manual",
-        type: "Database"
+        type: "Database",
       },
     ],
     dev: [
@@ -144,7 +157,7 @@ const mockProject: Project = {
         permission: ["dev@example.com"],
         expiryDate: new Date("2024-12-31"),
         rotationPolicy: "manual",
-        type: "Database"
+        type: "Database",
       },
     ],
   },
@@ -152,7 +165,11 @@ const mockProject: Project = {
 
 const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
+
+  const {createSecret,user,fetchSecrets,fetchProjects,fetchBranch} = useGlobalContext();
+
   const [project, setProject] = useState<Project | null>(null);
+  const [secret,setSecret] = useState([]);
   const [selectedBranch, setSelectedBranch] = useState("main");
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
@@ -162,8 +179,11 @@ const VaultManager: React.FC = () => {
   const [editingSecret, setEditingSecret] = useState<Secret | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [historySecret, setHistorySecret] = useState<Secret | null>(null);
+  const [isAddBranchOpen, setIsAddBranchOpen] = useState(false);
+  const [newBranch, setNewBranch] = useState("");
+  const [branchList,setBranchList]=useState("")
   const [notification, setNotification] = useState<{
-    type: "success" | "warning" | "danger";
+    type: "default" | "destructive";
     message: string;
   } | null>(null);
   const [newSecret, setNewSecret] = useState({
@@ -180,8 +200,14 @@ const VaultManager: React.FC = () => {
 
   useEffect(() => {
     const loadProject = async () => {
+      // const data = await fetchSecrets(projectId);
+      const data1 = await fetchProjects(projectId);
+      const branchData = await fetchBranch(projectId);
+      
+      console.log(branchData)
       await new Promise((resolve) => setTimeout(resolve, 800));
       setProject(mockProject);
+      setSecret(data);
       setIsLoading(false);
     };
     loadProject();
@@ -201,21 +227,22 @@ const VaultManager: React.FC = () => {
       secret.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const branchOptions = project?.branches.map(branch => ({
-    value: branch,
-    label: branch
-  })) || [];
+  const branchOptions =
+    project?.branches.map((branch) => ({
+      value: branch,
+      label: branch,
+    })) || [];
 
   const environmentOptions = [
     { value: "development", label: "Development" },
     { value: "staging", label: "Staging" },
-    { value: "production", label: "Production" }
+    { value: "production", label: "Production" },
   ];
 
   const rotationOptions = [
     { value: "manual", label: "Manual" },
     { value: "auto", label: "Automatic" },
-    { value: "interval", label: "Interval-based" }
+    { value: "interval", label: "Interval-based" },
   ];
 
   const toggleSecretVisibility = (secretId: string) => {
@@ -235,7 +262,7 @@ const VaultManager: React.FC = () => {
       setTimeout(() => setCopiedSecret(null), 2000);
     } catch (err) {
       setNotification({
-        type: "danger",
+        type: "destructive",
         message: "Failed to copy to clipboard",
       });
     }
@@ -248,6 +275,7 @@ const VaultManager: React.FC = () => {
       id: Date.now().toString(),
       key: newSecret.key,
       value: newSecret.value,
+      projectId:projectId,
       description: newSecret.description,
       environment_type: newSecret.environment_type,
       lastUpdated: new Date().toISOString(),
@@ -257,9 +285,10 @@ const VaultManager: React.FC = () => {
         ? new Date(newSecret.expiryDate)
         : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       rotationPolicy: newSecret.rotationPolicy,
-      type: newSecret.type
+      type: newSecret.type,
     };
 
+    createSecret(secret)
     const updatedProject = {
       ...project,
       secrets: {
@@ -280,7 +309,7 @@ const VaultManager: React.FC = () => {
       rotationPolicy: "manual",
     });
     setIsAddSecretOpen(false);
-    setNotification({ type: "success", message: "Secret added successfully" });
+    setNotification({ type: "default", message: "Secret added successfully" });
   };
 
   const handleEditSecret = () => {
@@ -304,11 +333,12 @@ const VaultManager: React.FC = () => {
       },
     };
 
+
     setProject(updatedProject);
     setIsEditSecretOpen(false);
     setEditingSecret(null);
     setNotification({
-      type: "success",
+      type: "default",
       message: "Secret updated successfully",
     });
   };
@@ -329,7 +359,7 @@ const VaultManager: React.FC = () => {
 
     setProject(updatedProject);
     setNotification({
-      type: "success",
+      type: "default",
       message: "Secret deleted successfully",
     });
   };
@@ -347,29 +377,60 @@ const VaultManager: React.FC = () => {
   const getEnvironmentBadge = (environment: string) => {
     switch (environment) {
       case "production":
-        return <Badge variant="danger">{environment}</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-red-50 text-red-700 border-red-200 dark:bg-red-900/20 dark:text-red-400 dark:border-red-800"
+          >
+            {environment}
+          </Badge>
+        );
       case "staging":
-        return <Badge variant="warning">{environment}</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-yellow-50 text-yellow-700 border-yellow-200 dark:bg-yellow-900/20 dark:text-yellow-400 dark:border-yellow-800"
+          >
+            {environment}
+          </Badge>
+        );
       case "development":
-        return <Badge variant="success">{environment}</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-green-50 text-green-700 border-green-200 dark:bg-green-900/20 dark:text-green-400 dark:border-green-800"
+          >
+            {environment}
+          </Badge>
+        );
       default:
-        return <Badge variant="secondary">{environment}</Badge>;
+        return (
+          <Badge
+            variant="outline"
+            className="bg-gray-50 text-gray-700 border-gray-200 dark:bg-gray-900/20 dark:text-gray-400 dark:border-gray-800"
+          >
+            {environment}
+          </Badge>
+        );
     }
   };
 
   if (isLoading) {
     return (
       <div className="space-y-6">
-        {/* Loading skeleton */}
+        {/* Loading skeleton with shimmer effect */}
         <div className="space-y-4">
-          <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
-          <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
+          <div className="h-8 bg-muted rounded-lg w-64 shimmer"></div>
+          <div className="h-4 bg-muted rounded-lg w-96 shimmer"></div>
         </div>
         <Card>
           <CardContent className="p-6">
             <div className="space-y-4">
               {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="h-16 bg-muted rounded animate-pulse"></div>
+                <div
+                  key={i}
+                  className="h-16 bg-muted rounded-lg shimmer opacity-60"
+                ></div>
               ))}
             </div>
           </CardContent>
@@ -413,21 +474,44 @@ const VaultManager: React.FC = () => {
       {/* Project Header */}
       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
         <div className="space-y-1">
-          <h1 className="text-3xl font-bold bg-vault-gradient bg-clip-text text-transparent">{project.name}</h1>
+          <h1 className="text-3xl font-bold bg-vault-gradient bg-clip-text text-transparent">
+            {project.name}
+          </h1>
           <p className="text-muted-foreground">{project.description}</p>
         </div>
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
-          <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-2 shadow-card">
-            <GitBranch className="h-4 w-4 text-primary" />
-            <Select
-              value={selectedBranch}
-              onValueChange={setSelectedBranch}
-              options={branchOptions}
-              className="border-0 bg-transparent"
-            />
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 bg-surface border border-border rounded-lg px-3 py-2 shadow-card">
+              <GitBranch className="h-4 w-4 text-primary" />
+              <Select value={selectedBranch} onValueChange={setSelectedBranch}>
+                <SelectTrigger className="border-0 bg-transparent">
+                  <SelectValue placeholder="Select branch" />
+                </SelectTrigger>
+                <SelectContent>
+                  {branchOptions.map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {option.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              variant="outline"
+              onClick={() => setIsAddBranchOpen(true)}
+              className="bg-background hover:bg-accent/10"
+            >
+              <GitBranch className="h-4 w-4 mr-2" />
+              Add Branch
+            </Button>
           </div>
-          <Button onClick={() => setIsAddSecretOpen(true)} className="bg-accent-gradient hover:bg-accent-hover">
+
+          <Button
+            variant="outline"
+            onClick={() => setIsAddSecretOpen(true)}
+            className="bg-background hover:bg-accent/10"
+          >
             <Plus className="h-4 w-4 mr-2" />
             Add Secret
           </Button>
@@ -457,8 +541,12 @@ const VaultManager: React.FC = () => {
       <div className="grid gap-4">
         {filteredSecrets.length > 0 ? (
           filteredSecrets.map((secret) => (
-            <Card key={secret.id} className="group hover:shadow-vault transition-all duration-200">
-              <CardContent className="p-6">
+            <Card
+              key={secret.id}
+              className="group relative overflow-hidden hover:shadow-lg transition-all duration-200 border-border/60 dark:border-border/40"
+            >
+              <div className="absolute inset-x-0 top-0 h-[2px] bg-vault-gradient opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
+              <CardContent className="p-6 relative z-10">
                 <div className="flex items-start justify-between">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-2">
@@ -468,14 +556,16 @@ const VaultManager: React.FC = () => {
                       {getEnvironmentBadge(secret.environment_type)}
                       <Badge variant="outline">{secret.type}</Badge>
                     </div>
-                    
+
                     <p className="text-sm text-muted-foreground mb-3 line-clamp-2">
                       {secret.description}
                     </p>
 
                     <div className="flex items-center gap-2 mb-3">
                       <code className="bg-muted px-3 py-1 rounded text-sm font-mono max-w-xs truncate">
-                        {visibleSecrets.has(secret.id) ? secret.value : "••••••••••••••••"}
+                        {visibleSecrets.has(secret.id)
+                          ? secret.value
+                          : "••••••••••••••••"}
                       </code>
                       <Button
                         variant="ghost"
@@ -582,17 +672,21 @@ const VaultManager: React.FC = () => {
               id="secret-key"
               placeholder="e.g., DATABASE_URL"
               value={newSecret.key}
-              onChange={(e) => setNewSecret({ ...newSecret, key: e.target.value })}
+              onChange={(e) =>
+                setNewSecret({ ...newSecret, key: e.target.value })
+              }
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="secret-value">Value</Label>
             <Textarea
               id="secret-value"
               placeholder="Enter the secret value"
               value={newSecret.value}
-              onChange={(e) => setNewSecret({ ...newSecret, value: e.target.value })}
+              onChange={(e) =>
+                setNewSecret({ ...newSecret, value: e.target.value })
+              }
             />
           </div>
 
@@ -602,7 +696,9 @@ const VaultManager: React.FC = () => {
               id="secret-type"
               placeholder="e.g., API Key, Database, Certificate"
               value={newSecret.type}
-              onChange={(e) => setNewSecret({ ...newSecret, type: e.target.value })}
+              onChange={(e) =>
+                setNewSecret({ ...newSecret, type: e.target.value })
+              }
             />
           </div>
 
@@ -612,7 +708,9 @@ const VaultManager: React.FC = () => {
               id="secret-description"
               placeholder="Brief description of this secret"
               value={newSecret.description}
-              onChange={(e) => setNewSecret({ ...newSecret, description: e.target.value })}
+              onChange={(e) =>
+                setNewSecret({ ...newSecret, description: e.target.value })
+              }
             />
           </div>
 
@@ -620,18 +718,28 @@ const VaultManager: React.FC = () => {
             <Label htmlFor="secret-environment">Environment</Label>
             <Select
               value={newSecret.environment_type}
-              onValueChange={(value) => setNewSecret({ ...newSecret, environment_type: value as any })}
-              options={environmentOptions}
-            />
+              onValueChange={(value) =>
+                setNewSecret({ ...newSecret, environment_type: value as any })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select environment" />
+              </SelectTrigger>
+              <SelectContent>
+                {environmentOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => setIsAddSecretOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddSecret}>
-              Add Secret
-            </Button>
+            <Button onClick={handleAddSecret}>Add Secret</Button>
           </div>
         </div>
       </Modal>
@@ -654,16 +762,20 @@ const VaultManager: React.FC = () => {
               <Input
                 id="edit-key"
                 value={editingSecret.key}
-                onChange={(e) => setEditingSecret({ ...editingSecret, key: e.target.value })}
+                onChange={(e) =>
+                  setEditingSecret({ ...editingSecret, key: e.target.value })
+                }
               />
             </div>
-            
+
             <div className="space-y-2">
               <Label htmlFor="edit-value">Value</Label>
               <Textarea
                 id="edit-value"
                 value={editingSecret.value}
-                onChange={(e) => setEditingSecret({ ...editingSecret, value: e.target.value })}
+                onChange={(e) =>
+                  setEditingSecret({ ...editingSecret, value: e.target.value })
+                }
               />
             </div>
 
@@ -672,20 +784,26 @@ const VaultManager: React.FC = () => {
               <Input
                 id="edit-description"
                 value={editingSecret.description}
-                onChange={(e) => setEditingSecret({ ...editingSecret, description: e.target.value })}
+                onChange={(e) =>
+                  setEditingSecret({
+                    ...editingSecret,
+                    description: e.target.value,
+                  })
+                }
               />
             </div>
 
             <div className="flex justify-end gap-2 pt-4">
-              <Button variant="outline" onClick={() => {
-                setIsEditSecretOpen(false);
-                setEditingSecret(null);
-              }}>
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setIsEditSecretOpen(false);
+                  setEditingSecret(null);
+                }}
+              >
                 Cancel
               </Button>
-              <Button onClick={handleEditSecret}>
-                Update Secret
-              </Button>
+              <Button onClick={handleEditSecret}>Update Secret</Button>
             </div>
           </div>
         )}
@@ -699,22 +817,40 @@ const VaultManager: React.FC = () => {
           setHistorySecret(null);
         }}
         title="Version History"
-        description={historySecret ? `View and manage version history for ${historySecret.key}` : ""}
+        description={
+          historySecret
+            ? `View and manage version history for ${historySecret.key}`
+            : ""
+        }
         className="max-w-2xl"
       >
         {historySecret && historySecret.history && (
           <div className="space-y-4">
             <div className="text-sm text-muted-foreground">
-              Current version: {historySecret.version} • {historySecret.history.length} total versions
+              Current version: {historySecret.version} •{" "}
+              {historySecret.history.length} total versions
             </div>
-            
+
             <div className="space-y-3 max-h-96 overflow-y-auto">
               {historySecret.history.map((version) => (
-                <Card key={version.version} className={version.version === historySecret.version ? "border-primary" : ""}>
+                <Card
+                  key={version.version}
+                  className={
+                    version.version === historySecret.version
+                      ? "border-primary"
+                      : ""
+                  }
+                >
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <Badge variant={version.version === historySecret.version ? "default" : "secondary"}>
+                        <Badge
+                          variant={
+                            version.version === historySecret.version
+                              ? "default"
+                              : "secondary"
+                          }
+                        >
                           Version {version.version}
                         </Badge>
                         {version.version === historySecret.version && (
@@ -725,17 +861,21 @@ const VaultManager: React.FC = () => {
                         {formatDate(version.updatedAt)}
                       </div>
                     </div>
-                    
+
                     <div className="text-sm mb-2">
                       <div>Updated by: {version.updatedBy}</div>
                       {version.changeReason && (
-                        <div className="text-muted-foreground">Reason: {version.changeReason}</div>
+                        <div className="text-muted-foreground">
+                          Reason: {version.changeReason}
+                        </div>
                       )}
                     </div>
 
                     <div className="bg-muted rounded p-2 font-mono text-sm">
-                      {visibleSecrets.has(`${historySecret.id}-v${version.version}`) 
-                        ? version.value 
+                      {visibleSecrets.has(
+                        `${historySecret.id}-v${version.version}`
+                      )
+                        ? version.value
                         : "••••••••••••••••"}
                     </div>
                   </CardContent>

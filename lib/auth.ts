@@ -1,6 +1,7 @@
 // Authentication utilities and state management
 
 import { useGlobalContext } from "@/hooks/useUser";
+import { useSession } from "next-auth/react";
 
 export interface User {
   email: string;
@@ -17,10 +18,7 @@ export const mockUser: User = {
 };
 
 
-export function isAuthenticated(): boolean {
-  if (typeof window === "undefined") return false;
-  return localStorage.getItem("isAuthenticated") === "true";
-}
+
 
 export function getCurrentUser(): User | null {
   const {user}= useGlobalContext();

@@ -7,7 +7,6 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Plus, Search, Folder, ChevronRight } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { isAuthenticated } from "@/lib/auth"
 import Link from "next/link";
 import {
   Dialog,
@@ -19,6 +18,7 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@radix-ui/react-menubar"
 import { Textarea } from "@/components/ui/textarea"
+import { useSession } from "next-auth/react"
 
 
 interface Project {
@@ -73,7 +73,7 @@ export default function ProjectsPage() {
       description: "",
     });
     const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
-  
+  const {data:session,status} = useSession();
   const handleCreateProject = () => {
     if (!newProject.name.trim()) return;
     setIsCreateModalOpen(true);
@@ -93,7 +93,7 @@ export default function ProjectsPage() {
     setIsCreateModalOpen(false)
   }
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!session?.user?.email) {
       router.push("/login")
       return
     }

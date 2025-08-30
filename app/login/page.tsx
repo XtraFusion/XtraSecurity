@@ -12,7 +12,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp"
 import { Eye, EyeOff, Shield, Moon, Sun } from "lucide-react"
 import { useTheme } from "next-themes"
-import { signIn } from "next-auth/react"
+import { signIn, useSession } from "next-auth/react"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("admin@example.com")
@@ -24,10 +24,13 @@ export default function LoginPage() {
   const { theme, setTheme } = useTheme()
   const [step, setStep] = useState<"login" | "verify">("login")
   const [verificationCode, setVerificationCode] = useState("")
-
+const {data:session} = useSession();
   useEffect(()=>{
- const role = localStorage.getItem("userRole")
-  },[])
+    if(session?.user?.email){
+      // User is authenticated, redirect to dashboard
+      window.location.href = "/dashboard"
+    }
+  },[session])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()

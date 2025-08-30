@@ -2,27 +2,17 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
+import { getServerSession } from "next-auth";
+import { authOptions } from "../auth/[...nextauth]/route";
 
 // Helper function to check authentication
-function getAuthFromRequest(request: NextRequest): { authenticated: boolean; user?: User } {
-  try {
-    const currentUser = getCurrentUser();
-    if (!currentUser) {
-      return { authenticated: false };
-    }
-    return { authenticated: true, user: currentUser };
-  } catch (error) {
-    return { authenticated: false };
-  }
-}
-
 // GET /api/branch - Get all branches or filter by projectId
 export async function GET(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+     const session = await getServerSession(authOptions);
+if (!session?.user?.email) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
@@ -30,7 +20,7 @@ export async function GET(request: NextRequest) {
     const branches = await prisma.branch.findMany({
       where: projectId ? { projectId } : undefined,
       include: {
-        project: true
+        project: true,
       }
     });
 
@@ -47,8 +37,8 @@ export async function GET(request: NextRequest) {
 // POST /api/branch - Create a new branch
 export async function POST(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -82,7 +72,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description: description || "",
-        createdBy: auth.user.email,
+        createdBy: session.user.email,
         projectId,
         versionNo,
         permissions
@@ -105,10 +95,10 @@ export async function POST(request: NextRequest) {
 // DELETE /api/branch - Delete a branch
 export async function DELETE(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+     const session = await getServerSession(authOptions);
+if (!session?.user?.email) {
+  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+}
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -160,8 +150,8 @@ export async function DELETE(request: NextRequest) {
 // PUT /api/branch - Update a branch
 export async function PUT(request: NextRequest) {
   try {
-    const auth = getAuthFromRequest(request);
-    if (!auth.authenticated || !auth.user) {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

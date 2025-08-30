@@ -38,6 +38,20 @@
   --sidebar-accent-foreground: oklch(0.35 0.15 200);
   --sidebar-border: oklch(0.88 0.02 200);
   --sidebar-ring: oklch(0.35 0.15 200);
+      --vault-gradient: linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 40%), hsl(45 100% 45%));
+    --vault-gradient-hover: linear-gradient(135deg, hsl(220 90% 45%), hsl(220 90% 35%), hsl(45 100% 40%));
+    --accent-gradient: linear-gradient(135deg, hsl(45 100% 50%), hsl(45 100% 40%));
+    --vault-shadow: 0 10px 40px -10px hsl(220 90% 50% / 0.3);
+    --card-shadow: 0 4px 20px -4px hsl(220 15% 12% / 0.08);
+    --secret-mask: repeating-linear-gradient(90deg, hsl(220 10% 46%) 0px, hsl(220 10% 46%) 8px, transparent 8px, transparent 16px);
+    
+    /* Animations */
+    --transition-all: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-colors: color 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s cubic-bezier(0.4, 0, 0.2, 1), border-color 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    
+    --radius: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 16px;
 }
 
 .dark {

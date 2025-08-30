@@ -41,6 +41,7 @@ if (!session?.user?.email) {
         },
         include: {
           branch: true,
+          secret:true,
           teamProjects: {
             include: {
               team: true

@@ -42,8 +42,8 @@ model TeamUser {
   userId   String   @db.ObjectId
   role     String // User's role in this specific team
   joinedAt DateTime @default(now())
-  team     Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  user     User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  team     Team     @relation(fields: [teamId], references: [id])
+  user     User     @relation(fields: [userId], references: [id])
 
   @@unique([teamId, userId])
 }
@@ -53,8 +53,8 @@ model TeamProject {
   id        String  @id @default(auto()) @map("_id") @db.ObjectId
   teamId    String  @db.ObjectId
   projectId String  @db.ObjectId
-  team      Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
-  project   Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  team      Team    @relation(fields: [teamId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
 
   @@unique([teamId, projectId])
 }
@@ -73,7 +73,7 @@ model Account {
   id_token          String?
   session_state     String?
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 
   @@unique([provider, providerAccountId])
 }
@@ -84,7 +84,7 @@ model Session {
   userId       String   @db.ObjectId
   expires      DateTime
 
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user User @relation(fields: [userId], references: [id])
 }
 
 model VerificationToken {
@@ -103,7 +103,7 @@ model Project {
   status       String        @default("active")
   userId       String        @db.ObjectId
   branch       Branch[]
-  user         User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user         User          @relation(fields: [userId], references: [id])
   secret       Secret[]
   createdAt    DateTime      @default(now())
   updatedAt    DateTime      @updatedAt
@@ -117,7 +117,8 @@ model Branch {
   createdBy   String   @db.ObjectId
   projectId   String   @db.ObjectId
   createdAt   DateTime @default(now())
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project     Project  @relation(fields: [projectId], references: [id])
+  secret      Secret[] @relation("BranchToSecret")
   versionNo   String
   permissions String[] // array of roles/user IDs
 }
@@ -130,7 +131,9 @@ model Secret {
   environment_type String
   version          String
   projectId        String    @db.ObjectId
-  project          Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  branchId         String    @db.ObjectId
+  project          Project   @relation(fields: [projectId], references: [id])
+  branch           Branch    @relation("BranchToSecret", fields: [branchId], references: [id])
   type             String    
   history          Json // JSON array of secret versions
   lastUpdated      DateTime  @updatedAt
