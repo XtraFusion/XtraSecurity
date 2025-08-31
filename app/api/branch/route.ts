@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description: description || "",
-        createdBy: session.user.email,
+        createdBy: session.user.id,
         projectId,
         versionNo,
         permissions

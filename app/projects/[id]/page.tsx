@@ -112,8 +112,10 @@ const mockProject: Project = {
             changeReason: "Migrated to new database server",
           },
         ],
-        permission: ["admin@example.com"],
-        expiryDate: new Date("2024-12-31"),
+  permission: ["admin@example.com"],
+  expiryDate: new Date("2024-12-31"),
+  projectId: "1",
+  branchId: "main",
         rotationPolicy: "auto",
         type: "Database",
       },
@@ -126,8 +128,10 @@ const mockProject: Project = {
         lastUpdated: "2024-01-14T16:45:00Z",
         updatedBy: "admin@example.com",
         version: 1,
-        permission: ["admin@example.com"],
-        expiryDate: new Date("2024-12-31"),
+  permission: ["admin@example.com"],
+  expiryDate: new Date("2024-12-31"),
+  projectId: "1",
+  branchId: "main",
         rotationPolicy: "manual",
         type: "API Key",
       },
@@ -142,8 +146,10 @@ const mockProject: Project = {
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "admin@example.com",
         version: 2,
-        permission: ["admin@example.com", "dev@example.com"],
-        expiryDate: new Date("2024-12-31"),
+  permission: ["admin@example.com", "dev@example.com"],
+  expiryDate: new Date("2024-12-31"),
+  projectId: "1",
+  branchId: "staging",
         rotationPolicy: "manual",
         type: "Database",
       },
@@ -158,8 +164,10 @@ const mockProject: Project = {
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "dev@example.com",
         version: 1,
-        permission: ["dev@example.com"],
-        expiryDate: new Date("2024-12-31"),
+  permission: ["dev@example.com"],
+  expiryDate: new Date("2024-12-31"),
+  projectId: "1",
+  branchId: "dev",
         rotationPolicy: "manual",
         type: "Database",
       },
@@ -170,11 +178,10 @@ const mockProject: Project = {
 const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
 
-  const { createSecret, user, fetchSecrets, fetchBranch, updateSecret } =
-    useGlobalContext();
+  const { user } = useGlobalContext();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [secretList, setSecretList] = useState([]);
+  const [secretList, setSecretList] = useState<Secret[]>([]);
 
   const [selectedBranch, setSelectedBranch] = useState<any>({});
   const [searchQuery, setSearchQuery] = useState("");
@@ -187,6 +194,7 @@ const VaultManager: React.FC = () => {
   const [historySecret, setHistorySecret] = useState<Secret | null>(null);
   const [isAddBranchOpen, setIsAddBranchOpen] = useState(false);
   const [newBranch, setNewBranch] = useState("");
+  const [newBranchDesc, setNewBranchDesc] = useState("");
   const [branchList, setBranchList] = useState<any[]>([]);
   const [notification, setNotification] = useState<{
     type: "default" | "destructive";
@@ -197,7 +205,7 @@ const VaultManager: React.FC = () => {
     value: "",
     description: "",
     projectId: projectId,
-    branchId: selectedBranch.id,
+    branchId: selectedBranch.id ?? "",
     environment_type: "development" as const,
     permission: [] as string[],
     expiryDate: "",
@@ -217,7 +225,8 @@ const VaultManager: React.FC = () => {
   const loadProject = async () => {
     // const data = await fetchSecrets(projectId);
     const data1 = await ProjectController.fetchProjects(projectId);
-    const branchData = await fetchBranch(projectId);
+  const branchRes = await axios.get(`/api/branch?projectId=${projectId}`);
+  const branchData = branchRes.data;
     setBranchList(branchData || []);
     console.log(branchData);
     if (branchData && branchData.length >= 1) {
@@ -241,7 +250,7 @@ const VaultManager: React.FC = () => {
     }
   }, [notification]);
 
-  const currentSecrets = project?.secrets[selectedBranch] || [];
+  const currentSecrets = secretList || [];
   const filteredSecrets = currentSecrets.filter(
     (secret) =>
       secret.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -289,7 +298,7 @@ const VaultManager: React.FC = () => {
     }
   };
 
-  const handleAddSecret = () => {
+  const handleAddSecret = async () => {
     console.log(selectedBranch);
     if (!project || !newSecret.key.trim() || !newSecret.value.trim()) return;
 
@@ -311,16 +320,13 @@ const VaultManager: React.FC = () => {
       type: newSecret.type,
     };
 
-    createSecret(secret);
-    const updatedProject = {
-      ...project,
-      secrets: {
-        ...project.secrets,
-        [selectedBranch]: [...(project.secrets[selectedBranch] || []), secret],
-      },
-    };
-
-    setProject(updatedProject);
+    try {
+      await axios.post("/api/secret", secret);
+    } catch (err) {
+      console.error("createSecret failed", err);
+    }
+  // update local secret list for current branch
+  setSecretList((prev: any) => [...prev, secret]);
     setNewSecret({
       key: "",
       value: "",
@@ -328,8 +334,8 @@ const VaultManager: React.FC = () => {
       environment_type: "development",
       permission: [],
       expiryDate: "",
-      projectId: projectId,
-      branchId: selectedBranch.id,
+  projectId: projectId,
+  branchId: selectedBranch.id,
       type: "",
       rotationPolicy: "manual",
     });
@@ -337,45 +343,28 @@ const VaultManager: React.FC = () => {
     setNotification({ type: "default", message: "Secret added successfully" });
   };
 
-  const handleEditSecret = () => {
+  const handleEditSecret = async () => {
     if (!project || !editingSecret) return;
 
-    // const updatedSecrets = project.secrets[selectedBranch].map((secret) =>
-    //   secret.id === editingSecret.id
-    //     ? {
-    //         ...editingSecret,
-    //         lastUpdated: new Date().toISOString(),
-    //         version: secret.version + 1,
-    //       }
-    //     : secret
-    // );
-
-    // const updatedProject = {
-    //   ...project,
-    //   secrets: {
-    //     ...project.secrets,
-    //     [selectedBranch]: updatedSecrets,
-    //   },
-    // };
-
-    // setProject(updatedProject);
     setIsEditSecretOpen(false);
     setEditingSecret(null);
     setNotification({
       type: "default",
       message: "Secret updated successfully",
     });
-    updateSecret(editingSecret.id, editingSecret);
+    try {
+      await axios.put(`/api/secret?id=${editingSecret.id}`, editingSecret);
+    } catch (err) {
+      console.error("updateSecret failed", err);
+    }
     loadProject();
   };
 
   const handleDeleteSecret = (secretId: string) => {
     if (!project) return;
-
-    const updatedSecrets = selectedBranch.secret.filter(
+    const updatedSecrets = secretList.filter(
       (secret: Secret) => secret.id !== secretId
     );
-    
     deleteSecret(secretId);
     setSecretList(updatedSecrets);
     setNotification({
@@ -392,6 +381,23 @@ const VaultManager: React.FC = () => {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const createBranch = async (name: string, description: string) => {
+    try {
+      const res = await axios.post("/api/branch", { projectId, name, description });
+      const branch = res.data;
+      // optimistic update
+      setBranchList((prev) => [...prev, branch]);
+      setSelectedBranch(branch);
+      setIsAddBranchOpen(false);
+      setNewBranch("");
+      setNewBranchDesc("");
+      setNotification({ type: "default", message: "Branch created" });
+    } catch (err: any) {
+      console.error(err);
+      setNotification({ type: "destructive", message: "Failed to create branch" });
+    }
   };
 
   const getEnvironmentBadge = (environment: string) => {
@@ -506,7 +512,7 @@ const VaultManager: React.FC = () => {
               <GitBranch className="h-4 w-4 text-primary" />
               {branchList.length >= 1 && (
                 <Select
-                  value={selectedBranch.name}
+                  value={selectedBranch.id}
                   onValueChange={(v) => {
                     setSelectedBranch(branchList.find((b) => b.id === v) ?? {});
                   }}
@@ -516,10 +522,7 @@ const VaultManager: React.FC = () => {
                   </SelectTrigger>
                   <SelectContent>
                     {branchList?.map((option: any) => (
-                      <SelectItem
-                        key={option.id}
-                        value={option.name ?? option.id}
-                      >
+                      <SelectItem key={option.id} value={option.id}>
                         {option.name}
                       </SelectItem>
                     ))}
@@ -562,7 +565,7 @@ const VaultManager: React.FC = () => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-primary"></div>
-            {filteredSecrets.length} secrets in {selectedBranch.name}
+            {filteredSecrets.length} secrets in {selectedBranch?.name ?? selectedBranch?.id ?? selectedBranch ?? "branch"}
           </span>
         </div>
       </div>
@@ -691,8 +694,8 @@ const VaultManager: React.FC = () => {
       <Modal
         isOpen={isAddSecretOpen}
         onClose={() => setIsAddSecretOpen(false)}
-        title="Add New Secret"
-        description={`Add a new environment variable or secret to ${selectedBranch.name} branch.`}
+  title="Add New Secret"
+  description={`Add a new environment variable or secret to ${selectedBranch?.name ?? selectedBranch?.id ?? selectedBranch ?? "branch"} branch.`}
         className="max-w-lg"
       >
         <div className="space-y-4">
@@ -770,6 +773,44 @@ const VaultManager: React.FC = () => {
               Cancel
             </Button>
             <Button onClick={handleAddSecret}>Add Secret</Button>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Add Branch Modal */}
+      <Modal
+        isOpen={isAddBranchOpen}
+        onClose={() => setIsAddBranchOpen(false)}
+        title="Create Branch"
+        description={`Create a new branch for project ${project?.name}`}
+        className="max-w-md"
+      >
+        <div className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="branch-name">Branch name</Label>
+            <Input
+              id="branch-name"
+              placeholder="e.g., feature/login"
+              value={newBranch}
+              onChange={(e) => setNewBranch(e.target.value)}
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="branch-desc">Description (optional)</Label>
+            <Textarea
+              id="branch-desc"
+              placeholder="Short description"
+              value={newBranchDesc}
+              onChange={(e) => setNewBranchDesc(e.target.value)}
+            />
+          </div>
+          <div className="flex justify-end gap-2 pt-4">
+            <Button variant="outline" onClick={() => setIsAddBranchOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={() => createBranch(newBranch.trim(), newBranchDesc.trim())}>
+              Create Branch
+            </Button>
           </div>
         </div>
       </Modal>
