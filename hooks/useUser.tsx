@@ -85,6 +85,12 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   }
 
 
+  //update secret
+
+  const updateSecret = (secretId:string, updatedData: any) => {
+    return axios.put(`/api/secret?id=${secretId}`, updatedData);
+  }
+
 
 
 
@@ -104,6 +110,10 @@ const fetchBranch = async (projectId: string) => {
   return [];
 };
 
+//update branch
+  
+
+
   //delete branch
 
 
@@ -112,7 +122,7 @@ const fetchBranch = async (projectId: string) => {
   //end of branch
 
   return (
-    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createProject,fetchProjects,createSecret,fetchSecrets,fetchBranch}}>
+    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createProject,fetchProjects,createSecret,fetchSecrets,fetchBranch,updateSecret}}>
       {children}
     </UserContext.Provider>
   );

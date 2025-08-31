@@ -168,11 +168,12 @@ const mockProject: Project = {
 const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
 
-  const { createSecret, user, fetchSecrets, fetchProjects, fetchBranch } =
+  const { createSecret, user, fetchSecrets, fetchProjects, fetchBranch, updateSecret } =
     useGlobalContext();
 
   const [project, setProject] = useState<Project | null>(null);
-  const [secret, setSecret] = useState([]);
+  const [secretList, setSecretList] = useState([]);
+
   const [selectedBranch, setSelectedBranch] = useState<any>({});
   const [searchQuery, setSearchQuery] = useState("");
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
@@ -204,7 +205,10 @@ const VaultManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const loadProject = async () => {
+    setSecretList(selectedBranch.secret || []);
+  }, [selectedBranch]);
+
+      const loadProject = async () => {
       // const data = await fetchSecrets(projectId);
       const data1 = await fetchProjects(projectId);
       const branchData = await fetchBranch(projectId);
@@ -213,12 +217,15 @@ const VaultManager: React.FC = () => {
       if (branchData && branchData.length >= 1) {
         // prefer branch name if available, otherwise id
         setSelectedBranch(branchData[0] ?? branchData[0] ?? {});
+        setSecretList(branchData[0]?.secret || []);
       }
       await new Promise((resolve) => setTimeout(resolve, 800));
       setProject(mockProject);
       // setSecret(data);
       setIsLoading(false);
     };
+  useEffect(() => {
+
     loadProject();
   }, [projectId]);
 
@@ -316,6 +323,8 @@ const VaultManager: React.FC = () => {
       environment_type: "development",
       permission: [],
       expiryDate: "",
+      projectId: projectId,
+      branchId: selectedBranch.id,
       type: "",
       rotationPolicy: "manual",
     });
@@ -326,31 +335,33 @@ const VaultManager: React.FC = () => {
   const handleEditSecret = () => {
     if (!project || !editingSecret) return;
 
-    const updatedSecrets = project.secrets[selectedBranch].map((secret) =>
-      secret.id === editingSecret.id
-        ? {
-            ...editingSecret,
-            lastUpdated: new Date().toISOString(),
-            version: secret.version + 1,
-          }
-        : secret
-    );
+    // const updatedSecrets = project.secrets[selectedBranch].map((secret) =>
+    //   secret.id === editingSecret.id
+    //     ? {
+    //         ...editingSecret,
+    //         lastUpdated: new Date().toISOString(),
+    //         version: secret.version + 1,
+    //       }
+    //     : secret
+    // );
 
-    const updatedProject = {
-      ...project,
-      secrets: {
-        ...project.secrets,
-        [selectedBranch]: updatedSecrets,
-      },
-    };
+    // const updatedProject = {
+    //   ...project,
+    //   secrets: {
+    //     ...project.secrets,
+    //     [selectedBranch]: updatedSecrets,
+    //   },
+    // };
 
-    setProject(updatedProject);
+    // setProject(updatedProject);
     setIsEditSecretOpen(false);
     setEditingSecret(null);
     setNotification({
       type: "default",
       message: "Secret updated successfully",
     });
+   updateSecret(editingSecret.id, editingSecret);
+   loadProject();
   };
 
   const handleDeleteSecret = (secretId: string) => {
@@ -497,9 +508,9 @@ const VaultManager: React.FC = () => {
               {branchList.length >= 1 && (
                 <Select
                   value={selectedBranch.name}
-                  onValueChange={(v) =>
-                    setSelectedBranch(branchList.find((b) => b.id === v) ?? {})
-                  }
+                  onValueChange={(v) => {
+                    setSelectedBranch(branchList.find((b) => b.id === v) ?? {});
+                  }}
                 >
                   <SelectTrigger className="border-0 bg-transparent">
                     <SelectValue placeholder="Select branch" />
@@ -559,8 +570,8 @@ const VaultManager: React.FC = () => {
 
       {/* Secrets Grid */}
       <div className="grid gap-4">
-        {filteredSecrets.length > 0 ? (
-          filteredSecrets.map((secret) => (
+        {secretList.length > 0 ? (
+          secretList.map((secret: Secret) => (
             <Card
               key={secret.id}
               className="group relative overflow-hidden hover:shadow-lg transition-all duration-200 border-border/60 dark:border-border/40"

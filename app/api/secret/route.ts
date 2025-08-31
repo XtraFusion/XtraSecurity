@@ -118,6 +118,8 @@ export async function PUT(request: NextRequest) {
       key,
       value,
       description,
+      projectId,
+      branchId,
       environment_type,
       type,
       permission,
