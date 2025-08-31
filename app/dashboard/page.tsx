@@ -38,55 +38,11 @@ import type { User } from "@/lib/auth";
 import { useSession } from "next-auth/react";
 import { UserContext } from "@/hooks/useUser";
 import axios from "axios";
+import { ProjectController } from "@/util/ProjectController";
+import {Project} from "@/util/Interface"
+import { formatDate } from "@/util/formatDate";
 
-interface Project {
-  id: string;
-  name: string;
-  description: string;
-  secretsCount: number;
-  updatedAt: string;
-  branch: string[];
-  status: "active" | "inactive" | "archived";
-}
 
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "Production API",
-    description: "Main production environment for our API services",
-    secretsCount: 24,
-    updatedAt: "2024-01-15T10:30:00Z",
-    branch: ["main", "staging"],
-    status: "active",
-  },
-  {
-    id: "2",
-    name: "Frontend App",
-    description: "React application environment variables",
-    secretsCount: 12,
-    updatedAt: "2024-01-14T16:45:00Z",
-    branch: ["main", "dev", "feature/auth"],
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Database Cluster",
-    description: "Database connection strings and credentials",
-    secretsCount: 8,
-    updatedAt: "2024-01-13T09:15:00Z",
-    branch: ["main"],
-    status: "active",
-  },
-  {
-    id: "4",
-    name: "Legacy System",
-    description: "Old system being phased out",
-    secretsCount: 45,
-    updatedAt: "2024-01-10T14:20:00Z",
-    branch: ["main", "maintenance"],
-    status: "archived",
-  },
-];
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -95,7 +51,7 @@ export default function DashboardPage() {
   if (!userContext) {
     throw new Error("useUser must be used within a UserProvider");
   }
-  const { user, fetchUser, createProject, fetchProjects } = userContext;
+  const { user, fetchUser, } = userContext;
   useEffect(() => {
     fetchUser();
   }, [status, session]);
@@ -119,11 +75,9 @@ export default function DashboardPage() {
    
 
     const loadData = async () => {
-      const projectsList = await fetchProjects();
-      console.log(projectsList);
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      mockProjects.push(...projectsList);
-      setProjects([...mockProjects]);
+      setIsLoading(true)
+      const projectsList = await ProjectController.fetchProjects("");
+      setProjects(projectsList);
       setIsLoading(false);
     };
 
@@ -143,27 +97,19 @@ export default function DashboardPage() {
       id: Date.now().toString(),
       name: newProject.name,
       description: newProject.description,
-      secretsCount: 0,
-      updatedAt: new Date().toISOString(),
-      branch: ["main"],
+      updatedAt: new Date(),
+      branch: [],
       status: "active",
+      createdAt: new Date(),
     };
 
-    createProject(project);
+    ProjectController.createProject(project);
     setProjects([project, ...projects]);
     setNewProject({ name: "", description: "" });
     setIsCreateModalOpen(false);
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("en-US", {
-      year: "numeric",
-      month: "short",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
+
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -273,7 +219,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-4 text-sm text-muted-foreground">
             <span>{filteredProjects.length} projects</span>
             <span>
-              {filteredProjects.reduce((acc, p) => acc + p.secretsCount, 0)}{" "}
+              {/* {filteredProjects.reduce((acc, p) => acc + p.secretsCount, 0)}{" "} */}
               total secrets
             </span>
           </div>
@@ -319,26 +265,26 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Key className="h-4 w-4" />
-                      <span>{project.secretsCount} secrets</span>
+                      {/* <span>{project.secretsCount} secrets</span> */}
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <GitBranch className="h-4 w-4" />
-                      <span>{project.branch.length} branches</span>
+                      <span>{project?.branch?.length} branches</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Calendar className="h-3 w-3" />
-                    <span>Updated {formatDate(project.updatedAt)}</span>
+                    <span>Updated {formatDate(project?.updatedAt)}</span>
                   </div>
                   <div className="flex flex-wrap gap-1">
-                    {project?.branch.slice(0, 3).map((b) => (
+                    {project?.branch?.slice(0, 3).map((b) => (
                       <Badge key={b.id} variant="secondary" className="text-xs">
                         {b.name}
                       </Badge>
                     ))}
-                    {project?.branch.length > 3 && (
+                    {project && project?.branch?.length > 3 && (
                       <Badge variant="secondary" className="text-xs">
-                        +{project?.branch.length - 3} more
+                        +{project?.branch?.length - 3} more
                       </Badge>
                     )}
                   </div>

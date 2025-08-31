@@ -40,6 +40,8 @@ import { Modal } from "@/components/ui/modal";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useParams } from "next/navigation";
 import { useGlobalContext } from "@/hooks/useUser";
+import { ProjectController } from "@/util/ProjectController";
+import axios from "axios";
 
 interface SecretVersion {
   version: number;
@@ -168,7 +170,7 @@ const mockProject: Project = {
 const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
 
-  const { createSecret, user, fetchSecrets, fetchProjects, fetchBranch, updateSecret } =
+  const { createSecret, user, fetchSecrets, fetchBranch, updateSecret } =
     useGlobalContext();
 
   const [project, setProject] = useState<Project | null>(null);
@@ -208,24 +210,27 @@ const VaultManager: React.FC = () => {
     setSecretList(selectedBranch.secret || []);
   }, [selectedBranch]);
 
-      const loadProject = async () => {
-      // const data = await fetchSecrets(projectId);
-      const data1 = await fetchProjects(projectId);
-      const branchData = await fetchBranch(projectId);
-      setBranchList(branchData || []);
-      console.log(branchData);
-      if (branchData && branchData.length >= 1) {
-        // prefer branch name if available, otherwise id
-        setSelectedBranch(branchData[0] ?? branchData[0] ?? {});
-        setSecretList(branchData[0]?.secret || []);
-      }
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setProject(mockProject);
-      // setSecret(data);
-      setIsLoading(false);
-    };
-  useEffect(() => {
+  const deleteSecret = async (secretId: string) => {
+    return await axios.delete(`/api/secret?id=${secretId}`);
+  };
 
+  const loadProject = async () => {
+    // const data = await fetchSecrets(projectId);
+    const data1 = await ProjectController.fetchProjects(projectId);
+    const branchData = await fetchBranch(projectId);
+    setBranchList(branchData || []);
+    console.log(branchData);
+    if (branchData && branchData.length >= 1) {
+      // prefer branch name if available, otherwise id
+      setSelectedBranch(branchData[0] ?? branchData[0] ?? {});
+      setSecretList(branchData[0]?.secret || []);
+    }
+    await new Promise((resolve) => setTimeout(resolve, 800));
+    setProject(mockProject);
+    // setSecret(data);
+    setIsLoading(false);
+  };
+  useEffect(() => {
     loadProject();
   }, [projectId]);
 
@@ -360,25 +365,19 @@ const VaultManager: React.FC = () => {
       type: "default",
       message: "Secret updated successfully",
     });
-   updateSecret(editingSecret.id, editingSecret);
-   loadProject();
+    updateSecret(editingSecret.id, editingSecret);
+    loadProject();
   };
 
   const handleDeleteSecret = (secretId: string) => {
     if (!project) return;
 
-    const updatedSecrets = project.secrets[selectedBranch].filter(
-      (secret) => secret.id !== secretId
+    const updatedSecrets = selectedBranch.secret.filter(
+      (secret: Secret) => secret.id !== secretId
     );
-    const updatedProject = {
-      ...project,
-      secrets: {
-        ...project.secrets,
-        [selectedBranch]: updatedSecrets,
-      },
-    };
-
-    setProject(updatedProject);
+    
+    deleteSecret(secretId);
+    setSecretList(updatedSecrets);
     setNotification({
       type: "default",
       message: "Secret deleted successfully",

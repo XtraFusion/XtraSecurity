@@ -28,41 +28,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
 
 
   
-  // projects controllers
-
-  //create
-  async function createProject(projectData: any) {
-    const response = await axios.post("/api/project", projectData);
-    if (response.status === 201) {
-      console.log("Project created:", response.data);
-    }
-  }
-
-  //fetch all projects
-  async function fetchProjects(id:string) {
-    if(id){
-
-      const response = await axios.get(`/api/project?id=${id}`);
-      if (response.status === 200) {
-        console.log("Fetched projects:", response.data);
-        return response.data
-      }
-      else{
-        return [];
-      }
-
-    }
-    else{
-      const response = await axios.get(`/api/project`);
-      if (response.status === 200) {
-        return response.data
-      }
-      else{
-        return [];
-      }
-    }
-  }
-
 
 
   //secret contoller
@@ -122,7 +87,7 @@ const fetchBranch = async (projectId: string) => {
   //end of branch
 
   return (
-    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createProject,fetchProjects,createSecret,fetchSecrets,fetchBranch,updateSecret}}>
+    <UserContext.Provider value={{ user, setUser,userStatus,setUserStatus,fetchUser,createSecret,fetchSecrets,fetchBranch,updateSecret}}>
       {children}
     </UserContext.Provider>
   );
