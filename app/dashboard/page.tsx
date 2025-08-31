@@ -39,10 +39,8 @@ import { useSession } from "next-auth/react";
 import { UserContext } from "@/hooks/useUser";
 import axios from "axios";
 import { ProjectController } from "@/util/ProjectController";
-import {Project} from "@/util/Interface"
+import { Project } from "@/util/Interface";
 import { formatDate } from "@/util/formatDate";
-
-
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -51,7 +49,7 @@ export default function DashboardPage() {
   if (!userContext) {
     throw new Error("useUser must be used within a UserProvider");
   }
-  const { user, fetchUser, } = userContext;
+  const { user, fetchUser, selectedWorkspace } = userContext;
   useEffect(() => {
     fetchUser();
   }, [status, session]);
@@ -64,18 +62,16 @@ export default function DashboardPage() {
     description: "",
   });
 
-  useEffect(()=>{
- if (!session?.user?.email && status!="loading") {
+  useEffect(() => {
+    if (!session?.user?.email && status != "loading") {
       router.push("/login");
       return;
     }
-  },[status,session])
+  }, [status, session]);
 
   useEffect(() => {
-   
-
     const loadData = async () => {
-      setIsLoading(true)
+      setIsLoading(true);
       const projectsList = await ProjectController.fetchProjects("");
       setProjects(projectsList);
       setIsLoading(false);
@@ -99,6 +95,7 @@ export default function DashboardPage() {
       description: newProject.description,
       updatedAt: new Date(),
       branch: [],
+      workspaceId: selectedWorkspace.id,
       status: "active",
       createdAt: new Date(),
     };
@@ -108,8 +105,6 @@ export default function DashboardPage() {
     setNewProject({ name: "", description: "" });
     setIsCreateModalOpen(false);
   };
-
-
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -228,7 +223,6 @@ export default function DashboardPage() {
         {/* Projects Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {filteredProjects.map((project) => {
-            console.log(project)
             return (
               <Card
                 key={project.id}

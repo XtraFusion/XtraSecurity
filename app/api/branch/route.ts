@@ -21,7 +21,7 @@ if (!session?.user?.email) {
       where: projectId ? { projectId } : undefined,
       include: {
         project: true,
-        secret: true
+        secrets: true
       }
     });
 

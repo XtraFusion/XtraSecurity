@@ -8,39 +8,125 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// USER MODEL
 model User {
-  id            String     @id @default(auto()) @map("_id") @db.ObjectId
-  name          String?
-  email         String?    @unique
-  emailVerified DateTime?
-  image         String?
-  accounts      Account[]
-  sessions      Session[]
-  projects      Project[]
-  createdAt     DateTime   @default(now())
-  updatedAt     DateTime   @default(now()) @updatedAt
-  role          String     @default("user") // e.g. "admin", "member"
-  teamUsers     TeamUser[] // Explicit relation table
+  id             String           @id @default(auto()) @map("_id") @db.ObjectId
+  name           String?
+  email          String?          @unique
+  emailVerified  DateTime?
+  image          String?
+  accounts       Account[]
+  sessions       Session[]
+  projects       Project[]
+  userSubscription UserSubscription? @relation("UserToUserSubscription")
+  workspaces     Workspace[]
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @default(now()) @updatedAt
+  role           String           @default("user") // "admin", "member"
+  teamUsers      TeamUser[]       // Explicit relation table
 
   @@map("users")
 }
 
-model Team {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  description  String
-  createdAt    DateTime      @default(now())
-  members      TeamUser[] // Explicit relation table
-  teamProjects TeamProject[] // Explicit relation table
-  roles        String[] // array of roles/permissions per user
+// USER-SUBSCRIPTION MODEL (per-user workspace limits)
+model UserSubscription {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  user           User     @relation("UserToUserSubscription", fields: [userId], references: [id])
+  userId         String   @unique @db.ObjectId
+  plan           String
+  workspaceLimit Int      @default(3)  // Free plan allows 3 workspaces
+  status         String   @default("active")
+  startDate      DateTime @default(now())
+  endDate        DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 }
 
-// Explicit relation table for User-Team many-to-many
+// WORKSPACE MODEL (per-workspace project limits and subscription)
+model Workspace {
+  id               String      @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String
+  workspaceType    String      // "personal" or "shared"
+  createdBy        String      @db.ObjectId
+  user             User        @relation(fields: [createdBy], references: [id])
+  subscriptionPlan String      @default("free") // "free", "pro", etc
+  projectLimit     Int         @default(5) // Free plan allows 5 projects
+  subscriptionEnd  DateTime?
+  projects         Project[]
+  createdAt        DateTime    @default(now())
+  updatedAt        DateTime    @updatedAt
+}
+
+// PROJECT MODEL
+model Project {
+  id             String       @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  status         String       @default("active")
+  userId         String       @db.ObjectId
+  workspaceId    String       @db.ObjectId
+  user           User         @relation(fields: [userId], references: [id])
+  workspace      Workspace    @relation(fields: [workspaceId], references: [id])
+  branches       Branch[]
+  secrets        Secret[]
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  teamProjects   TeamProject[]
+}
+
+// BRANCH MODEL
+model Branch {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String
+  createdBy    String    @db.ObjectId
+  projectId    String    @db.ObjectId
+  project      Project   @relation(fields: [projectId], references: [id])
+  secrets      Secret[]  @relation("BranchToSecret")
+  versionNo    String
+  permissions  String[]  // Roles/User IDs
+  createdAt    DateTime  @default(now())
+}
+
+// SECRET MODEL
+model Secret {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  key              String
+  value            String
+  description      String
+  environmentType  String
+  version          String
+  projectId        String    @db.ObjectId
+  branchId         String?   @db.ObjectId
+  project          Project   @relation(fields: [projectId], references: [id])
+  branch           Branch?   @relation("BranchToSecret", fields: [branchId], references: [id])
+  type             String
+  history          Json      // Array of secret versions
+  lastUpdated      DateTime  @updatedAt
+  updatedBy        String    // userId
+  permission       String[]  // Roles/User IDs
+  expiryDate       DateTime?
+  rotationPolicy   String    // "auto", "manual", etc.
+}
+
+// TEAM-RELATED MODELS
+model Team {
+  id             String        @id @default(auto()) @map("_id") @db.ObjectId
+  name           String
+  description    String
+  createdAt      DateTime      @default(now())
+  members        TeamUser[]    // User-Team relation
+  teamProjects   TeamProject[] // Team-Project relation
+  roles          String[]      // Roles/permissions per user
+}
+
+// Many-to-Many Team-User
 model TeamUser {
   id       String   @id @default(auto()) @map("_id") @db.ObjectId
   teamId   String   @db.ObjectId
   userId   String   @db.ObjectId
-  role     String // User's role in this specific team
+  role     String   // e.g. "owner", "member"
   joinedAt DateTime @default(now())
   team     Team     @relation(fields: [teamId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
@@ -48,30 +134,31 @@ model TeamUser {
   @@unique([teamId, userId])
 }
 
-// Explicit relation table for Team-Project many-to-many
+// Many-to-Many Team-Project
 model TeamProject {
-  id        String  @id @default(auto()) @map("_id") @db.ObjectId
-  teamId    String  @db.ObjectId
-  projectId String  @db.ObjectId
-  team      Team    @relation(fields: [teamId], references: [id])
-  project   Project @relation(fields: [projectId], references: [id])
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String   @db.ObjectId
+  projectId String   @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id])
+  project   Project  @relation(fields: [projectId], references: [id])
 
   @@unique([teamId, projectId])
 }
 
+// AUTHENTICATION MODELS
 model Account {
-  id                String  @id @default(auto()) @map("_id") @db.ObjectId
-  userId            String  @db.ObjectId
-  type              String
-  provider          String
-  providerAccountId String
-  refresh_token     String?
-  access_token      String?
-  expires_at        Int?
-  token_type        String?
-  scope             String?
-  id_token          String?
-  session_state     String?
+  id                 String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId             String  @db.ObjectId
+  type               String
+  provider           String
+  providerAccountId  String
+  refresh_token      String?
+  access_token       String?
+  expires_at         Int?
+  token_type         String?
+  scope              String?
+  id_token           String?
+  session_state      String?
 
   user User @relation(fields: [userId], references: [id])
 
@@ -94,51 +181,4 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
-}
-
-model Project {
-  id           String        @id @default(auto()) @map("_id") @db.ObjectId
-  name         String
-  description  String
-  status       String        @default("active")
-  userId       String        @db.ObjectId
-  branch       Branch[]
-  user         User          @relation(fields: [userId], references: [id])
-  secret       Secret[]
-  createdAt    DateTime      @default(now())
-  updatedAt    DateTime      @updatedAt
-  teamProjects TeamProject[] // Explicit relation table
-}
-
-model Branch {
-  id          String   @id @default(auto()) @map("_id") @db.ObjectId
-  name        String
-  description String               
-  createdBy   String   @db.ObjectId
-  projectId   String   @db.ObjectId
-  createdAt   DateTime @default(now())
-  project     Project  @relation(fields: [projectId], references: [id])
-  secret      Secret[] @relation("BranchToSecret")
-  versionNo   String
-  permissions String[] // array of roles/user IDs
-}
-
-model Secret {
-  id               String    @id @default(auto()) @map("_id") @db.ObjectId
-  key              String
-  value            String
-  description      String
-  environment_type String
-  version          String
-  projectId        String    @db.ObjectId
-  branchId         String?   @db.ObjectId
-  project          Project   @relation(fields: [projectId], references: [id])
-  branch           Branch?   @relation("BranchToSecret", fields: [branchId], references: [id])
-  type             String    
-  history          Json // JSON array of secret versions
-  lastUpdated      DateTime  @updatedAt
-  updatedBy        String // userId
-  permission       String[] // array of roles/user IDs
-  expiryDate       DateTime?
-  rotationPolicy   String // e.g. "auto", "manual", "interval"
 }

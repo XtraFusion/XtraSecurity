@@ -16,6 +16,19 @@ export interface User {
   teamUsers?: TeamUser[];
 }
 
+
+export interface Workspace{
+    id: string;
+    name: string;
+    description: string;
+    subscription: string;
+    subscriptionExpire: Date | null;
+    type: string;
+    createdBy: string;
+    createdAt: Date;
+    updatedAt: Date;
+}
+
 export interface Account {
   id: string;
   userId: string;
@@ -105,6 +118,7 @@ export interface Project {
   secret?: Secret[];
   createdAt: Date;
   updatedAt: Date;
+  workspaceId:string;
   teamProjects?: TeamProject[];
 }
 

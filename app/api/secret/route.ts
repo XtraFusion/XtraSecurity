@@ -16,9 +16,9 @@ export async function GET(request: NextRequest) {
     }
 
     const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get("projectId");
+    const branchId = searchParams.get("branchId");
 
-    const query = projectId ? { projectId } : {};
+    const query = branchId ? { branchId } : {};
     const secrets = await prisma.secret.findMany({
       where: query,
       include: {
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       key,
       value,
       description,
-      environment_type,
+      environmentType,
       projectId,
       type,
       branchId,
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
         key,
         value,
         description,
-        environment_type,
+        environmentType,
         version: "1",
         projectId,
         branchId,
@@ -153,7 +153,7 @@ export async function PUT(request: NextRequest) {
         key: key || existingSecret.key,
         value: value || existingSecret.value,
         description: description || existingSecret.description,
-        environment_type: environment_type || existingSecret.environment_type,
+        environmentType: environment_type || existingSecret.environmentType,
         version: newVersion,
         type: type || existingSecret.type,
         history: [

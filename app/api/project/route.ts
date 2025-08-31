@@ -40,8 +40,8 @@ if (!session?.user?.email) {
           ]
         },
         include: {
-          branch: true,
-          secret:true,
+          branches: true,
+          secrets: true,
           teamProjects: {
             include: {
               team: true
@@ -84,7 +84,7 @@ if (!session?.user?.email) {
         ]
       },
       include: {
-        branch: true,
+        branches: true,
         teamProjects: {
           include: {
             team: true
@@ -105,7 +105,7 @@ if (!session?.user?.email) {
       ...project,
       createdAt: project.createdAt?.toISOString?.() ?? null,
       updatedAt: project.updatedAt?.toISOString?.() ?? null,
-      branch: project.branch?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? []
+      branches: project.branches?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? []
     };
 
     return NextResponse.json(safeProject);
@@ -128,7 +128,25 @@ export async function POST(request: NextRequest) {
     console.log(session.user)
 
     const newProject = await request.json();
-    
+
+    // Resolve the actual user record in the database. Depending on your
+    // NextAuth/session setup session.user.id may be undefined or contain
+    // an identifier that doesn't match Prisma's User.id (ObjectId). Try to
+    // find the user by id first, then fallback to email.
+    const authUser = await prisma.user.findFirst({
+      where: {
+        OR: [
+          { id: session.user?.id ?? undefined },
+          { email: session.user?.email ?? undefined },
+        ].filter(Boolean) as any,
+      },
+    });
+console.log(authUser)
+    if (!authUser) {
+      console.error("Authenticated user not found in database for session:", session.user);
+      return NextResponse.json({ error: "Authenticated user not found" }, { status: 401 });
+    }
+
     if (!newProject.name || !newProject.description) {
       return NextResponse.json(
         { error: "Name and description are required" },
@@ -141,23 +159,24 @@ export async function POST(request: NextRequest) {
       data: {
         name: newProject.name,
         description: newProject.description,
-        userId: session.user.id,
+        userId: authUser.id,
         createdAt: new Date(),
         updatedAt: new Date(),
-        branch: {
+        workspaceId: newProject.workspaceId,
+        branches: {
           create: {
             name: "main",
             description: "Initial main branch",
-            createdBy: session.user.id,
+            createdBy: authUser.id,
             versionNo: "1",
-            permissions: [session.user.email],
+            permissions: [authUser.email].filter(Boolean) as string[],
             createdAt: new Date()
           }
         }
       },
       include: {
-        branch: true,
-        secret: true,
+        branches: true,
+        secrets: true,
         user: {
           select: {
             id: true,
@@ -315,7 +334,7 @@ if (!session?.user?.email) {
       where: { id },
       data: updateData,
       include: {
-        branch: true,
+        branches: true,
         teamProjects: {
           include: {
             team: true

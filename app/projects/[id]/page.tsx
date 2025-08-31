@@ -57,7 +57,7 @@ interface Secret {
   key: string;
   value: string;
   description: string;
-  environment_type: "development" | "staging" | "production";
+  environmentType: "development" | "staging" | "production";
   lastUpdated: string;
   projectId: string;
   branchId: string;
@@ -90,7 +90,7 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/prod",
         description: "Main database connection string",
-        environment_type: "production",
+        environmentType: "production",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "admin@example.com",
         version: 3,
@@ -112,10 +112,10 @@ const mockProject: Project = {
             changeReason: "Migrated to new database server",
           },
         ],
-  permission: ["admin@example.com"],
-  expiryDate: new Date("2024-12-31"),
-  projectId: "1",
-  branchId: "main",
+        permission: ["admin@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        projectId: "1",
+        branchId: "main",
         rotationPolicy: "auto",
         type: "Database",
       },
@@ -124,14 +124,14 @@ const mockProject: Project = {
         key: "API_SECRET_KEY",
         value: "sk_live_abcd1234567890",
         description: "Secret key for API authentication",
-        environment_type: "production",
+        environmentType: "production",
         lastUpdated: "2024-01-14T16:45:00Z",
         updatedBy: "admin@example.com",
         version: 1,
-  permission: ["admin@example.com"],
-  expiryDate: new Date("2024-12-31"),
-  projectId: "1",
-  branchId: "main",
+        permission: ["admin@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        projectId: "1",
+        branchId: "main",
         rotationPolicy: "manual",
         type: "API Key",
       },
@@ -142,14 +142,14 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/staging",
         description: "Staging database connection string",
-        environment_type: "staging",
+        environmentType: "staging",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "admin@example.com",
         version: 2,
-  permission: ["admin@example.com", "dev@example.com"],
-  expiryDate: new Date("2024-12-31"),
-  projectId: "1",
-  branchId: "staging",
+        permission: ["admin@example.com", "dev@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        projectId: "1",
+        branchId: "staging",
         rotationPolicy: "manual",
         type: "Database",
       },
@@ -160,14 +160,14 @@ const mockProject: Project = {
         key: "DATABASE_URL",
         value: "postgresql://user:pass@localhost:5432/dev",
         description: "Development database connection string",
-        environment_type: "development",
+        environmentType: "development",
         lastUpdated: "2024-01-15T10:30:00Z",
         updatedBy: "dev@example.com",
         version: 1,
-  permission: ["dev@example.com"],
-  expiryDate: new Date("2024-12-31"),
-  projectId: "1",
-  branchId: "dev",
+        permission: ["dev@example.com"],
+        expiryDate: new Date("2024-12-31"),
+        projectId: "1",
+        branchId: "dev",
         rotationPolicy: "manual",
         type: "Database",
       },
@@ -206,7 +206,7 @@ const VaultManager: React.FC = () => {
     description: "",
     projectId: projectId,
     branchId: selectedBranch.id ?? "",
-    environment_type: "development" as const,
+    environmentType: "development" as const,
     permission: [] as string[],
     expiryDate: "",
     type: "",
@@ -215,7 +215,7 @@ const VaultManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    setSecretList(selectedBranch.secret || []);
+    setSecretList(selectedBranch.secrets || []);
   }, [selectedBranch]);
 
   const deleteSecret = async (secretId: string) => {
@@ -225,8 +225,9 @@ const VaultManager: React.FC = () => {
   const loadProject = async () => {
     // const data = await fetchSecrets(projectId);
     const data1 = await ProjectController.fetchProjects(projectId);
-  const branchRes = await axios.get(`/api/branch?projectId=${projectId}`);
-  const branchData = branchRes.data;
+    const branchRes = await axios.get(`/api/branch?projectId=${projectId}`);
+    const branchData = branchRes.data;
+    console.log(branchData)
     setBranchList(branchData || []);
     console.log(branchData);
     if (branchData && branchData.length >= 1) {
@@ -236,7 +237,6 @@ const VaultManager: React.FC = () => {
     }
     await new Promise((resolve) => setTimeout(resolve, 800));
     setProject(mockProject);
-    // setSecret(data);
     setIsLoading(false);
   };
   useEffect(() => {
@@ -307,7 +307,7 @@ const VaultManager: React.FC = () => {
       key: newSecret.key,
       value: newSecret.value,
       description: newSecret.description,
-      environment_type: newSecret.environment_type,
+      environmentType: newSecret.environmentType,
       lastUpdated: new Date().toISOString(),
       version: 1,
       projectId: projectId,
@@ -325,17 +325,17 @@ const VaultManager: React.FC = () => {
     } catch (err) {
       console.error("createSecret failed", err);
     }
-  // update local secret list for current branch
-  setSecretList((prev: any) => [...prev, secret]);
+    // update local secret list for current branch
+    setSecretList((prev: any) => [...prev, secret]);
     setNewSecret({
       key: "",
       value: "",
       description: "",
-      environment_type: "development",
+      environmentType: "development",
       permission: [],
       expiryDate: "",
-  projectId: projectId,
-  branchId: selectedBranch.id,
+      projectId: projectId,
+      branchId: selectedBranch.id,
       type: "",
       rotationPolicy: "manual",
     });
@@ -385,7 +385,11 @@ const VaultManager: React.FC = () => {
 
   const createBranch = async (name: string, description: string) => {
     try {
-      const res = await axios.post("/api/branch", { projectId, name, description });
+      const res = await axios.post("/api/branch", {
+        projectId,
+        name,
+        description,
+      });
       const branch = res.data;
       // optimistic update
       setBranchList((prev) => [...prev, branch]);
@@ -396,7 +400,10 @@ const VaultManager: React.FC = () => {
       setNotification({ type: "default", message: "Branch created" });
     } catch (err: any) {
       console.error(err);
-      setNotification({ type: "destructive", message: "Failed to create branch" });
+      setNotification({
+        type: "destructive",
+        message: "Failed to create branch",
+      });
     }
   };
 
@@ -565,7 +572,11 @@ const VaultManager: React.FC = () => {
         <div className="flex items-center gap-4 text-sm text-muted-foreground">
           <span className="flex items-center gap-1">
             <div className="w-2 h-2 rounded-full bg-primary"></div>
-            {filteredSecrets.length} secrets in {selectedBranch?.name ?? selectedBranch?.id ?? selectedBranch ?? "branch"}
+            {filteredSecrets.length} secrets in{" "}
+            {selectedBranch?.name ??
+              selectedBranch?.id ??
+              selectedBranch ??
+              "branch"}
           </span>
         </div>
       </div>
@@ -586,7 +597,7 @@ const VaultManager: React.FC = () => {
                       <h3 className="font-mono font-semibold text-foreground truncate">
                         {secret.key}
                       </h3>
-                      {getEnvironmentBadge(secret.environment_type)}
+                      {getEnvironmentBadge(secret.environmentType)}
                       <Badge variant="outline">{secret.type}</Badge>
                     </div>
 
@@ -694,8 +705,13 @@ const VaultManager: React.FC = () => {
       <Modal
         isOpen={isAddSecretOpen}
         onClose={() => setIsAddSecretOpen(false)}
-  title="Add New Secret"
-  description={`Add a new environment variable or secret to ${selectedBranch?.name ?? selectedBranch?.id ?? selectedBranch ?? "branch"} branch.`}
+        title="Add New Secret"
+        description={`Add a new environment variable or secret to ${
+          selectedBranch?.name ??
+          selectedBranch?.id ??
+          selectedBranch ??
+          "branch"
+        } branch.`}
         className="max-w-lg"
       >
         <div className="space-y-4">
@@ -750,9 +766,9 @@ const VaultManager: React.FC = () => {
           <div className="space-y-2">
             <Label htmlFor="secret-environment">Environment</Label>
             <Select
-              value={newSecret.environment_type}
+              value={newSecret.environmentType}
               onValueChange={(value) =>
-                setNewSecret({ ...newSecret, environment_type: value as any })
+                setNewSecret({ ...newSecret, environmentType: value as any })
               }
             >
               <SelectTrigger>
@@ -808,7 +824,11 @@ const VaultManager: React.FC = () => {
             <Button variant="outline" onClick={() => setIsAddBranchOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={() => createBranch(newBranch.trim(), newBranchDesc.trim())}>
+            <Button
+              onClick={() =>
+                createBranch(newBranch.trim(), newBranchDesc.trim())
+              }
+            >
               Create Branch
             </Button>
           </div>

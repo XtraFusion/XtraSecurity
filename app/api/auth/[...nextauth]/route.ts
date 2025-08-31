@@ -5,6 +5,7 @@ import prisma from "@/lib/db"
 
 const prismaAdapter = {
   createUser: async (data: any) => {
+    // create user, personal workspace and default subscription
     const user = await prisma.user.create({
       data: {
         email: data.email,
@@ -16,6 +17,40 @@ const prismaAdapter = {
         updatedAt: new Date(),
       },
     })
+
+    try {
+      // create a personal workspace for the user
+      const workspaceName = data.name ? `${data.name}'s workspace` : "Personal Workspace";
+      await prisma.workspace.create({
+        data: {
+          name: workspaceName,
+          description: "Personal workspace",
+          workspaceType: "personal",
+          createdBy: user.id,
+          subscriptionPlan: "free",
+          // subscriptionEnd left null for free (no expiry) or set a year from now
+          subscriptionEnd: null,
+          // createdAt/updatedAt are defaulted by Prisma
+        },
+      })
+
+      // create user subscription record with a 1 year expiry by default
+      const oneYear = 1000 * 60 * 60 * 24 * 365;
+      await prisma.userSubscription.create({
+        data: {
+          userId: user.id,
+          plan: "free",
+          workspaceLimit: 3,
+          status: "active",
+          startDate: new Date(),
+          endDate: new Date(Date.now() + oneYear),
+        },
+      })
+    } catch (e) {
+      // don't fail user creation if workspace/subscription creation fails; log for debugging
+      console.error("Failed to create workspace/subscription for new user:", e)
+    }
+
     return user
   },
   getUser: async (id: string) => {
