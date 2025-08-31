@@ -45,7 +45,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log(body);
+    console.log(body,"data");
     const {
       key,
       value,
@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
       environment_type,
       projectId,
       type,
+      branchId,
       permission = [],
       expiryDate,
       rotationPolicy = "manual",
@@ -75,6 +76,7 @@ export async function POST(request: NextRequest) {
         environment_type,
         version: "1",
         projectId,
+        branchId,
         type,
         history: [
           {

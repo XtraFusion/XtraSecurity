@@ -131,9 +131,9 @@ model Secret {
   environment_type String
   version          String
   projectId        String    @db.ObjectId
-  branchId         String    @db.ObjectId
+  branchId         String?   @db.ObjectId
   project          Project   @relation(fields: [projectId], references: [id])
-  branch           Branch    @relation("BranchToSecret", fields: [branchId], references: [id])
+  branch           Branch?   @relation("BranchToSecret", fields: [branchId], references: [id])
   type             String    
   history          Json // JSON array of secret versions
   lastUpdated      DateTime  @updatedAt

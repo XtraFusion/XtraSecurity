@@ -49,8 +49,17 @@ if (!session?.user?.email) {
           }
         }
       });
-      console.log(projects)
-      return NextResponse.json(projects);
+      console.log("Fetched projects:", projects.length);
+      // Ensure dates and optional fields serialize cleanly for NextResponse
+      const safe = projects.map((p: any) => ({
+        ...p,
+        createdAt: p.createdAt?.toISOString?.() ?? null,
+        updatedAt: p.updatedAt?.toISOString?.() ?? null,
+        branch: p.branch?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? [],
+        secret: p.secret?.map((s: any) => ({ ...s, lastUpdated: s.lastUpdated?.toISOString?.() ?? null })) ?? []
+      }));
+
+      return NextResponse.json(safe);
     }
 
     // Get specific project with access check
@@ -91,7 +100,15 @@ if (!session?.user?.email) {
       );
     }
 
-    return NextResponse.json(project);
+    // Serialize dates on single project response
+    const safeProject = {
+      ...project,
+      createdAt: project.createdAt?.toISOString?.() ?? null,
+      updatedAt: project.updatedAt?.toISOString?.() ?? null,
+      branch: project.branch?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? []
+    };
+
+    return NextResponse.json(safeProject);
   } catch (error) {
     console.error("Error fetching projects:", error);
     return NextResponse.json(
