@@ -67,6 +67,10 @@ export async function GET() {
           },
         },
       },
+      include:{
+        teamProjects:true,
+        members:true
+      }
     });
 
     return NextResponse.json(getTeamData, { status: 200 });

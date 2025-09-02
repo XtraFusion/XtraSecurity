@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -61,15 +61,17 @@ import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { TeamController } from "@/util/TeamContoller";
 import { useRouter } from "next/navigation";
+import axios from "axios";
 
 interface Team {
   id: string;
   name: string;
   description: string;
-  memberCount: number;
+  members: [];
   createdAt: string;
+  teamProjects:any;
   createdBy: string;
-  color: string;
+  teamColor: string;
   isPrivate: boolean;
   recentActivity: string;
   projects: number;
@@ -81,63 +83,11 @@ const currentUser = {
   name: "John Doe",
 };
 
-const mockTeams: Team[] = [
-  {
-    id: "1",
-    name: "Engineering",
-    description:
-      "Core development team responsible for product architecture and implementation",
-    memberCount: 12,
-    createdAt: "2024-01-15",
-    createdBy: "John Doe",
-    color: "bg-blue-500",
-    isPrivate: false,
-    recentActivity: "2 hours ago",
-    projects: 8,
-  },
-  {
-    id: "2",
-    name: "Design System",
-    description:
-      "UI/UX designers working on design consistency and user experience",
-    memberCount: 6,
-    createdAt: "2024-01-18",
-    createdBy: "Sarah Wilson",
-    color: "bg-purple-500",
-    isPrivate: false,
-    recentActivity: "1 day ago",
-    projects: 4,
-  },
-  {
-    id: "3",
-    name: "DevOps & Infrastructure",
-    description:
-      "Managing deployment pipelines, monitoring, and cloud infrastructure",
-    memberCount: 4,
-    createdAt: "2024-01-20",
-    createdBy: "Mike Johnson",
-    color: "bg-green-500",
-    isPrivate: true,
-    recentActivity: "3 hours ago",
-    projects: 6,
-  },
-  {
-    id: "4",
-    name: "Mobile Development",
-    description: "Cross-platform mobile app development for iOS and Android",
-    memberCount: 8,
-    createdAt: "2024-01-22",
-    createdBy: "Emily Chen",
-    color: "bg-amber-500",
-    isPrivate: false,
-    recentActivity: "5 minutes ago",
-    projects: 3,
-  },
-];
+
 
 const Teams = () => {
   const router = useRouter();
-  const [teams, setTeams] = useState<Team[]>(mockTeams);
+  const [teams, setTeams] = useState<Team[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -155,6 +105,10 @@ const Teams = () => {
       team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       team.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  useEffect(()=>{
+FetchTeamList();
+  },[])
 
   const handleCreateTeam = async() => {
     if (!newTeam.name.trim()) {
@@ -188,7 +142,8 @@ const Teams = () => {
   };
 
   const FetchTeamList = async()=>{
-    
+    const teamList = await axios.get('/api/team');
+    setTeams(teamList.data)
   }
   const handleDeleteTeam = () => {
     if (!deleteDialog.team) return;
@@ -346,7 +301,7 @@ const Teams = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-success">
-                {teams.reduce((acc, team) => acc + team.memberCount, 0)}
+                {/* {teams.reduce((acc, team) => acc + team.members.length, 0)} */}
               </div>
               <p className="text-xs text-muted-foreground">Across all teams</p>
             </CardContent>
@@ -360,7 +315,7 @@ const Teams = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-info">
-                {teams.reduce((acc, team) => acc + team.projects, 0)}
+                {/* {teams.reduce((acc, team) => acc + team.projects, 0)} */}
               </div>
               <p className="text-xs text-muted-foreground">In development</p>
             </CardContent>
@@ -374,7 +329,7 @@ const Teams = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-warning">
-                {teams.filter((team) => team.isPrivate).length}
+                {/* {teams.filter((team) => team.isPrivate).length} */}
               </div>
               <p className="text-xs text-muted-foreground">Restricted access</p>
             </CardContent>
@@ -410,16 +365,12 @@ const Teams = () => {
                   <CardHeader className="space-y-1">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${team.color}`} />
+                        <div className={`w-3 h-3 rounded-full ${team.teamColor}`} />
                         <div>
                           <CardTitle className="text-lg group-hover:text-primary transition-colors">
                             {team.name}
                           </CardTitle>
-                          {team.isPrivate && (
-                            <Badge variant="secondary" className="text-xs mt-1">
-                              Private
-                            </Badge>
-                          )}
+                         
                         </div>
                       </div>
                       <DropdownMenu>
@@ -466,11 +417,11 @@ const Teams = () => {
                       <div className="flex items-center gap-4">
                         <div className="flex items-center gap-1">
                           <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{team.memberCount} members</span>
+                          <span>{team?.members?.length} members</span>
                         </div>
                         <div className="flex items-center gap-1">
                           <Code className="h-4 w-4 text-muted-foreground" />
-                          <span>{team.projects} projects</span>
+                          <span>{team?.teamProjects?.length} projects</span>
                         </div>
                       </div>
                     </div>
