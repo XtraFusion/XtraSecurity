@@ -116,9 +116,11 @@ model Team {
   name           String
   description    String
   createdAt      DateTime      @default(now())
+  teamColor      String
   members        TeamUser[]    // User-Team relation
   teamProjects   TeamProject[] // Team-Project relation
   roles          String[]      // Roles/permissions per user
+  createdBy      String        @db.ObjectId
 }
 
 // Many-to-Many Team-User
@@ -127,6 +129,7 @@ model TeamUser {
   teamId   String   @db.ObjectId
   userId   String   @db.ObjectId
   role     String   // e.g. "owner", "member"
+  status   String   @default("pending") // "active", "pending", "removed"
   joinedAt DateTime @default(now())
   team     Team     @relation(fields: [teamId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
