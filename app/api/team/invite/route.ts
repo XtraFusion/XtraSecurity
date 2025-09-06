@@ -6,15 +6,14 @@ import prisma from "@/lib/db";
 export async function POST(req: Request) {
   try {
     const { member } = await req.json();
-    const { teamId, email, role } =member
-console.log(teamId, email, role);
+    const { teamId, email, role } = member;
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-where: { email: email },
+      where: { email: email },
     });
 
     if (!user) {
@@ -50,4 +49,23 @@ where: { email: email },
       { status: 500 }
     );
   }
+}
+
+
+export async function  GET(){
+
+  const session = await getServerSession(authOptions);
+  if(!session?.user.id){
+    return NextResponse.json({error:"Unauthorized"},{status:401});
+  }
+
+  const invites = await prisma.teamUser.findMany({
+    where:{userId:session.user.id,status:"pending"},
+    include:{
+      team:true,
+      user:true
+    }
+  });
+
+  return NextResponse.json({invites},{status:200});
 }

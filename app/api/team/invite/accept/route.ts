@@ -5,7 +5,7 @@ import prisma from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const { teamId, status = "accept" } = await req.json();
+    const { teamId, status = "active" } = await req.json();
 
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
@@ -15,10 +15,7 @@ export async function POST(req: Request) {
     if (status === "accept") {
       const acceptInvite = await prisma.teamUser.update({
         where: {
-          teamId_userId: {
-            teamId,
-            userId: session.user.id,
-          },
+          id: teamId,
         },
         data: {
           status,
