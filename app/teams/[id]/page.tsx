@@ -166,7 +166,12 @@ const canRemoveMember = (userRole: string, targetMemberRole: string) => {
 const TeamDetail = () => {
   const { id: teamId } = useParams<{ id: string }>();
   const { data: session } = useSession();
-  const currentUser = session?.user as { id: string; name: string; email: string; role: string };
+  const [currentUser, setCurrentUser] = useState<{
+    id: string;
+    name: string;
+    email: string;
+    role: string;
+  }>({ id: "", name: "", email: "", role: "" });
   const [team, setTeam] = useState<Team | null>(null);
   const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
@@ -192,15 +197,24 @@ const TeamDetail = () => {
   const fetchTeamDetails = async () => {
     const resp = await axios.get(`/api/team/${teamId}`);
     setTeam(resp.data);
-        console.log(resp.data.members)
-
+    let member = resp.data.members.map((m) =>
+      m.user.id === currentUser.id ? m : null
+    );
+    let role = member[0]?.role;
+    console.log(member);
+    setCurrentUser({
+      id: session?.user.id || "",
+      name: session?.user.name || "",
+      email: session?.user.email || "",
+      role: role || "viewer",
+    });
+    console.log(currentUser);
     setMembers(resp.data.members);
   };
 
   useEffect(() => {
     fetchTeamDetails();
-    console.log(team)
-  }, [teamId]);
+  }, [teamId, session]);
   if (!team) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -220,7 +234,7 @@ const TeamDetail = () => {
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
       member?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member?.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ;
+      member?.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === "all" || member.role === roleFilter;
     const matchesStatus =
       statusFilter === "all" || member.status === statusFilter;
@@ -317,9 +331,9 @@ const TeamDetail = () => {
 
     toast({
       title: "Role updated",
-      description: `${confirmDialog.member.user.name}'s role has been updated to ${
-        roleConfig[confirmDialog.newRole].label
-      }`,
+      description: `${
+        confirmDialog.member.user.name
+      }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
     });
   };
 
@@ -409,7 +423,7 @@ const TeamDetail = () => {
                 onOpenChange={setInviteDialogOpen}
               >
                 <DialogTrigger asChild>
-                  <Button variant="hero" className="gap-2">
+                  <Button variant="hero" className="gap-2 text-white">
                     <UserPlus className="h-4 w-4" />
                     Invite Member
                   </Button>

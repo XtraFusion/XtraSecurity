@@ -36,10 +36,12 @@ export async function POST(req: Request) {
         createdAt: new Date(),
         createdBy: session.user.id,
         roles,
+        
         members: {
           create: {
             userId: session.user.id,
             role: "admin",
+            status: "active",
           },
         },
       },
