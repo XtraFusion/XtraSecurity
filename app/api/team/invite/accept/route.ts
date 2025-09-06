@@ -12,7 +12,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    if (status === "accept") {
+    if (status === "active") {
       const acceptInvite = await prisma.teamUser.update({
         where: {
           id: teamId,

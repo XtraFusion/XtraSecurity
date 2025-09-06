@@ -1332,37 +1332,67 @@ export default function NotificationsPage() {
               </CardHeader>
               <CardContent>
                 {teamInvites.length > 0 ? (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Role</TableHead>
-                        <TableHead>Status</TableHead>
-                        <TableHead>Action</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {teamInvites.map((invite: any) => (
-                        <TableRow key={invite.id}>
-                          <TableCell>{invite.user.email}</TableCell>
-                          <TableCell>{invite.role}</TableCell>
-                          <TableCell>{invite.status}</TableCell>
-                          <TableCell>
-                            <Button
-                              onClick={() => handleAcceptInvite(invite.id)}
+                  <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                    {teamInvites.map((invite: any) => (
+                      <Card
+                        key={invite.id}
+                        className="p-4 shadow-md rounded-2xl border"
+                      >
+                        <div className="flex items-center gap-3">
+                          <img
+                            src={invite.user.image}
+                            alt={invite.user.name}
+                            className="w-12 h-12 rounded-full border"
+                          />
+                          <div>
+                            <h3 className="text-lg font-semibold">
+                              {invite.user.name}
+                            </h3>
+                            <p className="text-sm text-gray-500">
+                              {invite.user.email}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 space-y-2">
+                          <div className="flex justify-between">
+                            <span className="font-medium">Team:</span>
+                            <span
+                              className={`px-2 py-1 text-sm rounded-lg text-white ${invite.team.teamColor}`}
                             >
-                              Accept
-                            </Button>
-                            <Button
-                              onClick={() => handleDeclineInvite(invite.id)}
-                            >
-                              Decline
-                            </Button>
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
+                              {invite.team.name}
+                            </span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Role:</span>
+                            <span className="capitalize">{invite.role}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="font-medium">Status:</span>
+                            <span className="capitalize">{invite.status}</span>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex gap-2">
+                          <Button
+                            size="sm"
+                            className="flex-1"
+                            onClick={() => handleAcceptInvite(invite.id)}
+                          >
+                            Accept
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="destructive"
+                            className="flex-1"
+                            onClick={() => handleDeclineInvite(invite.id)}
+                          >
+                            Decline
+                          </Button>
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
                 ) : (
                   <div className="text-center py-8">
                     <div className="text-muted-foreground mb-4">
