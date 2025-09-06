@@ -1,8 +1,14 @@
-"use client"
-import { useState } from "react";
+"use client";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
@@ -24,7 +30,13 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -58,6 +70,8 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import axios from "axios";
+import { useSession } from "next-auth/react";
 
 interface TeamMember {
   id: string;
@@ -82,139 +96,6 @@ interface Team {
   createdAt: string;
   projects: number;
 }
-
-const currentUser = {
-  id: "1",
-  role: "owner" as const,
-  name: "John Doe",
-};
-
-const mockTeams: Record<string, Team> = {
-  "1": {
-    id: "1",
-    name: "Engineering",
-    description: "Core development team responsible for product architecture and implementation",
-    color: "bg-blue-500",
-    isPrivate: false,
-    createdAt: "2024-01-15",
-    projects: 8,
-  },
-  "2": {
-    id: "2",
-    name: "Design System",
-    description: "UI/UX designers working on design consistency and user experience",
-    color: "bg-purple-500",
-    isPrivate: false,
-    createdAt: "2024-01-18",
-    projects: 4,
-  },
-  "3": {
-    id: "3",
-    name: "DevOps & Infrastructure",
-    description: "Managing deployment pipelines, monitoring, and cloud infrastructure",
-    color: "bg-green-500",
-    isPrivate: true,
-    createdAt: "2024-01-20",
-    projects: 6,
-  },
-};
-
-const mockTeamMembers: Record<string, TeamMember[]> = {
-  "1": [
-    {
-      id: "1",
-      name: "John Doe",
-      email: "john@company.com",
-      role: "owner",
-      status: "active",
-      joinedAt: "2024-01-15",
-      lastActive: "2 hours ago",
-      projects: 12,
-      department: "Engineering",
-      location: "San Francisco, CA",
-    },
-    {
-      id: "2",
-      name: "Sarah Wilson",
-      email: "sarah@company.com",
-      role: "admin",
-      status: "active",
-      joinedAt: "2024-01-18",
-      lastActive: "1 day ago",
-      projects: 8,
-      invitedBy: "John Doe",
-      department: "DevOps",
-      location: "New York, NY",
-    },
-    {
-      id: "3",
-      name: "Mike Johnson",
-      email: "mike@company.com",
-      role: "developer",
-      status: "active",
-      joinedAt: "2024-01-20",
-      lastActive: "3 hours ago",
-      projects: 5,
-      invitedBy: "Sarah Wilson",
-      department: "Frontend",
-      location: "Austin, TX",
-    },
-    {
-      id: "4",
-      name: "Emily Chen",
-      email: "emily@company.com",
-      role: "viewer",
-      status: "pending",
-      joinedAt: "2024-01-22",
-      lastActive: "Never",
-      projects: 0,
-      invitedBy: "John Doe",
-      department: "QA",
-      location: "Seattle, WA",
-    },
-  ],
-  "2": [
-    {
-      id: "5",
-      name: "Alex Rivera",
-      email: "alex@company.com",
-      role: "admin",
-      status: "active",
-      joinedAt: "2024-01-16",
-      lastActive: "1 hour ago",
-      projects: 6,
-      department: "Design",
-      location: "Los Angeles, CA",
-    },
-    {
-      id: "6",
-      name: "Jordan Smith",
-      email: "jordan@company.com",
-      role: "developer",
-      status: "active",
-      joinedAt: "2024-01-19",
-      lastActive: "30 minutes ago",
-      projects: 4,
-      invitedBy: "Alex Rivera",
-      department: "UX Research",
-      location: "Chicago, IL",
-    },
-  ],
-  "3": [
-    {
-      id: "7",
-      name: "Sam Taylor",
-      email: "sam@company.com",
-      role: "admin",
-      status: "active",
-      joinedAt: "2024-01-17",
-      lastActive: "45 minutes ago",
-      projects: 7,
-      department: "DevOps",
-      location: "Portland, OR",
-    },
-  ],
-};
 
 const roleConfig = {
   owner: {
@@ -273,14 +154,21 @@ const canEditMember = (userRole: string, targetMemberRole: string) => {
 
 const canRemoveMember = (userRole: string, targetMemberRole: string) => {
   if (userRole === "owner" && targetMemberRole !== "owner") return true;
-  if (userRole === "admin" && targetMemberRole !== "owner" && targetMemberRole !== "admin") return true;
+  if (
+    userRole === "admin" &&
+    targetMemberRole !== "owner" &&
+    targetMemberRole !== "admin"
+  )
+    return true;
   return false;
 };
 
 const TeamDetail = () => {
-  const { teamId } = useParams<{ teamId: string }>();
-  const team = teamId ? mockTeams[teamId] : null;
-  const [members, setMembers] = useState<TeamMember[]>(teamId ? mockTeamMembers[teamId] || [] : []);
+  const { id: teamId } = useParams<{ id: string }>();
+  const { data: session } = useSession();
+  const currentUser = session?.user as { id: string; name: string; email: string; role: string };
+  const [team, setTeam] = useState<Team | null>(null);
+  const [members, setMembers] = useState<TeamMember[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -301,6 +189,18 @@ const TeamDetail = () => {
     type: "remove",
   });
 
+  const fetchTeamDetails = async () => {
+    const resp = await axios.get(`/api/team/${teamId}`);
+    setTeam(resp.data);
+        console.log(resp.data.members)
+
+    setMembers(resp.data.members);
+  };
+
+  useEffect(() => {
+    fetchTeamDetails();
+    console.log(team)
+  }, [teamId]);
   if (!team) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -319,16 +219,16 @@ const TeamDetail = () => {
 
   const filteredMembers = members.filter((member) => {
     const matchesSearch =
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.department?.toLowerCase().includes(searchTerm.toLowerCase());
+      member?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      member?.user?.email.toLowerCase().includes(searchTerm.toLowerCase()) ;
     const matchesRole = roleFilter === "all" || member.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || member.status === statusFilter;
+    const matchesStatus =
+      statusFilter === "all" || member.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
   const handleInviteMember = () => {
-    if (!canInviteMembers(currentUser.role)) {
+    if (!canInviteMembers(currentUser?.role)) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to invite team members",
@@ -378,7 +278,10 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRoleChangeRequest = (memberId: string, newRole: TeamMember["role"]) => {
+  const handleRoleChangeRequest = (
+    memberId: string,
+    newRole: TeamMember["role"]
+  ) => {
     const member = members.find((m) => m.id === memberId);
     if (!member) return;
 
@@ -404,7 +307,9 @@ const TeamDetail = () => {
 
     setMembers(
       members.map((member) =>
-        member.id === confirmDialog.member!.id ? { ...member, role: confirmDialog.newRole! } : member
+        member.id === confirmDialog.member!.id
+          ? { ...member, role: confirmDialog.newRole! }
+          : member
       )
     );
 
@@ -412,7 +317,9 @@ const TeamDetail = () => {
 
     toast({
       title: "Role updated",
-      description: `${confirmDialog.member.name}'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
+      description: `${confirmDialog.member.user.name}'s role has been updated to ${
+        roleConfig[confirmDialog.newRole].label
+      }`,
     });
   };
 
@@ -439,12 +346,14 @@ const TeamDetail = () => {
   const handleRemoveMember = () => {
     if (!confirmDialog.member) return;
 
-    setMembers(members.filter((member) => member.id !== confirmDialog.member!.id));
+    setMembers(
+      members.filter((member) => member.id !== confirmDialog.member!.id)
+    );
     setConfirmDialog({ open: false, type: "remove" });
 
     toast({
       title: "Member removed",
-      description: `${confirmDialog.member.name} has been removed from the team`,
+      description: `${confirmDialog.member.user.name} has been removed from the team`,
     });
   };
 
@@ -489,15 +398,16 @@ const TeamDetail = () => {
                     {team.projects} projects
                   </div>
                   {team.isPrivate && (
-                    <Badge variant="secondary">
-                      Private Team
-                    </Badge>
+                    <Badge variant="secondary">Private Team</Badge>
                   )}
                 </div>
               </div>
             </div>
             {canInviteMembers(currentUser.role) && (
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+              <Dialog
+                open={inviteDialogOpen}
+                onOpenChange={setInviteDialogOpen}
+              >
                 <DialogTrigger asChild>
                   <Button variant="hero" className="gap-2">
                     <UserPlus className="h-4 w-4" />
@@ -507,7 +417,9 @@ const TeamDetail = () => {
                 <DialogContent className="sm:max-w-md">
                   <DialogHeader>
                     <DialogTitle>Invite Team Member</DialogTitle>
-                    <DialogDescription>Send an invitation to join {team.name}</DialogDescription>
+                    <DialogDescription>
+                      Send an invitation to join {team.name}
+                    </DialogDescription>
                   </DialogHeader>
                   <div className="space-y-4">
                     <div className="space-y-2">
@@ -517,14 +429,21 @@ const TeamDetail = () => {
                         type="email"
                         placeholder="colleague@company.com"
                         value={inviteForm.email}
-                        onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
+                        onChange={(e) =>
+                          setInviteForm({
+                            ...inviteForm,
+                            email: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="role">Role</Label>
                       <Select
                         value={inviteForm.role}
-                        onValueChange={(value: TeamMember["role"]) => setInviteForm({ ...inviteForm, role: value })}
+                        onValueChange={(value: TeamMember["role"]) =>
+                          setInviteForm({ ...inviteForm, role: value })
+                        }
                       >
                         <SelectTrigger>
                           <SelectValue />
@@ -533,20 +452,26 @@ const TeamDetail = () => {
                           <SelectItem value="viewer">
                             <div className="flex flex-col items-start">
                               <span>Viewer</span>
-                              <span className="text-xs text-muted-foreground">Read-only access</span>
+                              <span className="text-xs text-muted-foreground">
+                                Read-only access
+                              </span>
                             </div>
                           </SelectItem>
                           <SelectItem value="developer">
                             <div className="flex flex-col items-start">
                               <span>Developer</span>
-                              <span className="text-xs text-muted-foreground">Read/write access</span>
+                              <span className="text-xs text-muted-foreground">
+                                Read/write access
+                              </span>
                             </div>
                           </SelectItem>
                           {currentUser.role === "owner" && (
                             <SelectItem value="admin">
                               <div className="flex flex-col items-start">
                                 <span>Admin</span>
-                                <span className="text-xs text-muted-foreground">Full project access</span>
+                                <span className="text-xs text-muted-foreground">
+                                  Full project access
+                                </span>
                               </div>
                             </SelectItem>
                           )}
@@ -559,25 +484,42 @@ const TeamDetail = () => {
                         id="department"
                         placeholder="Engineering, Marketing, etc."
                         value={inviteForm.department}
-                        onChange={(e) => setInviteForm({ ...inviteForm, department: e.target.value })}
+                        onChange={(e) =>
+                          setInviteForm({
+                            ...inviteForm,
+                            department: e.target.value,
+                          })
+                        }
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="message">Personal Message (Optional)</Label>
+                      <Label htmlFor="message">
+                        Personal Message (Optional)
+                      </Label>
                       <Textarea
                         id="message"
                         placeholder="Welcome to our team!"
                         value={inviteForm.message}
-                        onChange={(e) => setInviteForm({ ...inviteForm, message: e.target.value })}
+                        onChange={(e) =>
+                          setInviteForm({
+                            ...inviteForm,
+                            message: e.target.value,
+                          })
+                        }
                         rows={3}
                       />
                     </div>
                   </div>
                   <DialogFooter>
-                    <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
+                    <Button
+                      variant="outline"
+                      onClick={() => setInviteDialogOpen(false)}
+                    >
                       Cancel
                     </Button>
-                    <Button onClick={handleInviteMember}>Send Invitation</Button>
+                    <Button onClick={handleInviteMember}>
+                      Send Invitation
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
@@ -591,17 +533,23 @@ const TeamDetail = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
           <Card className="bg-gradient-card border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Members</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Total Members
+              </CardTitle>
               <Users className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{members.length}</div>
+              <div className="text-2xl font-bold text-primary">
+                {members.length}
+              </div>
               <p className="text-xs text-muted-foreground">Team size</p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-card border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Members</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Active Members
+              </CardTitle>
               <Activity className="h-4 w-4 text-success" />
             </CardHeader>
             <CardContent>
@@ -609,13 +557,20 @@ const TeamDetail = () => {
                 {members.filter((m) => m.status === "active").length}
               </div>
               <p className="text-xs text-muted-foreground">
-                {Math.round((members.filter((m) => m.status === "active").length / members.length) * 100)}% of team
+                {Math.round(
+                  (members.filter((m) => m.status === "active").length /
+                    members.length) *
+                    100
+                )}
+                % of team
               </p>
             </CardContent>
           </Card>
           <Card className="bg-gradient-card border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
+              <CardTitle className="text-sm font-medium">
+                Pending Invites
+              </CardTitle>
               <Mail className="h-4 w-4 text-warning" />
             </CardHeader>
             <CardContent>
@@ -632,7 +587,11 @@ const TeamDetail = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-info">
-                {members.filter((m) => m.role === "admin" || m.role === "owner").length}
+                {
+                  members.filter(
+                    (m) => m.role === "admin" || m.role === "owner"
+                  ).length
+                }
               </div>
               <p className="text-xs text-muted-foreground">With admin access</p>
             </CardContent>
@@ -646,7 +605,9 @@ const TeamDetail = () => {
               <Users className="h-5 w-5" />
               Team Members
             </CardTitle>
-            <CardDescription>Manage team members, roles, and permissions</CardDescription>
+            <CardDescription>
+              Manage team members, roles, and permissions
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="flex flex-col sm:flex-row gap-4 mb-6">
@@ -690,7 +651,10 @@ const TeamDetail = () => {
                 const RoleIcon = roleConfig[member.role].icon;
                 const StatusIcon = statusConfig[member.status].icon;
                 const canEdit = canEditMember(currentUser.role, member.role);
-                const canRemove = canRemoveMember(currentUser.role, member.role);
+                const canRemove = canRemoveMember(
+                  currentUser.role,
+                  member.role
+                );
 
                 return (
                   <div
@@ -700,7 +664,7 @@ const TeamDetail = () => {
                     <div className="flex items-center gap-4">
                       <Avatar className="h-10 w-10 border-2 border-primary/20">
                         <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {member.name
+                          {member?.user?.name
                             .split(" ")
                             .map((n) => n[0])
                             .join("")}
@@ -708,26 +672,39 @@ const TeamDetail = () => {
                       </Avatar>
                       <div className="space-y-1">
                         <div className="flex items-center gap-2">
-                          <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className={roleConfig[member.role].color}>
+                          <p className="font-medium">{member?.user?.name}</p>
+                          <Badge
+                            variant="outline"
+                            className={roleConfig[member.role].color}
+                          >
                             <RoleIcon className="h-3 w-3 mr-1" />
                             {roleConfig[member.role].label}
                           </Badge>
-                          <Badge variant="outline" className={statusConfig[member.status].color}>
+                          <Badge
+                            variant="outline"
+                            className={statusConfig[member.status].color}
+                          >
                             <StatusIcon className="h-3 w-3 mr-1" />
                             {statusConfig[member.status].label}
                           </Badge>
                         </div>
-                        <p className="text-sm text-muted-foreground">{member.email}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {member.email}
+                        </p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3" />
-                            Joined {new Date(member.joinedAt).toLocaleDateString()}
+                            Joined{" "}
+                            {new Date(member.joinedAt).toLocaleDateString()}
                           </span>
                           <span>Last active: {member.lastActive}</span>
                           <span>{member.projects} projects</span>
-                          {member.department && <span>• {member.department}</span>}
-                          {member.invitedBy && <span>• Invited by {member.invitedBy}</span>}
+                          {member.department && (
+                            <span>• {member.department}</span>
+                          )}
+                          {member.invitedBy && (
+                            <span>• Invited by {member.invitedBy}</span>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -742,25 +719,39 @@ const TeamDetail = () => {
                         <DropdownMenuSeparator />
                         <DropdownMenuItem>View Profile</DropdownMenuItem>
                         <DropdownMenuItem>Send Message</DropdownMenuItem>
-                        {member.status === "pending" && canInviteMembers(currentUser.role) && (
-                          <DropdownMenuItem onClick={() => handleResendInvitation(member.id)}>
-                            Resend Invitation
-                          </DropdownMenuItem>
-                        )}
+                        {member.status === "pending" &&
+                          canInviteMembers(currentUser.role) && (
+                            <DropdownMenuItem
+                              onClick={() => handleResendInvitation(member.id)}
+                            >
+                              Resend Invitation
+                            </DropdownMenuItem>
+                          )}
                         <DropdownMenuSeparator />
                         {canEdit && (
                           <>
                             <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                            {Object.entries(roleConfig).map(([role, config]) => (
-                              <DropdownMenuItem
-                                key={role}
-                                onClick={() => handleRoleChangeRequest(member.id, role as TeamMember["role"])}
-                                disabled={member.role === role || (role === "owner" && currentUser.role !== "owner")}
-                              >
-                                <config.icon className="mr-2 h-4 w-4" />
-                                {config.label}
-                              </DropdownMenuItem>
-                            ))}
+                            {Object.entries(roleConfig).map(
+                              ([role, config]) => (
+                                <DropdownMenuItem
+                                  key={role}
+                                  onClick={() =>
+                                    handleRoleChangeRequest(
+                                      member.id,
+                                      role as TeamMember["role"]
+                                    )
+                                  }
+                                  disabled={
+                                    member.role === role ||
+                                    (role === "owner" &&
+                                      currentUser.role !== "owner")
+                                  }
+                                >
+                                  <config.icon className="mr-2 h-4 w-4" />
+                                  {config.label}
+                                </DropdownMenuItem>
+                              )
+                            )}
                             <DropdownMenuSeparator />
                           </>
                         )}
@@ -783,33 +774,45 @@ const TeamDetail = () => {
               <div className="text-center py-8">
                 <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                 <h3 className="text-lg font-medium mb-2">No members found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
+                <p className="text-muted-foreground">
+                  Try adjusting your search or filter criteria
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
       </div>
 
-
       {/* Confirmation Dialogs */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
+      <AlertDialog
+        open={confirmDialog.open}
+        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-5 w-5 text-warning" />
-              {confirmDialog.type === "remove" ? "Remove Team Member" : "Change Member Role"}
+              {confirmDialog.type === "remove"
+                ? "Remove Team Member"
+                : "Change Member Role"}
             </AlertDialogTitle>
             <AlertDialogDescription>
               {confirmDialog.type === "remove" ? (
                 <>
-                  Are you sure you want to remove <strong>{confirmDialog.member?.name}</strong> from{" "}
-                  <strong>{team.name}</strong>? This action cannot be undone and they will lose access to all team
-                  projects immediately.
+                  Are you sure you want to remove{" "}
+                  <strong>{confirmDialog.member?.name}</strong> from{" "}
+                  <strong>{team.name}</strong>? This action cannot be undone and
+                  they will lose access to all team projects immediately.
                 </>
               ) : (
                 <>
-                  Are you sure you want to change <strong>{confirmDialog.member?.name}</strong>'s role to{" "}
-                  <strong>{confirmDialog.newRole && roleConfig[confirmDialog.newRole].label}</strong>?
+                  Are you sure you want to change{" "}
+                  <strong>{confirmDialog.member?.name}</strong>'s role to{" "}
+                  <strong>
+                    {confirmDialog.newRole &&
+                      roleConfig[confirmDialog.newRole].label}
+                  </strong>
+                  ?
                   {confirmDialog.newRole && (
                     <div className="mt-2 p-3 bg-muted/50 rounded border border-primary/20 text-sm">
                       {roleConfig[confirmDialog.newRole].description}
@@ -822,10 +825,20 @@ const TeamDetail = () => {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={confirmDialog.type === "remove" ? handleRemoveMember : handleRoleChange}
-              className={confirmDialog.type === "remove" ? "bg-destructive hover:bg-destructive/90" : ""}
+              onClick={
+                confirmDialog.type === "remove"
+                  ? handleRemoveMember
+                  : handleRoleChange
+              }
+              className={
+                confirmDialog.type === "remove"
+                  ? "bg-destructive hover:bg-destructive/90"
+                  : ""
+              }
             >
-              {confirmDialog.type === "remove" ? "Remove Member" : "Change Role"}
+              {confirmDialog.type === "remove"
+                ? "Remove Member"
+                : "Change Role"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
