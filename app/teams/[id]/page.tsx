@@ -76,6 +76,7 @@ import { useSession } from "next-auth/react";
 interface TeamMember {
   id: string;
   name: string;
+  teamId:string;
   email: string;
   role: "owner" | "admin" | "developer" | "viewer";
   status: "active" | "pending" | "inactive";
@@ -241,7 +242,7 @@ const TeamDetail = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleInviteMember = () => {
+  const handleInviteMember = async() => {
     if (!canInviteMembers(currentUser?.role)) {
       toast({
         title: "Access Denied",
@@ -273,6 +274,7 @@ const TeamDetail = () => {
       id: Date.now().toString(),
       name: inviteForm.email.split("@")[0],
       email: inviteForm.email,
+      teamId,
       role: inviteForm.role,
       status: "pending",
       joinedAt: new Date().toISOString().split("T")[0],
@@ -281,7 +283,8 @@ const TeamDetail = () => {
       invitedBy: currentUser.name,
       department: inviteForm.department,
     };
-
+    console.log(newMember)
+    const resp = await axios.post("/api/team/invite", { member: newMember });
     setMembers([...members, newMember]);
     setInviteForm({ email: "", role: "viewer", message: "", department: "" });
     setInviteDialogOpen(false);

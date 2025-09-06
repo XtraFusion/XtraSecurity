@@ -5,15 +5,16 @@ import prisma from "@/lib/db";
 
 export async function POST(req: Request) {
   try {
-    const { teamId, email, role } = await req.json();
-
+    const { member } = await req.json();
+    const { teamId, email, role } =member
+console.log(teamId, email, role);
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
-      where: { email },
+where: { email: email },
     });
 
     if (!user) {
