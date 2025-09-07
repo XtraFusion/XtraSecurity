@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -24,20 +23,26 @@ export default function LoginPage() {
   const { theme, setTheme } = useTheme()
   const [step, setStep] = useState<"login" | "verify">("login")
   const [verificationCode, setVerificationCode] = useState("")
-const {data:session} = useSession();
-  useEffect(()=>{
-    if(session?.user?.email){
+  const { data: session } = useSession()
+
+  //fixed hydration mismatch
+  const [mounted, setMounted] = useState(false)
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (session?.user?.email) {
       // User is authenticated, redirect to dashboard
       window.location.href = "/dashboard"
     }
-  },[session])
+  }, [session])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
 
-    // Basic validation
     if (!email || !password) {
       setError("Please fill in all fields")
       setIsLoading(false)
@@ -50,13 +55,10 @@ const {data:session} = useSession();
       return
     }
 
-    // Mock authentication - replace with real API call
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Mock successful login
       if (email === "admin@example.com" && password === "password") {
-        // Move to verification step
         setStep("verify")
       } else {
         setError("Invalid email or password")
@@ -74,11 +76,9 @@ const {data:session} = useSession();
     setIsLoading(true)
 
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000)) // Simulate API call
+      await new Promise((resolve) => setTimeout(resolve, 1000))
 
-      // Mock verification
       if (verificationCode === "123456") {
-        // Store auth state (in real app, use proper auth management)
         localStorage.setItem("isAuthenticated", "true")
         localStorage.setItem("userEmail", email)
         localStorage.setItem("userId", "")
@@ -118,7 +118,7 @@ const {data:session} = useSession();
             onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             className="h-8 w-8 p-0"
           >
-            {theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+            {mounted && (theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
           </Button>
         </div>
 
