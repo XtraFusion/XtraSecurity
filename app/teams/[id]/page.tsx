@@ -179,6 +179,7 @@ const TeamDetail = () => {
   const [roleFilter, setRoleFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   const [inviteForm, setInviteForm] = useState({
     email: "",
     role: "viewer" as TeamMember["role"],
@@ -196,26 +197,111 @@ const TeamDetail = () => {
   });
 
   const fetchTeamDetails = async () => {
-    const resp = await axios.get(`/api/team/${teamId}`);
-    setTeam(resp.data);
-    let member = resp.data.members.map((m) =>
-      m.user.id === currentUser.id ? m : null
-    );
-    let role = member[0]?.role;
-    console.log(member);
-    setCurrentUser({
-      id: session?.user.id || "",
-      name: session?.user.name || "",
-      email: session?.user.email || "",
-      role: role || "viewer",
-    });
-    console.log(currentUser);
-    setMembers(resp.data.members);
+    try {
+      setIsLoading(true);
+      const resp = await axios.get(`/api/team/${teamId}`);
+      setTeam(resp.data);
+      let member = resp.data.members.map((m) =>
+        m.user.id === currentUser.id ? m : null
+      );
+      let role = member[0]?.role;
+      console.log(member);
+      setCurrentUser({
+        id: session?.user.id || "",
+        name: session?.user.name || "",
+        email: session?.user.email || "",
+        role: role || "viewer",
+      });
+      console.log(currentUser);
+      setMembers(resp.data.members);
+    } catch (error) {
+      console.error('Error fetching team details:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   useEffect(() => {
     fetchTeamDetails();
   }, [teamId, session]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Header Skeleton */}
+        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              <div className="flex items-center gap-4">
+                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
+                <div className="h-6 bg-muted rounded w-48 animate-pulse"></div>
+              </div>
+              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            </div>
+          </div>
+        </div>
+
+        {/* Team Header Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center justify-between mb-8">
+            <div className="space-y-2">
+              <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
+            </div>
+            <div className="h-10 bg-muted rounded w-40 animate-pulse"></div>
+          </div>
+        </div>
+
+        {/* Content Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Team Info Skeleton */}
+            <div className="lg:col-span-1">
+              <Card>
+                <CardHeader>
+                  <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                  <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Members List Skeleton */}
+            <div className="lg:col-span-2">
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
+                    <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <div key={i} className="flex items-center justify-between p-4 border rounded">
+                        <div className="flex items-center gap-3">
+                          <div className="h-10 w-10 bg-muted rounded-full animate-pulse"></div>
+                          <div className="space-y-2">
+                            <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
+                            <div className="h-3 bg-muted rounded w-24 animate-pulse"></div>
+                          </div>
+                        </div>
+                        <div className="h-6 bg-muted rounded w-16 animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (!team) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
