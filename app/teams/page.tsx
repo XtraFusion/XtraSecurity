@@ -145,8 +145,8 @@ FetchTeamList();
   const FetchTeamList = async()=>{
     try {
       setIsLoading(true);
-      const teamList = await axios.get('/api/team');
-      setTeams(teamList.data);
+      const teamList = await TeamController.getTeams();
+      setTeams(teamList);
     } catch (error) {
       console.error('Error fetching teams:', error);
     } finally {

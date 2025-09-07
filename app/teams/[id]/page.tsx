@@ -70,13 +70,13 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import axios from "axios";
+import apiClient from "@/lib/axios";
 import { useSession } from "next-auth/react";
 
 interface TeamMember {
   id: string;
   name: string;
-  teamId:string;
+  teamId: string;
   email: string;
   role: "owner" | "admin" | "developer" | "viewer";
   status: "active" | "pending" | "inactive";
@@ -86,6 +86,11 @@ interface TeamMember {
   invitedBy?: string;
   department?: string;
   location?: string;
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  };
 }
 
 interface Team {
@@ -199,10 +204,10 @@ const TeamDetail = () => {
   const fetchTeamDetails = async () => {
     try {
       setIsLoading(true);
-      const resp = await axios.get(`/api/team/${teamId}`);
+      const resp = await apiClient.get(`/api/team/${teamId}`);
       setTeam(resp.data);
-      let member = resp.data.members.map((m) =>
-        m.user.id === currentUser.id ? m : null
+      let member = resp.data.members.map((m: any) =>
+        m.user?.id === currentUser.id ? m : null
       );
       let role = member[0]?.role;
       console.log(member);
@@ -370,7 +375,7 @@ const TeamDetail = () => {
       department: inviteForm.department,
     };
     console.log(newMember)
-    const resp = await axios.post("/api/team/invite", { member: newMember });
+    const resp = await apiClient.post("/api/team/invite", { member: newMember });
     setMembers([...members, newMember]);
     setInviteForm({ email: "", role: "viewer", message: "", department: "" });
     setInviteDialogOpen(false);
@@ -421,7 +426,7 @@ const TeamDetail = () => {
     toast({
       title: "Role updated",
       description: `${
-        confirmDialog.member.user.name
+        confirmDialog.member.user?.name || confirmDialog.member.name
       }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
     });
   };
@@ -456,7 +461,7 @@ const TeamDetail = () => {
 
     toast({
       title: "Member removed",
-      description: `${confirmDialog.member.user.name} has been removed from the team`,
+      description: `${confirmDialog.member.user?.name || confirmDialog.member.name} has been removed from the team`,
     });
   };
 
