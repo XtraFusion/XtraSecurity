@@ -72,6 +72,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import apiClient from "@/lib/axios";
 import { useSession } from "next-auth/react";
+import axios from "axios";
 
 interface TeamMember {
   id: string;
@@ -386,7 +387,7 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRoleChangeRequest = (
+  const handleRoleChangeRequest = async(
     memberId: string,
     newRole: TeamMember["role"]
   ) => {
@@ -401,6 +402,7 @@ const TeamDetail = () => {
       });
       return;
     }
+    await axios.put("/api/team/role", { memberId: member.id, newRole: newRole });
 
     setConfirmDialog({
       open: true,
@@ -422,7 +424,6 @@ const TeamDetail = () => {
     );
 
     setConfirmDialog({ open: false, type: "remove" });
-
     toast({
       title: "Role updated",
       description: `${
@@ -433,11 +434,11 @@ const TeamDetail = () => {
 
   const handleRemoveMemberRequest = async(memberId: string) => {
     let member = members.find((m) =>
-      m.user.id === memberId ? m : null
+      m?.user?.id === memberId ? m : null
     );
-    console.log(member,memberId)
+    // console.log(member,memberId)
 
-    if (!canRemoveMember(currentUser.role, member.role)) {
+    if (!canRemoveMember(currentUser.role, member?.role)) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to remove this member",
@@ -445,7 +446,12 @@ const TeamDetail = () => {
       });
       return;
     }
-    const dataReturn = await axios.delete("/api/team/remove", { data: { memberId:member.id } });
+    if(member){
+      const dataReturn = await axios.delete("/api/team/remove", { data: { memberId:member.id } });
+    }
+    else{
+      console.log("Member not found")
+    }
 
     setConfirmDialog({
       open: true,
