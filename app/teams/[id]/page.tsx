@@ -340,9 +340,11 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRemoveMemberRequest = (memberId: string) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member) return;
+  const handleRemoveMemberRequest = async(memberId: string) => {
+    let member = members.find((m) =>
+      m.user.id === memberId ? m : null
+    );
+    console.log(member,memberId)
 
     if (!canRemoveMember(currentUser.role, member.role)) {
       toast({
@@ -352,12 +354,14 @@ const TeamDetail = () => {
       });
       return;
     }
+    const dataReturn = await axios.delete("/api/team/remove", { data: { memberId:member.id } });
 
     setConfirmDialog({
       open: true,
       type: "remove",
       member,
     });
+
   };
 
   const handleRemoveMember = () => {
@@ -706,7 +710,8 @@ const TeamDetail = () => {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {member.email}
+                          {member.user.email}
+                          {/* {member?.user?.id} */}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
                           <span className="flex items-center gap-1">
@@ -775,7 +780,7 @@ const TeamDetail = () => {
                         {canRemove && (
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleRemoveMemberRequest(member.id)}
+                            onClick={() => handleRemoveMemberRequest(member.user.id)}
                           >
                             Remove Member
                           </DropdownMenuItem>
