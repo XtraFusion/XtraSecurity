@@ -94,6 +94,7 @@ const Teams = () => {
     open: boolean;
     team?: Team;
   }>({ open: false });
+  const [isLoading, setIsLoading] = useState(true);
   const [newTeam, setNewTeam] = useState({
     name: "",
     description: "",
@@ -142,8 +143,15 @@ FetchTeamList();
   };
 
   const FetchTeamList = async()=>{
-    const teamList = await axios.get('/api/team');
-    setTeams(teamList.data)
+    try {
+      setIsLoading(true);
+      const teamList = await TeamController.getTeams();
+      setTeams(teamList);
+    } catch (error) {
+      console.error('Error fetching teams:', error);
+    } finally {
+      setIsLoading(false);
+    }
   }
   const handleDeleteTeam = () => {
     if (!deleteDialog.team) return;
@@ -167,6 +175,60 @@ FetchTeamList();
     "bg-indigo-500",
     "bg-cyan-500",
   ];
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        {/* Hero Section Skeleton */}
+        <div className="relative overflow-hidden">
+          <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+              <div className="text-center">
+                <div className="h-8 bg-muted rounded w-64 mx-auto mb-6 animate-pulse"></div>
+                <div className="h-16 bg-muted rounded w-96 mx-auto mb-6 animate-pulse"></div>
+                <div className="h-6 bg-muted rounded w-2xl mx-auto mb-8 animate-pulse"></div>
+                <div className="h-12 bg-muted rounded w-40 mx-auto animate-pulse"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Teams Grid Skeleton */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+          <div className="flex items-center justify-between mb-8">
+            <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Card key={i}>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
+                    <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
+                  </div>
+                  <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
+                    <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                    <div className="flex items-center gap-2 mt-4">
+                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                      <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">

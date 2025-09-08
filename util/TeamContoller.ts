@@ -1,13 +1,12 @@
 
 
 
-import axios from "axios";
-
+import apiClient from "@/lib/axios";
 
 export const TeamController = {
     createTeam: async (teamData: any) => {
         try {
-            const response = await axios.post("/api/team", teamData);
+            const response = await apiClient.post("/api/team", teamData);
             return response.data;
         } catch (error) {
             console.error("Error creating team:", error);
@@ -16,7 +15,7 @@ export const TeamController = {
     },
     getTeams: async () => {
         try {
-            const response = await axios.get("/api/teams");
+            const response = await apiClient.get("/api/team");
             return response.data;
         } catch (error) {
             console.error("Error fetching teams:", error);
@@ -25,7 +24,7 @@ export const TeamController = {
     },
     deleteTeam: async (teamId: string) => {
         try {
-            const response = await axios.delete(`/api/teams/${teamId}`);
+            const response = await apiClient.delete(`/api/team/${teamId}`);
             return response.data;
         } catch (error) {
             console.error("Error deleting team:", error);

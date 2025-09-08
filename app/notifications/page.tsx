@@ -70,7 +70,7 @@ import {
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import apiClient from "@/lib/axios";
 
 interface NotificationRule {
   id: string;
@@ -438,13 +438,13 @@ export default function NotificationsPage() {
     getTeamInvites();
   }, []);
   const getTeamInvites = async () => {
-    const resp = await axios.get("/api/team/invite");
+    const resp = await apiClient.get("/api/team/invite");
     console.log(resp.data.invites);
     setTeamInvites(resp.data.invites);
   };
 
   const handleAcceptInvite = async (inviteId: string) => {
-    await axios.post(`/api/team/invite/accept`, {
+    await apiClient.post(`/api/team/invite/accept`, {
       teamId: inviteId,
       status: "active",
     });
@@ -456,7 +456,7 @@ export default function NotificationsPage() {
   };
 
   const handleDeclineInvite = async (inviteId: string) => {
-    await axios.post(`/api/team/invite/accept`, {
+    await apiClient.post(`/api/team/invite/accept`, {
       teamId: inviteId,
       status: "decline",
     });

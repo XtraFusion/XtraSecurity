@@ -1,7 +1,6 @@
-import { PrismaClient } from './generated/prisma';
+import { PrismaClient } from '../lib/generated/prisma';
 
 declare global {
-  // For Next.js hot reload, prevent multiple PrismaClients being instantiated
   var prisma: PrismaClient | undefined;
 }
 

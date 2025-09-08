@@ -37,6 +37,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import TeamSwitcher from "./workspace-switcher";
 import { UserContext } from "@/hooks/useUser";
+import { AuthDebug } from "./auth-debug";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -201,6 +202,7 @@ console.log("calling ...")
         {/* Page Content */}
         <main className="p-4 sm:p-6 max-w-7xl mx-auto">{children}</main>
       </div>
+      <AuthDebug />
     </div>
   );
 }
