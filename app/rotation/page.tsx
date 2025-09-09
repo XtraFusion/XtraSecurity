@@ -46,7 +46,7 @@ import {
   Activity,
 } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { isAuthenticated } from "@/lib/auth"
+import { useSession } from "next-auth/react"
 
 interface RotationSchedule {
   id: string
@@ -181,7 +181,9 @@ const mockHistory: RotationHistory[] = [
 ]
 
 export default function SecretRotationPage() {
-  const router = useRouter()
+  const router = useRouter();
+  const {data:session} = useSession();
+
   const [schedules, setSchedules] = useState<RotationSchedule[]>(mockSchedules)
   const [history, setHistory] = useState<RotationHistory[]>(mockHistory)
   const [searchQuery, setSearchQuery] = useState("")
@@ -204,7 +206,7 @@ export default function SecretRotationPage() {
   })
 
   useEffect(() => {
-    if (!isAuthenticated()) {
+    if (!session) {
       router.push("/login")
       return
     }
@@ -298,11 +300,11 @@ export default function SecretRotationPage() {
       projectName: "New Project", // This would come from project lookup
       branch: newSchedule.branch,
       frequency: newSchedule.frequency,
-      customDays: newSchedule.frequency === "custom" ? newSchedule.customDays : undefined,
+      customDays: newSchedule?.frequency === "custom" ? newSchedule.customDays : undefined,
       enabled: true,
       nextRotation: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 days from now
       rotationMethod: newSchedule.rotationMethod,
-      webhookUrl: newSchedule.rotationMethod === "webhook" ? newSchedule.webhookUrl : undefined,
+      webhookUrl: newSchedule?.rotationMethod === "webhook" ? newSchedule.webhookUrl : undefined,
       createdBy: "admin@example.com",
       createdAt: new Date().toISOString(),
     }

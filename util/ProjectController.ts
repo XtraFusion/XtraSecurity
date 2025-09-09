@@ -1,5 +1,6 @@
 import apiClient from "@/lib/axios";
 import { Project } from "./Interface";
+import axios from "axios";
 
 export const ProjectController = {
   createProject: async function (projectData: Project) {
@@ -14,6 +15,19 @@ export const ProjectController = {
       throw error;
     }
   },
+
+  //delete project
+  deleteProject: async function (id: string) {
+    try {
+           await axios.delete(`/api/project?id=${id}`);
+    }
+    catch (error) {
+      console.error("Error deleting project:", error);
+      
+    } 
+
+  },
+
 
   //fetch all projects
   fetchProjects: async function (id: string) {

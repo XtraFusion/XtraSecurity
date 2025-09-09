@@ -816,8 +816,8 @@ const TeamDetail = () => {
                             Joined{" "}
                             {new Date(member.joinedAt).toLocaleDateString()}
                           </span>
-                          <span>Last active: {member.lastActive}</span>
-                          <span>{member.projects} projects</span>
+                          {/* <span>Last active: {member.lastActive}</span> */}
+                          {/* <span>{member.projects} projects</span> */}
                           {member.department && (
                             <span>• {member.department}</span>
                           )}

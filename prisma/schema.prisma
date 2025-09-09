@@ -81,7 +81,7 @@ model Branch {
   name         String
   description  String
   createdBy    String    @db.ObjectId
-  projectId    String    @db.ObjectId
+  projectId    String    @db.ObjectId 
   project      Project   @relation(fields: [projectId], references: [id])
   secrets      Secret[]  @relation("BranchToSecret")
   versionNo    String

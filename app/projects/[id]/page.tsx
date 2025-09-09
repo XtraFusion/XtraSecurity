@@ -67,6 +67,7 @@ interface Secret {
   permission: string[];
   expiryDate: Date;
   rotationPolicy: string;
+  rotationType:string;
   type: string;
 }
 
@@ -211,6 +212,7 @@ const VaultManager: React.FC = () => {
     expiryDate: "",
     type: "",
     rotationPolicy: "manual" as const,
+    rotationType:""
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -227,7 +229,7 @@ const VaultManager: React.FC = () => {
     const data1 = await ProjectController.fetchProjects(projectId);
     const branchRes = await axios.get(`/api/branch?projectId=${projectId}`);
     const branchData = branchRes.data;
-    console.log(branchData)
+    console.log(branchData);
     setBranchList(branchData || []);
     console.log(branchData);
     if (branchData && branchData.length >= 1) {
@@ -317,6 +319,7 @@ const VaultManager: React.FC = () => {
         ? new Date(newSecret.expiryDate)
         : new Date(Date.now() + 10 * 24 * 60 * 60 * 1000),
       rotationPolicy: newSecret.rotationPolicy,
+      rotationType: newSecret?.rotationType,
       type: newSecret.type,
     };
 
@@ -762,7 +765,18 @@ const VaultManager: React.FC = () => {
               }
             />
           </div>
-
+          <div className="space-y-2">
+            <Label htmlFor="secret-expiry-date">Expiry Date</Label>
+            <Input
+              id="secret-expiry-date"
+              placeholder="Choose Expiry Date"
+              type="date"
+              value={newSecret.expiryDate}
+              onChange={(e) =>
+                setNewSecret({ ...newSecret, expiryDate: e.target.value })
+              }
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="secret-environment">Environment</Label>
             <Select
@@ -776,6 +790,26 @@ const VaultManager: React.FC = () => {
               </SelectTrigger>
               <SelectContent>
                 {environmentOptions.map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="secret-environment">Secret Rotation Type:</Label>
+            <Select
+              value={newSecret.rotationPolicy}
+              onValueChange={(value) =>
+                setNewSecret({ ...newSecret, rotationPolicy: value as any })
+              }
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select rotation type" />
+              </SelectTrigger>
+              <SelectContent>
+                {rotationOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
                   </SelectItem>

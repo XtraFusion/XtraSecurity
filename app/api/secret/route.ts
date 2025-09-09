@@ -57,6 +57,7 @@ export async function POST(request: NextRequest) {
       permission = [],
       expiryDate,
       rotationPolicy = "manual",
+      rotationType = "automatic",
     } = body;
 
     // Validate required fields
@@ -77,6 +78,7 @@ export async function POST(request: NextRequest) {
         version: "1",
         projectId,
         branchId,
+        rotationPolicy,
         type,
         history: [
           {
@@ -90,7 +92,6 @@ export async function POST(request: NextRequest) {
         updatedBy: session.user.id,
         permission,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
-        rotationPolicy,
       },
     });
 

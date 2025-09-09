@@ -5,18 +5,16 @@ import type { User } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 
-
 // GET /api/project - Get all projects or a specific project by ID
 export async function GET(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     console.log("Session in GET /api/project:", session);
-    
+
     if (!session?.user?.email) {
       console.log("No session or email found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -33,24 +31,24 @@ export async function GET(request: NextRequest) {
                   team: {
                     members: {
                       some: {
-                        userId: session.user.id
-                      }
-                    }
-                  }
-                }
-              }
-            }
-          ]
+                        userId: session.user.id,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
         },
         include: {
           branches: true,
           secrets: true,
           teamProjects: {
             include: {
-              team: true
-            }
-          }
-        }
+              team: true,
+            },
+          },
+        },
       });
       console.log("Fetched projects:", projects.length);
       // Ensure dates and optional fields serialize cleanly for NextResponse
@@ -58,8 +56,16 @@ export async function GET(request: NextRequest) {
         ...p,
         createdAt: p.createdAt?.toISOString?.() ?? null,
         updatedAt: p.updatedAt?.toISOString?.() ?? null,
-        branch: p.branch?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? [],
-        secret: p.secret?.map((s: any) => ({ ...s, lastUpdated: s.lastUpdated?.toISOString?.() ?? null })) ?? []
+        branch:
+          p.branch?.map((b: any) => ({
+            ...b,
+            createdAt: b.createdAt?.toISOString?.() ?? null,
+          })) ?? [],
+        secret:
+          p.secret?.map((s: any) => ({
+            ...s,
+            lastUpdated: s.lastUpdated?.toISOString?.() ?? null,
+          })) ?? [],
       }));
 
       return NextResponse.json(safe);
@@ -77,23 +83,23 @@ export async function GET(request: NextRequest) {
                 team: {
                   members: {
                     some: {
-                      userId: session.user.id
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
+                      userId: session.user.id,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
       },
       include: {
         branches: true,
         teamProjects: {
           include: {
-            team: true
-          }
-        }
-      }
+            team: true,
+          },
+        },
+      },
     });
 
     if (!project) {
@@ -108,7 +114,11 @@ export async function GET(request: NextRequest) {
       ...project,
       createdAt: project.createdAt?.toISOString?.() ?? null,
       updatedAt: project.updatedAt?.toISOString?.() ?? null,
-      branches: project.branches?.map((b: any) => ({ ...b, createdAt: b.createdAt?.toISOString?.() ?? null })) ?? []
+      branches:
+        project.branches?.map((b: any) => ({
+          ...b,
+          createdAt: b.createdAt?.toISOString?.() ?? null,
+        })) ?? [],
     };
 
     return NextResponse.json(safeProject);
@@ -128,7 +138,7 @@ export async function POST(request: NextRequest) {
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.log(session.user)
+    console.log(session.user);
 
     const newProject = await request.json();
 
@@ -144,10 +154,16 @@ export async function POST(request: NextRequest) {
         ].filter(Boolean) as any,
       },
     });
-console.log(authUser)
+    console.log(authUser);
     if (!authUser) {
-      console.error("Authenticated user not found in database for session:", session.user);
-      return NextResponse.json({ error: "Authenticated user not found" }, { status: 401 });
+      console.error(
+        "Authenticated user not found in database for session:",
+        session.user
+      );
+      return NextResponse.json(
+        { error: "Authenticated user not found" },
+        { status: 401 }
+      );
     }
 
     if (!newProject.name || !newProject.description) {
@@ -173,9 +189,9 @@ console.log(authUser)
             createdBy: authUser.id,
             versionNo: "1",
             permissions: [authUser.email].filter(Boolean) as string[],
-            createdAt: new Date()
-          }
-        }
+            createdAt: new Date(),
+          },
+        },
       },
       include: {
         branches: true,
@@ -185,10 +201,10 @@ console.log(authUser)
             id: true,
             name: true,
             email: true,
-            role: true
-          }
-        }
-      }
+            role: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(project, { status: 201 });
@@ -205,10 +221,9 @@ console.log(authUser)
 export async function DELETE(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-if (!session?.user?.email) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
-
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -224,8 +239,8 @@ if (!session?.user?.email) {
     const project = await prisma.project.findFirst({
       where: {
         id,
-        userId: session.user.email // Only creator can delete
-      }
+        userId: session.user.id, // Only creator can delete
+      },
     });
 
     if (!project) {
@@ -235,9 +250,25 @@ if (!session?.user?.email) {
       );
     }
 
+    await prisma.$transaction(async (prisma) => {
+      // Delete related secrets
+      await prisma.secret.deleteMany({
+        where: { projectId: id },
+      });
+
+      // Delete related branches
+      await prisma.branch.deleteMany({
+        where: { projectId: id },
+      });
+      // Delete related team-project associations
+      await prisma.teamProject.deleteMany({
+        where: { projectId: id },
+      });
+    });
+
     // Delete project and all related data (cascading delete handled by Prisma)
     await prisma.project.delete({
-      where: { id }
+      where: { id },
     });
 
     return NextResponse.json(
@@ -257,10 +288,9 @@ if (!session?.user?.email) {
 export async function PUT(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
-if (!session?.user?.email) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
-
+    if (!session?.user?.email) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -287,15 +317,15 @@ if (!session?.user?.email) {
                   members: {
                     some: {
                       userId: session.user.email,
-                      role: "admin" // Only team admins can update
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      }
+                      role: "admin", // Only team admins can update
+                    },
+                  },
+                },
+              },
+            },
+          },
+        ],
+      },
     });
 
     if (!existingProject) {
@@ -308,7 +338,7 @@ if (!session?.user?.email) {
     // Update project
     const updateData: any = {
       name,
-      description
+      description,
     };
 
     // Update team associations if provided
@@ -323,13 +353,13 @@ if (!session?.user?.email) {
 
       // Delete existing team associations and create new ones
       await prisma.teamProject.deleteMany({
-        where: { projectId: id }
+        where: { projectId: id },
       });
 
       updateData.teamProjects = {
         create: teamIds.map((teamId: string) => ({
-          teamId
-        }))
+          teamId,
+        })),
       };
     }
 
@@ -340,10 +370,10 @@ if (!session?.user?.email) {
         branches: true,
         teamProjects: {
           include: {
-            team: true
-          }
-        }
-      }
+            team: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(project);

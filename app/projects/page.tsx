@@ -19,17 +19,11 @@ import {
 import { Label } from "@radix-ui/react-menubar"
 import { Textarea } from "@/components/ui/textarea"
 import { useSession } from "next-auth/react"
+import { ProjectController } from "@/util/ProjectController"
+import { Project } from "@/lib/generated/prisma"
 
 
-interface Project {
-  id: string
-  name: string
-  description: string
-  secretsCount: number
-  lastUpdated: string
-  activeBranches: string[]
-  status: "active" | "inactive" | "archived"
-}
+
 
 
 const mockProjects: Project[] = [
@@ -37,7 +31,6 @@ const mockProjects: Project[] = [
     id: "1",
     name: "Production API",
     description: "Main production environment for our API services",
-    secretsCount: 3,
     lastUpdated: "2024-01-15T10:30:00Z",
     activeBranches: ["main"],
     status: "active", 
@@ -87,9 +80,10 @@ export default function ProjectsPage() {
       activeBranches: ["main"],
       status: "active",
     }
+    ProjectController.createProject(project);
 
     setProjects([project, ...projects])
-    setNewProject({ name: "", description: "" })
+    setNewProject({ name: "", description: "" });
     setIsCreateModalOpen(false)
   }
   useEffect(() => {
@@ -99,8 +93,12 @@ export default function ProjectsPage() {
     }
 
     const loadProjects = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      setProjects(mockProjects)
+      
+      // In a real app, fetch projects from the API
+
+      const response = await fetch("/api/project")
+      const data = await response.json()
+      setProjects(data)
       setIsLoading(false)
     }
 
