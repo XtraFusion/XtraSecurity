@@ -78,7 +78,7 @@ export default function DashboardPage() {
     };
 
     loadData();
-  }, [router]);
+  }, [router,isCreateModalOpen]);
 
   const filteredProjects = projects.filter(
     (project) =>

@@ -49,12 +49,15 @@ interface ProjectSettingsProps {
 }
 
 const ProjectSettings: React.FC<ProjectSettingsProps> = ({ 
-  project, 
   onProjectDeleted, 
   onProjectTransferred 
 }) => {
   const {id} = useParams();
+
+  const [project, setProject] = useState<any>({  });
+
   // State for transfer to user
+
   const [transferUserEmail, setTransferUserEmail] = useState('');
   const [isTransferringUser, setIsTransferringUser] = useState(false);
   
@@ -79,6 +82,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
     }, 5000);
   };
 
+
   // Handle transfer to user
   const handleTransferToUser = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -100,6 +104,16 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
       setIsTransferringUser(false);
     }
   };
+
+  const loadProject = async () => {
+    const projects = await ProjectController.fetchProjects(id as string);
+    if (projects.length > 0) {
+      setProject(projects[0]);
+    }
+  };
+  React.useEffect(() => {
+    loadProject();
+  } , [id]);
 
   // Handle transfer to workspace
   const handleTransferToWorkspace = async (e: React.FormEvent) => {
