@@ -1,0 +1,530 @@
+'use client';
+
+import React, { useState, useRef } from 'react';
+import { Trash2, UserPlus, Building2, AlertTriangle, Check, X, ArrowLeft, Users, GitBranch, Pencil } from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
+import { ProjectController } from '@/util/ProjectController';
+
+// Types
+interface Project {
+  id: string;
+  name: string;
+  workspace: string;
+  owner: string;
+  teamMembers?: string[];
+  defaultBranch?: string;
+}
+
+interface Branch {
+  name: string;
+  isDefault: boolean;
+}
+
+interface ProjectSettingsProps {
+  onProjectDeleted?: () => void;
+  onProjectTransferred?: () => void;
+}
+
+// Project Settings Component
+const ProjectSettings = ({ 
+  onProjectDeleted, 
+  onProjectTransferred 
+}: ProjectSettingsProps): React.ReactElement => {
+  const {id} = useParams();
+  const router = useRouter();
+  const [activeSection, setActiveSection] = useState('general');
+
+  // Refs for scroll
+  const generalRef = useRef<HTMLDivElement>(null);
+  const teamRef = useRef<HTMLDivElement>(null);
+  const branchRef = useRef<HTMLDivElement>(null);
+  const transferRef = useRef<HTMLDivElement>(null);
+  const deleteRef = useRef<HTMLDivElement>(null);
+
+  // State
+  const [project, setProject] = useState<Project | null>(null);
+  const [newProjectName, setNewProjectName] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
+  const [branches, setBranches] = useState<Branch[]>([]);
+  const [selectedDefaultBranch, setSelectedDefaultBranch] = useState('');
+  const [newTeamMemberEmail, setNewTeamMemberEmail] = useState('');
+  const [isAddingTeamMember, setIsAddingTeamMember] = useState(false);
+  const [transferUserEmail, setTransferUserEmail] = useState('');
+  const [isTransferringUser, setIsTransferringUser] = useState(false);
+  const [transferWorkspaceId, setTransferWorkspaceId] = useState('');
+  const [isTransferringWorkspace, setIsTransferringWorkspace] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Clear messages after timeout
+  const clearMessages = () => {
+    setTimeout(() => {
+      setSuccessMessage('');
+      setErrorMessage('');
+    }, 5000);
+  };
+
+  // Scroll to section
+  const scrollToSection = (ref: React.RefObject<HTMLDivElement>, section: string) => {
+    if (ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth' });
+      setActiveSection(section);
+    }
+  };
+
+  // Load project data
+  React.useEffect(() => {
+    const loadProject = async () => {
+      if (typeof id === 'string') {
+        try {
+          const projects = await ProjectController.fetchProjects(id);
+          if (projects.length > 0) {
+            setProject(projects[0]);
+          }
+        } catch (error) {
+          setErrorMessage('Failed to load project');
+          clearMessages();
+        }
+      }
+    };
+    loadProject();
+  }, [id]);
+
+  // Handle rename project
+  const handleRenameProject = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newProjectName.trim() || !id || typeof id !== 'string') return;
+
+    setIsRenaming(true);
+    setErrorMessage('');
+    
+    try {
+      await ProjectController.renameProject(id, newProjectName.trim());
+      setSuccessMessage(`Project renamed to ${newProjectName}`);
+      setProject(prev => prev ? { ...prev, name: newProjectName } : null);
+      setNewProjectName('');
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to rename project');
+      clearMessages();
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
+  // Handle default branch change
+  const handleDefaultBranchChange = async (branchName: string) => {
+    if (!id || typeof id !== 'string') return;
+
+    try {
+      await ProjectController.setDefaultBranch(id, branchName);
+      setBranches(branches.map(b => ({
+        ...b,
+        isDefault: b.name === branchName
+      })));
+      setSuccessMessage(`Default branch changed to ${branchName}`);
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to change default branch');
+      clearMessages();
+    }
+  };
+
+  // Handle add team member
+  const handleAddTeamMember = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamMemberEmail.trim() || !id || typeof id !== 'string') return;
+
+    setIsAddingTeamMember(true);
+    setErrorMessage('');
+    
+    try {
+      await ProjectController.addTeamMember(id, newTeamMemberEmail.trim());
+      setSuccessMessage(`Team member ${newTeamMemberEmail} added`);
+      setNewTeamMemberEmail('');
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to add team member');
+      clearMessages();
+    } finally {
+      setIsAddingTeamMember(false);
+    }
+  };
+
+  // Handle transfer to user
+  const handleTransferToUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferUserEmail.trim() || !id || typeof id !== 'string') return;
+
+    setIsTransferringUser(true);
+    setErrorMessage('');
+    
+    try {
+      await ProjectController.transferToUser(id, transferUserEmail.trim());
+      setSuccessMessage(`Project transferred to ${transferUserEmail}`);
+      setTransferUserEmail('');
+      onProjectTransferred?.();
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to transfer project to user');
+      clearMessages();
+    } finally {
+      setIsTransferringUser(false);
+    }
+  };
+
+  // Handle transfer to workspace
+  const handleTransferToWorkspace = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!transferWorkspaceId.trim() || !id || typeof id !== 'string') return;
+
+    setIsTransferringWorkspace(true);
+    setErrorMessage('');
+    
+    try {
+      await ProjectController.transferToWorkspace(id, transferWorkspaceId.trim());
+      setSuccessMessage(`Project transferred to workspace ${transferWorkspaceId}`);
+      setTransferWorkspaceId('');
+      onProjectTransferred?.();
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to transfer project to workspace');
+      clearMessages();
+    } finally {
+      setIsTransferringWorkspace(false);
+    }
+  };
+
+  // Handle project deletion
+  const handleDeleteProject = async () => {
+    if (!id || typeof id !== 'string' || !project || deleteConfirmText !== project.name) return;
+
+    setIsDeleting(true);
+    setErrorMessage('');
+    
+    try {
+      await ProjectController.deleteProject(id);
+      setSuccessMessage('Project deleted successfully');
+      onProjectDeleted?.();
+      router.push('/projects');
+      clearMessages();
+    } catch (error) {
+      setErrorMessage('Failed to delete project');
+      clearMessages();
+    } finally {
+      setIsDeleting(false);
+      setShowDeleteConfirm(false);
+      setDeleteConfirmText('');
+    }
+  };
+
+  return (
+    <div className="flex min-h-screen bg-background">
+      {/* Sidebar */}
+      <div className="w-64 border-r border-border bg-card p-4 fixed h-full">
+        <button
+          onClick={() => router.back()}
+          className="flex items-center text-muted-foreground hover:text-foreground mb-6"
+        >
+          <ArrowLeft className="w-4 h-4 mr-2" />
+          Back to Project
+        </button>
+        
+        <nav className="space-y-2">
+          <button
+            onClick={() => scrollToSection(generalRef, 'general')}
+            className={`w-full text-left px-4 py-2 rounded-md ${
+              activeSection === 'general' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/5'
+            }`}
+          >
+            General
+          </button>
+          <button
+            onClick={() => scrollToSection(teamRef, 'team')}
+            className={`w-full text-left px-4 py-2 rounded-md ${
+              activeSection === 'team' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/5'
+            }`}
+          >
+            Team
+          </button>
+          <button
+            onClick={() => scrollToSection(branchRef, 'branch')}
+            className={`w-full text-left px-4 py-2 rounded-md ${
+              activeSection === 'branch' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/5'
+            }`}
+          >
+            Branches
+          </button>
+          <button
+            onClick={() => scrollToSection(transferRef, 'transfer')}
+            className={`w-full text-left px-4 py-2 rounded-md ${
+              activeSection === 'transfer' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/5'
+            }`}
+          >
+            Transfer
+          </button>
+          <button
+            onClick={() => scrollToSection(deleteRef, 'delete')}
+            className={`w-full text-left px-4 py-2 rounded-md ${
+              activeSection === 'delete' ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-primary/5'
+            }`}
+          >
+            Delete
+          </button>
+        </nav>
+      </div>
+
+      {/* Main Content */}
+      <div className="ml-64 flex-1 p-6 space-y-8">
+        {/* Page Header */}
+        <div className="border-b border-border pb-4">
+          <h1 className="text-2xl font-semibold text-foreground">Project Settings</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Manage settings for "{project?.name}"
+          </p>
+        </div>
+
+        {/* General Section */}
+        <div ref={generalRef} className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Pencil className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">General Settings</h2>
+          </div>
+          <form onSubmit={handleRenameProject} className="space-y-4">
+            <div>
+              <label htmlFor="project-name" className="block text-sm font-medium text-foreground mb-2">
+                Project Name
+              </label>
+              <input
+                type="text"
+                id="project-name"
+                value={newProjectName}
+                onChange={(e) => setNewProjectName(e.target.value)}
+                placeholder={project?.name}
+                className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-foreground"
+                required
+                disabled={isRenaming}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isRenaming || !newProjectName.trim()}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isRenaming ? 'Renaming...' : 'Rename Project'}
+            </button>
+          </form>
+        </div>
+
+        {/* Team Section */}
+        <div ref={teamRef} className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Users className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Team Members</h2>
+          </div>
+          <form onSubmit={handleAddTeamMember} className="space-y-4">
+            <div>
+              <label htmlFor="team-email" className="block text-sm font-medium text-foreground mb-2">
+                Add Team Member
+              </label>
+              <input
+                type="email"
+                id="team-email"
+                value={newTeamMemberEmail}
+                onChange={(e) => setNewTeamMemberEmail(e.target.value)}
+                placeholder="user@example.com"
+                className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-foreground"
+                required
+                disabled={isAddingTeamMember}
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={isAddingTeamMember || !newTeamMemberEmail.trim()}
+              className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isAddingTeamMember ? 'Adding...' : 'Add Team Member'}
+            </button>
+          </form>
+        </div>
+
+        {/* Branch Section */}
+        <div ref={branchRef} className="bg-card border border-border rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <GitBranch className="w-5 h-5 text-primary" />
+            <h2 className="text-lg font-medium text-foreground">Default Branch</h2>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label htmlFor="default-branch" className="block text-sm font-medium text-foreground mb-2">
+                Select Default Branch
+              </label>
+              <select
+                id="default-branch"
+                value={selectedDefaultBranch}
+                onChange={(e) => handleDefaultBranchChange(e.target.value)}
+                className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-foreground"
+              >
+                {branches.map((branch) => (
+                  <option key={branch.name} value={branch.name}>
+                    {branch.name} {branch.isDefault && '(current)'}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        {/* Transfer Section */}
+        <div ref={transferRef}>
+          {/* Transfer to User Section */}
+          <div className="bg-card border border-border rounded-lg p-6 mb-6">
+            <div className="flex items-center gap-3 mb-4">
+              <UserPlus className="w-5 h-5 text-primary" />
+              <h2 className="text-lg font-medium text-foreground">Transfer to User</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Transfer ownership of this project to another user by entering their email address.
+            </p>
+            <form onSubmit={handleTransferToUser} className="space-y-4">
+              <div>
+                <label htmlFor="user-email" className="block text-sm font-medium text-foreground mb-2">
+                  Recipient Email Address
+                </label>
+                <input
+                  type="email"
+                  id="user-email"
+                  value={transferUserEmail}
+                  onChange={(e) => setTransferUserEmail(e.target.value)}
+                  placeholder="user@example.com"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent bg-input text-foreground"
+                  required
+                  disabled={isTransferringUser}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isTransferringUser || !transferUserEmail.trim()}
+                className="bg-primary text-primary-foreground px-4 py-2 rounded-md hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTransferringUser ? 'Transferring...' : 'Transfer to User'}
+              </button>
+            </form>
+          </div>
+
+          {/* Transfer to Workspace Section */}
+          <div className="bg-card border border-border rounded-lg p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <Building2 className="w-5 h-5 text-accent" />
+              <h2 className="text-lg font-medium text-foreground">Transfer to Workspace</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-4">
+              Move this project to a different workspace within your organization.
+            </p>
+            <form onSubmit={handleTransferToWorkspace} className="space-y-4">
+              <div>
+                <label htmlFor="workspace-id" className="block text-sm font-medium text-foreground mb-2">
+                  Workspace Name or ID
+                </label>
+                <input
+                  type="text"
+                  id="workspace-id"
+                  value={transferWorkspaceId}
+                  onChange={(e) => setTransferWorkspaceId(e.target.value)}
+                  placeholder="workspace-name or ws-123456"
+                  className="w-full px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent bg-input text-foreground"
+                  required
+                  disabled={isTransferringWorkspace}
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={isTransferringWorkspace || !transferWorkspaceId.trim()}
+                className="bg-accent text-accent-foreground px-4 py-2 rounded-md hover:bg-accent/90 focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {isTransferringWorkspace ? 'Transferring...' : 'Transfer to Workspace'}
+              </button>
+            </form>
+          </div>
+        </div>
+
+        {/* Delete Section */}
+        <div ref={deleteRef} className="bg-card border border-destructive rounded-lg p-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Trash2 className="w-5 h-5 text-destructive" />
+            <h2 className="text-lg font-medium text-foreground">Delete Project</h2>
+          </div>
+          <p className="text-sm text-muted-foreground mb-4">
+            Permanently delete this project and all associated data. This action cannot be undone.
+          </p>
+          {!showDeleteConfirm ? (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2"
+            >
+              Delete Project
+            </button>
+          ) : (
+            <div className="space-y-4 p-4 bg-destructive/10 rounded-md border border-destructive">
+              <div className="flex items-center gap-2 text-destructive">
+                <AlertTriangle className="w-4 h-4" />
+                <span className="font-medium">Confirm Project Deletion</span>
+              </div>
+              <p className="text-sm text-destructive">
+                Type "{project?.name}" to confirm deletion:
+              </p>
+              <input
+                type="text"
+                value={deleteConfirmText}
+                onChange={(e) => setDeleteConfirmText(e.target.value)}
+                placeholder={project?.name}
+                className="w-full px-3 py-2 border border-destructive rounded-md focus:outline-none focus:ring-2 focus:ring-destructive focus:border-transparent bg-input text-foreground"
+                disabled={isDeleting}
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={handleDeleteProject}
+                  disabled={isDeleting || deleteConfirmText !== project?.name}
+                  className="bg-destructive text-destructive-foreground px-4 py-2 rounded-md hover:bg-destructive/90 focus:outline-none focus:ring-2 focus:ring-destructive focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isDeleting ? 'Deleting...' : 'Delete Project'}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowDeleteConfirm(false);
+                    setDeleteConfirmText('');
+                  }}
+                  disabled={isDeleting}
+                  className="bg-muted text-muted-foreground px-4 py-2 rounded-md hover:bg-muted/80 focus:outline-none focus:ring-2 focus:ring-muted focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Success/Error Messages */}
+      {successMessage && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 p-3 bg-success/10 border border-success rounded-md">
+          <Check className="w-4 h-4 text-success" />
+          <span className="text-sm text-success">{successMessage}</span>
+        </div>
+      )}
+      {errorMessage && (
+        <div className="fixed top-4 right-4 z-50 flex items-center gap-2 p-3 bg-destructive/10 border border-destructive rounded-md">
+          <X className="w-4 h-4 text-destructive" />
+          <span className="text-sm text-destructive">{errorMessage}</span>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default function Page(): React.ReactElement {
+  return <ProjectSettings onProjectDeleted={() => {}} onProjectTransferred={() => {}} />;
+}

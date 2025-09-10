@@ -1,0 +1,48 @@
+import { db } from '@/lib/db';
+
+interface Project {
+  id: string;
+  name: string;
+  workspace: string;
+  owner: string;
+  teamMembers?: string[];
+  defaultBranch?: string;
+}
+
+export class ProjectController {
+  static async createProject(projectData: Project): Promise<any> {
+    return db.collection('projects').add(projectData);
+  }
+
+  static async deleteProject(id: string): Promise<void> {
+    return db.collection('projects').doc(id).delete();
+  }
+
+  static async fetchProjects(id: string): Promise<any> {
+    return db.collection('projects').where('id', '==', id).get();
+  }
+
+  static async renameProject(id: string, newName: string): Promise<void> {
+    return db.collection('projects').doc(id).update({ name: newName });
+  }
+
+  static async setDefaultBranch(id: string, branchName: string): Promise<void> {
+    return db.collection('projects').doc(id).update({ defaultBranch: branchName });
+  }
+
+  static async addTeamMember(id: string, email: string): Promise<void> {
+    const project = await db.collection('projects').doc(id).get();
+    const teamMembers = project.data()?.teamMembers || [];
+    return db.collection('projects').doc(id).update({
+      teamMembers: [...teamMembers, email]
+    });
+  }
+
+  static async transferToUser(id: string, email: string): Promise<void> {
+    return db.collection('projects').doc(id).update({ owner: email });
+  }
+
+  static async transferToWorkspace(id: string, workspaceId: string): Promise<void> {
+    return db.collection('projects').doc(id).update({ workspace: workspaceId });
+  }
+}
