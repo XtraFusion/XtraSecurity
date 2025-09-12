@@ -16,6 +16,7 @@ import {
   MoreVertical,
   Clock,
   User,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,6 +120,7 @@ const mockProject: Project = {
         branchId: "main",
         rotationPolicy: "auto",
         type: "Database",
+        rotationType: "90-days",
       },
       {
         id: "2",
@@ -135,6 +137,7 @@ const mockProject: Project = {
         branchId: "main",
         rotationPolicy: "manual",
         type: "API Key",
+        rotationType: "30-days",
       },
     ],
     staging: [
@@ -153,6 +156,7 @@ const mockProject: Project = {
         branchId: "staging",
         rotationPolicy: "manual",
         type: "Database",
+        rotationType: "60-days",
       },
     ],
     dev: [
@@ -171,6 +175,7 @@ const mockProject: Project = {
         branchId: "dev",
         rotationPolicy: "manual",
         type: "Database",
+        rotationType: "30-days",
       },
     ],
   },
@@ -341,6 +346,7 @@ const VaultManager: React.FC = () => {
       branchId: selectedBranch.id,
       type: "",
       rotationPolicy: "manual",
+      rotationType: "30-days",
     });
     setIsAddSecretOpen(false);
     setNotification({ type: "default", message: "Secret added successfully" });
@@ -490,6 +496,22 @@ const VaultManager: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header with Settings Link */}
+      <div className="flex justify-between items-center">
+        <div className="space-y-1">
+          <h2 className="text-2xl font-semibold text-foreground">{project.name}</h2>
+          <p className="text-sm text-muted-foreground">{project.description}</p>
+        </div>
+        <Button
+          variant="outline"
+          className="gap-2"
+          onClick={() => window.location.href = `/projects/${projectId}/setting`}
+        >
+          <Settings className="w-4 h-4" />
+          Settings
+        </Button>
+      </div>
+
       {/* Notification */}
       {notification && (
         <Alert variant={notification.type}>
