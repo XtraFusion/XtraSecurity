@@ -91,7 +91,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('delete');
   const [isDeleting, setIsDeleting] = useState(false);
-  
+  const [newTeamMemberEmail, setNewTeamMemberEmail] = useState('');
   // Success/error states
   const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
@@ -368,6 +368,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
               >
                 Cancel
               </button>
+            </div>
             </div>
           )}
         </div>
