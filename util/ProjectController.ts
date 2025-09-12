@@ -1,11 +1,10 @@
-import apiClient from "@/lib/axios";
 import { Project } from "./Interface";
 import axios from "axios";
 
 export const ProjectController = {
   createProject: async function (projectData: Project) {
     try {
-      const response = await apiClient.post("/api/project", projectData);
+      const response = await axios.post("/api/project", projectData);
       if (response.status === 201) {
         console.log("Project created:", response.data);
         return response.data;
@@ -27,13 +26,28 @@ export const ProjectController = {
     } 
 
   },
+  //update project
+  updateProject:async function (id:string, data:Project) {
+    try {
+      const response = await axios.put(`/api/project?id=${id}`, data);
+      if (response.status === 200) {
+        console.log("Project updated:", response.data);
+        return response.data;
+      }
+    } catch (error) {
+      console.error("Error updating project:", error);
+      throw error;
+    }
+  }
+
+  ,
 
 
   //fetch all projects
   fetchProjects: async function (id: string) {
     try {
       if (id) {
-        const response = await apiClient.get(`/api/project?id=${id}`);
+        const response = await axios.get(`/api/project?id=${id}`);
         if (response.status === 200) {
           console.log("Fetched projects:", response.data);
           return response.data;
@@ -41,7 +55,7 @@ export const ProjectController = {
           return [];
         }
       } else {
-        const response = await apiClient.get(`/api/project`);
+        const response = await axios.get(`/api/project`);
         if (response.status === 200) {
           return response.data;
         } else {
