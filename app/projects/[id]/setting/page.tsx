@@ -231,7 +231,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
             </div>
           </div>
         </div>
-      )}
+      
       
       {errorMessage && (
         <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
@@ -373,7 +373,7 @@ const ProjectSettings: React.FC<ProjectSettingsProps> = ({
         </div>
       </div>
     </div>
-  );
+  )
 };
 
 export default ProjectSettings;
