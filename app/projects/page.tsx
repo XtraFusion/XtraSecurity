@@ -256,8 +256,8 @@ export default function ProjectsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>{project.secretsCount} secrets</span>
-                    <span>Updated {formatDate(project.lastUpdated)}</span>
+                    <span>{project?.secrets?.length} secrets</span>
+                    <span>Updated {formatDate(project.updatedAt)}</span>
                   </div>
                   <Button asChild variant="outline" className="w-full mt-4">
                     <Link href={`/projects/${project.id}`}>

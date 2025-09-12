@@ -71,8 +71,10 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadData = async () => {
+      
       setIsLoading(true);
       const projectsList = await ProjectController.fetchProjects("");
+      console.log(projectsList)
       setProjects(projectsList);
       setIsLoading(false);
     };
@@ -259,11 +261,11 @@ export default function DashboardPage() {
                   <div className="flex items-center justify-between text-sm">
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <Key className="h-4 w-4" />
-                      {/* <span>{project.secretsCount} secrets</span> */}
+                      <span>{project?.secrets?.length} secrets</span>
                     </div>
                     <div className="flex items-center gap-1 text-muted-foreground">
                       <GitBranch className="h-4 w-4" />
-                      <span>{project?.branch?.length} branches</span>
+                      <span>{project?.branches?.length} branches</span>
                     </div>
                   </div>
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">

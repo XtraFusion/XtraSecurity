@@ -234,9 +234,7 @@ const VaultManager: React.FC = () => {
     const data1 = await ProjectController.fetchProjects(projectId);
     const branchRes = await axios.get(`/api/branch?projectId=${projectId}`);
     const branchData = branchRes.data;
-    console.log(branchData);
     setBranchList(branchData || []);
-    console.log(branchData);
     if (branchData && branchData.length >= 1) {
       // prefer branch name if available, otherwise id
       setSelectedBranch(branchData[0] ?? branchData[0] ?? {});
