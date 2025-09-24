@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { encrypt } from "@/lib/encription";
 
 // Helper function to check authentication
 
@@ -72,7 +73,7 @@ export async function POST(request: NextRequest) {
     const newSecret = await prisma.secret.create({
       data: {
         key,
-        value,
+        value:encrypt(value),
         description,
         environmentType,
         version: "1",

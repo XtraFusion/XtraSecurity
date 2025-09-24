@@ -88,12 +88,14 @@ model Branch {
   permissions  String[]  // Roles/User IDs
   createdAt    DateTime  @default(now())
 }
+																	
+																	
 
 // SECRET MODEL
 model Secret {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId
   key              String
-  value            String
+  value            Object[]
   description      String
   environmentType  String
   version          String
@@ -184,4 +186,30 @@ model VerificationToken {
   expires    DateTime
 
   @@unique([identifier, token])
+}
+
+model Notification {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  userEmail String
+  taskTitle String
+  description   String
+  message   String
+  status    String
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+
+model AuditLog{
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  action    String
+  entity    String
+  entityId  String
+  changes   Json
+  timestamp DateTime @default(now())
+  user User @relation(fields: [userId], references: [id])
 }
