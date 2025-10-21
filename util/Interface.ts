@@ -107,6 +107,19 @@ export interface CreateProject {
   updatedAt: Date;
   teamProjects?: TeamProject[];
 }
+export type AccessLevel = 'private' | 'team' | 'public';
+export type SecurityLevel = 'low' | 'medium' | 'high';
+export type IpRestriction = { ip: string; description: string };
+
+export interface SecuritySettings {
+  twoFactorRequired: boolean;
+  passwordMinLength: number;
+  passwordRequireSpecialChars: boolean;
+  passwordRequireNumbers: boolean;
+  passwordExpiryDays: number;
+  ipRestrictions: IpRestriction[];
+}
+
 export interface Project {
   id: string;
   name: string;
@@ -118,8 +131,11 @@ export interface Project {
   secret?: Secret[];
   createdAt: Date;
   updatedAt: Date;
-  workspaceId:string;
+  workspaceId: string;
   teamProjects?: TeamProject[];
+  accessLevel: AccessLevel;
+  securityLevel: SecurityLevel;
+  securitySettings: SecuritySettings;
 }
 
 export interface Branch {

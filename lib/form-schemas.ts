@@ -23,6 +23,27 @@ export const profileSchema = z.object({
 
 export type ProfileFormData = z.infer<typeof profileSchema>
 
+// Project security settings schema
+export const projectSecuritySettingsSchema = z.object({
+  accessLevel: z.enum(['private', 'team', 'public'], {
+    required_error: "Please select an access level",
+  }),
+  securityLevel: z.enum(['low', 'medium', 'high'], {
+    required_error: "Please select a security level",
+  }),
+  twoFactorRequired: z.boolean().default(false),
+  passwordMinLength: z.number().min(8).max(128).default(8),
+  passwordRequireSpecialChars: z.boolean().default(false),
+  passwordRequireNumbers: z.boolean().default(false),
+  passwordExpiryDays: z.number().min(0).max(365).default(90),
+  ipRestrictions: z.array(z.object({
+    ip: z.string().regex(/^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/, "Please enter a valid IP address"),
+    description: z.string().max(100, "Description must be less than 100 characters").optional()
+  })).default([])
+})
+
+export type ProjectSecuritySettingsData = z.infer<typeof projectSecuritySettingsSchema>
+
 // Team invitation form schema
 export const teamInviteSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
