@@ -35,7 +35,7 @@ if (!session?.user?.email) {
   }
 }
 
-// POST /api/branch - Create a new branch
+// POST /api/branch - Create a new branch or perform branch operations
 export async function POST(request: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
@@ -43,6 +43,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const operation = searchParams.get("operation");
+    const branchId = searchParams.get("branchId");
+
+    if (operation === "clear" && branchId) {
+      // Clear branch operation
+      await prisma.secret.deleteMany({
+        where: { branchId }
+      });
+      return NextResponse.json({ message: "Branch cleared successfully" });
+    }
+
+    // Regular branch creation
     const body = await request.json();
     const { name, description, projectId, versionNo = "1", permissions = [] } = body;
 

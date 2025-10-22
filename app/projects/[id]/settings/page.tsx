@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import { useParams, useRouter } from 'next/navigation';
 import { ProjectController } from '@/util/ProjectController';
+import { BranchController } from '@/util/BranchController';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
@@ -121,20 +122,22 @@ export default function ProjectSettings() {
   const fetchData = async () => {
     try {
       // Get project data
-      const projectData = await ProjectController.fetchProjects(id as string);
-      if (projectData.length > 0) {
-        setProject(projectData[0]);
-      }
-
-      // Get teams and project teams data
-      const [teamsRes, projectTeamsRes] = await Promise.all([
+      const [projectData, branchesData, teamsRes, projectTeamsRes] = await Promise.all([
+        ProjectController.fetchProjects(id as string),
+        BranchController.fetchBranches(id as string),
         axios.get('/api/team'),
         axios.get(`/api/project/${id}/teams`)
       ]);
 
+      if (projectData.length > 0) {
+        setProject(projectData[0]);
+      }
+
+      setBranches(branchesData);
       setTeams(teamsRes.data);
       setProjectTeams(projectTeamsRes.data);
     } catch (error) {
+      console.error("Error fetching data:", error);
       toast({
         title: "Error",
         description: "Failed to fetch data",
@@ -150,17 +153,31 @@ export default function ProjectSettings() {
 
     setIsLoading(prev => ({ ...prev, createBranch: true }));
     try {
-      // Add API call here when available
-      setNewBranch('');
-      toast({
-        title: "Success",
-        description: "Branch created successfully",
-      });
-      await fetchData();
+      const branchData = {
+        name: newBranch.trim(),
+        description: "",
+        projectId: params.id,
+        versionNo: "1.0",
+        permissions: [],
+        createdBy: "" // This will be set by the server from the session
+      };
+
+      const result = await BranchController.createBranch(branchData);
+      if (result) {
+        setNewBranch('');
+        toast({
+          title: "Success",
+          description: "Branch created successfully",
+        });
+        await fetchData();
+      } else {
+        throw new Error("Failed to create branch");
+      }
     } catch (error) {
+      console.error("Error creating branch:", error);
       toast({
         title: "Error",
-        description: "Failed to create branch",
+        description: error instanceof Error ? error.message : "Failed to create branch",
         variant: "destructive"
       });
     } finally {
@@ -168,19 +185,24 @@ export default function ProjectSettings() {
     }
   };
 
-  const handleDeleteBranch = async (branch: string) => {
+  const handleDeleteBranch = async (branchId: string) => {
     setIsLoading(prev => ({ ...prev, deleteBranch: true }));
     try {
-      // Add API call here when available
-      toast({
-        title: "Success",
-        description: "Branch deleted successfully",
-      });
-      await fetchData();
+      const result = await BranchController.deleteBranch(branchId);
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Branch deleted successfully",
+        });
+        await fetchData();
+      } else {
+        throw new Error("Failed to delete branch");
+      }
     } catch (error) {
+      console.error("Error deleting branch:", error);
       toast({
         title: "Error",
-        description: "Failed to delete branch",
+        description: error instanceof Error ? error.message : "Failed to delete branch",
         variant: "destructive"
       });
     } finally {
@@ -188,19 +210,24 @@ export default function ProjectSettings() {
     }
   };
 
-  const handleClearBranch = async (branch: string) => {
+  const handleClearBranch = async (branchId: string) => {
     setIsLoading(prev => ({ ...prev, clearBranch: true }));
     try {
-      // Add API call here when available
-      toast({
-        title: "Success",
-        description: "Branch cleared successfully",
-      });
-      await fetchData();
+      const result = await BranchController.clearBranch(branchId);
+      if (result) {
+        toast({
+          title: "Success",
+          description: "Branch cleared successfully",
+        });
+        await fetchData();
+      } else {
+        throw new Error("Failed to clear branch");
+      }
     } catch (error) {
+      console.error("Error clearing branch:", error);
       toast({
         title: "Error",
-        description: "Failed to clear branch",
+        description: error instanceof Error ? error.message : "Failed to clear branch",
         variant: "destructive"
       });
     } finally {
