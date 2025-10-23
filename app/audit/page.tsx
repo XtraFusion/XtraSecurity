@@ -219,7 +219,7 @@ const statusConfig = {
 }
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>(mockAuditLogs)
+  const [logs, setLogs] = useState<AuditLog[]>([])
   const [searchTerm, setSearchTerm] = useState("")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
   const [severityFilter, setSeverityFilter] = useState<string>("all")
@@ -229,6 +229,9 @@ export default function AuditLogsPage() {
   const [realTimeEnabled, setRealTimeEnabled] = useState(true)
   const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
+  const [page, setPage] = useState<number>(1)
+  const [pageSize, setPageSize] = useState<number>(25)
+  const [total, setTotal] = useState<number>(0)
 
   useEffect(() => {
     if (!realTimeEnabled) return
@@ -259,6 +262,44 @@ export default function AuditLogsPage() {
 
     return () => clearInterval(interval)
   }, [realTimeEnabled])
+
+  useEffect(() => {
+    const loadLogs = async () => {
+      try {
+        const params = new URLSearchParams()
+        params.set('page', String(page))
+        params.set('pageSize', String(pageSize))
+        if (searchTerm) params.set('search', searchTerm)
+        if (categoryFilter !== 'all') params.set('category', categoryFilter)
+        if (severityFilter !== 'all') params.set('severity', severityFilter)
+        if (statusFilter !== 'all') params.set('status', statusFilter)
+        if (userFilter !== 'all') params.set('userId', userFilter)
+
+        const res = await fetch(`/api/audit?${params.toString()}`)
+        if (res.ok) {
+          const json = await res.json()
+          setLogs(
+            (json.data || []).map((l: any) => ({
+              id: l.id,
+              timestamp: l.timestamp || l.createdAt || new Date().toISOString(),
+              user: { id: l.user?.id || l.userId || 'unknown', name: l.user?.name || '', email: l.user?.email || '' },
+              action: l.action,
+              category: (l.entity as any) || 'system',
+              severity: 'info',
+              description: JSON.stringify(l.changes || l),
+              details: { ip: '', userAgent: '', location: '', resource: '' },
+              status: 'success',
+            })),
+          )
+          setTotal(json.total || 0)
+        }
+      } catch (err) {
+        console.error(err)
+      }
+    }
+
+    loadLogs()
+  }, [page, pageSize, searchTerm, categoryFilter, severityFilter, statusFilter, userFilter])
 
   const filteredLogs = logs.filter((log) => {
     const logDate = new Date(log.timestamp)
@@ -397,6 +438,17 @@ export default function AuditLogsPage() {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
+            <div className="ml-2 text-sm text-muted-foreground">
+              Showing {(page - 1) * pageSize + 1} - {Math.min(page * pageSize, total)} of {total}
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                Prev
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => setPage((p) => p + 1)}>
+                Next
+              </Button>
+            </div>
           </div>
         </div>
 

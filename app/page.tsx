@@ -8,19 +8,29 @@ import { useSession } from "next-auth/react"
 
 export default function HomePage() {
   const router = useRouter()
+  const { status } = useSession()
 
   useEffect(() => {
-
-  
-    // Check if user is authenticated
-    const isAuthenticated = localStorage.getItem("isAuthenticated")
-
-    if (isAuthenticated) {
-      router.push("/dashboard")
-    } else {
-      router.push("/login")
+    // If the app still uses the legacy localStorage flag (demo/login flow), prefer it
+    // to avoid a flash/loop between /login and /dashboard.
+    try {
+      const legacy = typeof window !== "undefined" && localStorage.getItem("isAuthenticated")
+      if (legacy) {
+        router.replace("/dashboard")
+        return
+      }
+    } catch (e) {
+      // ignore
     }
-  }, [router])
+
+    // Otherwise rely on next-auth session status.
+    if (status === "loading") return
+    if (status === "authenticated") {
+      router.replace("/dashboard")
+    } else {
+      router.replace("/login")
+    }
+  }, [router, status])
   return (
     <div className="min-h-screen  bg-background flex items-center justify-center" style={{pointerEvents:"fill"}}>
       <div className="text-center">

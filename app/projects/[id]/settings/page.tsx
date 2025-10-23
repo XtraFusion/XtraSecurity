@@ -129,10 +129,8 @@ export default function ProjectSettings() {
         axios.get(`/api/project/${id}/teams`)
       ]);
 
-      if (projectData.length > 0) {
-        setProject(projectData[0]);
-      }
-
+        setProject(projectData);
+console.log(projectData)
       setBranches(branchesData);
       setTeams(teamsRes.data);
       setProjectTeams(projectTeamsRes.data);
@@ -156,7 +154,7 @@ export default function ProjectSettings() {
       const branchData = {
         name: newBranch.trim(),
         description: "",
-        projectId: params.id,
+        projectId: id,
         versionNo: "1.0",
         permissions: [],
         createdBy: "" // This will be set by the server from the session
@@ -472,16 +470,16 @@ export default function ProjectSettings() {
 
               <div className="space-y-2">
                 {project?.branches.map((branch) => (
-                  <div key={branch} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                  <div key={branch.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2">
                       <GitBranch className="w-4 h-4" />
-                      <span>{branch}</span>
+                      <span>{branch.name}</span>
                     </div>
                     <div className="flex gap-2">
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => handleClearBranch(branch)}
+                        onClick={() => handleClearBranch(branch.id)}
                         disabled={isLoading.clearBranch}
                       >
                         <RefreshCw className="w-4 h-4 mr-2" />
@@ -490,7 +488,7 @@ export default function ProjectSettings() {
                       <Button
                         variant="destructive"
                         size="sm"
-                        onClick={() => handleDeleteBranch(branch)}
+                        onClick={() => handleDeleteBranch(branch.id)}
                         disabled={isLoading.deleteBranch}
                       >
                         <Trash2 className="w-4 h-4 mr-2" />

@@ -14,34 +14,72 @@ export async function POST(req: Request) {
 
     if (status === "active") {
       const acceptInvite = await prisma.teamUser.update({
-        where: {
-          id: teamId,
-        },
-        data: {
-          status,
-        },
+        where: { id: teamId },
+        data: { status },
       });
 
-      return NextResponse.json(
-        { message: "Invitation accepted", acceptInvite },
-        { status: 200 }
-      );
+      // audit log
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: session.user.id,
+            action: "invite_accepted",
+            entity: "team_user",
+            entityId: teamId,
+            changes: { status },
+          },
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log for invite acceptance:", auditErr);
+      }
+
+      // notify inviter if available
+      try {
+        const teamUser = await prisma.teamUser.findUnique({ where: { id: teamId } });
+        if (teamUser && (teamUser as any).invitedBy) {
+          const inviter = await prisma.user.findUnique({ where: { id: (teamUser as any).invitedBy } });
+          if (inviter) {
+            await prisma.notification.create({
+              data: {
+                userId: inviter.id,
+                userEmail: inviter.email || "",
+                taskTitle: "Invite accepted",
+                description: `${session.user.email} accepted your team invite`,
+                message: `${session.user.email} joined the team`,
+                status: "unread",
+                read: false,
+              },
+            });
+          }
+        }
+      } catch (notifErr) {
+        console.error("Failed to notify inviter for invite acceptance:", notifErr);
+      }
+
+      return NextResponse.json({ message: "Invitation accepted", acceptInvite }, { status: 200 });
     }
 
     if (status === "decline") {
       const deleteTeamUser = await prisma.teamUser.delete({
-        where: {
-          teamId_userId: {
-            teamId,
-            userId: session.user.id,
-          },
-        },
+        where: { teamId_userId: { teamId, userId: session.user.id } },
       });
 
-      return NextResponse.json(
-        { message: "Invitation rejected", deleteTeamUser },
-        { status: 200 }
-      );
+      // audit log
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: session.user.id,
+            action: "invite_declined",
+            entity: "team_user",
+            entityId: teamId,
+            changes: { status },
+          },
+        });
+      } catch (auditErr) {
+        console.error("Failed to write audit log for invite decline:", auditErr);
+      }
+
+      return NextResponse.json({ message: "Invitation rejected", deleteTeamUser }, { status: 200 });
     }
 
     return NextResponse.json(

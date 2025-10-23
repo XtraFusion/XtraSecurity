@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { getUserTeamRole, canManageMembers } from "@/lib/permissions";
 
 export async function POST(req: Request) {
   try {
@@ -12,12 +13,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { email: email },
-    });
+    const user = await prisma.user.findUnique({ where: { email: email } });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // generate a simple token for accept link (short-lived token could be implemented later)
+    const inviteToken = Math.random().toString(36).slice(2, 12);
+
+    // Check inviter permissions
+    const inviterRole = await getUserTeamRole(session.user.id, teamId);
+    if (!canManageMembers(inviterRole)) {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     const invite = await prisma.teamUser.create({
@@ -26,11 +34,29 @@ export async function POST(req: Request) {
         userId: user.id,
         role,
         status: "pending",
+        invitedBy: session.user.id,
       },
     });
 
+    // create notification with invite link/token
+    try {
+      await prisma.notification.create({
+        data: {
+          userId: user.id,
+          userEmail: user.email || "",
+          taskTitle: "Team invitation",
+          description: `You have been invited to join team ${teamId}`,
+          message: `Accept the invitation using token: ${inviteToken}`,
+          status: "unread",
+          read: false,
+        },
+      });
+    } catch (notifErr) {
+      console.error("Failed to create notification for invite:", notifErr);
+    }
+
     return NextResponse.json(
-      { message: "Invitation sent", invite },
+      { message: "Invitation sent", invite, inviteToken },
       { status: 200 }
     );
   } catch (error: any) {

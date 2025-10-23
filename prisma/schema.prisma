@@ -150,6 +150,7 @@ model TeamUser {
   role     String // e.g. "owner", "member"
   status   String   @default("pending") // "active", "pending", "removed"
   joinedAt DateTime @default(now())
+  invitedBy String? @db.ObjectId
   team     Team     @relation(fields: [teamId], references: [id])
   user     User     @relation(fields: [userId], references: [id])
 
@@ -228,4 +229,27 @@ model AuditLog {
   changes   Json
   timestamp DateTime @default(now())
   user      User     @relation(fields: [userId], references: [id])
+}
+
+// Team SSO (enterprise feature)
+model TeamSSO {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String   @db.ObjectId
+  provider  String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Integration storage (GitHub, AWS, etc.)
+model Integration {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  type      String   // e.g. "github", "aws"
+  enabled   Boolean  @default(true)
+  status    String   @default("disconnected")
+  config    Json
+  createdBy String   
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

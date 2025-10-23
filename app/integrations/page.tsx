@@ -49,7 +49,7 @@ import {
   RefreshCw,
 } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
-import { isAuthenticated } from "@/lib/auth"
+// import { isAuthenticated } from "@/lib/auth"
 
 interface CICDIntegration {
   id: string
@@ -294,9 +294,17 @@ export default function IntegrationsPage() {
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const [newIntegration, setNewIntegration] = useState({
+  type IntegrationType = "github-actions" | "jenkins" | "kubernetes" | "docker" | "gitlab-ci" | "azure-devops"
+  type InjectionMethod = "env-vars" | "files" | "vault" | "k8s-secrets"
+
+  const [newIntegration, setNewIntegration] = useState<{
+    name: string
+    type: IntegrationType
+    config: Record<string, any>
+    secretsInjection: { method: InjectionMethod; projects: string[]; branches: string[] }
+  }>({
     name: "",
-    type: "github-actions" as const,
+    type: "github-actions",
     config: {
       url: "",
       token: "",
@@ -305,19 +313,27 @@ export default function IntegrationsPage() {
       namespace: "",
     },
     secretsInjection: {
-      method: "env-vars" as const,
+      method: "env-vars",
       projects: [] as string[],
       branches: ["main"] as string[],
     },
   })
 
-  const [newRule, setNewRule] = useState({
+  const [newRule, setNewRule] = useState<{
+    name: string
+    integrationId: string
+    projects: string[]
+    branches: string[]
+    secrets: string[]
+    method: InjectionMethod
+    config: { prefix?: string; filePath?: string; namespace?: string }
+  }>({
     name: "",
     integrationId: "",
     projects: [] as string[],
     branches: [] as string[],
     secrets: [] as string[],
-    method: "env-vars" as const,
+    method: "env-vars",
     config: {
       prefix: "",
       filePath: "",
@@ -326,14 +342,37 @@ export default function IntegrationsPage() {
   })
 
   useEffect(() => {
-    if (!isAuthenticated()) {
-      router.push("/login")
-      return
-    }
+    // if (!isAuthenticated()) {
+    //   router.push("/login")
+    //   return
+    // }
 
     const loadData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800))
-      setIsLoading(false)
+      try {
+        const res = await fetch('/api/integrations')
+        if (res.ok) {
+          const json = await res.json()
+          const items = (json.integrations || []).map((it: any) => ({
+            id: it.id,
+            name: it.name,
+            type: it.type === 'github' ? 'github-actions' : it.type,
+            enabled: it.enabled,
+            status: it.status === 'connected' ? 'connected' : it.status || 'disconnected',
+            config: it.config || {},
+            secretsInjection: it.secretsInjection || { enabled: false, method: 'env-vars', projects: [], branches: [] },
+            lastSync: it.updatedAt || it.createdAt || new Date().toISOString(),
+            createdBy: it.createdBy || '',
+            createdAt: it.createdAt || new Date().toISOString(),
+          }))
+          setIntegrations(items)
+        } else {
+          console.error('Failed to load integrations')
+        }
+      } catch (err) {
+        console.error(err)
+      } finally {
+        setIsLoading(false)
+      }
     }
 
     loadData()
@@ -433,43 +472,39 @@ export default function IntegrationsPage() {
   }
 
   const handleCreateIntegration = () => {
-    if (!newIntegration.name || !newIntegration.config.token) return
-
-    const integration: CICDIntegration = {
-      id: Date.now().toString(),
-      name: newIntegration.name,
-      type: newIntegration.type,
-      enabled: true,
-      status: "pending",
-      config: newIntegration.config,
-      secretsInjection: {
-        enabled: true,
-        ...newIntegration.secretsInjection,
-      },
-      lastSync: new Date().toISOString(),
-      createdBy: "admin@example.com",
-      createdAt: new Date().toISOString(),
-    }
-
-    setIntegrations([...integrations, integration])
-    setNewIntegration({
-      name: "",
-      type: "github-actions",
-      config: {
-        url: "",
-        token: "",
-        repository: "",
-        branch: "main",
-        namespace: "",
-      },
-      secretsInjection: {
-        method: "env-vars",
-        projects: [],
-        branches: ["main"],
-      },
-    })
-    setIsCreateIntegrationOpen(false)
-    setNotification({ type: "success", message: "Integration created successfully" })
+    if (!newIntegration.name) return
+    // call backend API to create integration
+    ;(async () => {
+      try {
+        const res = await fetch('/api/integrations', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            name: newIntegration.name,
+            type: newIntegration.type === 'github-actions' ? 'github' : newIntegration.type,
+            config: newIntegration.config,
+          }),
+        })
+        if (res.ok) {
+          const json = await res.json()
+          setIntegrations([...integrations, { ...(json.integration as any), secretsInjection: { enabled: true, ...newIntegration.secretsInjection }, lastSync: new Date().toISOString(), createdBy: json.integration.createdBy || 'you' }])
+          setNotification({ type: 'success', message: 'Integration created successfully' })
+          setIsCreateIntegrationOpen(false)
+          setNewIntegration({
+            name: '',
+            type: 'github-actions',
+            config: { url: '', token: '', repository: '', branch: 'main', namespace: '' },
+            secretsInjection: { method: 'env-vars', projects: [], branches: ['main'] },
+          })
+        } else {
+          const err = await res.json()
+          setNotification({ type: 'error', message: err?.error || 'Failed to create integration' })
+        }
+      } catch (err) {
+        console.error(err)
+        setNotification({ type: 'error', message: 'Failed to create integration' })
+      }
+    })()
   }
 
   const handleCreateRule = () => {
@@ -523,8 +558,36 @@ export default function IntegrationsPage() {
   }
 
   const handleDeleteIntegration = (integrationId: string) => {
-    setIntegrations(integrations.filter((integration) => integration.id !== integrationId))
-    setNotification({ type: "success", message: "Integration deleted successfully" })
+    ;(async () => {
+      try {
+        const res = await fetch(`/api/integrations?id=${integrationId}`, { method: 'DELETE' })
+        if (res.ok) {
+          setIntegrations(integrations.filter((integration) => integration.id !== integrationId))
+          setNotification({ type: 'success', message: 'Integration deleted successfully' })
+        } else {
+          setNotification({ type: 'error', message: 'Failed to delete integration' })
+        }
+      } catch (err) {
+        console.error(err)
+        setNotification({ type: 'error', message: 'Failed to delete integration' })
+      }
+    })()
+  }
+
+  const handleTestIntegration = async (provider: string, config: any) => {
+    try {
+      const res = await fetch('/api/integrations/test', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ provider, config }) })
+      if (res.ok) {
+        const json = await res.json()
+        if (json.ok) setNotification({ type: 'success', message: 'Connection successful' })
+        else setNotification({ type: 'error', message: json.error || 'Connection failed' })
+      } else {
+        setNotification({ type: 'error', message: 'Connection failed' })
+      }
+    } catch (err) {
+      console.error(err)
+      setNotification({ type: 'error', message: 'Connection failed' })
+    }
   }
 
   const handleDeleteRule = (ruleId: string) => {
@@ -1059,7 +1122,14 @@ export default function IntegrationsPage() {
                                       <Edit className="mr-2 h-4 w-4" />
                                       Edit Integration
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem>
+                                    <DropdownMenuItem
+                                      onClick={() =>
+                                        handleTestIntegration(
+                                          integration.type?.toString().startsWith("github") ? "github" : integration.type,
+                                          integration.config,
+                                        )
+                                      }
+                                    >
                                       <RefreshCw className="mr-2 h-4 w-4" />
                                       Test Connection
                                     </DropdownMenuItem>

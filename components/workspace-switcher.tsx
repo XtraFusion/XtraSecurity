@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ChevronsUpDown,
   CheckIcon,
@@ -23,11 +23,12 @@ export default function WorkspaceSwitcher() {
   const [creatingPlan, setCreatingPlan] = useState("free");
 
   const { selectedWorkspace, setSelectedWorkspace } = useGlobalContext();
+  const fetchedRef = useRef(false)
 
   useEffect(() => {
-    const fetchWorkspaces = async () => {
+    const fetchWorkspaces = async (signal?: AbortSignal) => {
       try {
-        const res = await fetch(`/api/workspace`);
+        const res = await fetch(`/api/workspace`, { signal });
         if (!res.ok) return;
         const data = await res.json();
         const mapped: Workspace[] = (data || []).map((w: any) => ({
@@ -36,13 +37,17 @@ export default function WorkspaceSwitcher() {
           value: w.id,
         }));
         setWorkspaces(mapped);
-        if (mapped.length && !selectedWorkspace)
-          setSelectedWorkspace(mapped[0]);
+        if (mapped.length && !selectedWorkspace) setSelectedWorkspace(mapped[0]);
       } catch (err: any) {
         console.error("Failed to fetch workspaces", err);
       }
     };
-    workspaces.length === 0 && fetchWorkspaces();
+    if (!fetchedRef.current) {
+      fetchedRef.current = true
+      const controller = new AbortController()
+      fetchWorkspaces(controller.signal)
+      return () => controller.abort()
+    }
   }, []);
 
   const createWorkspace = async () => {

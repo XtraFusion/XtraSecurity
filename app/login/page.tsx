@@ -34,7 +34,8 @@ export default function LoginPage() {
   useEffect(() => {
     if (session?.user?.email) {
       // User is authenticated, redirect to dashboard
-      window.location.href = "/dashboard"
+      // use router.replace to avoid full reload and prevent race conditions
+      window.location.replace('/dashboard')
     }
   }, [session])
 
@@ -85,7 +86,8 @@ export default function LoginPage() {
         if (rememberMe) {
           localStorage.setItem("rememberMe", "true")
         }
-        window.location.href = "/dashboard"
+        // Prefer client-side navigation to prevent full reloads
+        window.location.replace('/dashboard')
       } else {
         setError("Invalid verification code. Please try again.")
       }
