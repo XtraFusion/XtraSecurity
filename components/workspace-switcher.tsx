@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   ChevronsUpDown,
   CheckIcon,
@@ -23,31 +23,26 @@ export default function WorkspaceSwitcher() {
   const [creatingPlan, setCreatingPlan] = useState("free");
 
   const { selectedWorkspace, setSelectedWorkspace } = useGlobalContext();
-  const fetchedRef = useRef(false)
+
+  const fetchWorkspaces = async () => {
+    try {
+      const res = await fetch(`/api/workspace`);
+      if (!res.ok) return;
+      const data = await res.json();
+      const mapped: Workspace[] = (data || []).map((w: any) => ({
+        id: w.id,
+        label: w.name,
+        value: w.id,
+      }));
+      setWorkspaces(mapped);
+      if (mapped.length && !selectedWorkspace) setSelectedWorkspace(mapped[0]);
+    } catch (err: any) {
+      console.error("Failed to fetch workspaces", err);
+    }
+  };
 
   useEffect(() => {
-    const fetchWorkspaces = async (signal?: AbortSignal) => {
-      try {
-        const res = await fetch(`/api/workspace`, { signal });
-        if (!res.ok) return;
-        const data = await res.json();
-        const mapped: Workspace[] = (data || []).map((w: any) => ({
-          id: w.id,
-          label: w.name,
-          value: w.id,
-        }));
-        setWorkspaces(mapped);
-        if (mapped.length && !selectedWorkspace) setSelectedWorkspace(mapped[0]);
-      } catch (err: any) {
-        console.error("Failed to fetch workspaces", err);
-      }
-    };
-    if (!fetchedRef.current) {
-      fetchedRef.current = true
-      const controller = new AbortController()
-      fetchWorkspaces(controller.signal)
-      return () => controller.abort()
-    }
+    fetchWorkspaces();
   }, []);
 
   const createWorkspace = async () => {
@@ -67,7 +62,10 @@ export default function WorkspaceSwitcher() {
       }
       const w = await res.json();
       const mapped: Workspace = { id: w.id, label: w.name, value: w.id };
-      setWorkspaces((s) => [mapped, ...s]);
+
+      // Refetch workspaces from database to ensure consistency
+      await fetchWorkspaces();
+
       setSelectedWorkspace(mapped);
       setShowNewWorkspaceDialog(false);
       setCreatingName("");
@@ -89,9 +87,8 @@ export default function WorkspaceSwitcher() {
       >
         <div className="flex items-center space-x-2">
           <img
-            src={`https://avatar.vercel.sh/${
-              selectedWorkspace?.value ?? "default"
-            }.png`}
+            src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"
+              }.png`}
             alt={selectedWorkspace?.label ?? "Workspace"}
             className="h-5 w-5 rounded-full"
           />

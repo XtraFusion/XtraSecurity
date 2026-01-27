@@ -4,7 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
-import { encrypt } from "@/lib/encription";
+import { encrypt, decrypt } from "@/lib/encription";
 
 // Helper function to check authentication
 
@@ -27,7 +27,29 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    return NextResponse.json(secrets);
+    // Decrypt secret values before sending to frontend
+    const decryptedSecrets = secrets.map((secret) => {
+      try {
+        // Value is stored as array of JSON strings
+        const encryptedString = secret.value[0];
+        const encryptedObject = JSON.parse(encryptedString);
+        const decryptedValue = decrypt(encryptedObject);
+        
+        return {
+          ...secret,
+          value: decryptedValue, // Return plain text value
+        };
+      } catch (error) {
+        console.error(`Failed to decrypt secret ${secret.id}:`, error);
+        // Return the secret with masked value if decryption fails
+        return {
+          ...secret,
+          value: "[Decryption failed]",
+        };
+      }
+    });
+
+    return NextResponse.json(decryptedSecrets);
   } catch (error) {
     console.error("Error fetching secrets:", error);
     return NextResponse.json(
@@ -46,7 +68,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    console.log(body,"data");
+    console.log("Creating secret with data:", body);
     const {
       key,
       value,
@@ -64,43 +86,55 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!key || !value || !projectId) {
       return NextResponse.json(
-        { error: "Missing required fields" },
+        { message: "Missing required fields: key, value, or projectId" },
         { status: 400 }
       );
     }
+
+    // Encrypt and prepare value as array
+    const encryptedValue = encrypt(value);
+    const encryptedString = JSON.stringify(encryptedValue);
 
     // Create new secret with version history
     const newSecret = await prisma.secret.create({
       data: {
         key,
-        value:encrypt(value),
-        description,
+        value: [encryptedString], // Store encrypted object as JSON string in array
+        description: description || "",
         environmentType,
         version: "1",
         projectId,
-        branchId,
+        branchId: branchId || null,
         rotationPolicy,
-        type,
+        type: type || "API Key",
         history: [
           {
             version: "1",
-            value,
-            description,
-            updatedAt: new Date(),
-            updatedBy: session.user.id,
+            value: value,
+            description: description || "",
+            updatedAt: new Date().toISOString(),
+            updatedBy: session.user.email,
           },
         ],
-        updatedBy: session.user.id,
+        updatedBy: session.user.email,
         permission,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
       },
     });
 
-    return NextResponse.json(newSecret, { status: 201 });
-  } catch (error) {
-    console.error("Error creating secret:", error);
+    // Return the secret with decrypted value for frontend display
     return NextResponse.json(
-      { error: "Failed to create secret" },
+      {
+        ...newSecret,
+        value: value, // Return plain text value, not encrypted array
+      },
+      { status: 201 }
+    );
+  } catch (error: any) {
+    console.error("Error creating secret:", error);
+    console.error("Error details:", error.message);
+    return NextResponse.json(
+      { message: error.message || "Failed to create secret" },
       { status: 500 }
     );
   }
@@ -114,27 +148,28 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get("id");
+
+    if (!id) {
+      return NextResponse.json(
+        { message: "Secret ID is required" },
+        { status: 400 }
+      );
+    }
+
     const body = await request.json();
+    console.log("Updating secret with data:", body);
     const {
-      id,
       key,
       value,
       description,
-      projectId,
-      branchId,
-      environment_type,
+      environmentType,
       type,
       permission,
       expiryDate,
       rotationPolicy,
     } = body;
-
-    if (!id) {
-      return NextResponse.json(
-        { error: "Secret ID is required" },
-        { status: 400 }
-      );
-    }
 
     // Get existing secret
     const existingSecret = await prisma.secret.findUnique({
@@ -142,46 +177,59 @@ export async function PUT(request: NextRequest) {
     });
 
     if (!existingSecret) {
-      return NextResponse.json({ error: "Secret not found" }, { status: 404 });
+      return NextResponse.json({ message: "Secret not found" }, { status: 404 });
     }
 
     // Parse existing history and add new version
     const history = existingSecret.history as any[];
     const newVersion = (parseInt(existingSecret.version) + 1).toString();
 
+    // Prepare update data
+    const updateData: any = {
+      version: newVersion,
+      updatedBy: session.user.email,
+    };
+
+    // Only update fields that are provided
+    if (key) updateData.key = key;
+    if (description !== undefined) updateData.description = description;
+    if (environmentType) updateData.environmentType = environmentType;
+    if (type) updateData.type = type;
+    if (permission) updateData.permission = permission;
+    if (rotationPolicy) updateData.rotationPolicy = rotationPolicy;
+    if (expiryDate) updateData.expiryDate = new Date(expiryDate);
+
+    // Handle value encryption if provided
+    if (value) {
+      const encryptedValue = encrypt(value);
+      const encryptedString = JSON.stringify(encryptedValue);
+      updateData.value = [encryptedString];
+    }
+
+    // Update history
+    updateData.history = [
+      {
+        version: newVersion,
+        value: value || "[unchanged]",
+        description: description || existingSecret.description,
+        updatedAt: new Date().toISOString(),
+        updatedBy: session.user.email,
+        changeReason: body.changeReason,
+      },
+      ...history,
+    ];
+
     const updatedSecret = await prisma.secret.update({
       where: { id },
-      data: {
-        key: key || existingSecret.key,
-        value: value || existingSecret.value,
-        description: description || existingSecret.description,
-        environmentType: environment_type || existingSecret.environmentType,
-        version: newVersion,
-        type: type || existingSecret.type,
-        history: [
-          {
-            version: newVersion,
-            value: value || existingSecret.value,
-            description: description || existingSecret.description,
-            updatedAt: new Date(),
-            updatedBy: session.user.email,
-          },
-          ...history,
-        ],
-        updatedBy: session.user.email,
-        permission: permission || existingSecret.permission,
-        expiryDate: expiryDate
-          ? new Date(expiryDate)
-          : existingSecret.expiryDate,
-        rotationPolicy: rotationPolicy || existingSecret.rotationPolicy,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedSecret);
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error updating secret:", error);
+    console.error("Error details:", error.message);
     return NextResponse.json(
-      { error: "Failed to update secret" },
+      { message: error.message || "Failed to update secret" },
       { status: 500 }
     );
   }
@@ -200,8 +248,20 @@ export async function DELETE(request: NextRequest) {
 
     if (!id) {
       return NextResponse.json(
-        { error: "Secret ID is required" },
+        { message: "Secret ID is required" },
         { status: 400 }
+      );
+    }
+
+    // Check if secret exists
+    const existingSecret = await prisma.secret.findUnique({
+      where: { id },
+    });
+
+    if (!existingSecret) {
+      return NextResponse.json(
+        { message: "Secret not found" },
+        { status: 404 }
       );
     }
 
@@ -213,10 +273,11 @@ export async function DELETE(request: NextRequest) {
       { message: "Secret deleted successfully" },
       { status: 200 }
     );
-  } catch (error) {
+  } catch (error: any) {
     console.error("Error deleting secret:", error);
+    console.error("Error details:", error.message);
     return NextResponse.json(
-      { error: "Failed to delete secret" },
+      { message: error.message || "Failed to delete secret" },
       { status: 500 }
     );
   }

@@ -1,5 +1,6 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
+import CredentialsProvider from "next-auth/providers/credentials"
 import type { NextAuthOptions } from "next-auth"
 import prisma from "@/lib/db"
 
@@ -163,6 +164,80 @@ const prismaAdapter = {
 export const authOptions: NextAuthOptions = {
   adapter: prismaAdapter as any,
   providers: [
+    CredentialsProvider({
+      name: "Credentials",
+      credentials: {
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        // For demo purposes, accept hardcoded admin credentials
+        if (credentials.email === "admin@example.com" && credentials.password === "password") {
+          // Try to find user in database
+          try {
+            let user = await prisma.user.findUnique({
+              where: { email: credentials.email }
+            })
+
+            // If user doesn't exist, create them
+            if (!user) {
+              user = await prisma.user.create({
+                data: {
+                  email: credentials.email,
+                  name: "Admin User",
+                  role: "admin",
+                  emailVerified: new Date(),
+                }
+              })
+
+              // Create workspace and subscription for new user
+              try {
+                await prisma.workspace.create({
+                  data: {
+                    name: "Admin's workspace",
+                    description: "Personal workspace",
+                    workspaceType: "personal",
+                    createdBy: user.id,
+                    subscriptionPlan: "free",
+                    subscriptionEnd: null,
+                  },
+                })
+
+                const oneYear = 1000 * 60 * 60 * 24 * 365
+                await prisma.userSubscription.create({
+                  data: {
+                    userId: user.id,
+                    plan: "free",
+                    workspaceLimit: 3,
+                    status: "active",
+                    startDate: new Date(),
+                    endDate: new Date(Date.now() + oneYear),
+                  },
+                })
+              } catch (e) {
+                console.error("Failed to create workspace/subscription:", e)
+              }
+            }
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+            }
+          } catch (error) {
+            console.error("Database error during authentication:", error)
+            return null
+          }
+        }
+
+        return null
+      }
+    }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,

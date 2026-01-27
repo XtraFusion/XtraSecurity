@@ -38,6 +38,7 @@ import Link from "next/link";
 import TeamSwitcher from "./workspace-switcher";
 import { UserContext } from "@/hooks/useUser";
 import { AuthDebug } from "./auth-debug";
+import { NotificationsPopover } from "./notifications-popover";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -67,9 +68,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const handleLogout = () => {
     logout();
   };
-useEffect(()=>{
-console.log("calling ...")
-},[])
+  useEffect(() => {
+    console.log("calling ...")
+  }, [])
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
     <div className={`flex flex-col h-full ${mobile ? "w-full" : "w-64"}`}>
       {/* Logo */}
@@ -92,11 +93,10 @@ console.log("calling ...")
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-[1.02]"
-              }`}
+              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${isActive
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-[1.02]"
+                }`}
               onClick={() => mobile && setSidebarOpen(false)}
             >
               <item.icon className="h-4 w-4" />
@@ -184,23 +184,35 @@ console.log("calling ...")
 
       {/* Main Content */}
       <div className="lg:pl-64">
-        {/* Mobile Header */}
-        <div className="lg:hidden flex items-center justify-between p-4 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60 sticky top-0 z-40">
-          <div className="flex items-center gap-2 min-w-0">
-            <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="sm" className="lg:hidden">
-                  <Menu className="h-5 w-5" />
-                </Button>
-              </SheetTrigger>
-            </Sheet>
-            <Shield className="h-6 w-6 text-primary flex-shrink-0" />
-            <span className="font-semibold truncate">XtraSecurity</span>
+        {/* Header */}
+        <div className="sticky top-0 z-40 flex items-center justify-between p-4 border-b border-border bg-card/95 backdrop-blur supports-[backdrop-filter]:bg-card/60">
+          <div className="flex items-center gap-2">
+            {/* Mobile Menu Trigger */}
+            <div className="lg:hidden">
+              <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
+                <SheetTrigger asChild>
+                  <Button variant="ghost" size="sm">
+                    <Menu className="h-5 w-5" />
+                  </Button>
+                </SheetTrigger>
+              </Sheet>
+            </div>
+            {/* Mobile Logo */}
+            <div className="lg:hidden flex items-center gap-2">
+              <Shield className="h-6 w-6 text-primary flex-shrink-0" />
+              <span className="font-semibold truncate">XtraSecurity</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <NotificationsPopover />
+            </div>
           </div>
         </div>
 
         {/* Page Content */}
-        <main className="p-4 sm:p-6 max-w-7xl mx-auto">{children}</main>
+        <main className="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto">{children}</main>
       </div>
       <AuthDebug />
     </div>

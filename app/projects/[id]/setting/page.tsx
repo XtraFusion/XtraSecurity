@@ -1,42 +1,50 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Trash2, UserPlus, Building2, AlertTriangle, Check, X } from 'lucide-react';
-import { useParams } from 'next/navigation';
+import React, { useState, useEffect } from 'react';
+import {
+  Trash2,
+  UserPlus,
+  Building2,
+  AlertTriangle,
+  Check,
+  X,
+  Shield,
+  Activity,
+  Home,
+  ChevronRight,
+  Settings,
+  AlertCircle,
+  Loader2
+} from 'lucide-react';
+import { useParams, useRouter } from 'next/navigation';
 import { ProjectController } from '@/util/ProjectController';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+  CardFooter,
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { motion } from "framer-motion";
 
-// Types matching your project structure
+// Types
 interface Project {
   id: string;
   name: string;
   description: string;
-  branches: string[];
-  secrets: Record<string, Secret[]>;
-  owner?: string;
-  workspace?: string;
-  teamMembers?: string[];
   securityLevel?: 'low' | 'medium' | 'high';
-  accessControl?: 'private' | 'team' | 'public';
   auditLogging?: boolean;
-  twoFactorRequired?: boolean;
-  created_at?: string;
-  updated_at?: string;
-  lastSecurityAudit?: string;
 }
 
-interface Secret {
-  id: string;
-  key: string;
-  value: string;
-  description: string;
-  environment_type: "development" | "staging" | "production";
-  lastUpdated: string;
-  updatedBy?: string;
-  version: number;
-  permission: string[];
-  expiryDate: Date;
-  rotationPolicy: string;
-  type: string;
+interface TransferUserData {
+  email: string;
 }
 
 interface TransferWorkspaceData {
@@ -46,335 +54,400 @@ interface TransferWorkspaceData {
 // Mock API functions - replace with actual API calls
 const projectAPI = {
   transferToUser: async (projectId: string, data: TransferUserData): Promise<void> => {
-    // POST /api/projects/{projectId}/transfer-user
     console.log('Transferring project to user:', data.email);
-    await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API delay
-  },
-  
-  transferToWorkspace: async (projectId: string, data: TransferWorkspaceData): Promise<void> => {
-    // POST /api/projects/{projectId}/transfer-workspace
-    console.log('Transferring project to workspace:', data.workspaceId);
     await new Promise(resolve => setTimeout(resolve, 1000));
   },
-  
-  delete: async (projectId: string): Promise<void> => {
-    // DELETE /api/projects/{projectId}
-    console.log('Deleting project:', projectId);
+
+  transferToWorkspace: async (projectId: string, data: TransferWorkspaceData): Promise<void> => {
+    console.log('Transferring project to workspace:', data.workspaceId);
     await new Promise(resolve => setTimeout(resolve, 1000));
   }
 };
 
-interface ProjectSettingsProps {
-  project: Project;
-  onProjectDeleted?: () => void;
-  onProjectTransferred?: () => void;
-}
+export default function ProjectSettings() {
+  const { id } = useParams();
+  const router = useRouter();
+  const [project, setProject] = useState<Project | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-const ProjectSettings: React.FC<ProjectSettingsProps> = ({ 
-  onProjectDeleted, 
-  onProjectTransferred 
-}) => {
-  const {id} = useParams();
-
-  const [project, setProject] = useState<any>({  });
-
-  // State for transfer to user
+  // Form States
+  const [newName, setNewName] = useState('');
+  const [isRenaming, setIsRenaming] = useState(false);
 
   const [transferUserEmail, setTransferUserEmail] = useState('');
   const [isTransferringUser, setIsTransferringUser] = useState(false);
-  
-  // State for transfer to workspace
+
   const [transferWorkspaceId, setTransferWorkspaceId] = useState('');
   const [isTransferringWorkspace, setIsTransferringWorkspace] = useState(false);
-  
-  // State for project deletion
+
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [deleteConfirmText, setDeleteConfirmText] = useState('delete');
+  const [deleteConfirmText, setDeleteConfirmText] = useState('');
   const [isDeleting, setIsDeleting] = useState(false);
-  const [newTeamMemberEmail, setNewTeamMemberEmail] = useState('');
-  // Success/error states
-  const [successMessage, setSuccessMessage] = useState('');
-  const [errorMessage, setErrorMessage] = useState('');
 
-  // Clear messages after timeout
-  const clearMessages = () => {
-    setTimeout(() => {
-      setSuccessMessage('');
-      setErrorMessage('');
-    }, 5000);
-  };
+  // Feedback States
+  const [notification, setNotification] = useState<{ type: "default" | "destructive" | "success"; message: string } | null>(null);
 
-
-  // Handle transfer to user
-  const handleTransferToUser = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!transferUserEmail.trim()) return;
-
-    setIsTransferringUser(true);
-    setErrorMessage('');
-    
-    try {
-      await projectAPI.transferToUser(project.id, { email: transferUserEmail.trim() });
-      setSuccessMessage(`Project transferred to ${transferUserEmail}`);
-      setTransferUserEmail('');
-      onProjectTransferred?.();
-    } catch (error) {
-      setErrorMessage('Failed to transfer project to user');
-      clearMessages();
-    } finally {
-      setIsLoading(prev => ({ ...prev, transferUser: false }));
+  useEffect(() => {
+    if (notification) {
+      const timer = setTimeout(() => setNotification(null), 5000);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [notification]);
 
   const loadProject = async () => {
-    const projects = await ProjectController.fetchProjects(id as string);
-    if (projects.length > 0) {
-      setProject(projects[0]);
+    try {
+      setIsLoading(true);
+      const projects = await ProjectController.fetchProjects(id as string);
+      if (Array.isArray(projects) && projects.length > 0) {
+        setProject(projects[0]); // Adjust based on actual API response structure
+        setNewName(projects[0].name);
+      } else {
+        // Fallback or error handling if project not found
+        setProject(projects as any);
+        setNewName((projects as any).name);
+      }
+    } catch (error) {
+      console.error("Failed to load project", error);
+      setNotification({ type: "destructive", message: "Failed to load project details" });
+    } finally {
+      setIsLoading(false);
     }
   };
-  React.useEffect(() => {
-    loadProject();
-  } , [id]);
 
-  // Handle transfer to workspace
+  useEffect(() => {
+    loadProject();
+  }, [id]);
+
+  const handleTransferToUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!project || !transferUserEmail.trim()) return;
+
+    setIsTransferringUser(true);
+    try {
+      // Use ProjectController or direct API
+      // Since ProjectController.updateProject takes generic project data, we can try using it or axios direct
+      // Let's use controller but we might need to cast or direct axios 
+      // Plan was to use Controller.update but let's stick to what we implemented in backend
+      await ProjectController.updateProject(project.id, { newOwnerEmail: transferUserEmail.trim() } as any);
+
+      setNotification({ type: "success", message: `Project ownership transferred to ${transferUserEmail}` });
+      setTransferUserEmail('');
+      router.push('/projects'); // Redirect as we might lose access
+    } catch (error: any) {
+      const msg = error.response?.data?.error || "Failed to transfer project";
+      setNotification({ type: "destructive", message: msg });
+    } finally {
+      setIsTransferringUser(false);
+    }
+  };
+
+  const handleRename = async () => {
+    if (!project || !newName.trim() || newName === project.name) return;
+
+    setIsRenaming(true);
+    try {
+      await ProjectController.updateProject(project.id, { name: newName.trim() } as any);
+      setNotification({ type: "success", message: "Project renamed successfully" });
+      // Update local state
+      setProject({ ...project, name: newName.trim() });
+    } catch (error: any) {
+      const msg = error.response?.data?.error || "Failed to rename project";
+      setNotification({ type: "destructive", message: msg });
+    } finally {
+      setIsRenaming(false);
+    }
+  };
+
   const handleTransferToWorkspace = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!transferWorkspaceId.trim()) return;
+    if (!project || !transferWorkspaceId.trim()) return;
 
     setIsTransferringWorkspace(true);
-    setErrorMessage('');
-    
     try {
-      await projectAPI.transferToWorkspace(project.id, { workspaceId: transferWorkspaceId.trim() });
-      setSuccessMessage(`Project transferred to workspace ${transferWorkspaceId}`);
+      await ProjectController.updateProject(project.id, { targetWorkspaceId: transferWorkspaceId.trim() } as any);
+
+      setNotification({ type: "success", message: `Project moved to workspace ${transferWorkspaceId}` });
       setTransferWorkspaceId('');
-      onProjectTransferred?.();
-    } catch (error) {
-      setErrorMessage('Failed to transfer project to workspace');
-      clearMessages();
+      router.push('/projects'); // Redirect as it moved
+    } catch (error: any) {
+      const msg = error.response?.data?.error || "Failed to transfer project";
+      setNotification({ type: "destructive", message: msg });
     } finally {
-      setIsLoading(prev => ({ ...prev, transferWorkspace: false }));
+      setIsTransferringWorkspace(false);
     }
   };
 
-  // Handle project deletion
   const handleDeleteProject = async () => {
-    if (deleteConfirmText !== "delete") return;
+    if (!project || deleteConfirmText !== project.name) return;
 
     setIsDeleting(true);
-    setErrorMessage('');
-    
     try {
-      await ProjectController.deleteProject(id);
-      setSuccessMessage('Project deleted successfully');
-      onProjectDeleted?.();
+      await ProjectController.deleteProject(project.id);
+      setNotification({ type: "success", message: "Project deleted successfully" });
       router.push('/projects');
     } catch (error) {
-      setErrorMessage('Failed to delete project');
-      clearMessages();
-    } finally {
-      setIsLoading(prev => ({ ...prev, delete: false }));
+      setNotification({ type: "destructive", message: "Failed to delete project" });
+      setIsDeleting(false);
       setShowDeleteConfirm(false);
-      setDeleteConfirmText("");
     }
   };
 
-  if (!project) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-white dark:bg-gray-900">
-        <div className="text-center">
-          <div className="loading-skeleton w-12 h-12 rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-500 dark:text-gray-400">Loading project settings...</p>
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-sm text-muted-foreground">Loading settings...</p>
         </div>
       </div>
     );
   }
 
-  return (
-    <div className="max-w-2xl mx-auto p-6 space-y-8 bg-background min-h-screen">
-      {/* Page Header */}
-      <div className="border-b border-gray-200 pb-4">
-        <h1 className="text-2xl font-semibold text-gray-900">Project Settings</h1>
-        <p className="text-sm text-gray-600 mt-1">
-          Manage transfer and deletion options for "{project?.name}"
-        </p>
-      </div>
+  if (!project) return null;
 
-      {/* Main Content */}
-      <div className="ml-64 flex-1 p-6 space-y-8 bg-background">
-        {/* Page Header */}
-        <div className="border-b border-border pb-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-semibold text-foreground">Project Security Settings</h1>
-              <p className="text-sm text-muted-foreground mt-1">
-                Manage security and access controls for "{project.name}"
-              </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                project.securityLevel === 'high' 
-                  ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                  : project.securityLevel === 'medium'
-                  ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400'
-                  : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-              }`}>
-                Security Level: {project.securityLevel || 'Low'}
-              </span>
-              <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm ${
-                project.auditLogging
-                  ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
-                  : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400'
-              }`}>
-                {project.auditLogging ? 'Audit Logging Enabled' : 'Audit Logging Disabled'}
-              </span>
-            </div>
-          </div>
-        </div>
-      
-      
-      {errorMessage && (
-        <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-md">
-          <X className="w-4 h-4 text-red-600" />
-          <span className="text-sm text-red-800">{errorMessage}</span>
+  return (
+    <div className="min-h-screen bg-background pb-12">
+      {/* Notification Toast */}
+      {notification && (
+        <div className="fixed top-4 right-4 z-50 max-w-md animate-in slide-in-from-top-2 fade-in duration-300">
+          <Alert variant={notification.type === 'destructive' ? 'destructive' : 'default'} className={notification.type === 'success' ? 'border-emerald-500 text-emerald-600 dark:text-emerald-400' : ''}>
+            {notification.type === 'success' ? <Check className="h-4 w-4" /> : <AlertCircle className="h-4 w-4" />}
+            <AlertTitle>{notification.type === 'success' ? 'Success' : 'Error'}</AlertTitle>
+            <AlertDescription>{notification.message}</AlertDescription>
+          </Alert>
         </div>
       )}
 
-      {/* Transfer to User Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <UserPlus className="w-5 h-5 text-blue-600" />
-          <h2 className="text-lg font-medium text-gray-900">Transfer to User</h2>
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+        {/* Breadcrumb */}
+        <nav className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Home className="h-4 w-4" />
+          <ChevronRight className="h-4 w-4" />
+          <span className="hover:text-foreground cursor-pointer" onClick={() => router.push('/projects')}>Projects</span>
+          <ChevronRight className="h-4 w-4" />
+          <span className="hover:text-foreground cursor-pointer" onClick={() => router.push(`/projects/${project.id}`)}>{project.name}</span>
+          <ChevronRight className="h-4 w-4" />
+          <span className="text-foreground font-medium">Settings</span>
+        </nav>
+
+        {/* Header */}
+        <div className="flex flex-col gap-2">
+          <h1 className="text-3xl font-bold tracking-tight">Project Settings</h1>
+          <p className="text-muted-foreground">
+            Manage security, access control, and danger zone for {project.name}
+          </p>
         </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Transfer ownership of this project to another user by entering their email address.
-        </p>
-        
-        <form onSubmit={handleTransferToUser} className="space-y-4">
-          <div>
-            <label htmlFor="user-email" className="block text-sm font-medium text-gray-700 mb-2">
-              Recipient Email Address
-            </label>
-            <input
-              type="email"
-              value={newTeamMemberEmail}
-              onChange={(e) => setNewTeamMemberEmail(e.target.value)}
-              placeholder="user@example.com"
-              required
-              disabled={isTransferringUser}
-            />
+
+        <Separator />
+
+        <div className="grid gap-8">
+          {/* General Information Card */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Settings className="h-5 w-5 text-primary" />
+                General Information
+              </CardTitle>
+              <CardDescription>
+                Overview of your project configuration
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="grid gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label>Project Name</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      value={newName}
+                      onChange={(e) => setNewName(e.target.value)}
+                      placeholder="Project Name"
+                    />
+                    <Button
+                      onClick={handleRename}
+                      disabled={isRenaming || !newName || newName === project.name}
+                      size="sm"
+                    >
+                      {isRenaming ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Save'}
+                    </Button>
+                  </div>
+                </div>
+                <div className="space-y-2">
+                  <Label>Project ID</Label>
+                  <div className="p-2.5 rounded-md bg-muted/50 border text-sm font-mono text-muted-foreground truncate">
+                    {project.id}
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-wrap gap-4 pt-2">
+                <div className="flex items-center gap-2 p-2 rounded-lg border bg-card text-sm">
+                  <Shield className={`h-4 w-4 ${project.securityLevel === 'high' ? 'text-emerald-500' :
+                    project.securityLevel === 'medium' ? 'text-amber-500' : 'text-red-500'
+                    }`} />
+                  <span className="text-muted-foreground">Security Level:</span>
+                  <span className="font-medium capitalize">{project.securityLevel || 'Low'}</span>
+                </div>
+                <div className="flex items-center gap-2 p-2 rounded-lg border bg-card text-sm">
+                  <Activity className={`h-4 w-4 ${project.auditLogging ? 'text-blue-500' : 'text-muted-foreground'}`} />
+                  <span className="text-muted-foreground">Audit Logging:</span>
+                  <span className="font-medium">{project.auditLogging ? 'Enabled' : 'Disabled'}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Transfer Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Transfer to User */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <UserPlus className="h-4 w-4 text-blue-500" />
+                  Transfer Ownership
+                </CardTitle>
+                <CardDescription>
+                  Transfer this project to another user
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleTransferToUser} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="user-email">Recipient Email</Label>
+                    <Input
+                      id="user-email"
+                      type="email"
+                      placeholder="colleague@example.com"
+                      value={transferUserEmail}
+                      onChange={(e) => setTransferUserEmail(e.target.value)}
+                      disabled={isTransferringUser}
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
+                    disabled={isTransferringUser || !transferUserEmail}
+                  >
+                    {isTransferringUser ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Transferring...
+                      </>
+                    ) : (
+                      'Transfer Project'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+
+            {/* Transfer to Workspace */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <Building2 className="h-4 w-4 text-purple-500" />
+                  Move to Workspace
+                </CardTitle>
+                <CardDescription>
+                  Move project to another workspace
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <form onSubmit={handleTransferToWorkspace} className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="workspace-id">Workspace ID / Name</Label>
+                    <Input
+                      id="workspace-id"
+                      placeholder="workspace_123"
+                      value={transferWorkspaceId}
+                      onChange={(e) => setTransferWorkspaceId(e.target.value)}
+                      disabled={isTransferringWorkspace}
+                    />
+                  </div>
+                  <Button
+                    type="submit"
+                    variant="secondary"
+                    className="w-full"
+                    disabled={isTransferringWorkspace || !transferWorkspaceId}
+                  >
+                    {isTransferringWorkspace ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Moving...
+                      </>
+                    ) : (
+                      'Move Project'
+                    )}
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
           </div>
-          
-          <button
-            type="submit"
-            disabled={isTransferringUser || !transferUserEmail.trim()}
-            className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isTransferringUser ? 'Transferring...' : 'Transfer to User'}
-          </button>
-        </form>
-      </div>
 
-      {/* Transfer to Workspace Section */}
-      <div className="bg-white border border-gray-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Building2 className="w-5 h-5 text-purple-600" />
-          <h2 className="text-lg font-medium text-gray-900">Transfer to Workspace</h2>
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Move this project to a different workspace within your organization.
-        </p>
-        
-        <form onSubmit={handleTransferToWorkspace} className="space-y-4">
-          <div>
-            <label htmlFor="workspace-id" className="block text-sm font-medium text-gray-700 mb-2">
-              Workspace Name or ID
-            </label>
-            <input
-              type="text"
-              id="workspace-id"
-              value={transferWorkspaceId}
-              onChange={(e) => setTransferWorkspaceId(e.target.value)}
-              placeholder="workspace-name or ws-123456"
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
-              required
-              disabled={isTransferringWorkspace}
-            />
-          </div>
-          
-          <button
-            type="submit"
-            disabled={isTransferringWorkspace || !transferWorkspaceId.trim()}
-            className="bg-purple-600 text-white px-4 py-2 rounded-md hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {isTransferringWorkspace ? 'Transferring...' : 'Transfer to Workspace'}
-          </button>
-        </form>
-      </div>
-
-      {/* Delete Project Section */}
-      <div className="bg-white border border-red-200 rounded-lg p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <Trash2 className="w-5 h-5 text-red-600" />
-          <h2 className="text-lg font-medium text-gray-900">Delete Project</h2>
-        </div>
-        <p className="text-sm text-gray-600 mb-4">
-          Permanently delete this project and all associated data. This action cannot be undone.
-        </p>
-
-        {!showDeleteConfirm ? (
-          <button
-            onClick={() => setShowDeleteConfirm(true)}
-            className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-          >
-            Delete Project
-          </button>
-        ) : (
-          <div className="space-y-4 p-4 bg-red-50 rounded-md border border-red-200">
-            <div className="flex items-center gap-2 text-red-800">
-              <AlertTriangle className="w-4 h-4" />
-              <span className="font-medium">Confirm Project Deletion</span>
-            </div>
-            
-            <p className="text-sm text-red-700">
-              Type "{project?.name}" to confirm deletion:
-            </p>
-            
-            <input
-              type="text"
-              value={deleteConfirmText}
-              onChange={(e) => setDeleteConfirmText(e.target.value)}
-              placeholder={project?.name}
-              className="w-full px-3 py-2 border border-red-300 rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-              disabled={isDeleting}
-            />
-            
-            <div className="flex gap-3">
-              <button
-                onClick={handleDeleteProject}
-                disabled={isDeleting || deleteConfirmText !== "delete"}
-                className="bg-red-600 text-white px-4 py-2 rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isDeleting ? 'Deleting...' : 'Delete Project'}
-              </button>
-              
-              <button
-                onClick={() => {
-                  setShowDeleteConfirm(false);
-                  setDeleteConfirmText('');
-                }}
-                disabled={isDeleting}
-                className="bg-gray-300 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Cancel
-              </button>
-            </div>
-            </div>
-          )}
+          {/* Danger Zone */}
+          <Card className="border-red-200 dark:border-red-900/50 bg-red-50/10 dark:bg-red-950/10">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-red-600 dark:text-red-400">
+                <AlertTriangle className="h-5 w-5" />
+                Danger Zone
+              </CardTitle>
+              <CardDescription>
+                Irreversible actions for this project
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-lg border border-red-100 dark:border-red-900/20 bg-background">
+                <div className="space-y-1">
+                  <h4 className="font-medium">Delete Project</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Permanently delete this project and all of its data.
+                  </p>
+                </div>
+                {!showDeleteConfirm ? (
+                  <Button
+                    variant="destructive"
+                    onClick={() => setShowDeleteConfirm(true)}
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete Project
+                  </Button>
+                ) : (
+                  <div className="w-full md:w-auto flex flex-col gap-3 animate-in fade-in zoom-in-95 duration-200">
+                    <div className="space-y-2">
+                      <Label className="text-red-600 text-xs uppercase font-bold">
+                        Type "{project.name}" to confirm
+                      </Label>
+                      <div className="flex gap-2">
+                        <Input
+                          value={deleteConfirmText}
+                          onChange={(e) => setDeleteConfirmText(e.target.value)}
+                          placeholder={project.name}
+                          className="md:w-64"
+                        />
+                        <Button
+                          variant="destructive"
+                          disabled={isDeleting || deleteConfirmText !== project.name}
+                          onClick={handleDeleteProject}
+                        >
+                          {isDeleting ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Confirm'}
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setShowDeleteConfirm(false);
+                            setDeleteConfirmText('');
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
-  )
-};
-
-export default ProjectSettings;
+  );
+}

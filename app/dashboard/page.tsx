@@ -71,7 +71,7 @@ export default function DashboardPage() {
 
   useEffect(() => {
     const loadData = async () => {
-      
+
       setIsLoading(true);
       const projectsList = await ProjectController.fetchProjects("");
       console.log(projectsList)
@@ -80,7 +80,7 @@ export default function DashboardPage() {
     };
 
     loadData();
-  }, [router,isCreateModalOpen]);
+  }, [router, isCreateModalOpen]);
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -88,24 +88,25 @@ export default function DashboardPage() {
       project.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const handleCreateProject = () => {
+  const handleCreateProject = async () => {
     if (!newProject.name.trim()) return;
 
     const project: Project = {
-      id: Date.now().toString(),
       name: newProject.name,
       description: newProject.description,
-      updatedAt: new Date(),
-      branch: [],
       workspaceId: selectedWorkspace.id,
       status: "active",
-      createdAt: new Date(),
     };
 
-    ProjectController.createProject(project);
-    setProjects([project, ...projects]);
-    setNewProject({ name: "", description: "" });
-    setIsCreateModalOpen(false);
+    try {
+      await ProjectController.createProject(project);
+      setNewProject({ name: "", description: "" });
+      setIsCreateModalOpen(false);
+      // Trigger refetch by toggling modal state
+    } catch (error) {
+      console.error("Failed to create project:", error);
+      // You might want to show an error message to the user here
+    }
   };
 
   const getStatusColor = (status: string) => {

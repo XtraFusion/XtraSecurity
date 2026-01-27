@@ -112,11 +112,11 @@ interface NotificationAlert {
   message: string;
   severity: "info" | "warning" | "error" | "critical";
   type:
-    | "secret_change"
-    | "rotation_failed"
-    | "suspicious_activity"
-    | "access_denied"
-    | "system_error";
+  | "secret_change"
+  | "rotation_failed"
+  | "suspicious_activity"
+  | "access_denied"
+  | "system_error";
   project?: string;
   branch?: string;
   user?: string;
@@ -127,6 +127,7 @@ interface NotificationAlert {
 }
 
 const mockRules: NotificationRule[] = [
+  // Keeping mock rules as placeholder per requirement
   {
     id: "1",
     name: "Production Secret Changes",
@@ -157,28 +158,8 @@ const mockChannels: NotificationChannel[] = [
   },
 ];
 
-const mockAlerts: NotificationAlert[] = [
-  {
-    id: "1",
-    ruleId: "1",
-    ruleName: "Production Secret Changes",
-    title: "Secret Modified in Production",
-    message: "DATABASE_URL was updated in Production API (main branch)",
-    severity: "warning",
-    type: "secret_change",
-    project: "Production API",
-    branch: "main",
-    user: "admin@example.com",
-    timestamp: "2024-01-15T10:30:00Z",
-    read: false,
-    channels: ["email-1", "slack-1"],
-    metadata: {
-      secretKey: "DATABASE_URL",
-      oldValue: "postgresql://...",
-      newValue: "postgresql://...",
-    },
-  },
-];
+// Mocks removed, fetching real data
+const mockAlerts: NotificationAlert[] = [];
 
 export default function NotificationsPage() {
   const router = useRouter();
@@ -227,12 +208,34 @@ export default function NotificationsPage() {
     }
 
     const loadData = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 800));
-      setIsLoading(false);
+      try {
+        const response = await apiClient.get("/api/notifications");
+        // Transform API notifications to match NotificationAlert interface
+        const fetchedAlerts: NotificationAlert[] = (response.data.notifications || []).map((n: any) => ({
+          id: n.id,
+          ruleId: "system", // default for system notifications
+          ruleName: "System Notification",
+          title: n.taskTitle || "Notification",
+          message: n.message || n.description,
+          severity: (n.status as any) || "info",
+          type: "system_error", // mapping to existing type or generic
+          timestamp: n.createdAt,
+          read: n.read,
+          channels: [], // system notifications might not have channels in this view yet
+          project: n.taskTitle?.includes("Project") ? "System" : undefined,
+          user: n.userEmail
+        }));
+        setAlerts(fetchedAlerts);
+      } catch (error) {
+        console.error("Failed to load notifications", error);
+        setNotification({ type: "error", message: "Failed to load notifications" });
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     loadData();
-  }, [router]);
+  }, [router, session]);
 
   useEffect(() => {
     if (notification) {
@@ -400,12 +403,21 @@ export default function NotificationsPage() {
     });
   };
 
-  const handleMarkAsRead = (alertId: string) => {
+  const handleMarkAsRead = async (alertId: string) => {
+    // Optimistic update
     setAlerts(
       alerts.map((alert) =>
         alert.id === alertId ? { ...alert, read: true } : alert
       )
     );
+
+    try {
+      await apiClient.patch("/api/notifications", { id: alertId, read: true });
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+      // Revert on failure if needed, or just show error
+      setNotification({ type: "error", message: "Failed to update status" });
+    }
   };
 
   const handleDeleteAlert = (alertId: string) => {
@@ -521,11 +533,10 @@ export default function NotificationsPage() {
         {/* Notification */}
         {notification && (
           <Alert
-            className={`${
-              notification.type === "error"
+            className={`${notification.type === "error"
                 ? "border-destructive"
                 : "border-green-500"
-            } animate-in slide-in-from-top-2 duration-300`}
+              } animate-in slide-in-from-top-2 duration-300`}
           >
             <AlertDescription>{notification.message}</AlertDescription>
           </Alert>
@@ -980,9 +991,8 @@ export default function NotificationsPage() {
                     {filteredAlerts.map((alert) => (
                       <Card
                         key={alert.id}
-                        className={`${
-                          !alert.read ? "border-l-4 border-l-primary" : ""
-                        }`}
+                        className={`${!alert.read ? "border-l-4 border-l-primary" : ""
+                          }`}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-4">

@@ -4,6 +4,7 @@ import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { decrypt } from "@/lib/encription";
 
 // Helper function to check authentication
 // GET /api/branch - Get all branches or filter by projectId
@@ -25,7 +26,29 @@ if (!session?.user?.email) {
       }
     });
 
-    return NextResponse.json(branches);
+    // Decrypt secret values in each branch
+    const branchesWithDecryptedSecrets = branches.map((branch) => ({
+      ...branch,
+      secrets: branch.secrets?.map((secret) => {
+        try {
+          const encryptedString = secret.value[0];
+          const encryptedObject = JSON.parse(encryptedString);
+          const decryptedValue = decrypt(encryptedObject);
+          return {
+            ...secret,
+            value: decryptedValue,
+          };
+        } catch (error) {
+          console.error(`Failed to decrypt secret ${secret.id}:`, error);
+          return {
+            ...secret,
+            value: "[Decryption failed]",
+          };
+        }
+      }) || [],
+    }));
+
+    return NextResponse.json(branchesWithDecryptedSecrets);
   } catch (error) {
     console.error("Error fetching branches:", error);
     return NextResponse.json(
