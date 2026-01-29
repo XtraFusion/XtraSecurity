@@ -100,9 +100,10 @@ export interface CreateProject {
   description: string;
   status: string; // "active" | "archived"
   userId?: string;
-  branch?: Branch[];
+  userId?: string;
+  branches?: Branch[];
   user?: User;
-  secret?: Secret[];
+  secrets?: Secret[];
   createdAt: Date;
   updatedAt: Date;
   teamProjects?: TeamProject[];
@@ -126,16 +127,26 @@ export interface Project {
   description: string;
   status: string; // "active" | "archived"
   userId?: string;
-  branch: Branch[];
+  branches: Branch[];
   user?: User;
-  secret?: Secret[];
+  secrets?: Secret[];
   createdAt: Date;
   updatedAt: Date;
   workspaceId: string;
   teamProjects?: TeamProject[];
-  accessLevel: AccessLevel;
+  accessControl: string | null;
   securityLevel: SecurityLevel;
-  securitySettings: SecuritySettings;
+  // Security Settings (Flat)
+  twoFactorRequired: boolean;
+  passwordMinLength: number;
+  passwordRequireSpecialChars: boolean;
+  passwordRequireNumbers: boolean;
+  passwordExpiryDays: number;
+  ipRestrictions: IpRestriction[];
+  // Audit & Status
+  isBlocked: boolean;
+  auditLogging: boolean;
+  lastSecurityAudit: Date | null;
 }
 
 export interface Branch {

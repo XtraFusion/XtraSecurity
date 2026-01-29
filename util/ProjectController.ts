@@ -1,8 +1,9 @@
 import { Project, AccessLevel, SecurityLevel, SecuritySettings, IpRestriction } from "./Interface";
+import { Project as PrismaProject } from "@/lib/generated/prisma";
 import axios from "axios";
 
 export const ProjectController = {
-  createProject: async function (projectData: Project) {
+  createProject: async function (projectData: Project | PrismaProject) {
     try {
       const response = await axios.post("/api/project", projectData);
       if (response.status === 201) {
@@ -100,7 +101,7 @@ export const ProjectController = {
   },
 
   //update project
-  updateProject: async function (id: string, data: Project) {
+  updateProject: async function (id: string, data: Project | PrismaProject) {
     try {
       const response = await axios.put(`/api/project?id=${id}`, data);
       if (response.status === 200) {

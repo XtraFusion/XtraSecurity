@@ -57,13 +57,13 @@ export async function GET(request: NextRequest) {
         ...p,
         createdAt: p.createdAt?.toISOString?.() ?? null,
         updatedAt: p.updatedAt?.toISOString?.() ?? null,
-        branch:
-          p.branch?.map((b: any) => ({
+        branches:
+          p.branches?.map((b: any) => ({
             ...b,
             createdAt: b.createdAt?.toISOString?.() ?? null,
           })) ?? [],
-        secret:
-          p.secret?.map((s: any) => ({
+        secrets:
+          p.secrets?.map((s: any) => ({
             ...s,
             lastUpdated: s.lastUpdated?.toISOString?.() ?? null,
           })) ?? [],

@@ -191,7 +191,7 @@ export default function NotificationsPage() {
   });
 
   const [newChannel, setNewChannel] = useState({
-    type: "email" as const,
+    type: "email" as "email" | "slack" | "teams" | "webhook",
     name: "",
     config: {
       email: "",
@@ -534,8 +534,8 @@ export default function NotificationsPage() {
         {notification && (
           <Alert
             className={`${notification.type === "error"
-                ? "border-destructive"
-                : "border-green-500"
+              ? "border-destructive"
+              : "border-green-500"
               } animate-in slide-in-from-top-2 duration-300`}
           >
             <AlertDescription>{notification.message}</AlertDescription>

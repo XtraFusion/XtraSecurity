@@ -334,7 +334,7 @@ const TeamDetail = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleInviteMember = async() => {
+  const handleInviteMember = async () => {
     if (!canInviteMembers(currentUser?.role)) {
       toast({
         title: "Access Denied",
@@ -387,7 +387,7 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRoleChangeRequest = async(
+  const handleRoleChangeRequest = async (
     memberId: string,
     newRole: TeamMember["role"]
   ) => {
@@ -402,6 +402,23 @@ const TeamDetail = () => {
       });
       return;
     }
+
+    // Check if removing the last admin
+    if (member.role === "admin" || member.role === "owner") {
+      const adminCount = members.filter(
+        (m) => m.role === "admin" || m.role === "owner"
+      ).length;
+
+      if (adminCount <= 1 && newRole !== "admin" && newRole !== "owner") {
+        toast({
+          title: "Action Denied",
+          description: "Cannot remove the last admin from the team",
+          variant: "destructive",
+        });
+        return;
+      }
+    }
+
     await axios.put("/api/team/role", { memberId: member.id, newRole: newRole });
 
     setConfirmDialog({
@@ -426,13 +443,12 @@ const TeamDetail = () => {
     setConfirmDialog({ open: false, type: "remove" });
     toast({
       title: "Role updated",
-      description: `${
-        confirmDialog.member.user?.name || confirmDialog.member.name
-      }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
+      description: `${confirmDialog.member.user?.name || confirmDialog.member.name
+        }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
     });
   };
 
-  const handleRemoveMemberRequest = async(memberId: string) => {
+  const handleRemoveMemberRequest = async (memberId: string) => {
     let member = members.find((m) =>
       m?.user?.id === memberId ? m : null
     );
@@ -446,10 +462,10 @@ const TeamDetail = () => {
       });
       return;
     }
-    if(member){
-      const dataReturn = await axios.delete("/api/team/remove", { data: { memberId:member.id } });
+    if (member) {
+      const dataReturn = await axios.delete("/api/team/remove", { data: { memberId: member.id } });
     }
-    else{
+    else {
       console.log("Member not found")
     }
 
@@ -678,7 +694,7 @@ const TeamDetail = () => {
                 {Math.round(
                   (members.filter((m) => m.status === "active").length /
                     members.length) *
-                    100
+                  100
                 )}
                 % of team
               </p>

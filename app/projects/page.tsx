@@ -22,50 +22,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Label } from "@radix-ui/react-menubar";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useSession } from "next-auth/react";
 import { ProjectController } from "@/util/ProjectController";
-import { Project } from "@/lib/generated/prisma";
+import { Project } from "@/util/Interface";
 import { UserContext } from "@/hooks/useUser";
 
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    name: "Production API",
-    description: "Main production environment for our API services",
-    lastUpdated: "2024-01-15T10:30:00Z",
-    activeBranches: ["main"],
-    status: "active",
-  },
-  {
-    id: "2",
-
-    name: "Staging Environment",
-    description: "Deployment environment for testing before production",
-    secretsCount: 1,
-    lastUpdated: "2024-01-14T16:45:00Z",
-    activeBranches: ["main"],
-    status: "active",
-  },
-  {
-    id: "3",
-    name: "Development Sandbox",
-    description: "For developers to experiment and build new features",
-    secretsCount: 1,
-    lastUpdated: "2024-01-15T10:30:00Z",
-    activeBranches: ["main"],
-    status: "active",
-  },
-];
 
 export default function ProjectsPage() {
   const router = useRouter();
-   const userContext = useContext(UserContext);
-    if (!userContext) {
-      throw new Error("useUser must be used within a UserProvider");
-    }
-    const { user, fetchUser, selectedWorkspace } = userContext;
+  const userContext = useContext(UserContext);
+  if (!userContext) {
+    throw new Error("useUser must be used within a UserProvider");
+  }
+  const { user, fetchUser, selectedWorkspace } = userContext;
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
@@ -85,10 +56,23 @@ export default function ProjectsPage() {
       name: newProject.name,
       description: newProject.description,
       updatedAt: new Date(),
-      branch: [],
       workspaceId: selectedWorkspace.id,
       status: "active",
       createdAt: new Date(),
+      userId: user?.id || "",
+      accessControl: "private",
+      securityLevel: "low",
+      isBlocked: false,
+      twoFactorRequired: false,
+      passwordMinLength: 8,
+      passwordRequireSpecialChars: false,
+      passwordRequireNumbers: false,
+      passwordExpiryDays: 90,
+      ipRestrictions: [],
+      auditLogging: false,
+      lastSecurityAudit: null,
+      branches: [],
+      secrets: [],
     };
     ProjectController.createProject(project);
 
@@ -120,7 +104,7 @@ export default function ProjectsPage() {
       project.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | Date) => {
     return new Date(dateString).toLocaleDateString("en-US", {
       year: "numeric",
       month: "short",
@@ -243,7 +227,8 @@ export default function ProjectsPage() {
             {filteredProjects.map((project) => (
               <Card
                 key={project.id}
-                className="hover:shadow-lg transition-shadow duration-300 flex flex-col"
+                className="hover:shadow-lg transition-shadow duration-300 flex flex-col cursor-pointer"
+                onClick={() => router.push(`/projects/${project.id}`)}
               >
                 <CardHeader className="flex-grow">
                   <div className="flex justify-between items-start">

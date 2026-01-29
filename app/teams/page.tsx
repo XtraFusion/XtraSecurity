@@ -69,7 +69,7 @@ interface Team {
   description: string;
   members: [];
   createdAt: string;
-  teamProjects:any;
+  teamProjects: any;
   createdBy: string;
   teamColor: string;
   isPrivate: boolean;
@@ -107,11 +107,11 @@ const Teams = () => {
       team.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  useEffect(()=>{
-FetchTeamList();
-  },[])
+  useEffect(() => {
+    FetchTeamList();
+  }, [])
 
-  const handleCreateTeam = async() => {
+  const handleCreateTeam = async () => {
     if (!newTeam.name.trim()) {
       toast({
         title: "Error",
@@ -121,28 +121,38 @@ FetchTeamList();
       return;
     }
 
-    const team: any = {
-      name: newTeam.name,
-      description: newTeam.description,
-      teamColor: newTeam.color,
-      roles: ["admin"],
-    };
-    const teamUserRes = await TeamController.createTeam(team);
-    if(teamUserRes?.id){
-     router.push(`/teams/${teamUserRes.id}`)
-      setTeams([team, ...teams]);
-      setNewTeam({ name: "", description: "", color: "bg-blue-500" });
-      setCreateDialogOpen(false);
+    try {
+      const team: any = {
+        name: newTeam.name,
+        description: newTeam.description,
+        teamColor: newTeam.color,
+        roles: ["admin"],
+      };
 
+      const teamUserRes = await TeamController.createTeam(team);
+
+      if (teamUserRes?.id) {
+        router.push(`/teams/${teamUserRes.id}`)
+        setTeams([teamUserRes, ...teams]);
+        setNewTeam({ name: "", description: "", color: "bg-blue-500" });
+        setCreateDialogOpen(false);
+
+        toast({
+          title: "Team created",
+          description: `${team.name} has been created successfully`,
+        });
+      }
+    } catch (error: any) {
+      console.error("Create team error:", error);
+      toast({
+        title: "Error creating team",
+        description: error.response?.data?.error || "Failed to create team. Please try again.",
+        variant: "destructive",
+      });
     }
-
-    toast({
-      title: "Team created",
-      description: `${team.name} has been created successfully`,
-    });
   };
 
-  const FetchTeamList = async()=>{
+  const FetchTeamList = async () => {
     try {
       setIsLoading(true);
       const teamList = await TeamController.getTeams();
@@ -199,7 +209,7 @@ FetchTeamList();
             <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
             <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {Array.from({ length: 6 }).map((_, i) => (
               <Card key={i}>
@@ -236,7 +246,7 @@ FetchTeamList();
       <div className="relative overflow-hidden">
         <div
           className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-          // style={{ backgroundImage: `url(${teamsHeroImage})` }}
+        // style={{ backgroundImage: `url(${teamsHeroImage})` }}
         />
         <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
@@ -310,11 +320,10 @@ FetchTeamList();
                           <button
                             key={color}
                             onClick={() => setNewTeam({ ...newTeam, color })}
-                            className={`w-8 h-8 rounded-full ${color} border-2 ${
-                              newTeam.color === color
-                                ? "border-primary"
-                                : "border-transparent"
-                            } transition-colors`}
+                            className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
+                              ? "border-primary"
+                              : "border-transparent"
+                              } transition-colors`}
                           />
                         ))}
                       </div>
@@ -432,7 +441,7 @@ FetchTeamList();
                           <CardTitle className="text-lg group-hover:text-primary transition-colors">
                             {team.name}
                           </CardTitle>
-                         
+
                         </div>
                       </div>
                       <DropdownMenu>

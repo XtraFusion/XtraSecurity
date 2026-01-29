@@ -24,6 +24,22 @@ export async function PUT(req: Request) {
                     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
                 }
 
+                // Prevent removing last admin
+                if (targetTeamUser.role === "admin" || targetTeamUser.role === "owner") {
+                    if (newRole !== "admin" && newRole !== "owner") {
+                        const adminCount = await prisma.teamUser.count({
+                            where: {
+                                teamId: targetTeamUser.teamId,
+                                role: { in: ["admin", "owner"] }
+                            }
+                        });
+
+                        if (adminCount <= 1) {
+                             return NextResponse.json({ error: "Cannot remove the last admin from the team" }, { status: 400 });
+                        }
+                    }
+                }
+
                 const roleUpdate = await prisma.teamUser.updateMany({
                         where: { id: memberId },
                         data: { role: newRole },

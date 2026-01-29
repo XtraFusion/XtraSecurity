@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "./../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { createNotification } from "@/lib/notifications";
 
 export async function POST(req: Request) {
   try {
@@ -22,13 +23,13 @@ export async function POST(req: Request) {
     const createTeam = await prisma.team.findFirst({
       where: { AND: [{ name: name }, { createdBy: session.user.id }] },
     });
-    console.log(createTeam)
+    console.log("Existing team check:", createTeam);
 
     if (createTeam) {
       return NextResponse.json({ error: "Already Exists" }, { status: 409 });
     }
 
-    await prisma.team.create({
+    const team = await prisma.team.create({
       data: {
         name,
         description,
@@ -45,9 +46,31 @@ export async function POST(req: Request) {
           },
         },
       },
+      include: {
+        members: true,
+        teamProjects: true,
+      },
     });
 
-    return NextResponse.json({ message: "Invitation sent" }, { status: 200 });
+    console.log("Team created in DB:", team);
+
+    // Notify user
+    try {
+        await createNotification(
+          session.user.id,
+          session.user.email,
+          "Team Created",
+          `Team "${team.name}" created`,
+          `You successfully created team "${team.name}".`,
+          "success"
+        );
+        console.log("Notification created successfully");
+    } catch (notifError) {
+        console.error("Failed to create notification:", notifError);
+        // Do not fail the request if notification fails
+    }
+
+    return NextResponse.json(team, { status: 201 });
   } catch (error: any) {
     console.error("POST /team error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
@@ -101,6 +124,16 @@ export async function DELETE(req: Request) {
     if (!deleteTeam.count) {
       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
+
+    // Notify user
+    await createNotification(
+      session.user.id,
+      session.user.email,
+      "Team Deleted",
+      "Team deleted", 
+      "The team has been successfully deleted.",
+      "warning"
+    );
 
     return NextResponse.json({ message: "Team deleted successfully" }, { status: 200 });
   } catch (error: any) {
