@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma";
-import { verifyAuth } from "@/lib/auth";
+import { prisma } from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 // POST /api/projects/:pid/envs/:env/secrets/:key/promote
 export async function POST(

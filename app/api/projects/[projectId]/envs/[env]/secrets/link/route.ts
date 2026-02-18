@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/prisma"; // Adjust path if needed
-import { verifyAuth } from "@/lib/auth"; // Adjust path if needed
+import { prisma } from "@/lib/db"; // Adjust path if needed
+import { verifyAuth } from "@/lib/server-auth"; // Adjust path if needed
 
 // POST /api/projects/:projectId/envs/:env/secrets/link
 export async function POST(
