@@ -3,14 +3,22 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 
-export async function GET() {
+export async function GET(req: Request) {
   const session = await getServerSession(authOptions);
   if (!session?.user?.id) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  const url = new URL(req.url);
+  const workspaceId = url.searchParams.get("workspaceId");
+
+  const whereClause: any = { userId: session.user.id };
+  if (workspaceId) {
+      whereClause.workspaceId = workspaceId;
+  }
+
   const notifications = await prisma.notification.findMany({
-    where: { userId: session.user.id },
+    where: whereClause,
     orderBy: { createdAt: "desc" },
   });
 

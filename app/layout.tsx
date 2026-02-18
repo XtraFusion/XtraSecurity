@@ -4,9 +4,11 @@ import type { Metadata } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
-import {UserProvider} from "@/hooks/useUser"
+import { UserProvider } from "@/hooks/useUser"
 import "./globals.css"
 import Provider from "@/lib/provider"
+import { Toaster } from "@/components/ui/sonner"
+import { Toaster as CustomToaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
   title: "XtraSecurity",
@@ -32,16 +34,18 @@ html {
       </head>
 
       <body style={{
-        pointerEvents:"fill"
+        pointerEvents: "fill"
       }}>
-      <Provider>
-        <UserProvider  >
+        <Provider>
+          <UserProvider  >
 
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-        </ThemeProvider>
-        </UserProvider>
-      </Provider>
+            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+              {children}
+              <Toaster />
+              <CustomToaster />
+            </ThemeProvider>
+          </UserProvider>
+        </Provider>
       </body>
     </html>
   )

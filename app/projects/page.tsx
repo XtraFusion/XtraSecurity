@@ -11,7 +11,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Plus, Search, Folder, ChevronRight } from "lucide-react";
+import { Plus, Search, Folder, ChevronRight, RotateCcw } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import Link from "next/link";
 import {
@@ -80,23 +80,29 @@ export default function ProjectsPage() {
     setNewProject({ name: "", description: "" });
     setIsCreateModalOpen(false);
   };
+  const loadProjects = async () => {
+    setIsLoading(true);
+    // In a real app, fetch projects from the API
+    const url = selectedWorkspace ? `/api/project?workspaceId=${selectedWorkspace.id}` : "/api/project";
+    const response = await fetch(url);
+
+    if (response.ok) {
+      const data = await response.json();
+      setProjects(data);
+    }
+    setIsLoading(false);
+  };
+
   useEffect(() => {
     if (!session?.user?.email) {
       router.push("/login");
       return;
     }
 
-    const loadProjects = async () => {
-      // In a real app, fetch projects from the API
-
-      const response = await fetch("/api/project");
-      const data = await response.json();
-      setProjects(data);
-      setIsLoading(false);
-    };
-
-    loadProjects();
-  }, [router]);
+    if (session?.user?.email) {
+      loadProjects();
+    }
+  }, [router, session, selectedWorkspace]);
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -152,64 +158,74 @@ export default function ProjectsPage() {
               A list of all your projects.
             </p>
           </div>
-          <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="flex items-center gap-2 w-full sm:w-auto">
-                <Plus className="h-4 w-4" />
-                New Projects
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Create New Project</DialogTitle>
-                <DialogDescription>
-                  Add a new project to manage environment variables and secrets.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="project-name">Project Name</Label>
-                  <Input
-                    id="project-name"
-                    placeholder="Enter project name"
-                    value={newProject.name}
-                    onChange={(e) =>
-                      setNewProject({ ...newProject, name: e.target.value })
-                    }
-                  />
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={loadProjects}
+              title="Refresh Projects"
+            >
+              <RotateCcw className="h-4 w-4" />
+            </Button>
+            <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="flex items-center gap-2 w-full sm:w-auto">
+                  <Plus className="h-4 w-4" />
+                  New Projects
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Project</DialogTitle>
+                  <DialogDescription>
+                    Add a new project to manage environment variables and secrets.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="project-name">Project Name</Label>
+                    <Input
+                      id="project-name"
+                      placeholder="Enter project name"
+                      value={newProject.name}
+                      onChange={(e) =>
+                        setNewProject({ ...newProject, name: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="project-description">Description</Label>
+                    <Textarea
+                      id="project-description"
+                      placeholder="Enter project description"
+                      value={newProject.description}
+                      onChange={(e) =>
+                        setNewProject({
+                          ...newProject,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={() => setIsCreateModalOpen(false)}
+                      className="w-full sm:w-auto"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleCreateProject}
+                      className="w-full sm:w-auto"
+                    >
+                      Create Project
+                    </Button>
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="project-description">Description</Label>
-                  <Textarea
-                    id="project-description"
-                    placeholder="Enter project description"
-                    value={newProject.description}
-                    onChange={(e) =>
-                      setNewProject({
-                        ...newProject,
-                        description: e.target.value,
-                      })
-                    }
-                  />
-                </div>
-                <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                  <Button
-                    variant="outline"
-                    onClick={() => setIsCreateModalOpen(false)}
-                    className="w-full sm:w-auto"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    onClick={handleCreateProject}
-                    className="w-full sm:w-auto"
-                  >
-                    Create Project
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
 
         <div className="relative">
@@ -241,7 +257,7 @@ export default function ProjectsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="flex justify-between items-center text-sm text-muted-foreground">
-                    <span>{project?.secrets?.length} secrets</span>
+                    <span>{new Set(project.secrets?.map((s: any) => s.key)).size || 0} secrets</span>
                     <span>Updated {formatDate(project.updatedAt)}</span>
                   </div>
                   <Button asChild variant="outline" className="w-full mt-4">

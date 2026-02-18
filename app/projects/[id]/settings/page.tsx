@@ -1,19 +1,20 @@
 "use client";
 
 import { useEffect, useState } from 'react';
-import { 
-  Trash2, 
-  UserPlus, 
-  Building2, 
-  AlertTriangle, 
-  Check, 
-  X, 
-  GitBranch, 
-  Lock, 
-  Unlock, 
-  RefreshCw, 
-  Plus 
+import {
+  Trash2,
+  UserPlus,
+  Building2,
+  AlertTriangle,
+  Check,
+  X,
+  GitBranch,
+  Lock,
+  Unlock,
+  RefreshCw,
+  Plus
 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
 import { ProjectController } from '@/util/ProjectController';
 import { BranchController } from '@/util/BranchController';
@@ -29,6 +30,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
 import axios from '@/lib/axios';
+import { ServiceAccountsTab } from './service-accounts-tab';
 
 interface Team {
   id: string;
@@ -103,6 +105,7 @@ export default function ProjectSettings() {
   const [newBranch, setNewBranch] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [isPageLoading, setIsPageLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState({
     teams: false,
@@ -120,6 +123,7 @@ export default function ProjectSettings() {
   }, [id]);
 
   const fetchData = async () => {
+    setIsPageLoading(true);
     try {
       // Get project data
       const [projectData, branchesData, teamsRes, projectTeamsRes] = await Promise.all([
@@ -129,8 +133,7 @@ export default function ProjectSettings() {
         axios.get(`/api/project/${id}/teams`)
       ]);
 
-        setProject(projectData);
-console.log(projectData)
+      setProject(projectData);
       setBranches(branchesData);
       setTeams(teamsRes.data);
       setProjectTeams(projectTeamsRes.data);
@@ -141,6 +144,8 @@ console.log(projectData)
         description: "Failed to fetch data",
         variant: "destructive"
       });
+    } finally {
+      setIsPageLoading(false);
     }
   };
 
@@ -154,7 +159,7 @@ console.log(projectData)
       const branchData = {
         name: newBranch.trim(),
         description: "",
-        projectId: id,
+        projectId: id as string,
         versionNo: "1.0",
         permissions: [],
         createdBy: "" // This will be set by the server from the session
@@ -307,7 +312,7 @@ console.log(projectData)
       const response = await axios.post(`/api/project/${id}/teams`, {
         teamId: selectedTeam
       });
-      
+
       if (response.data) {
         setProjectTeams(prev => [...prev, response.data]);
         setSelectedTeam('');
@@ -331,12 +336,12 @@ console.log(projectData)
     setIsLoading(prev => ({ ...prev, teams: true }));
     try {
       await axios.delete(`/api/project/${id}/teams/${teamProjectId}`);
-      
+
       toast({
         title: "Success",
         description: "Team removed from project successfully",
       });
-      
+
       fetchData();
     } catch (error) {
       toast({
@@ -348,6 +353,24 @@ console.log(projectData)
       setIsLoading(prev => ({ ...prev, teams: false }));
     }
   };
+
+  if (isPageLoading) {
+    return (
+      <div className="container max-w-4xl mx-auto p-6 space-y-8">
+        <div className="flex items-center justify-between">
+          <div className="space-y-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-48" />
+          </div>
+          <Skeleton className="h-10 w-32" />
+        </div>
+        <div className="space-y-4">
+          <Skeleton className="h-10 w-full" />
+          <Skeleton className="h-[400px] w-full" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="container max-w-4xl mx-auto p-6 space-y-8">
@@ -375,13 +398,14 @@ console.log(projectData)
       </div>
 
       <Tabs defaultValue="teams" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="teams">Teams</TabsTrigger>
+          <TabsTrigger value="service-accounts">Service Accounts</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
-          <TabsTrigger value="access">Access Control</TabsTrigger>
+          <TabsTrigger value="access">Access</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="clear">Clear Data</TabsTrigger>
-          <TabsTrigger value="danger">Danger Zone</TabsTrigger>
+          <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
 
         <TabsContent value="teams">
@@ -392,7 +416,16 @@ console.log(projectData)
             </CardHeader>
             <CardContent>
               <div className="flex gap-4 mb-6">
-                <Select value={selectedTeam} onValueChange={setSelectedTeam}>
+                <Select
+                  value={selectedTeam}
+                  onValueChange={(value) => {
+                    if (value === 'create_new_team') {
+                      router.push('/teams');
+                      return;
+                    }
+                    setSelectedTeam(value);
+                  }}
+                >
                   <SelectTrigger className="w-[200px]">
                     <SelectValue placeholder="Select team" />
                   </SelectTrigger>
@@ -404,10 +437,17 @@ console.log(projectData)
                           {team.name}
                         </SelectItem>
                       ))}
+                    <div className="border-t my-1" />
+                    <SelectItem value="create_new_team" className="font-medium text-primary cursor-pointer">
+                      <div className="flex items-center gap-2">
+                        <Plus className="h-4 w-4" />
+                        Create New Team
+                      </div>
+                    </SelectItem>
                   </SelectContent>
                 </Select>
-                <Button 
-                  onClick={addTeamToProject} 
+                <Button
+                  onClick={addTeamToProject}
                   disabled={isLoading.teams || !selectedTeam}
                 >
                   {isLoading.teams ? "Adding..." : "Add Team"}
@@ -459,8 +499,8 @@ console.log(projectData)
                   placeholder="Enter new branch name"
                   disabled={isLoading.createBranch}
                 />
-                <Button 
-                  type="submit" 
+                <Button
+                  type="submit"
                   disabled={isLoading.createBranch || !newBranch.trim()}
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -469,7 +509,7 @@ console.log(projectData)
               </form>
 
               <div className="space-y-2">
-                {project?.branches.map((branch) => (
+                {branches.map((branch) => (
                   <div key={branch.id} className="flex items-center justify-between p-3 bg-muted rounded-lg">
                     <div className="flex items-center gap-2">
                       <GitBranch className="w-4 h-4" />
@@ -512,8 +552,8 @@ console.log(projectData)
               <div className="space-y-4">
                 <div>
                   <h3 className="text-sm font-medium mb-2">Access Level</h3>
-                  <Select 
-                    value={project?.accessControl} 
+                  <Select
+                    value={project?.accessControl}
                     onValueChange={(value: 'private' | 'team' | 'public') => {
                       if (!project) return;
                       ProjectController.updateAccessLevel(id as string, value)
@@ -820,18 +860,18 @@ console.log(projectData)
                     <AlertTriangle className="w-4 h-4" />
                     <span className="font-medium">Confirm Project Deletion</span>
                   </div>
-                  
+
                   <p className="text-sm text-red-700">
                     Type "{project?.name}" to confirm deletion:
                   </p>
-                  
+
                   <Input
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
                     className="border-red-300"
                     disabled={isLoading.deleteProject}
                   />
-                  
+
                   <div className="flex gap-2">
                     <Button
                       variant="destructive"
@@ -840,7 +880,7 @@ console.log(projectData)
                     >
                       {isLoading.deleteProject ? 'Deleting...' : 'Delete Project'}
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       onClick={() => {
@@ -856,6 +896,10 @@ console.log(projectData)
               )}
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="service-accounts">
+          <ServiceAccountsTab />
         </TabsContent>
       </Tabs>
     </div>

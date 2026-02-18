@@ -8,6 +8,7 @@ export interface User {
   name: string;
   userId: string;
   role: "admin" | "developer" | "viewer";
+  tier: "free" | "pro" | "enterprise";
 }
 
 export const mockUser: User = {
@@ -15,6 +16,7 @@ export const mockUser: User = {
   name: "Admin User",
   userId: "user-123",
   role: "admin",
+  tier: "pro",
 };
 
 

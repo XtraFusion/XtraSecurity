@@ -13,9 +13,10 @@ export const TeamController = {
             throw error;
         }
     },
-    getTeams: async () => {
+    getTeams: async (workspaceId?: string) => {
         try {
-            const response = await apiClient.get("/api/team");
+            const url = workspaceId ? `/api/team?workspaceId=${workspaceId}` : "/api/team";
+            const response = await apiClient.get(url);
             return response.data;
         } catch (error) {
             console.error("Error fetching teams:", error);

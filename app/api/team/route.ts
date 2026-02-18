@@ -3,12 +3,38 @@ import { authOptions } from "./../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { createNotification } from "@/lib/notifications";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Fetch user with tier
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+      select: { id: true, tier: true }
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    // Check team limit
+    const userTier = (user.tier || "free") as Tier;
+    const limit = DAILY_LIMITS[userTier].maxTeams;
+    
+    const teamCount = await prisma.team.count({
+      where: { createdBy: user.id }
+    });
+
+    if (teamCount >= limit) {
+      return NextResponse.json({ 
+        error: "Team limit reached", 
+        message: `Your ${userTier} plan allows creating up to ${limit} teams. Please upgrade for more capacity.` 
+      }, { status: 403 });
     }
 
     const {
@@ -18,10 +44,15 @@ export async function POST(req: Request) {
       roles = [],
       members = [],
       teamProjects = [],
+      workspaceId,
     } = await req.json();
 
+    if (!workspaceId) {
+        return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+    }
+
     const createTeam = await prisma.team.findFirst({
-      where: { AND: [{ name: name }, { createdBy: session.user.id }] },
+      where: { AND: [{ name: name }, { createdBy: user.id }, { workspaceId: workspaceId }] },
     });
     console.log("Existing team check:", createTeam);
 
@@ -36,6 +67,7 @@ export async function POST(req: Request) {
         teamColor: teamColor || "blue",
         createdAt: new Date(),
         createdBy: session.user.id,
+        workspaceId,
         roles,
         
         members: {
@@ -67,7 +99,6 @@ export async function POST(req: Request) {
         console.log("Notification created successfully");
     } catch (notifError) {
         console.error("Failed to create notification:", notifError);
-        // Do not fail the request if notification fails
     }
 
     return NextResponse.json(team, { status: 201 });
@@ -77,21 +108,30 @@ export async function POST(req: Request) {
   }
 }
 
-export async function GET() {
+export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const getTeamData = await prisma.team.findMany({
-      where: {
+    const url = new URL(req.url);
+    const workspaceId = url.searchParams.get("workspaceId");
+
+    const whereClause: any = {
         members: {
           some: {
             userId: session.user.id,
           },
         },
-      },
+    };
+
+    if (workspaceId) {
+        whereClause.workspaceId = workspaceId;
+    }
+
+    const getTeamData = await prisma.team.findMany({
+      where: whereClause,
       include:{
         teamProjects:true,
         members:true

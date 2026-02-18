@@ -3,6 +3,8 @@ import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(req: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -16,12 +18,14 @@ export async function GET(req: Request) {
     const severity = url.searchParams.get("severity") || undefined;
     const status = url.searchParams.get("status") || undefined;
     const userId = url.searchParams.get("userId") || undefined;
+    const workspaceId = url.searchParams.get("workspaceId") || undefined;
 
     const where: any = {};
     if (category) where.entity = category; // in schema 'entity' maps to e.g., 'auth','project', etc.
     if (severity) where.action = { contains: severity }; // simplistic mapping if severity stored elsewhere
     if (status) where.action = { contains: status }; // placeholder: AuditLog model doesn't have explicit status field
     if (userId) where.userId = userId;
+    if (workspaceId) where.workspaceId = workspaceId;
     if (search) where.OR = [{ action: { contains: search } }, { changes: { contains: search } }];
 
     const total = await prisma.auditLog.count({ where });

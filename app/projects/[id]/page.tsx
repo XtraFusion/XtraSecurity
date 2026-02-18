@@ -39,6 +39,7 @@ import {
   Globe,
   FileKey,
 } from "lucide-react";
+import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -68,7 +69,7 @@ import {
 import { Dialog } from "@/components/ui/dialog-custom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { useParams } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/hooks/useUser";
 import { ProjectController } from "@/util/ProjectController";
@@ -151,15 +152,15 @@ const EnvironmentBadge = ({ environment }: { environment: string }) => {
     development: Activity,
   };
 
-  const Icon = icons[environment as keyof typeof icons] || Shield;
+  const Icon = icons[(environment === "dev" ? "development" : environment) as keyof typeof icons] || Shield;
 
   return (
     <Badge
       variant="outline"
-      className={`${styles[environment as keyof typeof styles] || styles.development} gap-1.5 px-2.5 py-0.5 font-medium`}
+      className={`${styles[(environment === "dev" ? "development" : environment) as keyof typeof styles] || styles.development} gap-1.5 px-2.5 py-0.5 font-medium`}
     >
       <Icon className="h-3 w-3" />
-      <span className="capitalize">{environment}</span>
+      <span className="capitalize">{environment === "dev" ? "development" : environment}</span>
     </Badge>
   );
 };
@@ -340,6 +341,8 @@ const StatCard = ({
 
 const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
+  const router = useRouter(); // Import needed
+  const searchParams = useSearchParams(); // Import needed
   const { user } = useGlobalContext();
 
   const [project, setProject] = useState<Project | null>(null);
@@ -347,10 +350,13 @@ const VaultManager: React.FC = () => {
   const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
   const [secrets, setSecrets] = useState<Secret[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false); // New state
 
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [filterEnv, setFilterEnv] = useState<string>("all");
+
+  // Initialize filterEnv from URL or default to "all"
+  const [filterEnv, setFilterEnv] = useState<string>(searchParams.get("env") || "all");
 
   const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
   const [copiedSecret, setCopiedSecret] = useState<string | null>(null);
@@ -378,11 +384,24 @@ const VaultManager: React.FC = () => {
 
   const [newBranch, setNewBranch] = useState({ name: "", description: "" });
 
+  // Helper to update URL
+  const updateUrl = (key: string, value: string | null) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (value) {
+      params.set(key, value);
+    } else {
+      params.delete(key);
+    }
+    router.replace(`?${params.toString()}`, { scroll: false });
+  };
+
   // --- Data Loading ---
 
-  const loadProject = useCallback(async () => {
+  const loadProject = useCallback(async (silent = false) => {
     try {
-      setIsLoading(true);
+      if (!silent) setIsLoading(true);
+      else setIsRefreshing(true);
+
       // Simulate API calls
       const [projectRes, branchesRes] = await Promise.all([
         ProjectController.fetchProjects(projectId),
@@ -393,8 +412,20 @@ const VaultManager: React.FC = () => {
       setBranches(branchData);
 
       if (branchData.length > 0) {
-        setSelectedBranch(branchData[0]);
-        setSecrets(branchData[0].secrets || []);
+        // Preference: URL param -> Current State -> First Branch
+        const paramBranchId = searchParams.get("branch");
+        const foundBranch = branchData.find((b: any) => b.id === paramBranchId) ||
+          (selectedBranch ? branchData.find((b: any) => b.id === selectedBranch.id) : null) ||
+          branchData[0];
+
+        setSelectedBranch(foundBranch);
+        setSecrets(foundBranch.secrets || []);
+
+        // Sync URL if needed
+        if (!paramBranchId && foundBranch) {
+          // Don't force update URL on initial load if empty, actually it's better to reflect state
+          // But let's avoid infinite loops.
+        }
       }
 
       setProject({
@@ -406,19 +437,44 @@ const VaultManager: React.FC = () => {
       setNotification({ type: "destructive", message: "Failed to load project data" });
     } finally {
       setIsLoading(false);
+      setIsRefreshing(false);
     }
-  }, [projectId]);
+  }, [projectId, searchParams]); // searchParams dependency is tricky, handled carefully
 
+  // Initial Load - minimal dependency
   useEffect(() => {
     loadProject();
-  }, [loadProject]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [projectId]);
 
+  // Watch for notification clear
   useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 4000);
       return () => clearTimeout(timer);
     }
   }, [notification]);
+
+  // Handlers for persistence
+  const handleBranchChange = (branchId: string) => {
+    const branch = branches.find((b) => b.id === branchId);
+    if (branch) {
+      setSelectedBranch(branch);
+      setSecrets(branch.secrets || []);
+      updateUrl("branch", branch.id);
+    }
+  };
+
+  const handleEnvChange = (env: string) => {
+    setFilterEnv(env);
+    updateUrl("env", env);
+  };
+
+  const handleRefresh = () => {
+    loadProject(true);
+  };
+
+  // ... rest of handlers ...
 
   // --- Handlers ---
 
@@ -626,7 +682,7 @@ const VaultManager: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pb-12">
+    <DashboardLayout>
       {/* Notification */}
       <AnimatePresence>
         {notification && (
@@ -643,7 +699,7 @@ const VaultManager: React.FC = () => {
         )}
       </AnimatePresence>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+      <div className="space-y-8">
         {/* Breadcrumb */}
         <nav className="flex items-center gap-2 text-sm text-muted-foreground">
           <Link href="/dashboard" className="hover:text-foreground transition-colors">
@@ -664,7 +720,7 @@ const VaultManager: React.FC = () => {
             <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => window.location.href = `/projects/${projectId}/setting`}>
+            <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
               <Settings className="h-4 w-4 mr-2" />
               Settings
             </Button>
@@ -714,11 +770,7 @@ const VaultManager: React.FC = () => {
                 <GitBranch className="h-4 w-4 text-muted-foreground" />
                 <Select
                   value={selectedBranch?.id}
-                  onValueChange={(v) => {
-                    const branch = branches.find((b) => b.id === v);
-                    setSelectedBranch(branch || null);
-                    setSecrets(branch?.secrets || []);
-                  }}
+                  onValueChange={handleBranchChange}
                 >
                   <SelectTrigger className="border-0 bg-transparent font-medium">
                     <SelectValue placeholder="Select branch" />
@@ -736,7 +788,7 @@ const VaultManager: React.FC = () => {
               <div className="h-6 w-px bg-border hidden sm:block" />
 
               {/* Environment Filter */}
-              <Select value={filterEnv} onValueChange={setFilterEnv}>
+              <Select value={filterEnv} onValueChange={handleEnvChange}>
                 <SelectTrigger className="w-[140px] border-0 bg-transparent">
                   <Filter className="h-4 w-4 mr-2 text-muted-foreground" />
                   <SelectValue placeholder="Filter" />
@@ -751,6 +803,18 @@ const VaultManager: React.FC = () => {
             </div>
 
             <div className="flex items-center gap-3 w-full sm:w-auto">
+              {/* Refresh Button */}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleRefresh}
+                disabled={isRefreshing}
+                className={isRefreshing ? "animate-spin" : ""}
+                title="Refresh Secrets"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
+
               {/* Search */}
               <div className="relative flex-1 sm:w-64">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -1176,7 +1240,7 @@ const VaultManager: React.FC = () => {
           </div>
         </div>
       </Dialog>
-    </div>
+    </DashboardLayout>
   );
 };
 

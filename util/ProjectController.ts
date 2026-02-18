@@ -1,6 +1,12 @@
 import { Project, AccessLevel, SecurityLevel, SecuritySettings, IpRestriction } from "./Interface";
+export type { AccessLevel, SecurityLevel, IpRestriction };
 import { Project as PrismaProject } from "@/lib/generated/prisma";
 import axios from "axios";
+
+const CACHE_TTL = 60 * 1000; // 60 seconds
+const projectCache = new Map<string, { data: any; expiry: number }>();
+
+const clearCache = () => projectCache.clear();
 
 export const ProjectController = {
   createProject: async function (projectData: Project | PrismaProject) {
@@ -8,6 +14,7 @@ export const ProjectController = {
       const response = await axios.post("/api/project", projectData);
       if (response.status === 201) {
         console.log("Project created:", response.data);
+        clearCache(); // Invalidate cache
         return response.data;
       }
       return null;
@@ -21,6 +28,7 @@ export const ProjectController = {
     try {
       const response = await axios.patch(`/api/project/${projectId}/access`, { accessLevel });
       if (response.status === 200) {
+        clearCache();
         return response.data;
       }
       return null;
@@ -34,6 +42,7 @@ export const ProjectController = {
     try {
       const response = await axios.patch(`/api/project/${projectId}/security-level`, { securityLevel });
       if (response.status === 200) {
+        clearCache();
         return response.data;
       }
       return null;
@@ -47,6 +56,7 @@ export const ProjectController = {
     try {
       const response = await axios.patch(`/api/project/${projectId}/security-settings`, settings);
       if (response.status === 200) {
+        clearCache();
         return response.data;
       }
       return null;
@@ -60,6 +70,7 @@ export const ProjectController = {
     try {
       const response = await axios.patch(`/api/project/${projectId}/ip-restrictions`, { ipRestrictions });
       if (response.status === 200) {
+        clearCache();
         return response.data;
       }
       return null;
@@ -72,6 +83,7 @@ export const ProjectController = {
   addIpRestriction: async function (id: string, ipRestriction: IpRestriction) {
     try {
       const response = await axios.post(`/api/project/${id}/ip-restrictions`, ipRestriction);
+      clearCache();
       return response.data;
     } catch (error) {
       console.error("Error adding IP restriction:", error);
@@ -82,6 +94,7 @@ export const ProjectController = {
   removeIpRestriction: async function (id: string, ip: string) {
     try {
       const response = await axios.delete(`/api/project/${id}/ip-restrictions/${ip}`);
+      clearCache();
       return response.data;
     } catch (error) {
       console.error("Error removing IP restriction:", error);
@@ -93,6 +106,7 @@ export const ProjectController = {
   deleteProject: async function (id: string) {
     try {
       const response = await axios.delete(`/api/project?id=${id}`);
+      clearCache();
       return response.data;
     } catch (error) {
       console.error("Error deleting project:", error);
@@ -106,6 +120,7 @@ export const ProjectController = {
       const response = await axios.put(`/api/project?id=${id}`, data);
       if (response.status === 200) {
         console.log("Project updated:", response.data);
+        clearCache();
         return response.data;
       }
       return null;
@@ -116,14 +131,28 @@ export const ProjectController = {
   },
 
   //fetch all projects
-  fetchProjects: async function (id: string) {
+  fetchProjects: async function (id?: string, workspaceId?: string) {
     try {
+      const cacheKey = id ? `project-${id}` : `all-projects-${workspaceId || 'global'}`;
+      const cached = projectCache.get(cacheKey);
+      
+      if (cached && Date.now() < cached.expiry) {
+        console.log("Serving from cache:", cacheKey);
+        return cached.data;
+      }
+
       if (id) {
         const response = await axios.get(`/api/project?id=${id}`);
-        return response.status === 200 ? response.data : [];
+        const data = response.status === 200 ? response.data : [];
+        projectCache.set(cacheKey, { data, expiry: Date.now() + CACHE_TTL });
+        return data;
       }
-      const response = await axios.get("/api/project");
-      return response.status === 200 ? response.data : [];
+      
+      const url = workspaceId ? `/api/project?workspaceId=${workspaceId}` : "/api/project";
+      const response = await axios.get(url);
+      const data = response.status === 200 ? response.data : [];
+      projectCache.set(cacheKey, { data, expiry: Date.now() + CACHE_TTL });
+      return data;
     } catch (error) {
       console.error("Error fetching projects:", error);
       return [];
@@ -134,6 +163,7 @@ export const ProjectController = {
   clearProject: async function (id: string) {
     try {
       const response = await axios.post(`/api/project/${id}/clear`);
+      clearCache();
       return response.data;
     } catch (error) {
       console.error("Error clearing project:", error);
@@ -145,6 +175,7 @@ export const ProjectController = {
   toggleProjectBlock: async function (id: string) {
     try {
       const response = await axios.post(`/api/project/${id}/toggle-block`);
+      clearCache(); // Invalidate cache on block toggle
       return response.data;
     } catch (error) {
       console.error("Error toggling project block:", error);

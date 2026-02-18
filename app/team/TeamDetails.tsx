@@ -62,7 +62,7 @@ interface TeamMember {
   id: string;
   name: string;
   email: string;
-  role: "owner" | "admin" | "developer" | "viewer";
+  role: "owner" | "admin" | "developer" | "viewer" | "guest";
   status: "active" | "pending" | "inactive";
   joinedAt: string;
   lastActive: string;
@@ -232,13 +232,19 @@ const roleConfig = {
     label: "Developer",
     icon: Code,
     color: "bg-info/10 text-info border-info/20",
-    description: "Read/write access to projects and development resources",
+    description: "Read/write access to dev/staging, read-only for production",
   },
   viewer: {
     label: "Viewer",
     icon: Eye,
     color: "bg-muted/50 text-muted-foreground border-muted",
     description: "Read-only access to team projects and resources",
+  },
+  guest: {
+    label: "Guest",
+    icon: Clock,
+    color: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    description: "Temporary access via JIT approval only",
   },
 };
 
@@ -398,21 +404,45 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRoleChange = () => {
+  const handleRoleChange = async () => {
     if (!confirmDialog.member || !confirmDialog.newRole) return;
 
-    setMembers(
-      members.map((member) =>
-        member.id === confirmDialog.member!.id ? { ...member, role: confirmDialog.newRole! } : member
-      )
-    );
+    try {
+      // Call API to update role
+      const response = await fetch("/api/team/role", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          memberId: confirmDialog.member.id,
+          newRole: confirmDialog.newRole,
+        }),
+      });
 
-    setConfirmDialog({ open: false, type: "remove" });
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "Failed to update role");
+      }
 
-    toast({
-      title: "Role updated",
-      description: `${confirmDialog.member.name}'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
-    });
+      // Update local state
+      setMembers(
+        members.map((member) =>
+          member.id === confirmDialog.member!.id ? { ...member, role: confirmDialog.newRole! } : member
+        )
+      );
+
+      setConfirmDialog({ open: false, type: "remove" });
+
+      toast({
+        title: "Role updated",
+        description: `${confirmDialog.member.name}'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update role",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveMemberRequest = (memberId: string) => {
@@ -668,6 +698,7 @@ const TeamDetail = () => {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="developer">Developer</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
+                  <SelectItem value="guest">Guest</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>

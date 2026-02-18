@@ -1,0 +1,11 @@
+{
+  "projectId": "69777bc32b12bd573520520e",
+  "environment": "development",
+  "lastSyncedAt": "2026-02-06T05:15:04.995Z",
+  "secrets": {
+    "KEY": {
+      "hash": "fe3d147c5902a7c7e0956b7074527202a4965789669a78478a636108b32c63f4",
+      "updatedAt": "2026-02-06T05:15:05.015Z"
+    }
+  }
+}

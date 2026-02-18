@@ -1,25 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
-import type { User } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
 import { encrypt, decrypt } from "@/lib/encription";
+import { withSecurity } from "@/lib/api-middleware";
 
-// Helper function to check authentication
-
-// GET /api/secret - Get all secrets or filter by projectId
-export async function GET(request: NextRequest) {
+// GET /api/secret - Get all secrets for a project
+export const GET = withSecurity(async (request, context, session) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
+    const projectId = searchParams.get("projectId");
     const branchId = searchParams.get("branchId");
 
-    const query = branchId ? { branchId } : {};
+    if (!projectId) {
+         return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
+    }
+
+    // Access Control
+    if (session.isServiceAccount) {
+        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
+        if (!session.permissions?.includes("read:secrets")) return NextResponse.json({ error: "Forbidden: Missing read:secrets scope" }, { status: 403 });
+    } else {
+        const hasAccess = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                OR: [
+                    { userId: session.userId },
+                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
+                ]
+            }
+        });
+        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    const query: any = { projectId };
+    if (branchId) query.branchId = branchId;
+
     const secrets = await prisma.secret.findMany({
       where: query,
       include: {
@@ -27,26 +45,52 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    // Decrypt secret values before sending to frontend
+    // Decrypt secret values and history before sending to frontend
     const decryptedSecrets = secrets.map((secret) => {
+      let decryptedValue = "[Decryption failed]";
       try {
-        // Value is stored as array of JSON strings
         const encryptedString = secret.value[0];
         const encryptedObject = JSON.parse(encryptedString);
-        const decryptedValue = decrypt(encryptedObject);
-        
-        return {
-          ...secret,
-          value: decryptedValue, // Return plain text value
-        };
+        decryptedValue = decrypt(encryptedObject);
       } catch (error) {
         console.error(`Failed to decrypt secret ${secret.id}:`, error);
-        // Return the secret with masked value if decryption fails
-        return {
-          ...secret,
-          value: "[Decryption failed]",
-        };
       }
+
+      // Decrypt history if present
+      let decryptedHistory = secret.history;
+      if (Array.isArray(secret.history)) {
+        decryptedHistory = secret.history.map((h: any) => {
+          try {
+            let val = h.value;
+            if (Array.isArray(val) && val.length > 0) {
+              val = val[0];
+            }
+
+            if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
+              try {
+                const parsed = JSON.parse(val);
+                if (parsed.iv && parsed.encryptedData && parsed.authTag) {
+                  val = decrypt(parsed);
+                } else if (Array.isArray(parsed) && parsed.length > 0) {
+                  const inner = JSON.parse(parsed[0]);
+                  if (inner && inner.iv && inner.encryptedData && inner.authTag) {
+                    val = decrypt(inner);
+                  }
+                }
+              } catch (e) {}
+            }
+            return { ...h, value: val };
+          } catch (e) {
+            return h;
+          }
+        });
+      }
+
+      return {
+        ...secret,
+        value: decryptedValue,
+        history: decryptedHistory
+      };
     });
 
     return NextResponse.json(decryptedSecrets);
@@ -57,13 +101,12 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/secret - Create a new secret
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request, context, session) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -91,6 +134,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Access Control
+    if (session.isServiceAccount) {
+        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
+        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
+    } else {
+        const hasAccess = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                OR: [
+                    { userId: session.userId },
+                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
+                ]
+            }
+        });
+        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     // Encrypt and prepare value as array
     const encryptedValue = encrypt(value);
     const encryptedString = JSON.stringify(encryptedValue);
@@ -113,10 +173,10 @@ export async function POST(request: NextRequest) {
             value: value,
             description: description || "",
             updatedAt: new Date().toISOString(),
-            updatedBy: session.user.email,
+            updatedBy: session.email,
           },
         ],
-        updatedBy: session.user.email,
+        updatedBy: session.email,
         permission,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
       },
@@ -138,13 +198,12 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/secret - Update a secret
-export async function PUT(request: NextRequest) {
+export const PUT = withSecurity(async (request, context, session) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -171,13 +230,32 @@ export async function PUT(request: NextRequest) {
       rotationPolicy,
     } = body;
 
-    // Get existing secret
+    // Get existing secret to verify project access
     const existingSecret = await prisma.secret.findUnique({
       where: { id },
     });
 
     if (!existingSecret) {
       return NextResponse.json({ message: "Secret not found" }, { status: 404 });
+    }
+
+    const projectId = existingSecret.projectId;
+
+    // Access Control
+    if (session.isServiceAccount) {
+        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
+        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
+    } else {
+        const hasAccess = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                OR: [
+                    { userId: session.userId },
+                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
+                ]
+            }
+        });
+        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     // Parse existing history and add new version
@@ -187,7 +265,7 @@ export async function PUT(request: NextRequest) {
     // Prepare update data
     const updateData: any = {
       version: newVersion,
-      updatedBy: session.user.email,
+      updatedBy: session.email,
     };
 
     // Only update fields that are provided
@@ -213,7 +291,7 @@ export async function PUT(request: NextRequest) {
         value: value || "[unchanged]",
         description: description || existingSecret.description,
         updatedAt: new Date().toISOString(),
-        updatedBy: session.user.email,
+        updatedBy: session.email,
         changeReason: body.changeReason,
       },
       ...history,
@@ -233,13 +311,12 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/secret - Delete a secret
-export async function DELETE(request: NextRequest) {
+export const DELETE = withSecurity(async (request, context, session) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -265,6 +342,25 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    const projectId = existingSecret.projectId;
+
+    // Access Control
+    if (session.isServiceAccount) {
+        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
+        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
+    } else {
+        const hasAccess = await prisma.project.findFirst({
+            where: {
+                id: projectId,
+                OR: [
+                    { userId: session.userId },
+                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
+                ]
+            }
+        });
+        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
     await prisma.secret.delete({
       where: { id },
     });
@@ -281,4 +377,4 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
