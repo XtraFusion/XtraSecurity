@@ -31,6 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import axios from '@/lib/axios';
 import { ServiceAccountsTab } from './service-accounts-tab';
+import { WebhooksTab } from './webhooks-tab';
 
 interface Team {
   id: string;
@@ -76,6 +77,7 @@ interface Project {
   passwordRequireNumbers?: boolean;
   passwordExpiryDays?: number;
   ipRestrictions?: IpRestriction[];
+  currentUserRole?: string;
 }
 
 interface Secret {
@@ -134,6 +136,18 @@ export default function ProjectSettings() {
       ]);
 
       setProject(projectData);
+
+      // Redirect if not owner/admin
+      if (projectData && ['developer', 'viewer'].includes(projectData.currentUserRole)) {
+        router.push(`/projects/${id}`);
+        toast({
+          title: "Access Denied",
+          description: "You do not have permission to view project settings",
+          variant: "destructive"
+        });
+        return;
+      }
+
       setBranches(branchesData);
       setTeams(teamsRes.data);
       setProjectTeams(projectTeamsRes.data);
@@ -248,10 +262,11 @@ export default function ProjectSettings() {
         description: "Project cleared successfully",
       });
       await fetchData();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to clear project";
       toast({
         title: "Error",
-        description: "Failed to clear project",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -268,10 +283,11 @@ export default function ProjectSettings() {
         description: project?.isBlocked ? "Project unblocked" : "Project blocked",
       });
       await fetchData();
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to toggle project block";
       toast({
         title: "Error",
-        description: "Failed to toggle project block",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -290,10 +306,11 @@ export default function ProjectSettings() {
         description: "Project deleted successfully",
       });
       router.push('/projects');
-    } catch (error) {
+    } catch (error: any) {
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete project";
       toast({
         title: "Error",
-        description: "Failed to delete project",
+        description: errorMsg,
         variant: "destructive"
       });
     } finally {
@@ -398,12 +415,13 @@ export default function ProjectSettings() {
       </div>
 
       <Tabs defaultValue="teams" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="service-accounts">Service Accounts</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="access">Access</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="clear">Clear Data</TabsTrigger>
           <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
@@ -564,10 +582,11 @@ export default function ProjectSettings() {
                           });
                           fetchData();
                         })
-                        .catch(() => {
+                        .catch((error) => {
+                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update access level";
                           toast({
                             title: "Error",
-                            description: "Failed to update access level",
+                            description: errorMsg,
                             variant: "destructive"
                           });
                         });
@@ -598,10 +617,11 @@ export default function ProjectSettings() {
                           });
                           fetchData();
                         })
-                        .catch(() => {
+                        .catch((error) => {
+                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update security level";
                           toast({
                             title: "Error",
-                            description: "Failed to update security level",
+                            description: errorMsg,
                             variant: "destructive"
                           });
                         });
@@ -650,10 +670,11 @@ export default function ProjectSettings() {
                           });
                           fetchData();
                         })
-                        .catch(() => {
+                        .catch((error) => {
+                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update 2FA requirement";
                           toast({
                             title: "Error",
-                            description: "Failed to update 2FA requirement",
+                            description: errorMsg,
                             variant: "destructive"
                           });
                         });
@@ -679,10 +700,11 @@ export default function ProjectSettings() {
                               });
                               fetchData();
                             })
-                            .catch(() => {
+                            .catch((error) => {
+                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
                               toast({
                                 title: "Error",
-                                description: "Failed to update password requirements",
+                                description: errorMsg,
                                 variant: "destructive"
                               });
                             });
@@ -710,10 +732,11 @@ export default function ProjectSettings() {
                               });
                               fetchData();
                             })
-                            .catch(() => {
+                            .catch((error) => {
+                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
                               toast({
                                 title: "Error",
-                                description: "Failed to update password requirements",
+                                description: errorMsg,
                                 variant: "destructive"
                               });
                             });
@@ -747,10 +770,11 @@ export default function ProjectSettings() {
                           fetchData();
                           e.currentTarget.reset();
                         })
-                        .catch(() => {
+                        .catch((error) => {
+                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to add IP restriction";
                           toast({
                             title: "Error",
-                            description: "Failed to add IP restriction",
+                            description: errorMsg,
                             variant: "destructive"
                           });
                         });
@@ -794,10 +818,11 @@ export default function ProjectSettings() {
                                       });
                                       fetchData();
                                     })
-                                    .catch(() => {
+                                    .catch((error) => {
+                                      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to remove IP restriction";
                                       toast({
                                         title: "Error",
-                                        description: "Failed to remove IP restriction",
+                                        description: errorMsg,
                                         variant: "destructive"
                                       });
                                     });
@@ -900,6 +925,10 @@ export default function ProjectSettings() {
 
         <TabsContent value="service-accounts">
           <ServiceAccountsTab />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <WebhooksTab />
         </TabsContent>
       </Tabs>
     </div>

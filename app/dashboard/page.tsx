@@ -83,7 +83,7 @@ export default function DashboardPage() {
 
       // Parallel Fetching
       const [projectsList, statsRes, logsRes] = await Promise.all([
-        ProjectController.fetchProjects(undefined, selectedWorkspace.id),
+        ProjectController.fetchProjects(undefined, selectedWorkspace.id), // Fetch projects for selected workspace only
         fetch(`/api/audit/stats?workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { totalEvents: 0, activeUsers: 0, failedActions: 0 }),
         fetch(`/api/audit?pageSize=5&workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { data: [] })
       ]);
@@ -102,9 +102,8 @@ export default function DashboardPage() {
 
   const filteredProjects = projects.filter(
     (project) =>
-      (project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description.toLowerCase().includes(searchQuery.toLowerCase())) &&
-      (!selectedWorkspace || project.workspaceId === selectedWorkspace.id || project.workspaceId === selectedWorkspace.value)
+      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      project.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleCreateProject = async () => {
@@ -115,6 +114,21 @@ export default function DashboardPage() {
       description: newProject.description,
       workspaceId: selectedWorkspace.id,
       status: "active",
+      id: "", // Will be set by server
+      branches: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+      securityLevel: "low",
+      accessControl: "private",
+      isBlocked: false,
+      auditLogging: false,
+      lastSecurityAudit: null,
+      twoFactorRequired: false,
+      passwordMinLength: 8,
+      passwordRequireSpecialChars: false,
+      passwordRequireNumbers: false,
+      passwordExpiryDays: 90,
+      ipRestrictions: [],
     };
 
     try {
@@ -301,7 +315,8 @@ export default function DashboardPage() {
                     </div>
                   </CardContent>
                 </Card>
-              ))}
+              )
+              )}
             </div>
 
             {filteredProjects.length === 0 && !isLoading && (

@@ -100,7 +100,6 @@ export interface CreateProject {
   description: string;
   status: string; // "active" | "archived"
   userId?: string;
-  userId?: string;
   branches?: Branch[];
   user?: User;
   secrets?: Secret[];
@@ -147,6 +146,7 @@ export interface Project {
   isBlocked: boolean;
   auditLogging: boolean;
   lastSecurityAudit: Date | null;
+  currentUserRole?: string;
 }
 
 export interface Branch {

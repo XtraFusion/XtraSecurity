@@ -14,7 +14,12 @@ export async function POST(req: Request) {
 
     if (status === "active") {
       const acceptInvite = await prisma.teamUser.update({
-        where: { id: teamId },
+        where: { 
+          teamId_userId: { 
+            teamId, 
+            userId: session.user.id 
+          } 
+        },
         data: { status },
       });
 

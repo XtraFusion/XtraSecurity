@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
+import { getUserProjectRole } from "@/lib/permissions";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -139,16 +140,20 @@ export const POST = withSecurity(async (request, context, session) => {
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
     } else {
-        const hasAccess = await prisma.project.findFirst({
-            where: {
-                id: projectId,
-                OR: [
-                    { userId: session.userId },
-                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
-                ]
-            }
-        });
-        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const role = await getUserProjectRole(session.userId, projectId);
+        
+        if (!role) {
+             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
+        }
+
+        // ACL Check: Write
+        if (role === "viewer") {
+             return NextResponse.json({ error: "Viewers do not have permission to create secrets" }, { status: 403 });
+        }
+        
+        if (role === "developer" && environmentType === "production") {
+             return NextResponse.json({ error: "Developers cannot create secrets in Production" }, { status: 403 });
+        }
     }
 
     // Encrypt and prepare value as array
@@ -246,16 +251,20 @@ export const PUT = withSecurity(async (request, context, session) => {
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
     } else {
-        const hasAccess = await prisma.project.findFirst({
-            where: {
-                id: projectId,
-                OR: [
-                    { userId: session.userId },
-                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
-                ]
-            }
-        });
-        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const role = await getUserProjectRole(session.userId, projectId);
+        
+        if (!role) {
+             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
+        }
+        
+        // ACL Check: Write/Update
+        if (role === "viewer") {
+             return NextResponse.json({ error: "Viewers do not have permission to update secrets" }, { status: 403 });
+        }
+
+        if (role === "developer" && existingSecret.environmentType === "production") {
+             return NextResponse.json({ error: "Developers cannot update secrets in Production" }, { status: 403 });
+        }
     }
 
     // Parse existing history and add new version
@@ -349,16 +358,23 @@ export const DELETE = withSecurity(async (request, context, session) => {
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
     } else {
-        const hasAccess = await prisma.project.findFirst({
-            where: {
-                id: projectId,
-                OR: [
-                    { userId: session.userId },
-                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
-                ]
-            }
-        });
-        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const role = await getUserProjectRole(session.userId, projectId);
+        
+        if (!role) {
+             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
+        }
+        
+        // ACL Check: Delete
+        if (role === "viewer") {
+             return NextResponse.json({ error: "Viewers do not have permission to delete secrets" }, { status: 403 });
+        }
+        
+        if (role === "developer") {
+             // Developers cannot delete in Production
+             if (existingSecret.environmentType === "production") {
+                  return NextResponse.json({ error: "Developers cannot delete secrets in Production" }, { status: 403 });
+             }
+        }
     }
 
     await prisma.secret.delete({

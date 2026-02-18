@@ -1,55 +1,61 @@
 import prisma from "@/lib/db";
 
-interface WebhookPayload {
-  event: string;
-  projectId: string;
-  data: any;
-  timestamp?: string;
+const EVENT_EMOJI: Record<string, string> = {
+  "secret.created":   "🔑",
+  "secret.updated":   "✏️",
+  "secret.deleted":   "🗑️",
+  "rotation.success": "✅",
+  "rotation.failed":  "❌",
+  "member.added":     "👤",
+  "member.removed":   "👋",
+};
+
+function buildSlackDiscordMessage(event: string, projectId: string, data: any): object {
+  const icon = EVENT_EMOJI[event] ?? "🔔";
+  const projectName = data?.projectName ?? projectId;
+  const detail = data?.key
+    ? `Secret \`${data.key}\` in \`${data.environment ?? "?"}\` environment`
+    : data?.message ?? JSON.stringify(data ?? {}).slice(0, 200);
+
+  const text = `${icon} *XtraSecurity [${projectName}]* — \`${event}\`\n${detail}\n_${new Date().toISOString()}_`;
+
+  // Both Slack and Discord accept { text } / { content } — send both
+  return { text, content: text };
 }
 
 export async function triggerWebhooks(projectId: string, event: string, data: any) {
   try {
-    // 1. Find active webhooks for this project that subscribe to this event
     const webhooks = await prisma.webhook.findMany({
       where: {
         projectId,
         active: true,
-        events: { has: event }
-      }
+        events: { has: event },
+      },
     });
 
     if (webhooks.length === 0) return;
 
-    const payload: WebhookPayload = {
-      event,
-      projectId,
-      timestamp: new Date().toISOString(),
-      data
-    };
+    const body = JSON.stringify(buildSlackDiscordMessage(event, projectId, data));
 
-    // 2. Fire requests in parallel (fire-and-forget style to not block main thread)
-    // In a real prod env, this should use a message queue (Redis/Bull/Kafka)
+    // Fire-and-forget — never blocks the main request
     Promise.allSettled(
       webhooks.map(async (webhook) => {
         try {
           const response = await fetch(webhook.url, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-            // Set a timeout to avoid hanging
-            signal: AbortSignal.timeout(5000) 
+            body,
+            signal: AbortSignal.timeout(5000),
           });
-
           if (!response.ok) {
-            console.warn(`Webhook ${webhook.id} failed with status ${response.status}`);
+            console.warn(`[webhook] ${webhook.id} responded with ${response.status}`);
           }
         } catch (err) {
-          console.error(`Webhook ${webhook.id} error:`, err);
+          console.error(`[webhook] ${webhook.id} error:`, err);
         }
       })
     );
-
   } catch (error) {
-    console.error("Error triggering webhooks:", error);
+    console.error("[webhook] triggerWebhooks error:", error);
   }
 }

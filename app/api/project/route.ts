@@ -123,9 +123,14 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    // Compute currentUserRole for frontend permission checks
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(userId, project.id);
+
     // Serialize dates on single project response
     const safeProject = {
       ...project,
+      currentUserRole: role,
       createdAt: project.createdAt?.toISOString?.() ?? null,
       updatedAt: project.updatedAt?.toISOString?.() ?? null,
       branches:
@@ -280,19 +285,23 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check if user has permission to delete the project
-    const project = await prisma.project.findFirst({
-      where: {
-        id,
-        userId: session.user.id, // Only creator can delete
-      },
+    // Check existence
+    const project = await prisma.project.findUnique({
+      where: { id },
     });
 
     if (!project) {
       return NextResponse.json(
-        { error: "Project not found or permission denied" },
+        { error: "Project not found" },
         { status: 404 }
       );
+    }
+
+    // Check permission: Owner only
+    // We can check direct ownership or use getUserProjectRole if we want to support "Owner" role in team context (future proof)
+    // For now, strict Creator/UserId matching is safest for "Delete Project" as per ACL
+    if (project.userId !== session.user.id) {
+         return NextResponse.json({ error: "Only the project owner can delete this project" }, { status: 403 });
     }
 
     await prisma.$transaction(async (prisma) => {
@@ -311,7 +320,7 @@ export async function DELETE(request: NextRequest) {
       });
     });
 
-    // Delete project and all related data (cascading delete handled by Prisma)
+    // Delete project
     await prisma.project.delete({
       where: { id },
     });
@@ -359,7 +368,6 @@ export async function PUT(request: NextRequest) {
         );
     }
     
-    // Check if user has permission to update the project
     const existingProject = await prisma.project.findUnique({
       where: { id },
     });
@@ -371,12 +379,25 @@ export async function PUT(request: NextRequest) {
         );
     }
     
-    // Check permissions - strictly checks currently
-    // In a real app, you might check if session.user.id === existingProject.userId
-    // The current code used email for userId check which might be risky if ids are used elsewhere
-    // Assuming existing logic is what we want to extend
+    // Check Permissions
+    // For general updates: Owner or Admin
+    // For Transfer (newOwnerEmail) or Move (targetWorkspaceId): Owner ONLY
     
-    // NOTE: For Transfer/Delete, usually only the OWNER can do it.
+    // Import helper dynamically or use checking logic here
+    const { getUserProjectRole } = await import("@/lib/permissions"); // Dynamic import to avoid circular dep if any? No, should be fine.
+    
+    const role = await getUserProjectRole(session.user.id, id);
+    
+    if (!role || (role !== "owner" && role !== "admin")) {
+         return NextResponse.json({ error: "You do not have permission to update project settings" }, { status: 403 });
+    }
+
+    // Strict checks for critical actions
+    if (newOwnerEmail || targetWorkspaceId) {
+        if (role !== "owner") {
+             return NextResponse.json({ error: "Only the project owner can transfer or move the project" }, { status: 403 });
+        }
+    }
     
     // Update data object
     const updateData: any = {};
@@ -400,7 +421,6 @@ export async function PUT(request: NextRequest) {
 
     // Handle Workspace Transfer
     if (targetWorkspaceId) {
-        // Optional: Validate workspace exists
         const workspace = await prisma.workspace.findUnique({
             where: { id: targetWorkspaceId }
         });
@@ -415,10 +435,6 @@ export async function PUT(request: NextRequest) {
 
     // Update team associations if provided
     if (teamIds) {
-      // Only project owner can update team associations
-      // existing check: if (existingProject.userId !== session.user.email) ... 
-      // Need to be careful about userId vs email types. Prisma schema says userId is ObjectId (String).
-      
       await prisma.teamProject.deleteMany({
         where: { projectId: id },
       });
@@ -463,7 +479,7 @@ export async function PUT(request: NextRequest) {
        session.user.email!,
        action,
        details,
-       details, // Message and description similar for now
+       details, 
        "info"
     );
 

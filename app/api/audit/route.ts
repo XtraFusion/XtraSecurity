@@ -11,6 +11,20 @@ export async function GET(req: Request) {
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const url = new URL(req.url);
+    const workspaceId = url.searchParams.get("workspaceId");
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+    }
+
+    // Permission Check
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+    if (!role || (role !== "owner" && role !== "admin")) {
+      return NextResponse.json({ error: "Unauthorized access to audit logs" }, { status: 403 });
+    }
+
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "25", 10);
     const search = url.searchParams.get("search") || undefined;
@@ -18,7 +32,6 @@ export async function GET(req: Request) {
     const severity = url.searchParams.get("severity") || undefined;
     const status = url.searchParams.get("status") || undefined;
     const userId = url.searchParams.get("userId") || undefined;
-    const workspaceId = url.searchParams.get("workspaceId") || undefined;
 
     const where: any = {};
     if (category) where.entity = category; // in schema 'entity' maps to e.g., 'auth','project', etc.
