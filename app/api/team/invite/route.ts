@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         teamId,
         userId: user.id,
         role,
-        status: "active",
+        status: "pending",
         invitedBy: session.user.id,
       },
     });

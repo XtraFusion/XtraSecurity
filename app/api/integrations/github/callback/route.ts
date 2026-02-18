@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
 
     // Get session from cookies to identify user
     const { getServerSession } = await import("next-auth");
-    const { authOptions } = await import("@/lib/auth");
+    const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
     const session = await getServerSession(authOptions);
 
     if (!session?.user?.id) {

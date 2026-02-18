@@ -67,6 +67,8 @@ import {
   Activity,
   Users,
   Key,
+  CheckCircle2,
+  XOctagon,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { useSession } from "next-auth/react";
@@ -127,47 +129,12 @@ interface NotificationAlert {
   metadata?: Record<string, any>;
 }
 
-const mockRules: NotificationRule[] = [
-  // Keeping mock rules as placeholder per requirement
-  {
-    id: "1",
-    name: "Production Secret Changes",
-    description: "Alert when secrets are modified in production environments",
-    enabled: true,
-    triggers: ["secret_change", "secret_rotation"],
-    channels: ["email-1", "slack-1"],
-    conditions: {
-      environments: ["production"],
-      severity: ["warning", "error", "critical"],
-    },
-    createdBy: "admin@example.com",
-    createdAt: "2024-01-01T00:00:00Z",
-    lastTriggered: "2024-01-15T10:30:00Z",
-  },
-];
-
-const mockChannels: NotificationChannel[] = [
-  {
-    id: "email-1",
-    type: "email",
-    name: "Admin Email",
-    enabled: true,
-    config: {
-      email: "admin@example.com",
-    },
-    createdAt: "2024-01-01T00:00:00Z",
-  },
-];
-
-// Mocks removed, fetching real data
-const mockAlerts: NotificationAlert[] = [];
-
 export default function NotificationsPage() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [rules, setRules] = useState<NotificationRule[]>(mockRules);
-  const [channels, setChannels] = useState<NotificationChannel[]>(mockChannels);
-  const [alerts, setAlerts] = useState<NotificationAlert[]>(mockAlerts);
+  const [rules, setRules] = useState<NotificationRule[]>([]);
+  const [channels, setChannels] = useState<NotificationChannel[]>([]);
+  const [alerts, setAlerts] = useState<NotificationAlert[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedTab, setSelectedTab] = useState("alerts");
   const [isCreateRuleOpen, setIsCreateRuleOpen] = useState(false);
@@ -204,6 +171,7 @@ export default function NotificationsPage() {
 
   const { selectedWorkspace } = useGlobalContext();
 
+  // Load all data
   useEffect(() => {
     if (!session?.user?.email) {
       router.push("/login");
@@ -212,35 +180,65 @@ export default function NotificationsPage() {
 
     const loadData = async () => {
       try {
-        const url = selectedWorkspace ? `/api/notifications?workspaceId=${selectedWorkspace.id}` : "/api/notifications";
-        const response = await apiClient.get(url);
-        // Transform API notifications to match NotificationAlert interface
-        const fetchedAlerts: NotificationAlert[] = (response.data.notifications || []).map((n: any) => ({
+        const wsParam = selectedWorkspace ? `?workspaceId=${selectedWorkspace.id}` : "";
+
+        const [alertsRes, rulesRes, channelsRes] = await Promise.all([
+          apiClient.get(`/api/notifications`),
+          apiClient.get(`/api/notification-rules${wsParam}`),
+          apiClient.get(`/api/notification-channels${wsParam}`),
+        ]);
+
+        // Map alerts
+        const fetchedAlerts: NotificationAlert[] = (alertsRes.data.notifications || []).map((n: any) => ({
           id: n.id,
-          ruleId: "system", // default for system notifications
+          ruleId: "system",
           ruleName: "System Notification",
           title: n.taskTitle || "Notification",
           message: n.message || n.description,
           severity: (n.status as any) || "info",
-          type: "system_error", // mapping to existing type or generic
+          type: "system_error",
           timestamp: n.createdAt,
           read: n.read,
-          channels: [], // system notifications might not have channels in this view yet
+          channels: [],
           project: n.taskTitle?.includes("Project") ? "System" : undefined,
-          user: n.userEmail
+          user: n.userEmail,
         }));
         setAlerts(fetchedAlerts);
+
+        // Map rules
+        const fetchedRules: NotificationRule[] = (rulesRes.data.rules || []).map((r: any) => ({
+          id: r.id,
+          name: r.name,
+          description: r.description,
+          enabled: r.enabled,
+          triggers: r.triggers || [],
+          channels: r.channels || [],
+          conditions: r.conditions || {},
+          createdBy: r.createdBy,
+          createdAt: r.createdAt,
+          lastTriggered: r.lastTriggered,
+        }));
+        setRules(fetchedRules);
+
+        // Map channels
+        const fetchedChannels: NotificationChannel[] = (channelsRes.data.channels || []).map((c: any) => ({
+          id: c.id,
+          type: c.type,
+          name: c.name,
+          enabled: c.enabled,
+          config: c.config || {},
+          createdAt: c.createdAt,
+        }));
+        setChannels(fetchedChannels);
       } catch (error) {
-        console.error("Failed to load notifications", error);
-        setNotification({ type: "error", message: "Failed to load notifications" });
+        console.error("Failed to load notifications data", error);
+        setNotification({ type: "error", message: "Failed to load notifications data" });
       } finally {
         setIsLoading(false);
       }
     };
 
-    if (selectedWorkspace || !session) { // Load if workspace selected (or if just checking session) - logic adjusted to ensure we load
-      loadData();
-    }
+    loadData();
   }, [router, session, selectedWorkspace]);
 
   useEffect(() => {
@@ -320,108 +318,87 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleCreateRule = () => {
-    if (!newRule.name || !newRule.triggers.length || !newRule.channels.length)
-      return;
+  const handleCreateRule = async () => {
+    if (!newRule.name || !newRule.triggers.length) return;
 
-    const rule: NotificationRule = {
-      id: Date.now().toString(),
-      name: newRule.name,
-      description: newRule.description,
-      enabled: true,
-      triggers: newRule.triggers,
-      channels: newRule.channels,
-      conditions: newRule.conditions,
-      createdBy: "admin@example.com",
-      createdAt: new Date().toISOString(),
-    };
-
-    setRules([...rules, rule]);
-    setNewRule({
-      name: "",
-      description: "",
-      triggers: [],
-      channels: [],
-      conditions: {
-        projects: [],
-        branches: [],
-        environments: [],
-        severity: [],
-      },
-    });
-    setIsCreateRuleOpen(false);
-    setNotification({
-      type: "success",
-      message: "Notification rule created successfully",
-    });
+    try {
+      const res = await apiClient.post("/api/notification-rules", {
+        ...newRule,
+        workspaceId: selectedWorkspace?.id,
+      });
+      const created = res.data.rule;
+      setRules([{ ...created, conditions: created.conditions || {} }, ...rules]);
+      setNewRule({
+        name: "",
+        description: "",
+        triggers: [],
+        channels: [],
+        conditions: { projects: [], branches: [], environments: [], severity: [] },
+      });
+      setIsCreateRuleOpen(false);
+      setNotification({ type: "success", message: "Notification rule created successfully" });
+    } catch (err) {
+      console.error(err);
+      setNotification({ type: "error", message: "Failed to create rule" });
+    }
   };
 
-  const handleCreateChannel = () => {
+  const handleCreateChannel = async () => {
     if (!newChannel.name) return;
 
-    const channel: NotificationChannel = {
-      id: `${newChannel.type}-${Date.now()}`,
-      type: newChannel.type,
-      name: newChannel.name,
-      enabled: true,
-      config: newChannel.config,
-      createdAt: new Date().toISOString(),
-    };
-
-    setChannels([...channels, channel]);
-    setNewChannel({
-      type: "email",
-      name: "",
-      config: {
-        email: "",
-        webhookUrl: "",
-        slackChannel: "",
-        teamsWebhook: "",
-      },
-    });
-    setIsCreateChannelOpen(false);
-    setNotification({
-      type: "success",
-      message: "Notification channel created successfully",
-    });
+    try {
+      const res = await apiClient.post("/api/notification-channels", {
+        ...newChannel,
+        workspaceId: selectedWorkspace?.id,
+      });
+      const created = res.data.channel;
+      setChannels([{ ...created, config: created.config || {} }, ...channels]);
+      setNewChannel({
+        type: "email",
+        name: "",
+        config: { email: "", webhookUrl: "", slackChannel: "", teamsWebhook: "" },
+      });
+      setIsCreateChannelOpen(false);
+      setNotification({ type: "success", message: "Notification channel created successfully" });
+    } catch (err) {
+      console.error(err);
+      setNotification({ type: "error", message: "Failed to create channel" });
+    }
   };
 
-  const handleToggleRule = (ruleId: string) => {
-    setRules(
-      rules.map((rule) =>
-        rule.id === ruleId ? { ...rule, enabled: !rule.enabled } : rule
-      )
-    );
-    setNotification({ type: "success", message: "Rule updated successfully" });
+  const handleToggleRule = async (ruleId: string) => {
+    const rule = rules.find((r) => r.id === ruleId);
+    if (!rule) return;
+    // Optimistic update
+    setRules(rules.map((r) => r.id === ruleId ? { ...r, enabled: !r.enabled } : r));
+    try {
+      await apiClient.patch("/api/notification-rules", { id: ruleId, enabled: !rule.enabled });
+      setNotification({ type: "success", message: "Rule updated successfully" });
+    } catch {
+      setRules(rules.map((r) => r.id === ruleId ? { ...r, enabled: rule.enabled } : r));
+      setNotification({ type: "error", message: "Failed to update rule" });
+    }
   };
 
-  const handleToggleChannel = (channelId: string) => {
-    setChannels(
-      channels.map((channel) =>
-        channel.id === channelId
-          ? { ...channel, enabled: !channel.enabled }
-          : channel
-      )
-    );
-    setNotification({
-      type: "success",
-      message: "Channel updated successfully",
-    });
+  const handleToggleChannel = async (channelId: string) => {
+    const channel = channels.find((c) => c.id === channelId);
+    if (!channel) return;
+    setChannels(channels.map((c) => c.id === channelId ? { ...c, enabled: !c.enabled } : c));
+    try {
+      await apiClient.patch("/api/notification-channels", { id: channelId, enabled: !channel.enabled });
+      setNotification({ type: "success", message: "Channel updated successfully" });
+    } catch {
+      setChannels(channels.map((c) => c.id === channelId ? { ...c, enabled: channel.enabled } : c));
+      setNotification({ type: "error", message: "Failed to update channel" });
+    }
   };
 
   const handleMarkAsRead = async (alertId: string) => {
-    // Optimistic update
-    setAlerts(
-      alerts.map((alert) =>
-        alert.id === alertId ? { ...alert, read: true } : alert
-      )
-    );
-
+    setAlerts(alerts.map((alert) => alert.id === alertId ? { ...alert, read: true } : alert));
     try {
       await apiClient.patch("/api/notifications", { id: alertId, read: true });
     } catch (error) {
       console.error("Failed to mark as read", error);
-      // Revert on failure if needed, or just show error
       setNotification({ type: "error", message: "Failed to update status" });
     }
   };
@@ -431,17 +408,24 @@ export default function NotificationsPage() {
     setNotification({ type: "success", message: "Alert deleted successfully" });
   };
 
-  const handleDeleteRule = (ruleId: string) => {
+  const handleDeleteRule = async (ruleId: string) => {
     setRules(rules.filter((rule) => rule.id !== ruleId));
-    setNotification({ type: "success", message: "Rule deleted successfully" });
+    try {
+      await apiClient.delete(`/api/notification-rules?id=${ruleId}`);
+      setNotification({ type: "success", message: "Rule deleted successfully" });
+    } catch {
+      setNotification({ type: "error", message: "Failed to delete rule" });
+    }
   };
 
-  const handleDeleteChannel = (channelId: string) => {
+  const handleDeleteChannel = async (channelId: string) => {
     setChannels(channels.filter((channel) => channel.id !== channelId));
-    setNotification({
-      type: "success",
-      message: "Channel deleted successfully",
-    });
+    try {
+      await apiClient.delete(`/api/notification-channels?id=${channelId}`);
+      setNotification({ type: "success", message: "Channel deleted successfully" });
+    } catch {
+      setNotification({ type: "error", message: "Failed to delete channel" });
+    }
   };
 
   const stats = {
@@ -455,34 +439,34 @@ export default function NotificationsPage() {
   useEffect(() => {
     getTeamInvites();
   }, []);
+
   const getTeamInvites = async () => {
-    const resp = await apiClient.get("/api/team/invite");
-    console.log(resp.data.invites);
-    setTeamInvites(resp.data.invites);
+    try {
+      const resp = await apiClient.get("/api/team/invite");
+      setTeamInvites(resp.data.invites || []);
+    } catch (err) {
+      console.error("Failed to load team invites", err);
+    }
   };
 
   const handleAcceptInvite = async (inviteId: string) => {
-    await apiClient.post(`/api/team/invite/accept`, {
-      teamId: inviteId,
-      status: "active",
-    });
-    setNotification({
-      type: "success",
-      message: "Invite accepted successfully",
-    });
-    getTeamInvites();
+    try {
+      await apiClient.post(`/api/team/invite/accept`, { teamId: inviteId, status: "active" });
+      setNotification({ type: "success", message: "Invite accepted successfully" });
+      getTeamInvites();
+    } catch {
+      setNotification({ type: "error", message: "Failed to accept invite" });
+    }
   };
 
   const handleDeclineInvite = async (inviteId: string) => {
-    await apiClient.post(`/api/team/invite/accept`, {
-      teamId: inviteId,
-      status: "decline",
-    });
-    setNotification({
-      type: "success",
-      message: "Invite declined successfully",
-    });
-    getTeamInvites();
+    try {
+      await apiClient.post(`/api/team/invite/accept`, { teamId: inviteId, status: "decline" });
+      setNotification({ type: "success", message: "Invite declined successfully" });
+      getTeamInvites();
+    } catch {
+      setNotification({ type: "error", message: "Failed to decline invite" });
+    }
   };
 
   if (isLoading) {
@@ -496,7 +480,6 @@ export default function NotificationsPage() {
             </div>
             <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             {Array.from({ length: 5 }).map((_, i) => (
               <Card key={i}>
@@ -507,7 +490,6 @@ export default function NotificationsPage() {
               </Card>
             ))}
           </div>
-
           <Card>
             <CardHeader>
               <div className="h-6 bg-muted rounded w-48 animate-pulse"></div>
@@ -515,10 +497,7 @@ export default function NotificationsPage() {
             <CardContent>
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div
-                    key={i}
-                    className="flex items-center justify-between p-4 border rounded"
-                  >
+                  <div key={i} className="flex items-center justify-between p-4 border rounded">
                     <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
                     <div className="h-4 bg-muted rounded w-24 animate-pulse"></div>
                     <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
@@ -536,12 +515,10 @@ export default function NotificationsPage() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        {/* Notification */}
+        {/* Toast Notification */}
         {notification && (
           <Alert
-            className={`${notification.type === "error"
-              ? "border-destructive"
-              : "border-green-500"
+            className={`${notification.type === "error" ? "border-destructive" : "border-green-500"
               } animate-in slide-in-from-top-2 duration-300`}
           >
             <AlertDescription>{notification.message}</AlertDescription>
@@ -551,23 +528,14 @@ export default function NotificationsPage() {
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">
-              Notifications
-            </h1>
-            <p className="text-muted-foreground">
-              Manage alerts, rules, and notification channels
-            </p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Notifications</h1>
+            <p className="text-muted-foreground">Manage alerts, rules, and notification channels</p>
           </div>
           <div className="flex gap-2">
-            <Dialog
-              open={isCreateChannelOpen}
-              onOpenChange={setIsCreateChannelOpen}
-            >
+            {/* Add Channel Dialog */}
+            <Dialog open={isCreateChannelOpen} onOpenChange={setIsCreateChannelOpen}>
               <DialogTrigger asChild>
-                <Button
-                  variant="outline"
-                  className="flex items-center gap-2 bg-transparent"
-                >
+                <Button variant="outline" className="flex items-center gap-2 bg-transparent">
                   <Plus className="h-4 w-4" />
                   Add Channel
                 </Button>
@@ -575,22 +543,16 @@ export default function NotificationsPage() {
               <DialogContent className="max-w-md">
                 <DialogHeader>
                   <DialogTitle>Create Notification Channel</DialogTitle>
-                  <DialogDescription>
-                    Add a new channel to receive notifications
-                  </DialogDescription>
+                  <DialogDescription>Add a new channel to receive notifications</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
                     <Label htmlFor="channel-type">Channel Type</Label>
                     <Select
                       value={newChannel.type}
-                      onValueChange={(value) =>
-                        setNewChannel({ ...newChannel, type: value as any })
-                      }
+                      onValueChange={(value) => setNewChannel({ ...newChannel, type: value as any })}
                     >
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
+                      <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="email">Email</SelectItem>
                         <SelectItem value="slack">Slack</SelectItem>
@@ -605,9 +567,7 @@ export default function NotificationsPage() {
                       id="channel-name"
                       placeholder="e.g., Security Team Email"
                       value={newChannel.name}
-                      onChange={(e) =>
-                        setNewChannel({ ...newChannel, name: e.target.value })
-                      }
+                      onChange={(e) => setNewChannel({ ...newChannel, name: e.target.value })}
                     />
                   </div>
                   {newChannel.type === "email" && (
@@ -618,15 +578,7 @@ export default function NotificationsPage() {
                         type="email"
                         placeholder="admin@example.com"
                         value={newChannel.config.email}
-                        onChange={(e) =>
-                          setNewChannel({
-                            ...newChannel,
-                            config: {
-                              ...newChannel.config,
-                              email: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setNewChannel({ ...newChannel, config: { ...newChannel.config, email: e.target.value } })}
                       />
                     </div>
                   )}
@@ -637,15 +589,7 @@ export default function NotificationsPage() {
                         id="slack-channel"
                         placeholder="#security-alerts"
                         value={newChannel.config.slackChannel}
-                        onChange={(e) =>
-                          setNewChannel({
-                            ...newChannel,
-                            config: {
-                              ...newChannel.config,
-                              slackChannel: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setNewChannel({ ...newChannel, config: { ...newChannel.config, slackChannel: e.target.value } })}
                       />
                     </div>
                   )}
@@ -656,15 +600,7 @@ export default function NotificationsPage() {
                         id="teams-webhook"
                         placeholder="https://outlook.office.com/webhook/..."
                         value={newChannel.config.teamsWebhook}
-                        onChange={(e) =>
-                          setNewChannel({
-                            ...newChannel,
-                            config: {
-                              ...newChannel.config,
-                              teamsWebhook: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setNewChannel({ ...newChannel, config: { ...newChannel.config, teamsWebhook: e.target.value } })}
                       />
                     </div>
                   )}
@@ -675,36 +611,19 @@ export default function NotificationsPage() {
                         id="webhook-url"
                         placeholder="https://api.example.com/webhook"
                         value={newChannel.config.webhookUrl}
-                        onChange={(e) =>
-                          setNewChannel({
-                            ...newChannel,
-                            config: {
-                              ...newChannel.config,
-                              webhookUrl: e.target.value,
-                            },
-                          })
-                        }
+                        onChange={(e) => setNewChannel({ ...newChannel, config: { ...newChannel.config, webhookUrl: e.target.value } })}
                       />
                     </div>
                   )}
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsCreateChannelOpen(false)}
-                      className="w-full sm:w-auto"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreateChannel}
-                      className="w-full sm:w-auto"
-                    >
-                      Create Channel
-                    </Button>
+                    <Button variant="outline" onClick={() => setIsCreateChannelOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+                    <Button onClick={handleCreateChannel} className="w-full sm:w-auto">Create Channel</Button>
                   </div>
                 </div>
               </DialogContent>
             </Dialog>
+
+            {/* Create Rule Dialog */}
             <Dialog open={isCreateRuleOpen} onOpenChange={setIsCreateRuleOpen}>
               <DialogTrigger asChild>
                 <Button className="flex items-center gap-2">
@@ -715,9 +634,7 @@ export default function NotificationsPage() {
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
                   <DialogTitle>Create Notification Rule</DialogTitle>
-                  <DialogDescription>
-                    Set up automated alerts for specific events and conditions
-                  </DialogDescription>
+                  <DialogDescription>Set up automated alerts for specific events and conditions</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -726,9 +643,7 @@ export default function NotificationsPage() {
                       id="rule-name"
                       placeholder="e.g., Production Secret Changes"
                       value={newRule.name}
-                      onChange={(e) =>
-                        setNewRule({ ...newRule, name: e.target.value })
-                      }
+                      onChange={(e) => setNewRule({ ...newRule, name: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
@@ -737,158 +652,86 @@ export default function NotificationsPage() {
                       id="rule-description"
                       placeholder="Describe when this rule should trigger"
                       value={newRule.description}
-                      onChange={(e) =>
-                        setNewRule({ ...newRule, description: e.target.value })
-                      }
+                      onChange={(e) => setNewRule({ ...newRule, description: e.target.value })}
                     />
                   </div>
                   <div className="space-y-2">
                     <Label>Trigger Events</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {[
-                        "secret_change",
-                        "rotation_failed",
-                        "suspicious_activity",
-                        "access_denied",
-                        "system_error",
-                      ].map((trigger) => (
-                        <div
-                          key={trigger}
-                          className="flex items-center space-x-2"
-                        >
+                      {["secret_change", "rotation_failed", "suspicious_activity", "access_denied", "system_error"].map((trigger) => (
+                        <div key={trigger} className="flex items-center space-x-2">
                           <input
                             type="checkbox"
                             id={trigger}
                             checked={newRule.triggers.includes(trigger)}
                             onChange={(e) => {
                               if (e.target.checked) {
-                                setNewRule({
-                                  ...newRule,
-                                  triggers: [...newRule.triggers, trigger],
-                                });
+                                setNewRule({ ...newRule, triggers: [...newRule.triggers, trigger] });
                               } else {
-                                setNewRule({
-                                  ...newRule,
-                                  triggers: newRule.triggers.filter(
-                                    (t) => t !== trigger
-                                  ),
-                                });
+                                setNewRule({ ...newRule, triggers: newRule.triggers.filter((t) => t !== trigger) });
                               }
                             }}
                           />
-                          <Label
-                            htmlFor={trigger}
-                            className="text-sm capitalize"
-                          >
-                            {trigger.replace("_", " ")}
-                          </Label>
+                          <Label htmlFor={trigger} className="text-sm capitalize">{trigger.replace(/_/g, " ")}</Label>
                         </div>
                       ))}
                     </div>
                   </div>
                   <div className="space-y-2">
                     <Label>Notification Channels</Label>
-                    <div className="grid grid-cols-1 gap-2">
-                      {channels.map((channel) => (
-                        <div
-                          key={channel.id}
-                          className="flex items-center space-x-2"
-                        >
-                          <input
-                            type="checkbox"
-                            id={channel.id}
-                            checked={newRule.channels.includes(channel.id)}
-                            onChange={(e) => {
-                              if (e.target.checked) {
-                                setNewRule({
-                                  ...newRule,
-                                  channels: [...newRule.channels, channel.id],
-                                });
-                              } else {
-                                setNewRule({
-                                  ...newRule,
-                                  channels: newRule.channels.filter(
-                                    (c) => c !== channel.id
-                                  ),
-                                });
-                              }
-                            }}
-                          />
-                          <Label
-                            htmlFor={channel.id}
-                            className="text-sm flex items-center gap-2"
-                          >
-                            {getChannelIcon(channel.type)}
-                            {channel.name}
-                          </Label>
-                        </div>
-                      ))}
-                    </div>
+                    {channels.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">No channels configured yet. Create a channel first.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-2">
+                        {channels.map((channel) => (
+                          <div key={channel.id} className="flex items-center space-x-2">
+                            <input
+                              type="checkbox"
+                              id={channel.id}
+                              checked={newRule.channels.includes(channel.id)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setNewRule({ ...newRule, channels: [...newRule.channels, channel.id] });
+                                } else {
+                                  setNewRule({ ...newRule, channels: newRule.channels.filter((c) => c !== channel.id) });
+                                }
+                              }}
+                            />
+                            <Label htmlFor={channel.id} className="text-sm flex items-center gap-2">
+                              {getChannelIcon(channel.type)}
+                              {channel.name}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Severity Levels</Label>
                     <div className="grid grid-cols-2 gap-2">
-                      {["info", "warning", "error", "critical"].map(
-                        (severity) => (
-                          <div
-                            key={severity}
-                            className="flex items-center space-x-2"
-                          >
-                            <input
-                              type="checkbox"
-                              id={severity}
-                              checked={newRule.conditions.severity?.includes(
-                                severity
-                              )}
-                              onChange={(e) => {
-                                const currentSeverity =
-                                  newRule.conditions.severity || [];
-                                if (e.target.checked) {
-                                  setNewRule({
-                                    ...newRule,
-                                    conditions: {
-                                      ...newRule.conditions,
-                                      severity: [...currentSeverity, severity],
-                                    },
-                                  });
-                                } else {
-                                  setNewRule({
-                                    ...newRule,
-                                    conditions: {
-                                      ...newRule.conditions,
-                                      severity: currentSeverity.filter(
-                                        (s) => s !== severity
-                                      ),
-                                    },
-                                  });
-                                }
-                              }}
-                            />
-                            <Label
-                              htmlFor={severity}
-                              className="text-sm capitalize"
-                            >
-                              {severity}
-                            </Label>
-                          </div>
-                        )
-                      )}
+                      {["info", "warning", "error", "critical"].map((severity) => (
+                        <div key={severity} className="flex items-center space-x-2">
+                          <input
+                            type="checkbox"
+                            id={severity}
+                            checked={newRule.conditions.severity?.includes(severity)}
+                            onChange={(e) => {
+                              const currentSeverity = newRule.conditions.severity || [];
+                              if (e.target.checked) {
+                                setNewRule({ ...newRule, conditions: { ...newRule.conditions, severity: [...currentSeverity, severity] } });
+                              } else {
+                                setNewRule({ ...newRule, conditions: { ...newRule.conditions, severity: currentSeverity.filter((s) => s !== severity) } });
+                              }
+                            }}
+                          />
+                          <Label htmlFor={severity} className="text-sm capitalize">{severity}</Label>
+                        </div>
+                      ))}
                     </div>
                   </div>
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                    <Button
-                      variant="outline"
-                      onClick={() => setIsCreateRuleOpen(false)}
-                      className="w-full sm:w-auto"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleCreateRule}
-                      className="w-full sm:w-auto"
-                    >
-                      Create Rule
-                    </Button>
+                    <Button variant="outline" onClick={() => setIsCreateRuleOpen(false)} className="w-full sm:w-auto">Cancel</Button>
+                    <Button onClick={handleCreateRule} className="w-full sm:w-auto">Create Rule</Button>
                   </div>
                 </div>
               </DialogContent>
@@ -902,9 +745,7 @@ export default function NotificationsPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-2">
                 <Bell className="h-4 w-4 text-muted-foreground" />
-                <div className="text-sm font-medium text-muted-foreground">
-                  Total Alerts
-                </div>
+                <div className="text-sm font-medium text-muted-foreground">Total Alerts</div>
               </div>
               <div className="text-2xl font-bold">{stats.totalAlerts}</div>
             </CardContent>
@@ -913,52 +754,36 @@ export default function NotificationsPage() {
             <CardContent className="p-6">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="h-4 w-4 text-orange-600" />
-                <div className="text-sm font-medium text-muted-foreground">
-                  Unread
-                </div>
+                <div className="text-sm font-medium text-muted-foreground">Unread</div>
               </div>
-              <div className="text-2xl font-bold text-orange-600">
-                {stats.unreadAlerts}
-              </div>
+              <div className="text-2xl font-bold text-orange-600">{stats.unreadAlerts}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-2">
                 <XCircle className="h-4 w-4 text-red-600" />
-                <div className="text-sm font-medium text-muted-foreground">
-                  Critical
-                </div>
+                <div className="text-sm font-medium text-muted-foreground">Critical</div>
               </div>
-              <div className="text-2xl font-bold text-red-600">
-                {stats.criticalAlerts}
-              </div>
+              <div className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-2">
                 <Zap className="h-4 w-4 text-green-600" />
-                <div className="text-sm font-medium text-muted-foreground">
-                  Active Rules
-                </div>
+                <div className="text-sm font-medium text-muted-foreground">Active Rules</div>
               </div>
-              <div className="text-2xl font-bold text-green-600">
-                {stats.activeRules}
-              </div>
+              <div className="text-2xl font-bold text-green-600">{stats.activeRules}</div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center gap-2">
                 <Settings className="h-4 w-4 text-blue-600" />
-                <div className="text-sm font-medium text-muted-foreground">
-                  Channels
-                </div>
+                <div className="text-sm font-medium text-muted-foreground">Channels</div>
               </div>
-              <div className="text-2xl font-bold text-blue-600">
-                {stats.activeChannels}
-              </div>
+              <div className="text-2xl font-bold text-blue-600">{stats.activeChannels}</div>
             </CardContent>
           </Card>
         </div>
@@ -977,19 +802,32 @@ export default function NotificationsPage() {
         {/* Tabs */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList>
-            <TabsTrigger value="alerts">Recent Alerts</TabsTrigger>
+            <TabsTrigger value="alerts">
+              Recent Alerts
+              {stats.unreadAlerts > 0 && (
+                <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-orange-500 text-white">
+                  {stats.unreadAlerts}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="rules">Notification Rules</TabsTrigger>
             <TabsTrigger value="channels">Channels</TabsTrigger>
-            <TabsTrigger value="invites">Team Invite</TabsTrigger>
+            <TabsTrigger value="invites">
+              Team Invites
+              {teamInvites.length > 0 && (
+                <Badge className="ml-2 h-5 w-5 rounded-full p-0 flex items-center justify-center text-xs bg-blue-500 text-white">
+                  {teamInvites.length}
+                </Badge>
+              )}
+            </TabsTrigger>
           </TabsList>
 
+          {/* Recent Alerts Tab */}
           <TabsContent value="alerts" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Recent Alerts</CardTitle>
-                <CardDescription>
-                  View and manage recent notification alerts
-                </CardDescription>
+                <CardDescription>View and manage recent notification alerts</CardDescription>
               </CardHeader>
               <CardContent>
                 {filteredAlerts.length > 0 ? (
@@ -997,58 +835,32 @@ export default function NotificationsPage() {
                     {filteredAlerts.map((alert) => (
                       <Card
                         key={alert.id}
-                        className={`${!alert.read ? "border-l-4 border-l-primary" : ""
-                          }`}
+                        className={`${!alert.read ? "border-l-4 border-l-primary" : ""}`}
                       >
                         <CardContent className="p-4">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex items-start gap-3 min-w-0 flex-1">
-                              <div className="flex-shrink-0 mt-1">
-                                {getTypeIcon(alert.type)}
-                              </div>
+                              <div className="flex-shrink-0 mt-1">{getTypeIcon(alert.type)}</div>
                               <div className="min-w-0 flex-1">
                                 <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-medium text-sm">
-                                    {alert.title}
-                                  </h4>
-                                  <Badge
-                                    className={getSeverityColor(alert.severity)}
-                                  >
-                                    {alert.severity}
-                                  </Badge>
+                                  <h4 className="font-medium text-sm">{alert.title}</h4>
+                                  <Badge className={getSeverityColor(alert.severity)}>{alert.severity}</Badge>
                                   {!alert.read && (
-                                    <Badge
-                                      variant="secondary"
-                                      className="text-xs"
-                                    >
-                                      New
-                                    </Badge>
+                                    <Badge variant="secondary" className="text-xs">New</Badge>
                                   )}
                                 </div>
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {alert.message}
-                                </p>
+                                <p className="text-sm text-muted-foreground mb-2">{alert.message}</p>
                                 <div className="flex items-center gap-4 text-xs text-muted-foreground">
                                   <span>{formatDate(alert.timestamp)}</span>
-                                  {alert.project && (
-                                    <span>Project: {alert.project}</span>
-                                  )}
-                                  {alert.branch && (
-                                    <span>Branch: {alert.branch}</span>
-                                  )}
-                                  {alert.user && (
-                                    <span>User: {alert.user}</span>
-                                  )}
+                                  {alert.project && <span>Project: {alert.project}</span>}
+                                  {alert.branch && <span>Branch: {alert.branch}</span>}
+                                  {alert.user && <span>User: {alert.user}</span>}
                                 </div>
                               </div>
                             </div>
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-6 w-6 p-0"
-                                >
+                                <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                   <MoreHorizontal className="h-3 w-3" />
                                 </Button>
                               </DropdownMenuTrigger>
@@ -1056,9 +868,7 @@ export default function NotificationsPage() {
                                 <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                 <DropdownMenuSeparator />
                                 {!alert.read && (
-                                  <DropdownMenuItem
-                                    onClick={() => handleMarkAsRead(alert.id)}
-                                  >
+                                  <DropdownMenuItem onClick={() => handleMarkAsRead(alert.id)}>
                                     <Eye className="mr-2 h-4 w-4" />
                                     Mark as Read
                                   </DropdownMenuItem>
@@ -1068,10 +878,7 @@ export default function NotificationsPage() {
                                   View Details
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteAlert(alert.id)}
-                                  className="text-destructive"
-                                >
+                                <DropdownMenuItem onClick={() => handleDeleteAlert(alert.id)} className="text-destructive">
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Delete
                                 </DropdownMenuItem>
@@ -1083,11 +890,10 @@ export default function NotificationsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-12">
+                    <Bell className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                     <div className="text-muted-foreground">
-                      {searchQuery
-                        ? "No alerts found matching your search."
-                        : "No alerts available."}
+                      {searchQuery ? "No alerts found matching your search." : "No alerts yet. You're all caught up!"}
                     </div>
                   </div>
                 )}
@@ -1095,13 +901,12 @@ export default function NotificationsPage() {
             </Card>
           </TabsContent>
 
+          {/* Notification Rules Tab */}
           <TabsContent value="rules" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Notification Rules</CardTitle>
-                <CardDescription>
-                  Manage automated notification rules and triggers
-                </CardDescription>
+                <CardDescription>Manage automated notification rules and triggers</CardDescription>
               </CardHeader>
               <CardContent>
                 {filteredRules.length > 0 ? (
@@ -1112,7 +917,7 @@ export default function NotificationsPage() {
                           <TableHead>Rule Name</TableHead>
                           <TableHead>Triggers</TableHead>
                           <TableHead>Channels</TableHead>
-                          <TableHead>Last Triggered</TableHead>
+                          <TableHead>Created By</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Actions</TableHead>
                         </TableRow>
@@ -1123,64 +928,46 @@ export default function NotificationsPage() {
                             <TableCell>
                               <div className="space-y-1">
                                 <div className="font-medium">{rule.name}</div>
-                                <div className="text-sm text-muted-foreground">
-                                  {rule.description}
-                                </div>
+                                <div className="text-sm text-muted-foreground">{rule.description}</div>
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
                                 {rule.triggers.map((trigger) => (
-                                  <Badge
-                                    key={trigger}
-                                    variant="outline"
-                                    className="text-xs"
-                                  >
-                                    {trigger.replace("_", " ")}
+                                  <Badge key={trigger} variant="outline" className="text-xs">
+                                    {trigger.replace(/_/g, " ")}
                                   </Badge>
                                 ))}
                               </div>
                             </TableCell>
                             <TableCell>
                               <div className="flex flex-wrap gap-1">
-                                {rule.channels.map((channelId) => {
-                                  const channel = channels.find(
-                                    (c) => c.id === channelId
-                                  );
-                                  return channel ? (
-                                    <Badge
-                                      key={channelId}
-                                      variant="secondary"
-                                      className="text-xs flex items-center gap-1"
-                                    >
-                                      {getChannelIcon(channel.type)}
-                                      {channel.name}
-                                    </Badge>
-                                  ) : null;
-                                })}
+                                {rule.channels.length === 0 ? (
+                                  <span className="text-xs text-muted-foreground">None</span>
+                                ) : (
+                                  rule.channels.map((channelId) => {
+                                    const channel = channels.find((c) => c.id === channelId);
+                                    return channel ? (
+                                      <Badge key={channelId} variant="secondary" className="text-xs flex items-center gap-1">
+                                        {getChannelIcon(channel.type)}
+                                        {channel.name}
+                                      </Badge>
+                                    ) : null;
+                                  })
+                                )}
                               </div>
                             </TableCell>
-                            <TableCell className="text-sm text-muted-foreground">
-                              {rule.lastTriggered
-                                ? formatDate(rule.lastTriggered)
-                                : "Never"}
-                            </TableCell>
+                            <TableCell className="text-sm text-muted-foreground">{rule.createdBy}</TableCell>
                             <TableCell>
                               <Switch
                                 checked={rule.enabled}
-                                onCheckedChange={() =>
-                                  handleToggleRule(rule.id)
-                                }
+                                onCheckedChange={() => handleToggleRule(rule.id)}
                               />
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                  >
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                     <MoreHorizontal className="h-3 w-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -1191,15 +978,8 @@ export default function NotificationsPage() {
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit Rule
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
-                                    <Eye className="mr-2 h-4 w-4" />
-                                    Test Rule
-                                  </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => handleDeleteRule(rule.id)}
-                                    className="text-destructive"
-                                  >
+                                  <DropdownMenuItem onClick={() => handleDeleteRule(rule.id)} className="text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete Rule
                                   </DropdownMenuItem>
@@ -1212,16 +992,13 @@ export default function NotificationsPage() {
                     </Table>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
+                  <div className="text-center py-12">
+                    <Zap className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
                     <div className="text-muted-foreground mb-4">
-                      {searchQuery
-                        ? "No rules found matching your search."
-                        : "No notification rules configured yet."}
+                      {searchQuery ? "No rules found matching your search." : "No notification rules configured yet."}
                     </div>
                     {!searchQuery && (
-                      <Button onClick={() => setIsCreateRuleOpen(true)}>
-                        Create your first rule
-                      </Button>
+                      <Button onClick={() => setIsCreateRuleOpen(true)}>Create your first rule</Button>
                     )}
                   </div>
                 )}
@@ -1229,13 +1006,12 @@ export default function NotificationsPage() {
             </Card>
           </TabsContent>
 
+          {/* Channels Tab */}
           <TabsContent value="channels" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Notification Channels</CardTitle>
-                <CardDescription>
-                  Manage notification delivery channels
-                </CardDescription>
+                <CardDescription>Manage notification delivery channels</CardDescription>
               </CardHeader>
               <CardContent>
                 {channels.length > 0 ? (
@@ -1257,20 +1033,15 @@ export default function NotificationsPage() {
                             <TableCell>
                               <div className="flex items-center gap-2">
                                 {getChannelIcon(channel.type)}
-                                <span className="font-medium">
-                                  {channel.name}
-                                </span>
+                                <span className="font-medium">{channel.name}</span>
                               </div>
                             </TableCell>
                             <TableCell>
-                              <Badge variant="outline" className="capitalize">
-                                {channel.type}
-                              </Badge>
+                              <Badge variant="outline" className="capitalize">{channel.type}</Badge>
                             </TableCell>
                             <TableCell className="text-sm text-muted-foreground">
                               {channel.type === "email" && channel.config.email}
-                              {channel.type === "slack" &&
-                                channel.config.slackChannel}
+                              {channel.type === "slack" && channel.config.slackChannel}
                               {channel.type === "teams" && "Teams Webhook"}
                               {channel.type === "webhook" && "Custom Webhook"}
                             </TableCell>
@@ -1280,19 +1051,13 @@ export default function NotificationsPage() {
                             <TableCell>
                               <Switch
                                 checked={channel.enabled}
-                                onCheckedChange={() =>
-                                  handleToggleChannel(channel.id)
-                                }
+                                onCheckedChange={() => handleToggleChannel(channel.id)}
                               />
                             </TableCell>
                             <TableCell>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    className="h-6 w-6 p-0"
-                                  >
+                                  <Button variant="ghost" size="sm" className="h-6 w-6 p-0">
                                     <MoreHorizontal className="h-3 w-3" />
                                   </Button>
                                 </DropdownMenuTrigger>
@@ -1308,12 +1073,7 @@ export default function NotificationsPage() {
                                     Test Channel
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() =>
-                                      handleDeleteChannel(channel.id)
-                                    }
-                                    className="text-destructive"
-                                  >
+                                  <DropdownMenuItem onClick={() => handleDeleteChannel(channel.id)} className="text-destructive">
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Delete Channel
                                   </DropdownMenuItem>
@@ -1326,57 +1086,45 @@ export default function NotificationsPage() {
                     </Table>
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <div className="text-muted-foreground mb-4">
-                      No notification channels configured yet.
-                    </div>
-                    <Button onClick={() => setIsCreateChannelOpen(true)}>
-                      Create your first channel
-                    </Button>
+                  <div className="text-center py-12">
+                    <Settings className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                    <div className="text-muted-foreground mb-4">No notification channels configured yet.</div>
+                    <Button onClick={() => setIsCreateChannelOpen(true)}>Create your first channel</Button>
                   </div>
                 )}
               </CardContent>
             </Card>
           </TabsContent>
+
+          {/* Team Invites Tab */}
           <TabsContent value="invites" className="space-y-4">
             <Card>
               <CardHeader>
                 <CardTitle>Team Invites</CardTitle>
-                <CardDescription>
-                  Manage your team invites here.
-                </CardDescription>
+                <CardDescription>Pending invitations to join teams in your workspaces.</CardDescription>
               </CardHeader>
               <CardContent>
                 {teamInvites.length > 0 ? (
                   <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {teamInvites.map((invite: any) => (
-                      <Card
-                        key={invite.id}
-                        className="p-4 shadow-md rounded-2xl border"
-                      >
+                      <Card key={invite.id} className="p-4 shadow-md rounded-2xl border">
                         <div className="flex items-center gap-3">
                           <img
-                            src={invite.user.image}
-                            alt={invite.user.name}
+                            src={invite.user?.image || `https://avatar.vercel.sh/${invite.user?.email}.png`}
+                            alt={invite.user?.name || "User"}
                             className="w-12 h-12 rounded-full border"
                           />
                           <div>
-                            <h3 className="text-lg font-semibold">
-                              {invite.user.name}
-                            </h3>
-                            <p className="text-sm text-gray-500">
-                              {invite.user.email}
-                            </p>
+                            <h3 className="text-lg font-semibold">{invite.user?.name || "Unknown"}</h3>
+                            <p className="text-sm text-gray-500">{invite.user?.email}</p>
                           </div>
                         </div>
 
                         <div className="mt-4 space-y-2">
                           <div className="flex justify-between">
                             <span className="font-medium">Team:</span>
-                            <span
-                              className={`px-2 py-1 text-sm rounded-lg text-white ${invite.team.teamColor}`}
-                            >
-                              {invite.team.name}
+                            <span className={`px-2 py-1 text-sm rounded-lg text-white ${invite.team?.teamColor || "bg-gray-500"}`}>
+                              {invite.team?.name || "Unknown Team"}
                             </span>
                           </div>
                           <div className="flex justify-between">
@@ -1385,24 +1133,26 @@ export default function NotificationsPage() {
                           </div>
                           <div className="flex justify-between">
                             <span className="font-medium">Status:</span>
-                            <span className="capitalize">{invite.status}</span>
+                            <Badge variant="secondary" className="capitalize">{invite.status}</Badge>
                           </div>
                         </div>
 
                         <div className="mt-4 flex gap-2">
                           <Button
                             size="sm"
-                            className="flex-1"
+                            className="flex-1 gap-1"
                             onClick={() => handleAcceptInvite(invite.id)}
                           >
+                            <CheckCircle2 className="h-4 w-4" />
                             Accept
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
-                            className="flex-1"
+                            className="flex-1 gap-1"
                             onClick={() => handleDeclineInvite(invite.id)}
                           >
+                            <XOctagon className="h-4 w-4" />
                             Decline
                           </Button>
                         </div>
@@ -1410,10 +1160,10 @@ export default function NotificationsPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="text-center py-8">
-                    <div className="text-muted-foreground mb-4">
-                      No pending invites.
-                    </div>
+                  <div className="text-center py-12">
+                    <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4 opacity-50" />
+                    <div className="text-muted-foreground">No pending team invites.</div>
+                    <p className="text-sm text-muted-foreground mt-1">When someone invites you to a team, it will appear here.</p>
                   </div>
                 )}
               </CardContent>
