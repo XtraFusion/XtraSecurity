@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       const { decrypt } = await import("@/lib/encription");
       const encryptedSecret = JSON.parse(user.mfaSecret!);
       const secret = decrypt(encryptedSecret);
-      verified = verifyTotp(token, secret);
+      verified = await verifyTotp(token, secret);
     }
 
     if (!verified) {
