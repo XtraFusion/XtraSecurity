@@ -1,8 +1,9 @@
 "use client";
 
 import axios from "axios";
-import React, { useState, createContext, useContext, useEffect } from "react";
+import React, { useState, createContext, useContext, useEffect, useRef } from "react";
 import { useSession } from "next-auth/react";
+
 
 interface UserContextType {
   user: any | null;
@@ -27,6 +28,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [selectedWorkspace, setSelectedWorkspace] = useState<any | null>(null);
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
+  const hasFetchedWorkspaces = useRef(false);
 
   const fetchWorkspaces = async () => {
     try {
@@ -46,11 +48,13 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
-    if (status === "authenticated") {
+    if (status === "authenticated" && !hasFetchedWorkspaces.current) {
+      hasFetchedWorkspaces.current = true;
       fetchUser();
       fetchWorkspaces();
     }
   }, [status]);
+
 
   // Load workspace on mount
   useEffect(() => {

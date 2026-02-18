@@ -34,24 +34,41 @@ export async function POST(req: NextRequest) {
     }
 
     // Decrypt access token
-    const encryptedToken = JSON.parse(integration.accessToken);
+    const encryptedToken = JSON.parse(integration.accessToken!);
     const accessToken = decrypt(encryptedToken);
 
-    // Get secrets for the project/environment
-    const secrets = await prisma.secret.findMany({
+    // Verify project belongs to user (separate check, no relation filter)
+    const project = await prisma.project.findFirst({
       where: {
-        projectId,
-        environmentType: environment,
-        project: { userId: auth.userId }
-      },
-      select: {
-        key: true,
-        value: true
+        id: projectId,
+        OR: [
+          { userId: auth.userId },
+          { teamProjects: { some: { team: { members: { some: { userId: auth.userId, status: "active" } } } } } }
+        ]
       }
     });
 
+    if (!project) {
+      return NextResponse.json({ error: "Project not found or access denied" }, { status: 403 });
+    }
+
+    // Get secrets for the project — match environment case-insensitively
+    const allSecrets = await prisma.secret.findMany({
+      where: { projectId },
+      select: { key: true, value: true, environmentType: true }
+    });
+
+    // Filter by environment (case-insensitive)
+    const secrets = allSecrets.filter(
+      s => s.environmentType?.toLowerCase() === environment.toLowerCase()
+    );
+
     if (secrets.length === 0) {
-      return NextResponse.json({ error: "No secrets found" }, { status: 404 });
+      // Return helpful error showing what environments DO have secrets
+      const availableEnvs = [...new Set(allSecrets.map(s => s.environmentType).filter(Boolean))];
+      return NextResponse.json({ 
+        error: `No secrets found for environment "${environment}". Available environments: ${availableEnvs.length > 0 ? availableEnvs.join(", ") : "none"}` 
+      }, { status: 404 });
     }
 
     // Get repo public key for encryption
@@ -68,7 +85,7 @@ export async function POST(req: NextRequest) {
     if (!keyRes.ok) {
       const error = await keyRes.json();
       return NextResponse.json({ 
-        error: `GitHub API error: ${error.message}` 
+        error: `GitHub API error: ${error.message || keyRes.statusText}` 
       }, { status: keyRes.status });
     }
 
@@ -82,9 +99,16 @@ export async function POST(req: NextRequest) {
     // Sync each secret
     for (const secret of secrets) {
       try {
-        // Decrypt secret value
-        const encryptedValue = JSON.parse(secret.value[0]);
-        const decryptedValue = decrypt(encryptedValue);
+        // Decrypt secret value — handle both string and array formats
+        let decryptedValue: string;
+        try {
+          const rawValue = Array.isArray(secret.value) ? secret.value[0] : secret.value;
+          const encryptedValue = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
+          decryptedValue = decrypt(encryptedValue);
+        } catch (decryptErr: any) {
+          syncResults.push({ key: secret.key, success: false, error: `Decryption failed: ${decryptErr.message}` });
+          continue;
+        }
 
         // Encrypt for GitHub using sealed box
         const messageBytes = Uint8Array.from(Buffer.from(decryptedValue, "utf-8"));
@@ -117,7 +141,7 @@ export async function POST(req: NextRequest) {
           syncResults.push({ key: secretName, success: true });
         } else {
           const error = await syncRes.json();
-          syncResults.push({ key: secretName, success: false, error: error.message });
+          syncResults.push({ key: secretName, success: false, error: error.message || `HTTP ${syncRes.status}` });
         }
       } catch (err: any) {
         syncResults.push({ key: secret.key, success: false, error: err.message });
@@ -125,20 +149,25 @@ export async function POST(req: NextRequest) {
     }
 
     // Audit log
-    await prisma.auditLog.create({
-      data: {
-        userId: auth.userId,
-        action: "github_sync",
-        entity: "project",
-        entityId: projectId,
-        changes: { 
-          repo: `${repoOwner}/${repoName}`, 
-          environment,
-          secretsCount: secrets.length,
-          successCount: syncResults.filter(r => r.success).length
+    try {
+      await prisma.auditLog.create({
+        data: {
+          userId: auth.userId,
+          action: "github_sync",
+          entity: "project",
+          entityId: projectId,
+          changes: { 
+            repo: `${repoOwner}/${repoName}`, 
+            environment,
+            secretsCount: secrets.length,
+            successCount: syncResults.filter(r => r.success).length
+          }
         }
-      }
-    });
+      });
+    } catch (auditErr) {
+      // Don't fail the sync if audit log fails
+      console.error("Audit log failed:", auditErr);
+    }
 
     return NextResponse.json({
       success: true,
@@ -180,7 +209,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Decrypt access token
-    const encryptedToken = JSON.parse(integration.accessToken);
+    const encryptedToken = JSON.parse(integration.accessToken!);
     const accessToken = decrypt(encryptedToken);
 
     // Get repos
@@ -213,3 +242,57 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
+
+// DELETE /api/integrations/github/sync?repoOwner=&repoName=&secretName= - Delete a secret from GitHub
+export async function DELETE(req: NextRequest) {
+  try {
+    const auth = await verifyAuth(req);
+    if (!auth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const repoOwner = url.searchParams.get("repoOwner");
+    const repoName = url.searchParams.get("repoName");
+    const secretName = url.searchParams.get("secretName");
+
+    if (!repoOwner || !repoName || !secretName) {
+      return NextResponse.json({ error: "repoOwner, repoName, and secretName are required" }, { status: 400 });
+    }
+
+    // Get GitHub integration
+    const integration = await prisma.integration.findUnique({
+      where: { userId_provider: { userId: auth.userId, provider: "github" } }
+    });
+
+    if (!integration) {
+      return NextResponse.json({ error: "GitHub not connected" }, { status: 400 });
+    }
+
+    const encryptedToken = JSON.parse(integration.accessToken!);
+    const accessToken = decrypt(encryptedToken);
+
+    const deleteRes = await fetch(
+      `https://api.github.com/repos/${repoOwner}/${repoName}/actions/secrets/${secretName}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Authorization": `Bearer ${accessToken}`,
+          "Accept": "application/vnd.github.v3+json"
+        }
+      }
+    );
+
+    if (deleteRes.status === 204 || deleteRes.ok) {
+      return NextResponse.json({ success: true, deleted: secretName });
+    }
+
+    const error = await deleteRes.json().catch(() => ({ message: deleteRes.statusText }));
+    return NextResponse.json({ error: error.message || "Failed to delete secret" }, { status: deleteRes.status });
+
+  } catch (error: any) {
+    console.error("GitHub delete secret error:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+

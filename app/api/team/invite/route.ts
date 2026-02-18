@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { getUserTeamRole, canManageMembers } from "@/lib/permissions";
 
 export async function POST(req: Request) {
@@ -33,7 +34,7 @@ export async function POST(req: Request) {
         teamId,
         userId: user.id,
         role,
-        status: "active",
+        status: "pending",
         invitedBy: session.user.id,
       },
     });
@@ -50,6 +51,12 @@ export async function POST(req: Request) {
           status: "unread",
           read: false,
         },
+      });
+      await dispatchNotification({
+        title: "New Team Invite",
+        message: `${user.email} was invited to a team`,
+        type: "info",
+        fields: [{ label: "Role", value: role }],
       });
     } catch (notifErr) {
       console.error("Failed to create notification for invite:", notifErr);

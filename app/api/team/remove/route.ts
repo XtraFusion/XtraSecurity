@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { getUserTeamRole, canRemoveMember } from "@/lib/permissions";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
 
 export async function DELETE(req: Request) {
   try {
@@ -56,6 +57,12 @@ export async function DELETE(req: Request) {
               status: "unread",
               read: false,
             },
+          });
+          await dispatchNotification({
+            title: "Team Member Removed",
+            message: `${targetUser.email} was removed from the team`,
+            type: "error",
+            fields: [{ label: "Removed by", value: session.user.email || "" }],
           });
         }
       }

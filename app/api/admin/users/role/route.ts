@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { UserRole } from "@/lib/authz/types";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
 
 // PUT /api/admin/users/role - Update user role
 export async function PUT(req: NextRequest) {
@@ -103,6 +104,16 @@ export async function PUT(req: NextRequest) {
           status: "unread",
           read: false
         }
+      });
+      await dispatchNotification({
+        title: "Admin Role Change",
+        message: `${targetUser.email}'s role was updated to *${role}*`,
+        type: "warning",
+        fields: [
+          { label: "User", value: targetUser.email || "" },
+          { label: "New Role", value: role },
+          { label: "Changed by", value: currentUser.email || "" },
+        ],
       });
     } catch (e) {
       // Non-critical, continue
