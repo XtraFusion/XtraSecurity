@@ -2,6 +2,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
 
 export async function POST(req: Request) {
   try {
@@ -54,6 +55,11 @@ export async function POST(req: Request) {
                 status: "unread",
                 read: false,
               },
+            });
+            await dispatchNotification({
+              title: "Invite Accepted",
+              message: `${session.user.email} accepted a team invite`,
+              type: "success",
             });
           }
         }

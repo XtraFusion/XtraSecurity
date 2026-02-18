@@ -209,7 +209,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Decrypt access token
-    const encryptedToken = JSON.parse(integration.accessToken);
+    const encryptedToken = JSON.parse(integration.accessToken!);
     const accessToken = decrypt(encryptedToken);
 
     // Get repos
@@ -269,7 +269,7 @@ export async function DELETE(req: NextRequest) {
       return NextResponse.json({ error: "GitHub not connected" }, { status: 400 });
     }
 
-    const encryptedToken = JSON.parse(integration.accessToken);
+    const encryptedToken = JSON.parse(integration.accessToken!);
     const accessToken = decrypt(encryptedToken);
 
     const deleteRes = await fetch(

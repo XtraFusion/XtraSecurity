@@ -428,6 +428,24 @@ export default function NotificationsPage() {
     }
   };
 
+  const handleTestChannel = async (channel: any) => {
+    const webhookUrl = channel.config?.webhookUrl;
+    if (!webhookUrl) {
+      setNotification({ type: "error", message: "No webhook URL configured for this channel" });
+      return;
+    }
+    try {
+      setNotification({ type: "success", message: `Sending test message to ${channel.name}...` });
+      const res = await apiClient.post("/api/notification-channels/test", {
+        webhookUrl,
+        type: channel.type,
+      });
+      setNotification({ type: "success", message: `Test message sent to ${channel.name}! Check Slack.` });
+    } catch (err: any) {
+      setNotification({ type: "error", message: err?.response?.data?.error || "Test failed" });
+    }
+  };
+
   const stats = {
     totalAlerts: alerts.length,
     unreadAlerts: alerts.filter((a) => !a.read).length,
@@ -1068,7 +1086,7 @@ export default function NotificationsPage() {
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit Channel
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => handleTestChannel(channel)}>
                                     <Zap className="mr-2 h-4 w-4" />
                                     Test Channel
                                   </DropdownMenuItem>

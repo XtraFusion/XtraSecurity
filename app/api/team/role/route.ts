@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { getUserTeamRole, canEditRole } from "@/lib/permissions";
 import { authOptions } from "../../auth/[...nextauth]/route";
+import { dispatchNotification } from "@/lib/notifications/dispatch";
 
 export async function PUT(req: Request) {
     try {
@@ -76,6 +77,16 @@ export async function PUT(req: Request) {
                             status: "unread",
                             read: false,
                         },
+                    });
+                    await dispatchNotification({
+                      title: "Team Role Changed",
+                      message: `${targetUser.email}'s role was changed to *${newRole}*`,
+                      type: "warning",
+                      fields: [
+                        { label: "User", value: targetUser.email || "" },
+                        { label: "New Role", value: newRole },
+                        { label: "Changed by", value: session.user.email || "" },
+                      ],
                     });
                 }
             }
