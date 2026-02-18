@@ -28,7 +28,6 @@ export async function GET(request: NextRequest) {
     // 1. Get workspaces created by user
     const ownedWorkspaces = await prisma.workspace.findMany({
       where: { createdBy: session.user.id },
-      include: { projects: true },
     });
 
     // 2. Get workspaces where user is a team member
@@ -58,7 +57,6 @@ export async function GET(request: NextRequest) {
         // Avoid duplicates if user is both owner and member (rare but possible)
         NOT: { createdBy: session.user.id }
       },
-      include: { projects: true },
     });
 
     const allWorkspaces = [...ownedWorkspaces, ...memberWorkspaces];
