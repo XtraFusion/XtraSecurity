@@ -25,12 +25,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json(workspace);
     }
 
-    const workspaces = await prisma.workspace.findMany({
-        where:{createdBy:session.user.id},
+    // 1. Get workspaces created by user
+    const ownedWorkspaces = await prisma.workspace.findMany({
+      where: { createdBy: session.user.id },
       include: { projects: true },
     });
 
-    return NextResponse.json(workspaces);
+    // 2. Get workspaces where user is a team member
+    // discrete query because Workspace -> Team relation is missing in schema
+    const userTeams = await prisma.teamUser.findMany({
+      where: { 
+        userId: session.user.id,
+        status: "active" 
+      },
+      select: { teamId: true }
+    });
+    
+    const teamIds = userTeams.map(ut => ut.teamId);
+    
+    const teams = await prisma.team.findMany({
+      where: { id: { in: teamIds } },
+      select: { workspaceId: true }
+    });
+
+    const teamWorkspaceIds = teams
+      .map(t => t.workspaceId)
+      .filter((id): id is string => !!id);
+
+    const memberWorkspaces = await prisma.workspace.findMany({
+      where: { 
+        id: { in: teamWorkspaceIds },
+        // Avoid duplicates if user is both owner and member (rare but possible)
+        NOT: { createdBy: session.user.id }
+      },
+      include: { projects: true },
+    });
+
+    const allWorkspaces = [...ownedWorkspaces, ...memberWorkspaces];
+
+    return NextResponse.json(allWorkspaces);
   } catch (error) {
     console.error("Error fetching workspace(s):", error);
     return NextResponse.json({ error: "Failed to fetch workspace(s)" }, { status: 500 });

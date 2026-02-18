@@ -33,7 +33,7 @@ export async function POST(req: Request) {
         teamId,
         userId: user.id,
         role,
-        status: "pending",
+        status: "active",
         invitedBy: session.user.id,
       },
     });
@@ -44,9 +44,9 @@ export async function POST(req: Request) {
         data: {
           userId: user.id,
           userEmail: user.email || "",
-          taskTitle: "Team invitation",
-          description: `You have been invited to join team ${teamId}`,
-          message: `Accept the invitation using token: ${inviteToken}`,
+          taskTitle: "Team Access Granted",
+          description: `You have been added to team ${teamId}`,
+          message: `You are now a member of the team.`,
           status: "unread",
           read: false,
         },

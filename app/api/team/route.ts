@@ -51,6 +51,17 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
     }
 
+    // Permission Check: Owner or Admin of the workspace
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+    if (!role || (role !== "owner" && role !== "admin")) {
+        return NextResponse.json({ 
+            error: "Only workspace owners and admins can create teams.",
+            message: "You do not have permission to create teams in this workspace."
+        }, { status: 403 });
+    }
+
     const createTeam = await prisma.team.findFirst({
       where: { AND: [{ name: name }, { createdBy: user.id }, { workspaceId: workspaceId }] },
     });
@@ -154,16 +165,38 @@ export async function DELETE(req: Request) {
 
     const { teamId } = await req.json();
 
-    const deleteTeam = await prisma.team.deleteMany({
-      where: {
-        id: teamId,
-        createdBy: session.user.id,
-      },
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { workspaceId: true, createdBy: true }
     });
 
-    if (!deleteTeam.count) {
-      return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    if (!team) {
+       return NextResponse.json({ error: "Team not found" }, { status: 404 });
     }
+
+    // Permission Check
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    // We need workspaceId, finding it from the team
+    if (!team.workspaceId) {
+        return NextResponse.json({ error: "Team not linked to a workspace" }, { status: 400 });
+    }
+    const role = await getUserWorkspaceRole(session.user.id, team.workspaceId);
+    
+    // Also allow if the user is the direct creator (though creator should be owner usually)
+    const isCreator = team.createdBy === session.user.id;
+
+    if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
+        return NextResponse.json({ 
+            error: "Only workspace owners and admins can delete teams.", 
+             message: "You do not have permission to delete this team."
+        }, { status: 403 });
+    }
+
+    const deleteTeam = await prisma.team.delete({
+      where: {
+        id: teamId,
+      },
+    });
 
     // Notify user
     await createNotification(
@@ -191,10 +224,30 @@ export async function PUT(req: Request) {
 
     const { teamId, name, description } = await req.json();
 
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { workspaceId: true, createdBy: true }
+    });
+
+    if (!team) {
+       return NextResponse.json({ error: "Team not found" }, { status: 404 });
+    }
+
+    // Permission Check
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    if (!team.workspaceId) {
+        return NextResponse.json({ error: "Team not linked to a workspace" }, { status: 400 });
+    }
+    const role = await getUserWorkspaceRole(session.user.id, team.workspaceId);
+    const isCreator = team.createdBy === session.user.id;
+
+    if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
+        return NextResponse.json({ error: "Only workspace owners and admins can update teams." }, { status: 403 });
+    }
+
     const updateTeam = await prisma.team.update({
       where: {
         id: teamId,
-        createdBy: session.user.id,
       },
       data: {
         name,

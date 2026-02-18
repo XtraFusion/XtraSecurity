@@ -102,10 +102,11 @@ export async function GET(req: Request) {
 
     // ── 5. Admin Actions (recent audit log) ──────────────────────────────────
     const adminActions = await prisma.auditLog.findMany({
-      where: {
-        userId: session.user.id,
-        ...(workspaceId ? { workspaceId } : {}),
-      },
+      where: workspaceId 
+        ? { workspaceId } 
+        : { 
+            workspaceId: { in: workspaces.map(w => w.id) } 
+          },
       orderBy: { timestamp: "desc" },
       take: 50,
       include: {

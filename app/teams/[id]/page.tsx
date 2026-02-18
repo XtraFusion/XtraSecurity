@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -173,6 +174,8 @@ const canRemoveMember = (userRole: string, targetMemberRole: string) => {
 const TeamDetail = () => {
   const { id: teamId } = useParams<{ id: string }>();
   const { data: session } = useSession();
+  const router = useRouter();
+  const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
   const [currentUser, setCurrentUser] = useState<{
     id: string;
     name: string;
@@ -207,23 +210,32 @@ const TeamDetail = () => {
       setIsLoading(true);
       const resp = await apiClient.get(`/api/team/${teamId}`);
       setTeam(resp.data);
-      let member = resp.data.members.map((m: any) =>
-        m.user?.id === currentUser.id ? m : null
+      // Use session id directly — currentUser.id may be stale at call time
+      const sessionUserId = session?.user?.id;
+      const myMembership = resp.data.members.find(
+        (m: any) => m.user?.id === sessionUserId
       );
-      let role = member[0]?.role;
-      console.log(member);
       setCurrentUser({
-        id: session?.user.id || "",
-        name: session?.user.name || "",
-        email: session?.user.email || "",
-        role: role || "viewer",
+        id: sessionUserId || "",
+        name: session?.user?.name || "",
+        email: session?.user?.email || "",
+        role: myMembership?.role || "viewer",
       });
-      console.log(currentUser);
       setMembers(resp.data.members);
     } catch (error) {
-      console.error('Error fetching team details:', error);
+      console.error("Error fetching team details:", error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleDeleteTeam = async () => {
+    try {
+      await apiClient.delete(`/api/team/${teamId}`);
+      toast({ title: "Team deleted", description: `${team?.name} has been deleted.` });
+      router.push("/teams");
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete team", variant: "destructive" });
     }
   };
 
@@ -537,127 +549,164 @@ const TeamDetail = () => {
                 </div>
               </div>
             </div>
-            {canInviteMembers(currentUser.role) && (
-              <Dialog
-                open={inviteDialogOpen}
-                onOpenChange={setInviteDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button variant="hero" className="gap-2 text-white">
-                    <UserPlus className="h-4 w-4" />
-                    Invite Member
+            <div className="flex items-center gap-2">
+              {currentUser.role === "owner" && (
+                <>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10"
+                    onClick={() => setDeleteTeamDialogOpen(true)}
+                  >
+                    <AlertTriangle className="h-4 w-4" />
+                    Delete Team
                   </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Invite Team Member</DialogTitle>
-                    <DialogDescription>
-                      Send an invitation to join {team.name}
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email Address</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="colleague@company.com"
-                        value={inviteForm.email}
-                        onChange={(e) =>
-                          setInviteForm({
-                            ...inviteForm,
-                            email: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="role">Role</Label>
-                      <Select
-                        value={inviteForm.role}
-                        onValueChange={(value: TeamMember["role"]) =>
-                          setInviteForm({ ...inviteForm, role: value })
-                        }
-                      >
-                        <SelectTrigger>
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="viewer">
-                            <div className="flex flex-col items-start">
-                              <span>Viewer</span>
-                              <span className="text-xs text-muted-foreground">
-                                Read-only access
-                              </span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="developer">
-                            <div className="flex flex-col items-start">
-                              <span>Developer</span>
-                              <span className="text-xs text-muted-foreground">
-                                Read/write access
-                              </span>
-                            </div>
-                          </SelectItem>
-                          {currentUser.role === "owner" && (
-                            <SelectItem value="admin">
+                  <AlertDialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
+                    <AlertDialogContent>
+                      <AlertDialogHeader>
+                        <AlertDialogTitle className="flex items-center gap-2">
+                          <AlertTriangle className="h-5 w-5 text-destructive" />
+                          Delete Team
+                        </AlertDialogTitle>
+                        <AlertDialogDescription>
+                          Are you sure you want to permanently delete <strong>{team.name}</strong>? All members will lose access and this action cannot be undone.
+                        </AlertDialogDescription>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancel</AlertDialogCancel>
+                        <AlertDialogAction
+                          onClick={handleDeleteTeam}
+                          className="bg-destructive hover:bg-destructive/90"
+                        >
+                          Delete Team
+                        </AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </>
+              )}
+              {canInviteMembers(currentUser.role) && (
+                <Dialog
+                  open={inviteDialogOpen}
+                  onOpenChange={setInviteDialogOpen}
+                >
+                  <DialogTrigger asChild>
+                    <Button variant="hero" className="gap-2 text-white">
+                      <UserPlus className="h-4 w-4" />
+                      Invite Member
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-md">
+                    <DialogHeader>
+                      <DialogTitle>Invite Team Member</DialogTitle>
+                      <DialogDescription>
+                        Send an invitation to join {team.name}
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="email">Email Address</Label>
+                        <Input
+                          id="email"
+                          type="email"
+                          placeholder="colleague@company.com"
+                          value={inviteForm.email}
+                          onChange={(e) =>
+                            setInviteForm({
+                              ...inviteForm,
+                              email: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="role">Role</Label>
+                        <Select
+                          value={inviteForm.role}
+                          onValueChange={(value: TeamMember["role"]) =>
+                            setInviteForm({ ...inviteForm, role: value })
+                          }
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="viewer">
                               <div className="flex flex-col items-start">
-                                <span>Admin</span>
+                                <span>Viewer</span>
                                 <span className="text-xs text-muted-foreground">
-                                  Full project access
+                                  Read-only access
                                 </span>
                               </div>
                             </SelectItem>
-                          )}
-                        </SelectContent>
-                      </Select>
+                            <SelectItem value="developer">
+                              <div className="flex flex-col items-start">
+                                <span>Developer</span>
+                                <span className="text-xs text-muted-foreground">
+                                  Read/write access
+                                </span>
+                              </div>
+                            </SelectItem>
+                            {currentUser.role === "owner" && (
+                              <SelectItem value="admin">
+                                <div className="flex flex-col items-start">
+                                  <span>Admin</span>
+                                  <span className="text-xs text-muted-foreground">
+                                    Full project access
+                                  </span>
+                                </div>
+                              </SelectItem>
+                            )}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="department">Department (Optional)</Label>
+                        <Input
+                          id="department"
+                          placeholder="Engineering, Marketing, etc."
+                          value={inviteForm.department}
+                          onChange={(e) =>
+                            setInviteForm({
+                              ...inviteForm,
+                              department: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="message">
+                          Personal Message (Optional)
+                        </Label>
+                        <Textarea
+                          id="message"
+                          placeholder="Welcome to our team!"
+                          value={inviteForm.message}
+                          onChange={(e) =>
+                            setInviteForm({
+                              ...inviteForm,
+                              message: e.target.value,
+                            })
+                          }
+                          rows={3}
+                        />
+                      </div>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="department">Department (Optional)</Label>
-                      <Input
-                        id="department"
-                        placeholder="Engineering, Marketing, etc."
-                        value={inviteForm.department}
-                        onChange={(e) =>
-                          setInviteForm({
-                            ...inviteForm,
-                            department: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="message">
-                        Personal Message (Optional)
-                      </Label>
-                      <Textarea
-                        id="message"
-                        placeholder="Welcome to our team!"
-                        value={inviteForm.message}
-                        onChange={(e) =>
-                          setInviteForm({
-                            ...inviteForm,
-                            message: e.target.value,
-                          })
-                        }
-                        rows={3}
-                      />
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setInviteDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleInviteMember}>
-                      Send Invitation
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            )}
+                    <DialogFooter>
+                      <Button
+                        variant="outline"
+                        onClick={() => setInviteDialogOpen(false)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button onClick={handleInviteMember}>
+                        Send Invitation
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              )}
+            </div>
           </div>
         </div>
       </div>

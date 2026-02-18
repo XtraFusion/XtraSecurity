@@ -120,6 +120,11 @@ const Teams = () => {
       team.description.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
+  // User is admin if they have admin role in ANY team in this workspace
+  const isWorkspaceAdmin = teams.some(t => t.members?.some((m: any) => m.userId === user?.id && m.role === 'admin'));
+  const canManageTeams = isWorkspaceOwner || isWorkspaceAdmin;
+
   useEffect(() => {
     if (selectedWorkspace) {
       FetchTeamList();
@@ -145,6 +150,10 @@ const Teams = () => {
   }, [user?.id]);
 
   const handleCreateTeam = async () => {
+    if (!canManageTeams) {
+      toast({ title: "Permission Denied", description: "Only admins can create teams", variant: "destructive" });
+      return;
+    }
     if (isLimitReached) {
       toast({
         title: "Limit reached",
@@ -214,6 +223,7 @@ const Teams = () => {
     }
   }
   const handleDeleteTeam = () => {
+    if (!canManageTeams) return;
     if (!deleteDialog.team) return;
 
     setTeams(teams.filter((team) => team.id !== deleteDialog.team!.id));
@@ -337,92 +347,94 @@ const Teams = () => {
                     <Progress value={(totalCreatedTeams / teamLimit) * 100} className="w-32 h-2" />
                   </div>
 
-                  <Dialog
-                    open={createDialogOpen}
-                    onOpenChange={setCreateDialogOpen}
-                  >
-                    <TooltipProvider>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <DialogTrigger asChild>
-                            <Button
-                              size="lg"
-                              className="gap-2"
-                              disabled={isLimitReached}
-                            >
-                              <Plus className="h-5 w-5" />
-                              Create New Team
-                            </Button>
-                          </DialogTrigger>
-                        </TooltipTrigger>
-                        {isLimitReached && (
-                          <TooltipContent>
-                            <p>Upgrade to Pro to create more teams</p>
-                          </TooltipContent>
-                        )}
-                      </Tooltip>
-                    </TooltipProvider>
-                    <DialogContent className="sm:max-w-md">
-                      <DialogHeader>
-                        <DialogTitle>Create New Team</DialogTitle>
-                        <DialogDescription>
-                          Set up a new team to collaborate with your colleagues
-                        </DialogDescription>
-                      </DialogHeader>
-                      <div className="space-y-4">
-                        <div className="space-y-2">
-                          <Label htmlFor="team-name">Team Name</Label>
-                          <Input
-                            id="team-name"
-                            placeholder="e.g., Engineering, Design, Marketing"
-                            value={newTeam.name}
-                            onChange={(e) =>
-                              setNewTeam({ ...newTeam, name: e.target.value })
-                            }
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label htmlFor="team-description">Description</Label>
-                          <Textarea
-                            id="team-description"
-                            placeholder="What does this team work on?"
-                            value={newTeam.description}
-                            onChange={(e) =>
-                              setNewTeam({
-                                ...newTeam,
-                                description: e.target.value,
-                              })
-                            }
-                            rows={3}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label>Team Color</Label>
-                          <div className="flex gap-2">
-                            {colorOptions.map((color) => (
-                              <button
-                                key={color}
-                                onClick={() => setNewTeam({ ...newTeam, color })}
-                                className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
-                                  ? "border-primary"
-                                  : "border-transparent"
-                                  } transition-colors`}
-                              />
-                            ))}
+                  {canManageTeams && (
+                    <Dialog
+                      open={createDialogOpen}
+                      onOpenChange={setCreateDialogOpen}
+                    >
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <DialogTrigger asChild>
+                              <Button
+                                size="lg"
+                                className="gap-2"
+                                disabled={isLimitReached}
+                              >
+                                <Plus className="h-5 w-5" />
+                                Create New Team
+                              </Button>
+                            </DialogTrigger>
+                          </TooltipTrigger>
+                          {isLimitReached && (
+                            <TooltipContent>
+                              <p>Upgrade to Pro to create more teams</p>
+                            </TooltipContent>
+                          )}
+                        </Tooltip>
+                      </TooltipProvider>
+                      <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                          <DialogTitle>Create New Team</DialogTitle>
+                          <DialogDescription>
+                            Set up a new team to collaborate with your colleagues
+                          </DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="team-name">Team Name</Label>
+                            <Input
+                              id="team-name"
+                              placeholder="e.g., Engineering, Design, Marketing"
+                              value={newTeam.name}
+                              onChange={(e) =>
+                                setNewTeam({ ...newTeam, name: e.target.value })
+                              }
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor="team-description">Description</Label>
+                            <Textarea
+                              id="team-description"
+                              placeholder="What does this team work on?"
+                              value={newTeam.description}
+                              onChange={(e) =>
+                                setNewTeam({
+                                  ...newTeam,
+                                  description: e.target.value,
+                                })
+                              }
+                              rows={3}
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label>Team Color</Label>
+                            <div className="flex gap-2">
+                              {colorOptions.map((color) => (
+                                <button
+                                  key={color}
+                                  onClick={() => setNewTeam({ ...newTeam, color })}
+                                  className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
+                                    ? "border-primary"
+                                    : "border-transparent"
+                                    } transition-colors`}
+                                />
+                              ))}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <DialogFooter>
-                        <Button
-                          variant="outline"
-                          onClick={() => setCreateDialogOpen(false)}
-                        >
-                          Cancel
-                        </Button>
-                        <Button onClick={handleCreateTeam}>Create Team</Button>
-                      </DialogFooter>
-                    </DialogContent>
-                  </Dialog>
+                        <DialogFooter>
+                          <Button
+                            variant="outline"
+                            onClick={() => setCreateDialogOpen(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button onClick={handleCreateTeam}>Create Team</Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  )}
                 </div>
               </div>
             </div>
@@ -526,39 +538,41 @@ const Teams = () => {
 
                         </div>
                       </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
-                          >
-                            <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem>
-                            <Edit3 className="mr-2 h-4 w-4" />
-                            Edit Team
-                          </DropdownMenuItem>
-                          <DropdownMenuItem>
-                            <Settings className="mr-2 h-4 w-4" />
-                            Settings
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem
-                            onClick={() =>
-                              setDeleteDialog({ open: true, team })
-                            }
-                            className="text-destructive"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete Team
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {canManageTeams && (
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem>
+                              <Edit3 className="mr-2 h-4 w-4" />
+                              Edit Team
+                            </DropdownMenuItem>
+                            <DropdownMenuItem>
+                              <Settings className="mr-2 h-4 w-4" />
+                              Settings
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              onClick={() =>
+                                setDeleteDialog({ open: true, team })
+                              }
+                              className="text-destructive"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete Team
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      )}
                     </div>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -610,7 +624,7 @@ const Teams = () => {
                     ? "Try adjusting your search criteria"
                     : "Create your first team to get started"}
                 </p>
-                {!searchTerm && (
+                {!searchTerm && canManageTeams && (
                   <Button
                     variant="outline"
                     onClick={() => setCreateDialogOpen(true)}

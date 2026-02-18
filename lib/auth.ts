@@ -32,12 +32,18 @@ export function getCurrentUser(): User | null {
   return null;
 }
 
+import { signOut } from "next-auth/react";
+
 export function logout(): void {
   if (typeof window === "undefined") return;
+  // Clear local storage items we use
   localStorage.removeItem("isAuthenticated");
   localStorage.removeItem("userEmail");
   localStorage.removeItem("rememberMe");
-  window.location.href = "/login";
+  
+  // Sign out from NextAuth
+  // This will clear the session cookie and redirect to the configured callbackUrl (or current page)
+  signOut({ callbackUrl: "/login", redirect: true });
 }
 
 export function isAuthenticated(): boolean {

@@ -76,6 +76,8 @@ import { ProjectController } from "@/util/ProjectController";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
 import { SecretHistoryModal } from "@/components/SecretHistoryModal";
+import { AccessRequestModal } from "@/components/AccessRequestModal";
+import { AccessRequestAdmin } from "@/components/AccessRequestAdmin";
 
 // --- Types ---
 
@@ -119,6 +121,8 @@ interface Project {
   id: string;
   name: string;
   description: string;
+  currentUserRole?: string;
+  workspaceId?: string;
 }
 
 // --- Mock Data ---
@@ -191,6 +195,7 @@ const SecretCard = ({
   onEdit,
   onDelete,
   onViewHistory,
+  onRequestAccess,
 }: {
   secret: Secret;
   isVisible: boolean;
@@ -200,6 +205,7 @@ const SecretCard = ({
   onEdit: () => void;
   onDelete: () => void;
   onViewHistory: () => void;
+  onRequestAccess: () => void;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const SecretIcon = SECRET_TYPES.find((t) => t.value === secret.type)?.icon || Key;
@@ -249,6 +255,9 @@ const SecretCard = ({
               </DropdownMenuItem>
               <DropdownMenuItem onClick={onViewHistory} className="gap-2">
                 <History className="h-4 w-4" /> History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onRequestAccess} className="gap-2 text-amber-500 focus:text-amber-500">
+                <ShieldAlert className="h-4 w-4" /> Request Access
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
@@ -344,35 +353,38 @@ const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
   const router = useRouter(); // Import needed
   const searchParams = useSearchParams(); // Import needed
-  const { user } = useGlobalContext();
+  const { user, selectedWorkspace, setSelectedWorkspace, workspaces } = useGlobalContext();
 
-  const [project, setProject] = useState<Project | null>(null);
-  const [branches, setBranches] = useState<Branch[]>([]);
-  const [selectedBranch, setSelectedBranch] = useState<Branch | null>(null);
-  const [secrets, setSecrets] = useState<Secret[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false); // New state
+  const [project, setProject] = React.useState<Project | null>(null);
+  const [branches, setBranches] = React.useState<Branch[]>([]);
+  const [selectedBranch, setSelectedBranch] = React.useState<Branch | null>(null);
+  const [secrets, setSecrets] = React.useState<Secret[]>([]);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isRefreshing, setIsRefreshing] = React.useState(false); // New state
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [viewMode, setViewMode] = React.useState<"grid" | "list">("grid");
 
   // Initialize filterEnv from URL or default to "all"
-  const [filterEnv, setFilterEnv] = useState<string>(searchParams.get("env") || "all");
+  const [filterEnv, setFilterEnv] = React.useState<string>(searchParams.get("env") || "all");
 
-  const [visibleSecrets, setVisibleSecrets] = useState<Set<string>>(new Set());
-  const [copiedSecret, setCopiedSecret] = useState<string | null>(null);
+  const [visibleSecrets, setVisibleSecrets] = React.useState<Set<string>>(new Set());
+  const [copiedSecret, setCopiedSecret] = React.useState<string | null>(null);
 
   // Modals
-  const [isAddSecretOpen, setIsAddSecretOpen] = useState(false);
-  const [isEditSecretOpen, setIsEditSecretOpen] = useState(false);
-  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
-  const [isAddBranchOpen, setIsAddBranchOpen] = useState(false);
-  const [editingSecret, setEditingSecret] = useState<Secret | null>(null);
-  const [historySecret, setHistorySecret] = useState<Secret | null>(null);
+  const [isAddSecretOpen, setIsAddSecretOpen] = React.useState(false);
+  const [isEditSecretOpen, setIsEditSecretOpen] = React.useState(false);
+  const [isHistoryOpen, setIsHistoryOpen] = React.useState(false);
+  const [isAccessRequestOpen, setIsAccessRequestOpen] = React.useState(false);
+  const [isAdminRequestsOpen, setIsAdminRequestsOpen] = React.useState(false);
+  const [isAddBranchOpen, setIsAddBranchOpen] = React.useState(false);
+  const [editingSecret, setEditingSecret] = React.useState<Secret | null>(null);
+  const [historySecret, setHistorySecret] = React.useState<Secret | null>(null);
+  const [requestAccessSecret, setRequestAccessSecret] = React.useState<Secret | null>(null);
 
-  const [notification, setNotification] = useState<{ type: "default" | "destructive"; message: string } | null>(null);
+  const [notification, setNotification] = React.useState<{ type: "default" | "destructive"; message: string } | null>(null);
 
-  const [newSecret, setNewSecret] = useState({
+  const [newSecret, setNewSecret] = React.useState({
     key: "",
     value: "",
     description: "",
@@ -383,7 +395,7 @@ const VaultManager: React.FC = () => {
     expiryDate: "",
   });
 
-  const [newBranch, setNewBranch] = useState({ name: "", description: "" });
+  const [newBranch, setNewBranch] = React.useState({ name: "", description: "" });
 
   // Helper to update URL
   const updateUrl = (key: string, value: string | null) => {
@@ -398,7 +410,7 @@ const VaultManager: React.FC = () => {
 
   // --- Data Loading ---
 
-  const loadProject = useCallback(async (silent = false) => {
+  const loadProject = React.useCallback(async (silent = false) => {
     try {
       if (!silent) setIsLoading(true);
       else setIsRefreshing(true);
@@ -408,6 +420,15 @@ const VaultManager: React.FC = () => {
         ProjectController.fetchProjects(projectId),
         axios.get(`/api/branch?projectId=${projectId}`),
       ]);
+
+      // Auto-switch workspace if needed
+      if (projectRes && selectedWorkspace && projectRes.workspaceId !== selectedWorkspace.id) {
+        console.log("Auto-switching workspace context:", projectRes.workspaceId);
+        const targetWorkspace = workspaces.find((w: any) => w.id === projectRes.workspaceId);
+        if (targetWorkspace) {
+          setSelectedWorkspace(targetWorkspace);
+        }
+      }
 
       const branchData = branchesRes.data || [];
       setBranches(branchData);
@@ -421,18 +442,14 @@ const VaultManager: React.FC = () => {
 
         setSelectedBranch(foundBranch);
         setSecrets(foundBranch.secrets || []);
-
-        // Sync URL if needed
-        if (!paramBranchId && foundBranch) {
-          // Don't force update URL on initial load if empty, actually it's better to reflect state
-          // But let's avoid infinite loops.
-        }
       }
 
       setProject({
         id: projectId,
-        name: "Production API",
-        description: "Main production environment for API services",
+        name: projectRes?.name || "Project",
+        description: projectRes?.description || "",
+        currentUserRole: projectRes?.currentUserRole,
+        workspaceId: projectRes?.workspaceId,
       });
     } catch (error) {
       setNotification({ type: "destructive", message: "Failed to load project data" });
@@ -440,16 +457,16 @@ const VaultManager: React.FC = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [projectId, searchParams]); // searchParams dependency is tricky, handled carefully
+  }, [projectId, searchParams, selectedWorkspace, workspaces, setSelectedWorkspace, selectedBranch]); // Added dependencies
 
   // Initial Load - minimal dependency
-  useEffect(() => {
+  React.useEffect(() => {
     loadProject();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [projectId]);
 
   // Watch for notification clear
-  useEffect(() => {
+  React.useEffect(() => {
     if (notification) {
       const timer = setTimeout(() => setNotification(null), 4000);
       return () => clearTimeout(timer);
@@ -474,8 +491,6 @@ const VaultManager: React.FC = () => {
   const handleRefresh = () => {
     loadProject(true);
   };
-
-  // ... rest of handlers ...
 
   // --- Handlers ---
 
@@ -528,7 +543,7 @@ const VaultManager: React.FC = () => {
       });
       setNotification({ type: "default", message: "✓ Secret created successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to create secret";
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to create secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     }
   };
@@ -553,7 +568,7 @@ const VaultManager: React.FC = () => {
       setEditingSecret(null);
       setNotification({ type: "default", message: "✓ Secret updated successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to update secret";
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     }
   };
@@ -564,7 +579,7 @@ const VaultManager: React.FC = () => {
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
       setNotification({ type: "default", message: "✓ Secret deleted successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to delete secret";
+      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     }
   };
@@ -721,10 +736,19 @@ const VaultManager: React.FC = () => {
             <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
           <div className="flex items-center gap-3">
-            <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
-              <Settings className="h-4 w-4 mr-2" />
-              Settings
-            </Button>
+            {/* Permission Check for Settings/Requests */}
+            {(project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin') && (
+              <>
+                <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+                <Button variant="outline" onClick={() => setIsAdminRequestsOpen(true)}>
+                  <ShieldCheck className="h-4 w-4 mr-2" />
+                  Requests
+                </Button>
+              </>
+            )}
             <Button onClick={() => setIsAddSecretOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Secret
@@ -875,6 +899,10 @@ const VaultManager: React.FC = () => {
                       onViewHistory={() => {
                         setHistorySecret(secret);
                         setIsHistoryOpen(true);
+                      }}
+                      onRequestAccess={() => {
+                        setRequestAccessSecret(secret);
+                        setIsAccessRequestOpen(true);
                       }}
                     />
                   ))}

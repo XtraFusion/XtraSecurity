@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { triggerWebhooks } from "@/lib/webhook";
+import { PolicyEngine } from "@/lib/authz/policy-engine";
+import { Decision } from "@/lib/authz/types";
 
 export async function GET(
   req: NextRequest,
@@ -18,10 +20,8 @@ export async function GET(
   const project = await prisma.project.findFirst({
     where: {
       id: params.projectId,
-      OR: [
-        { userId: userId },
-      ]
-    }
+    },
+    select: { id: true, workspaceId: true }
   });
 
   if (!project) {
@@ -41,6 +41,41 @@ export async function GET(
     return NextResponse.json({ error: "Secret not found" }, { status: 404 });
   }
 
+  // 4. Authorization via Policy Engine
+  const decision = await PolicyEngine.authorize({
+    userId,
+    projectId: params.projectId,
+    resource: "secret",
+    action: "value.read",
+    environment: params.env,
+    context: { secretId: secret.id } 
+  });
+
+  if (decision === Decision.DENY) {
+    return NextResponse.json({ error: "Access Denied" }, { status: 403 });
+  }
+  
+  if (decision === Decision.REQUIRES_ELEVATION) {
+     return NextResponse.json({ 
+         error: "JIT Elevation Required", 
+         action: "request_jit"
+     }, { status: 403 });
+  }
+
+  // 5. Audit Logging (Async)
+  const workspaceId = project.workspaceId; // captured above
+  // We don't await this to avoid slowing down the response
+  prisma.auditLog.create({
+    data: {
+      userId,
+      action: "secret.read",
+      entity: "secret",
+      entityId: secret.id,
+      workspaceId,
+      changes: { key: params.key, env: params.env }
+    }
+  }).catch(err => console.error("Failed to log secret access:", err));
+
   return NextResponse.json(secret);
 }
 
@@ -56,9 +91,10 @@ export async function DELETE(
     const userId = auth.userId;
     const { projectId, env, key } = await params;
 
-    // Verify Project Access
-    const project = await prisma.project.findFirst({
-        where: { id: projectId, userId: auth.userId }
+    // Verify Project Exists (Relaxed check, rely on PolicyEngine)
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { id: true, workspaceId: true }
     });
 
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
@@ -69,6 +105,20 @@ export async function DELETE(
 
     if (!secret) return NextResponse.json({ error: "Secret not found" }, { status: 404 });
 
+    // Authorization via Policy Engine
+    const decision = await PolicyEngine.authorize({
+        userId,
+        projectId: projectId,
+        resource: "secret",
+        action: "secret.delete",
+        environment: env,
+        context: { secretId: secret.id } 
+    });
+
+    if (decision === Decision.DENY) {
+        return NextResponse.json({ error: "Access Denied" }, { status: 403 });
+    }
+
     await prisma.secret.delete({ where: { id: secret.id } });
 
     // Trigger Webhook
@@ -76,6 +126,18 @@ export async function DELETE(
         key,
         environment: env,
         updatedBy: userId
+    });
+
+    // Audit Log
+    await prisma.auditLog.create({
+        data: {
+            userId,
+            action: "secret.delete",
+            entity: "secret",
+            entityId: secret.id,
+            workspaceId: project.workspaceId,
+            changes: { key, env }
+        }
     });
 
     return NextResponse.json({ success: true });

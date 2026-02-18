@@ -12,17 +12,12 @@ export async function DELETE(
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const project = await prisma.project.findUnique({
-      where: { id: params.id }
-  });
+  // Check permission: Owner or Admin
+  const { getUserProjectRole } = await import("@/lib/permissions");
+  const role = await getUserProjectRole(auth.userId, params.id);
 
-  if (!project) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-  }
-
-  // Only project owner can remove teams
-  if (project.userId !== auth.userId) {
-      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  if (!role || (role !== 'owner' && role !== 'admin')) {
+      return NextResponse.json({ error: "Only project owners and admins can remove teams" }, { status: 403 });
   }
 
   // Verify the assignment belongs to this project
