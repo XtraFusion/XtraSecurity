@@ -1,17 +1,23 @@
-import { authenticator } from "otplib";
 import * as QRCode from "qrcode";
 import crypto from "crypto";
 
-// Configure TOTP settings
-authenticator.options = {
-  window: 1, // Allow 1 step before/after for clock drift
-  step: 30, // 30 second window
-};
+async function getAuthenticator() {
+  const otplib = await import("otplib");
+  const authenticator: any = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
+  if (authenticator && typeof authenticator === "object") {
+    authenticator.options = {
+      window: 1,
+      step: 30,
+    };
+  }
+  return authenticator;
+}
 
 /**
  * Generate a new TOTP secret for a user
  */
-export function generateMfaSecret(): string {
+export async function generateMfaSecret(): Promise<string> {
+  const authenticator = await getAuthenticator();
   return authenticator.generateSecret();
 }
 
@@ -23,6 +29,7 @@ export async function generateQrCode(
   secret: string,
   appName: string = "XtraSync"
 ): Promise<string> {
+  const authenticator = await getAuthenticator();
   const otpauthUrl = authenticator.keyuri(email, appName, secret);
   return QRCode.toDataURL(otpauthUrl);
 }
@@ -30,9 +37,16 @@ export async function generateQrCode(
 /**
  * Verify TOTP token
  */
-export function verifyTotp(token: string, secret: string): boolean {
+export async function verifyTotp(token: string, secret: string): Promise<boolean> {
   try {
-    return authenticator.verify({ token, secret });
+    const authenticator = await getAuthenticator();
+    if (typeof authenticator.check === "function") {
+      return !!authenticator.check(token, secret);
+    }
+    if (typeof authenticator.verify === "function") {
+      return !!authenticator.verify({ token, secret });
+    }
+    return false;
   } catch {
     return false;
   }

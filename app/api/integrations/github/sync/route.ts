@@ -74,9 +74,8 @@ export async function POST(req: NextRequest) {
 
     const { key, key_id } = await keyRes.json();
 
-    // Import sodium for encryption
-    const sodium = await import("libsodium-wrappers");
-    await sodium.ready;
+    // Use tweetnacl-sealedbox-js for sealed box encryption (Node-friendly)
+    const { seal } = await import("tweetnacl-sealedbox-js");
 
     const syncResults: { key: string; success: boolean; error?: string }[] = [];
 
@@ -87,11 +86,11 @@ export async function POST(req: NextRequest) {
         const encryptedValue = JSON.parse(secret.value[0]);
         const decryptedValue = decrypt(encryptedValue);
 
-        // Encrypt for GitHub
-        const messageBytes = sodium.from_string(decryptedValue);
-        const keyBytes = sodium.from_base64(key, sodium.base64_variants.ORIGINAL);
-        const encryptedBytes = sodium.crypto_box_seal(messageBytes, keyBytes);
-        const encryptedBase64 = sodium.to_base64(encryptedBytes, sodium.base64_variants.ORIGINAL);
+        // Encrypt for GitHub using sealed box
+        const messageBytes = Uint8Array.from(Buffer.from(decryptedValue, "utf-8"));
+        const keyBytes = Uint8Array.from(Buffer.from(key, "base64"));
+        const encryptedBytes = seal(messageBytes, keyBytes);
+        const encryptedBase64 = Buffer.from(encryptedBytes).toString("base64");
 
         const secretName = secretPrefix 
           ? `${secretPrefix}_${secret.key}`.toUpperCase()

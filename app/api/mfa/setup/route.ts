@@ -26,8 +26,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Generate new secret
-    const secret = generateMfaSecret();
-    
+    const secret = await generateMfaSecret();
+
     // Generate QR code
     const qrCode = await generateQrCode(user.email || "user", secret);
 
@@ -84,7 +84,7 @@ export async function PUT(req: NextRequest) {
     const encryptedSecret = JSON.parse(user.mfaSecret);
     const secret = decrypt(encryptedSecret);
 
-    if (!verifyTotp(token, secret)) {
+    if (!(await verifyTotp(token, secret))) {
       return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
     }
 
@@ -148,7 +148,7 @@ export async function DELETE(req: NextRequest) {
     const encryptedSecret = JSON.parse(user.mfaSecret!);
     const secret = decrypt(encryptedSecret);
 
-    if (!verifyTotp(token, secret)) {
+    if (!(await verifyTotp(token, secret))) {
       return NextResponse.json({ error: "Invalid verification code" }, { status: 400 });
     }
 

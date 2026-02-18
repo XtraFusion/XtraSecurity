@@ -39,3 +39,8 @@ export function logout(): void {
   localStorage.removeItem("rememberMe");
   window.location.href = "/login";
 }
+
+export function isAuthenticated(): boolean {
+  if (typeof window === "undefined") return false;
+  return localStorage.getItem("isAuthenticated") === "true";
+}
