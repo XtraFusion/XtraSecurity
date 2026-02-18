@@ -75,6 +75,7 @@ import { useGlobalContext } from "@/hooks/useUser";
 import { ProjectController } from "@/util/ProjectController";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
+import { SecretHistoryModal } from "@/components/SecretHistoryModal";
 
 // --- Types ---
 
@@ -1154,59 +1155,16 @@ const VaultManager: React.FC = () => {
       </Dialog>
 
       {/* History Modal */}
-      <Dialog
-        isOpen={isHistoryOpen}
-        onClose={() => { setIsHistoryOpen(false); setHistorySecret(null); }}
-        title="Version History"
-        description={historySecret?.key}
-        className="max-w-2xl"
-      >
-        {historySecret && (
-          <div className="space-y-4 max-h-[60vh] overflow-y-auto pr-2">
-            {historySecret.history?.map((version, idx) => (
-              <div
-                key={version.version}
-                className={`p-4 rounded-lg border ${idx === 0 ? "border-primary bg-primary/5" : "border-border"
-                  }`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <Badge variant={idx === 0 ? "default" : "secondary"}>
-                      v{version.version}
-                    </Badge>
-                    {idx === 0 && <Badge variant="outline">Current</Badge>}
-                  </div>
-                  <span className="text-sm text-muted-foreground">
-                    {new Date(version.updatedAt).toLocaleDateString()}
-                  </span>
-                </div>
-                <div className="text-sm mb-2">
-                  <span className="text-muted-foreground">By {version.updatedBy}</span>
-                  {version.changeReason && (
-                    <span className="ml-2 text-foreground">• {version.changeReason}</span>
-                  )}
-                </div>
-                <code className="block bg-muted p-2 rounded text-xs font-mono truncate">
-                  {version.value}
-                </code>
-                {idx !== 0 && (
-                  <div className="mt-2 flex justify-end">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => historySecret && handleRevert(historySecret, version)}
-                      className="h-7 text-xs"
-                    >
-                      <RotateCcw className="h-3 w-3 mr-1.5" />
-                      Revert to this version
-                    </Button>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        )}
-      </Dialog>
+      {historySecret && (
+        <SecretHistoryModal
+          open={isHistoryOpen}
+          onClose={() => { setIsHistoryOpen(false); setHistorySecret(null); }}
+          projectId={projectId}
+          env={historySecret.environmentType}
+          secretKey={historySecret.key}
+          onRollbackSuccess={() => loadProject(true)}
+        />
+      )}
 
       {/* Add Branch Modal */}
       <Dialog

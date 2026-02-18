@@ -262,6 +262,18 @@ export default function SecuritySettings() {
                             Back
                         </Button>
                     </Link>
+                    <Link href="/dashboard/security">
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <Shield className="h-4 w-4" />
+                            Security Dashboard
+                        </Button>
+                    </Link>
+                    <Link href="/compliance">
+                        <Button variant="outline" size="sm" className="gap-2">
+                            <Key className="h-4 w-4" />
+                            Compliance Report
+                        </Button>
+                    </Link>
                 </div>
 
                 <div className="mb-8">

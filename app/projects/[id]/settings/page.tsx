@@ -31,6 +31,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import axios from '@/lib/axios';
 import { ServiceAccountsTab } from './service-accounts-tab';
+import { WebhooksTab } from './webhooks-tab';
 
 interface Team {
   id: string;
@@ -398,12 +399,13 @@ export default function ProjectSettings() {
       </div>
 
       <Tabs defaultValue="teams" className="space-y-4">
-        <TabsList className="grid w-full grid-cols-7">
+        <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="service-accounts">Service Accounts</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="access">Access</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="clear">Clear Data</TabsTrigger>
           <TabsTrigger value="danger">Danger</TabsTrigger>
         </TabsList>
@@ -900,6 +902,10 @@ export default function ProjectSettings() {
 
         <TabsContent value="service-accounts">
           <ServiceAccountsTab />
+        </TabsContent>
+
+        <TabsContent value="notifications">
+          <WebhooksTab />
         </TabsContent>
       </Tabs>
     </div>
