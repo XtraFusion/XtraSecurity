@@ -14,36 +14,26 @@ type Workspace = {
   value: string;
 };
 
+import { useWorkspaces } from "@/hooks/useWorkspaces";
+
+// ... existing imports
+
 export default function WorkspaceSwitcher() {
   const [open, setOpen] = useState(false);
   const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
-  const [workspaces, setWorkspaces] = useState<Workspace[]>([]);
+
+  const { workspaces, loading, fetchWorkspaces } = useWorkspaces();
+  const { selectedWorkspace, setSelectedWorkspace } = useGlobalContext();
 
   const [creatingName, setCreatingName] = useState("");
   const [creatingPlan, setCreatingPlan] = useState("free");
 
-  const { selectedWorkspace, setSelectedWorkspace } = useGlobalContext();
-
-  const fetchWorkspaces = async () => {
-    try {
-      const res = await fetch(`/api/workspace`);
-      if (!res.ok) return;
-      const data = await res.json();
-      const mapped: Workspace[] = (data || []).map((w: any) => ({
-        id: w.id,
-        label: w.name,
-        value: w.id,
-      }));
-      setWorkspaces(mapped);
-      if (mapped.length && !selectedWorkspace) setSelectedWorkspace(mapped[0]);
-    } catch (err: any) {
-      console.error("Failed to fetch workspaces", err);
-    }
-  };
-
+  // Select first workspace if none selected 
   useEffect(() => {
-    fetchWorkspaces();
-  }, []);
+    if (!selectedWorkspace && workspaces.length > 0) {
+      setSelectedWorkspace(workspaces[0]);
+    }
+  }, [workspaces, selectedWorkspace, setSelectedWorkspace]);
 
   const createWorkspace = async () => {
     if (!creatingName) return;
@@ -80,23 +70,29 @@ export default function WorkspaceSwitcher() {
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(!open)}
+        disabled={loading}
         className="w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm 
                    bg-white hover:bg-gray-50 text-black 
                    dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white
-                   focus:outline-none"
+                   focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
       >
         <div className="flex items-center space-x-2">
-          <img
-            src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"
-              }.png`}
-            alt={selectedWorkspace?.label ?? "Workspace"}
-            className="h-5 w-5 rounded-full"
-          />
-          <span>
-            {selectedWorkspace && selectedWorkspace?.label?.length > 10
-              ? selectedWorkspace?.label.slice(0, 10) + "..."
-              : selectedWorkspace?.label ?? "Select workspace"}
-          </span>
+          {loading ? (
+            <span className="text-muted-foreground">Loading...</span>
+          ) : (
+            <>
+              <img
+                src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"}.png`}
+                alt={selectedWorkspace?.label ?? "Workspace"}
+                className="h-5 w-5 rounded-full"
+              />
+              <span>
+                {selectedWorkspace && selectedWorkspace?.label?.length > 10
+                  ? selectedWorkspace?.label.slice(0, 10) + "..."
+                  : selectedWorkspace?.label ?? "Select workspace"}
+              </span>
+            </>
+          )}
         </div>
         <ChevronsUpDown className="h-4 w-4 opacity-50" />
       </button>
