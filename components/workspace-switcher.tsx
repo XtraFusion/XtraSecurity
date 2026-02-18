@@ -14,23 +14,23 @@ type Workspace = {
   value: string;
 };
 
-import { useWorkspaces } from "@/hooks/useWorkspaces";
-
-// ... existing imports
-
 export default function WorkspaceSwitcher() {
   const [open, setOpen] = useState(false);
   const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
 
-  const { workspaces, loading, fetchWorkspaces } = useWorkspaces();
-  const { selectedWorkspace, setSelectedWorkspace } = useGlobalContext();
+  const {
+    selectedWorkspace,
+    setSelectedWorkspace,
+    workspaces,
+    refreshWorkspaces
+  } = useGlobalContext();
 
   const [creatingName, setCreatingName] = useState("");
   const [creatingPlan, setCreatingPlan] = useState("free");
 
   // Select first workspace if none selected 
   useEffect(() => {
-    if (!selectedWorkspace && workspaces.length > 0) {
+    if (!selectedWorkspace && workspaces && workspaces.length > 0) {
       setSelectedWorkspace(workspaces[0]);
     }
   }, [workspaces, selectedWorkspace, setSelectedWorkspace]);
@@ -54,7 +54,7 @@ export default function WorkspaceSwitcher() {
       const mapped: Workspace = { id: w.id, label: w.name, value: w.id };
 
       // Refetch workspaces from database to ensure consistency
-      await fetchWorkspaces();
+      await refreshWorkspaces();
 
       setSelectedWorkspace(mapped);
       setShowNewWorkspaceDialog(false);
@@ -70,29 +70,22 @@ export default function WorkspaceSwitcher() {
       {/* Trigger Button */}
       <button
         onClick={() => setOpen(!open)}
-        disabled={loading}
         className="w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm 
                    bg-white hover:bg-gray-50 text-black 
                    dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white
-                   focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                   focus:outline-none"
       >
         <div className="flex items-center space-x-2">
-          {loading ? (
-            <span className="text-muted-foreground">Loading...</span>
-          ) : (
-            <>
-              <img
-                src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"}.png`}
-                alt={selectedWorkspace?.label ?? "Workspace"}
-                className="h-5 w-5 rounded-full"
-              />
-              <span>
-                {selectedWorkspace && selectedWorkspace?.label?.length > 10
-                  ? selectedWorkspace?.label.slice(0, 10) + "..."
-                  : selectedWorkspace?.label ?? "Select workspace"}
-              </span>
-            </>
-          )}
+          <img
+            src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"}.png`}
+            alt={selectedWorkspace?.label ?? "Workspace"}
+            className="h-5 w-5 rounded-full"
+          />
+          <span>
+            {selectedWorkspace && selectedWorkspace?.label?.length > 10
+              ? selectedWorkspace?.label.slice(0, 10) + "..."
+              : selectedWorkspace?.label ?? "Select workspace"}
+          </span>
         </div>
         <ChevronsUpDown className="h-4 w-4 opacity-50" />
       </button>
@@ -112,12 +105,12 @@ export default function WorkspaceSwitcher() {
             />
           </div>
           <div className="max-h-48 overflow-y-auto">
-            {workspaces.length === 0 && (
+            {(!workspaces || workspaces.length === 0) && (
               <p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
                 No Workspace found.
               </p>
             )}
-            {workspaces.map((ws) => (
+            {workspaces?.map((ws: any) => (
               <div
                 key={ws.id}
                 onClick={() => {

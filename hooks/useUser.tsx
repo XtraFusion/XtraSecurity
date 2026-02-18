@@ -12,6 +12,8 @@ interface UserContextType {
   loading: boolean;
   fetchUser: () => Promise<void>;
   createProject: (projectData: any) => Promise<void>;
+  workspaces: any[];
+  refreshWorkspaces: () => Promise<void>;
 }
 
 export const UserContext = createContext<UserContextType | any>(
@@ -24,9 +26,29 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Initialize from LocalStorage or default to null
   const [selectedWorkspace, setSelectedWorkspace] = useState<any | null>(null);
 
+  const [workspaces, setWorkspaces] = useState<any[]>([]);
+
+  const fetchWorkspaces = async () => {
+    try {
+      const res = await axios.get("/api/workspace");
+      if (res.status === 200) {
+        // Map to include label/value for UI components
+        const mapped = res.data.map((w: any) => ({
+          ...w,
+          label: w.name,
+          value: w.id,
+        }));
+        setWorkspaces(mapped);
+      }
+    } catch (error) {
+      console.error("Failed to fetch workspaces", error);
+    }
+  };
+
   useEffect(() => {
     if (status === "authenticated") {
       fetchUser();
+      fetchWorkspaces();
     }
   }, [status]);
 
@@ -124,6 +146,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         updateSecret,
         selectedWorkspace,
         setSelectedWorkspace,
+        workspaces,
+        refreshWorkspaces: fetchWorkspaces,
       }}
     >
       {children}
