@@ -1,15 +1,14 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import prisma from '@/lib/db';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '../../auth/[...nextauth]/route';
+import { verifyAuth } from '@/lib/server-auth';
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { branchId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
@@ -23,11 +22,11 @@ export async function DELETE(
     }
 
     // Check if user has permission to delete branch
-    if (branch.project.userId !== session.user.id) {
+    if (branch.project.userId !== auth.userId) {
       // Check if user is a team admin
       const teamMember = await prisma.teamUser.findFirst({
         where: {
-          userId: session.user.id,
+          userId: auth.userId,
           team: {
             teamProjects: {
               some: {

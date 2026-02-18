@@ -14,6 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 import {
   Home,
   FolderOpen,
@@ -30,13 +31,16 @@ import {
   HelpCircle,
   Bell,
   Zap,
+  Key,
+  CreditCard,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { logout, getCurrentUser } from "@/lib/auth";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import TeamSwitcher from "./workspace-switcher";
 import { UserContext } from "@/hooks/useUser";
+import { UserAvatar } from "./ui/user-avatar";
 import { AuthDebug } from "./auth-debug";
 import { NotificationsPopover } from "./notifications-popover";
 
@@ -52,6 +56,8 @@ const navigation = [
   { name: "Integrations", href: "/integrations", icon: Zap },
   { name: "Teams", href: "/teams", icon: Users },
   { name: "Audit Logs", href: "/audit", icon: FileText },
+  { name: "Access Reviews", href: "/admin/reviews", icon: Shield },
+  { name: "Access Requests", href: "/access-requests", icon: Key },
   { name: "Profile", href: "/profile", icon: User },
   { name: "Help", href: "/help", icon: HelpCircle },
 ];
@@ -60,30 +66,33 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const pathname = usePathname();
+  const router = useRouter();
   const userContext = useContext(UserContext);
+
   if (!userContext) {
-    return;
+    return null;
   }
   const { user } = userContext;
+
   const handleLogout = () => {
     logout();
   };
-  useEffect(() => {
-    console.log("calling ...")
-  }, [])
+
   const Sidebar = ({ mobile = false }: { mobile?: boolean }) => (
-    <div className={`flex flex-col h-full ${mobile ? "w-full" : "w-64"}`}>
+    <div className={`flex flex-col h-full ${mobile ? "w-full" : "w-64"} bg-card text-card-foreground border-r border-border`}>
       {/* Logo */}
-      <div className="flex items-center gap-2 px-6 py-4 border-b border-border">
-        <Shield className="h-8 w-8 text-primary" />
+      <div className="flex items-center gap-3 px-6 py-5 border-b border-border/50">
+        <div className="bg-primary/10 p-1.5 rounded-lg">
+          <Shield className="h-6 w-6 text-primary" />
+        </div>
         <div className="flex flex-col">
-          <span className="font-semibold text-sm">XtraSecurity</span>
+          <span className="font-bold text-lg tracking-tight">XtraSecurity</span>
         </div>
       </div>
 
       {/* Navigation */}
-      <nav className="flex-1 px-4 py-4 space-y-1">
-        <div className="w-full mb-6">
+      <nav className="flex-1 px-4 py-6 space-y-1 overflow-y-auto">
+        <div className="w-full mb-8">
           <TeamSwitcher />
         </div>
         {navigation.map((item) => {
@@ -93,13 +102,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
             <Link
               key={item.name}
               href={item.href}
-              className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-all duration-200 ${isActive
-                ? "bg-primary text-primary-foreground shadow-sm"
-                : "text-muted-foreground hover:text-foreground hover:bg-accent hover:scale-[1.02]"
+              className={`group flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all duration-200 ${isActive
+                ? "bg-primary/10 text-primary shadow-sm"
+                : "text-muted-foreground hover:text-foreground hover:bg-muted"
                 }`}
               onClick={() => mobile && setSidebarOpen(false)}
             >
-              <item.icon className="h-4 w-4" />
+              <item.icon className={`h-4 w-4 transition-colors ${isActive ? "text-primary" : "text-muted-foreground group-hover:text-foreground"}`} />
               {item.name}
             </Link>
           );
@@ -107,40 +116,59 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
       </nav>
 
       {/* User Menu */}
-      <div className="p-4 border-t border-border">
+      <div className="p-4 border-t border-border/50 bg-muted/5">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button
               variant="ghost"
-              className="w-full justify-start gap-3 h-auto p-3 hover:bg-accent transition-colors"
+              className="w-full justify-start gap-3 h-auto p-3 hover:bg-background border border-transparent hover:border-border transition-all rounded-xl"
             >
-              <Avatar className="h-8 w-8">
-                <AvatarFallback className="bg-primary text-primary-foreground">
-                  {user?.name?.charAt(0) || "U"}
-                </AvatarFallback>
-              </Avatar>
+              <UserAvatar
+                name={user?.name}
+                image={user?.image}
+                tier={user?.tier}
+                size="md"
+              />
               <div className="flex flex-col items-start text-sm min-w-0">
-                <span className="font-medium truncate w-full">
+                <span className="font-semibold truncate w-full">
                   {user?.name || "User"}
                 </span>
-                <span className="text-xs text-muted-foreground truncate w-full">
-                  {user?.email}
-                </span>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="text-xs text-muted-foreground truncate max-w-[100px]">
+                    {user?.email}
+                  </span>
+                  <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 uppercase font-bold border-primary/30 text-primary">
+                    {user?.tier || "free"}
+                  </Badge>
+                </div>
               </div>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel>My Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem>
+          <DropdownMenuContent align="end" className="w-60 p-2" sideOffset={8}>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <div className="flex items-center justify-between">
+                  <p className="text-sm font-medium leading-none">{user?.name}</p>
+                  <Badge className="text-[10px] px-1.5 h-4 uppercase font-black tracking-tighter">
+                    {user?.tier || "free"}
+                  </Badge>
+                </div>
+                <p className="text-xs leading-none text-muted-foreground">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator className="my-2" />
+            <DropdownMenuItem className="cursor-pointer">
               <User className="mr-2 h-4 w-4" />
               Profile
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            <DropdownMenuItem className="cursor-pointer">
               <Settings className="mr-2 h-4 w-4" />
               Settings
             </DropdownMenuItem>
             <DropdownMenuItem
+              className="cursor-pointer"
               onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
             >
               {theme === "dark" ? (
@@ -150,10 +178,10 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
               )}
               Toggle theme
             </DropdownMenuItem>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="my-2" />
             <DropdownMenuItem
               onClick={handleLogout}
-              className="text-destructive"
+              className="text-destructive focus:text-destructive cursor-pointer"
             >
               <LogOut className="mr-2 h-4 w-4" />
               Log out
@@ -165,9 +193,9 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   );
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-muted/20">
       {/* Desktop Sidebar */}
-      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col">
+      <div className="hidden lg:fixed lg:inset-y-0 lg:flex lg:w-64 lg:flex-col z-50">
         <div className="flex flex-col flex-grow bg-card border-r border-border shadow-sm">
           <Sidebar />
         </div>
@@ -207,6 +235,41 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
           <div className="flex items-center gap-4">
             <div className="flex items-center gap-2">
               <NotificationsPopover />
+
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full relative p-0 h-8 w-8">
+                    <UserAvatar
+                      name={user?.name}
+                      image={user?.image}
+                      tier={user?.tier}
+                      size="sm"
+                    />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">{user?.name}</p>
+                      <p className="text-xs leading-none text-muted-foreground">{user?.email}</p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profile</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => router.push('/subscription')} className="cursor-pointer">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    <span>Subscription</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="text-destructive focus:text-destructive cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Log out</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </div>

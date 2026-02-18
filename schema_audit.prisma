@@ -1,0 +1,15 @@
+
+// AUDIT LOGS
+model AuditLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  action    String   // e.g. "SECRET_ACCESS", "SECRET_UPDATE"
+  actorId   String   @db.ObjectId
+  projectId String   @db.ObjectId
+  changes   Json?    // Details of what changed
+  ipAddress String?
+  userAgent String?
+  createdAt DateTime @default(now())
+
+  user    User    @relation(fields: [actorId], references: [id])
+  project Project @relation(fields: [projectId], references: [id])
+}

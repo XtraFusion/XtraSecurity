@@ -6,7 +6,11 @@
 # next.js
 /.next/
 /out/
-
+/xtra-cli
+/xtra-sdk-node
+/xtra-sdk-deno
+/xtra-action
+/integrations
 # production
 /build
 

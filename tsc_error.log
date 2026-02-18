@@ -1,0 +1,2 @@
+﻿app/api/projects/[projectId]/envs/[env]/secrets/route.ts(153,1): error TS1005: ',' expected.
+app/api/projects/[projectId]/envs/[env]/secrets/route.ts(347,1): error TS1005: ')' expected.

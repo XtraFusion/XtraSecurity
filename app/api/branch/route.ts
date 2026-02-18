@@ -1,19 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getCurrentUser } from "@/lib/auth";
-import type { User } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
 
 // Helper function to check authentication
 // GET /api/branch - Get all branches or filter by projectId
+// Force Rebuild
 export async function GET(request: NextRequest) {
   try {
-     const session = await getServerSession(authOptions);
-if (!session?.user?.email) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
+     const auth = await verifyAuth(request);
+     if (!auth) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
@@ -26,25 +24,60 @@ if (!session?.user?.email) {
       }
     });
 
+    // Fetch user details for each branch
+    const branchesWithUsers = await Promise.all(
+      branches.map(async (branch) => {
+        let user = null;
+        if (branch.createdBy) {
+          user = await prisma.user.findUnique({
+            where: { id: branch.createdBy },
+            select: { email: true, name: true }
+          });
+        }
+        return { ...branch, user };
+      })
+    );
+
     // Decrypt secret values in each branch
-    const branchesWithDecryptedSecrets = branches.map((branch) => ({
+    const branchesWithDecryptedSecrets = branchesWithUsers.map((branch) => ({
       ...branch,
       secrets: branch.secrets?.map((secret) => {
+        let decryptedValue = "";
         try {
           const encryptedString = secret.value[0];
           const encryptedObject = JSON.parse(encryptedString);
-          const decryptedValue = decrypt(encryptedObject);
-          return {
-            ...secret,
-            value: decryptedValue,
-          };
+          decryptedValue = decrypt(encryptedObject);
         } catch (error) {
           console.error(`Failed to decrypt secret ${secret.id}:`, error);
-          return {
-            ...secret,
-            value: "[Decryption failed]",
-          };
+          decryptedValue = "[Decryption failed]";
         }
+
+        // Decrypt history
+        const decryptedHistory = Array.isArray(secret.history) ? secret.history.map((h: any) => {
+            try {
+                // Check if value is array (as it is in DB) or string
+                const histRaw = Array.isArray(h.value) ? h.value[0] : h.value;
+                if (!histRaw) return h;
+
+                const histEncryptedObject = JSON.parse(histRaw);
+                // Check if it looks like an encrypted object
+                if (histEncryptedObject.iv && histEncryptedObject.encryptedData) {
+                    return {
+                        ...h,
+                        value: decrypt(histEncryptedObject)
+                    };
+                }
+                return h;
+            } catch (e) {
+                return h;
+            }
+        }) : secret.history;
+
+        return {
+          ...secret,
+          value: decryptedValue,
+          history: decryptedHistory
+        };
       }) || [],
     }));
 
@@ -61,8 +94,8 @@ if (!session?.user?.email) {
 // POST /api/branch - Create a new branch or perform branch operations
 export async function POST(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const auth = await verifyAuth(request);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -109,7 +142,7 @@ export async function POST(request: NextRequest) {
       data: {
         name,
         description: description || "",
-        createdBy: session.user.id,
+        createdBy: auth.userId,
         projectId,
         versionNo,
         permissions
@@ -132,10 +165,10 @@ export async function POST(request: NextRequest) {
 // DELETE /api/branch - Delete a branch
 export async function DELETE(request: NextRequest) {
   try {
-     const session = await getServerSession(authOptions);
-if (!session?.user?.email) {
-  return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-}
+     const auth = await verifyAuth(request);
+     if (!auth) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -187,8 +220,8 @@ if (!session?.user?.email) {
 // PUT /api/branch - Update a branch
 export async function PUT(request: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const auth = await verifyAuth(request);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 

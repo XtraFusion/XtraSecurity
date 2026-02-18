@@ -62,6 +62,13 @@ import Link from "next/link";
 import { TeamController } from "@/util/TeamContoller";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useGlobalContext } from "@/hooks/useUser";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Progress } from "@/components/ui/progress";
+import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 
 interface Team {
   id: string;
@@ -88,6 +95,7 @@ const currentUser = {
 const Teams = () => {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
+  const [totalCreatedTeams, setTotalCreatedTeams] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -101,6 +109,11 @@ const Teams = () => {
     color: "bg-blue-500",
   });
 
+  const { selectedWorkspace, user } = useGlobalContext();
+  const userTier = (user?.tier || "free") as Tier;
+  const teamLimit = DAILY_LIMITS[userTier].maxTeams;
+  const isLimitReached = totalCreatedTeams >= teamLimit;
+
   const filteredTeams = teams.filter(
     (team) =>
       team.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -108,10 +121,38 @@ const Teams = () => {
   );
 
   useEffect(() => {
-    FetchTeamList();
-  }, [])
+    if (selectedWorkspace) {
+      FetchTeamList();
+    }
+  }, [selectedWorkspace])
+
+  // Fetch total teams created by user for limit check
+  useEffect(() => {
+    const fetchTotalTeams = async () => {
+      try {
+        const response = await TeamController.getTeams(); // All teams
+        // Filter locally for teams created by current user
+        // Alternatively, update API to return this count
+        const createdTeams = response.filter((t: any) => t.createdBy === user?.id);
+        setTotalCreatedTeams(createdTeams.length);
+      } catch (error) {
+        console.error("Error fetching all teams:", error);
+      }
+    };
+    if (user?.id) {
+      fetchTotalTeams();
+    }
+  }, [user?.id]);
 
   const handleCreateTeam = async () => {
+    if (isLimitReached) {
+      toast({
+        title: "Limit reached",
+        description: `You have reached the limit of ${teamLimit} teams for your ${userTier} plan.`,
+        variant: "destructive",
+      });
+      return;
+    }
     if (!newTeam.name.trim()) {
       toast({
         title: "Error",
@@ -121,17 +162,24 @@ const Teams = () => {
       return;
     }
 
+    if (!selectedWorkspace) {
+      toast({ title: "Error", description: "No workspace selected", variant: "destructive" });
+      return;
+    }
+
     try {
       const team: any = {
         name: newTeam.name,
         description: newTeam.description,
         teamColor: newTeam.color,
         roles: ["admin"],
+        workspaceId: selectedWorkspace.id
       };
 
       const teamUserRes = await TeamController.createTeam(team);
 
       if (teamUserRes?.id) {
+        setTotalCreatedTeams(prev => prev + 1);
         router.push(`/teams/${teamUserRes.id}`)
         setTeams([teamUserRes, ...teams]);
         setNewTeam({ name: "", description: "", color: "bg-blue-500" });
@@ -155,8 +203,10 @@ const Teams = () => {
   const FetchTeamList = async () => {
     try {
       setIsLoading(true);
-      const teamList = await TeamController.getTeams();
-      setTeams(teamList);
+      if (selectedWorkspace) {
+        const teamList = await TeamController.getTeams(selectedWorkspace.id);
+        setTeams(teamList);
+      }
     } catch (error) {
       console.error('Error fetching teams:', error);
     } finally {
@@ -188,167 +238,199 @@ const Teams = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background">
-        {/* Hero Section Skeleton */}
-        <div className="relative overflow-hidden">
-          <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-              <div className="text-center">
-                <div className="h-8 bg-muted rounded w-64 mx-auto mb-6 animate-pulse"></div>
-                <div className="h-16 bg-muted rounded w-96 mx-auto mb-6 animate-pulse"></div>
-                <div className="h-6 bg-muted rounded w-2xl mx-auto mb-8 animate-pulse"></div>
-                <div className="h-12 bg-muted rounded w-40 mx-auto animate-pulse"></div>
+      <DashboardLayout>
+        <div className="min-h-screen bg-background">
+          {/* Hero Section Skeleton */}
+          <div className="relative overflow-hidden rounded-xl border border-border/50">
+            <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
+              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+                <div className="text-center">
+                  <div className="h-8 bg-muted rounded w-64 mx-auto mb-6 animate-pulse"></div>
+                  <div className="h-16 bg-muted rounded w-96 mx-auto mb-6 animate-pulse"></div>
+                  <div className="h-6 bg-muted rounded w-2xl mx-auto mb-8 animate-pulse"></div>
+                  <div className="h-12 bg-muted rounded w-40 mx-auto animate-pulse"></div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Teams Grid Skeleton */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-          <div className="flex items-center justify-between mb-8">
-            <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
-            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
-          </div>
+          {/* Teams Grid Skeleton */}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+            <div className="flex items-center justify-between mb-8">
+              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
+              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i}>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
-                    <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
-                  </div>
-                  <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                    <div className="flex items-center gap-2 mt-4">
-                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                      <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                      <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i}>
+                  <CardHeader>
+                    <div className="flex items-center justify-between">
+                      <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
+                      <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+                    <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
+                      <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
+                      <div className="flex items-center gap-2 mt-4">
+                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
+                        <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <div className="relative overflow-hidden">
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-        // style={{ backgroundImage: `url(${teamsHeroImage})` }}
-        />
-        <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-            <div className="text-center">
-              <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
-                <Sparkles className="h-4 w-4 text-primary" />
-                <span className="text-sm font-medium text-primary">
-                  Team Collaboration Platform
-                </span>
-              </div>
-              <h1 className="text-4xl md:text-6xl font-bold mb-6 bg-gradient-hero bg-clip-text dark:text-white text-black ">
-                Manage Your Teams
-              </h1>
-              <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Create, organize, and collaborate with multiple teams.
-                Streamline your workflow with role-based access and seamless
-                project management.
-              </p>
-              <Dialog
-                open={createDialogOpen}
-                onOpenChange={setCreateDialogOpen}
-              >
-                <DialogTrigger asChild>
-                  <Button
-                    variant="hero"
-                    size="xl"
-                    className="gap-2 dark:text-white text-black"
-                  >
-                    <Plus className="h-5 w-5" />
-                    Create New Team
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Create New Team</DialogTitle>
-                    <DialogDescription>
-                      Set up a new team to collaborate with your colleagues
-                    </DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="team-name">Team Name</Label>
-                      <Input
-                        id="team-name"
-                        placeholder="e.g., Engineering, Design, Marketing"
-                        value={newTeam.name}
-                        onChange={(e) =>
-                          setNewTeam({ ...newTeam, name: e.target.value })
-                        }
-                      />
+    <DashboardLayout>
+      <div className="space-y-6">
+        {/* Hero Section */}
+        <div className="relative overflow-hidden rounded-xl border border-border/50">
+          <div
+            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
+          // style={{ backgroundImage: `url(${teamsHeroImage})` }}
+          />
+          <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
+              <div className="text-center">
+                <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
+                  <Sparkles className="h-4 w-4 text-primary" />
+                  <span className="text-sm font-medium text-primary">
+                    Team Collaboration Platform
+                  </span>
+                </div>
+                <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-hero bg-clip-text text-foreground">
+                  Manage Your Teams
+                </h1>
+                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
+                  Create, organize, and collaborate with multiple teams.
+                  Streamline your workflow with role-based access and seamless
+                  project management.
+                </p>
+                <div className="flex flex-col items-center gap-4">
+                  {isLimitReached && (
+                    <Alert variant="destructive" className="max-w-md bg-destructive/10 border-destructive/20 text-destructive mb-4">
+                      <AlertCircle className="h-4 w-4" />
+                      <AlertTitle>Team Limit Reached</AlertTitle>
+                      <AlertDescription>
+                        You've reached your limit of {teamLimit} team{teamLimit > 1 ? 's' : ''}.
+                        <Link href="/subscription" className="ml-1 font-bold underline">Upgrade to Pro</Link> to create up to 10 teams.
+                      </AlertDescription>
+                    </Alert>
+                  )}
+
+                  <div className="flex items-center gap-4 mb-4">
+                    <div className="text-sm font-medium text-muted-foreground">
+                      Usage: {totalCreatedTeams} / {teamLimit} teams
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="team-description">Description</Label>
-                      <Textarea
-                        id="team-description"
-                        placeholder="What does this team work on?"
-                        value={newTeam.description}
-                        onChange={(e) =>
-                          setNewTeam({
-                            ...newTeam,
-                            description: e.target.value,
-                          })
-                        }
-                        rows={3}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Team Color</Label>
-                      <div className="flex gap-2">
-                        {colorOptions.map((color) => (
-                          <button
-                            key={color}
-                            onClick={() => setNewTeam({ ...newTeam, color })}
-                            className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
-                              ? "border-primary"
-                              : "border-transparent"
-                              } transition-colors`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+                    <Progress value={(totalCreatedTeams / teamLimit) * 100} className="w-32 h-2" />
                   </div>
-                  <DialogFooter>
-                    <Button
-                      variant="outline"
-                      onClick={() => setCreateDialogOpen(false)}
-                    >
-                      Cancel
-                    </Button>
-                    <Button onClick={handleCreateTeam}>Create Team</Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
+
+                  <Dialog
+                    open={createDialogOpen}
+                    onOpenChange={setCreateDialogOpen}
+                  >
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <DialogTrigger asChild>
+                            <Button
+                              size="lg"
+                              className="gap-2"
+                              disabled={isLimitReached}
+                            >
+                              <Plus className="h-5 w-5" />
+                              Create New Team
+                            </Button>
+                          </DialogTrigger>
+                        </TooltipTrigger>
+                        {isLimitReached && (
+                          <TooltipContent>
+                            <p>Upgrade to Pro to create more teams</p>
+                          </TooltipContent>
+                        )}
+                      </Tooltip>
+                    </TooltipProvider>
+                    <DialogContent className="sm:max-w-md">
+                      <DialogHeader>
+                        <DialogTitle>Create New Team</DialogTitle>
+                        <DialogDescription>
+                          Set up a new team to collaborate with your colleagues
+                        </DialogDescription>
+                      </DialogHeader>
+                      <div className="space-y-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="team-name">Team Name</Label>
+                          <Input
+                            id="team-name"
+                            placeholder="e.g., Engineering, Design, Marketing"
+                            value={newTeam.name}
+                            onChange={(e) =>
+                              setNewTeam({ ...newTeam, name: e.target.value })
+                            }
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="team-description">Description</Label>
+                          <Textarea
+                            id="team-description"
+                            placeholder="What does this team work on?"
+                            value={newTeam.description}
+                            onChange={(e) =>
+                              setNewTeam({
+                                ...newTeam,
+                                description: e.target.value,
+                              })
+                            }
+                            rows={3}
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label>Team Color</Label>
+                          <div className="flex gap-2">
+                            {colorOptions.map((color) => (
+                              <button
+                                key={color}
+                                onClick={() => setNewTeam({ ...newTeam, color })}
+                                className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
+                                  ? "border-primary"
+                                  : "border-transparent"
+                                  } transition-colors`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <DialogFooter>
+                        <Button
+                          variant="outline"
+                          onClick={() => setCreateDialogOpen(false)}
+                        >
+                          Cancel
+                        </Button>
+                        <Button onClick={handleCreateTeam}>Create Team</Button>
+                      </DialogFooter>
+                    </DialogContent>
+                  </Dialog>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Stats & Search */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card className="bg-gradient-card border-primary/20">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">Total Teams</CardTitle>
@@ -408,7 +490,7 @@ const Teams = () => {
         </div>
 
         {/* Search & Filter */}
-        <Card className="mb-8">
+        <Card>
           <CardHeader>
             <CardTitle>Your Teams</CardTitle>
             <CardDescription>
@@ -541,35 +623,34 @@ const Teams = () => {
             )}
           </CardContent>
         </Card>
-      </div>
 
-      {/* Delete Confirmation Dialog */}
-      <AlertDialog
-        open={deleteDialog.open}
-        onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Team</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete{" "}
-              <strong>{deleteDialog.team?.name}</strong>? This action cannot be
-              undone and all team data will be permanently lost.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDeleteTeam}
-              className="bg-destructive hover:bg-destructive/90"
-            >
-              Delete Team
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
+        {/* Delete Confirmation Dialog */}
+        <AlertDialog
+          open={deleteDialog.open}
+          onOpenChange={(open) => setDeleteDialog({ ...deleteDialog, open })}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Delete Team</AlertDialogTitle>
+              <AlertDialogDescription>
+                Are you sure you want to delete{" "}
+                <strong>{deleteDialog.team?.name}</strong>? This action cannot be
+                undone and all team data will be permanently lost.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={handleDeleteTeam}
+                className="bg-destructive hover:bg-destructive/90"
+              >
+                Delete Team
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
+    </DashboardLayout>);
 };
 
 export default Teams;

@@ -71,6 +71,7 @@ import {
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { useSession } from "next-auth/react";
 import apiClient from "@/lib/axios";
+import { useGlobalContext } from "@/hooks/useUser";
 
 interface NotificationRule {
   id: string;
@@ -201,6 +202,8 @@ export default function NotificationsPage() {
     },
   });
 
+  const { selectedWorkspace } = useGlobalContext();
+
   useEffect(() => {
     if (!session?.user?.email) {
       router.push("/login");
@@ -209,7 +212,8 @@ export default function NotificationsPage() {
 
     const loadData = async () => {
       try {
-        const response = await apiClient.get("/api/notifications");
+        const url = selectedWorkspace ? `/api/notifications?workspaceId=${selectedWorkspace.id}` : "/api/notifications";
+        const response = await apiClient.get(url);
         // Transform API notifications to match NotificationAlert interface
         const fetchedAlerts: NotificationAlert[] = (response.data.notifications || []).map((n: any) => ({
           id: n.id,
@@ -234,8 +238,10 @@ export default function NotificationsPage() {
       }
     };
 
-    loadData();
-  }, [router, session]);
+    if (selectedWorkspace || !session) { // Load if workspace selected (or if just checking session) - logic adjusted to ensure we load
+      loadData();
+    }
+  }, [router, session, selectedWorkspace]);
 
   useEffect(() => {
     if (notification) {

@@ -1,13 +1,15 @@
 "use client";
 
 import axios from "axios";
-import { useState, createContext, useContext } from "react";
+import React, { useState, createContext, useContext, useEffect } from "react";
+import { useSession } from "next-auth/react";
 
 interface UserContextType {
   user: any | null;
   setUser: React.Dispatch<React.SetStateAction<any | null>>;
   userStatus: boolean | string;
   setUserStatus: React.Dispatch<React.SetStateAction<boolean | string>>;
+  loading: boolean;
   fetchUser: () => Promise<void>;
   createProject: (projectData: any) => Promise<void>;
 }
@@ -17,14 +19,50 @@ export const UserContext = createContext<UserContextType | any>(
 );
 
 export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+  const { data: session, status } = useSession();
   const [user, setUser] = useState<any | null>(null);
+  // Initialize from LocalStorage or default to null
   const [selectedWorkspace, setSelectedWorkspace] = useState<any | null>(null);
+
+  useEffect(() => {
+    if (status === "authenticated") {
+      fetchUser();
+    }
+  }, [status]);
+
+  // Load workspace on mount
+  useEffect(() => {
+    const saved = localStorage.getItem("selectedWorkspace");
+    if (saved) {
+      try {
+        setSelectedWorkspace(JSON.parse(saved));
+      } catch (e) {
+        console.error("Failed to parse saved workspace", e);
+      }
+    }
+  }, []);
+
+  // Save workspace on change
+  useEffect(() => {
+    if (selectedWorkspace) {
+      localStorage.setItem("selectedWorkspace", JSON.stringify(selectedWorkspace));
+    }
+  }, [selectedWorkspace]);
+
   const [userStatus, setUserStatus] = useState<boolean | string>(false);
+  const [loading, setLoading] = useState<boolean>(false);
+
   async function fetchUser() {
-    const userData = await axios.get("/api/user");
-    if (userData.status == 200) {
-      console.log(userData.data);
-      setUser(userData.data);
+    try {
+      setLoading(true);
+      const userData = await axios.get("/api/user");
+      if (userData.status == 200) {
+        setUser(userData.data);
+      }
+    } catch (error) {
+      console.error("Failed to fetch user:", error);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -78,6 +116,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         setUser,
         userStatus,
         setUserStatus,
+        loading,
         fetchUser,
         createSecret,
         fetchSecrets,

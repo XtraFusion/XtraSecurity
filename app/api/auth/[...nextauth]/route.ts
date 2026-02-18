@@ -228,6 +228,7 @@ export const authOptions: NextAuthOptions = {
               email: user.email,
               name: user.name,
               role: user.role,
+              tier: user.tier || "free",
             }
           } catch (error) {
             console.error("Database error during authentication:", error)
@@ -252,6 +253,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.role = user.role || "user"
         token.id = user.id
+        token.tier = user.tier || "free"
       }
       return token
     },
@@ -259,6 +261,7 @@ export const authOptions: NextAuthOptions = {
       if (token) {
         session.user.id = token.id
         session.user.role = token.role
+        session.user.tier = token.tier
       }
       return session
     },

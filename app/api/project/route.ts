@@ -5,41 +5,53 @@ import type { User } from "@/lib/auth";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { createNotification } from "@/lib/notifications";
+import { verifyAuth } from "@/lib/server-auth";
 
 // GET /api/project - Get all projects or a specific project by ID
 export async function GET(request: NextRequest) {
   try {
+    // Try CLI auth first, then session
+    const cliAuth = await verifyAuth(request);
     const session = await getServerSession(authOptions);
-    console.log("Session in GET /api/project:", session);
-
-    if (!session?.user?.email) {
-      console.log("No session or email found");
+    
+    const userId = cliAuth?.userId || session?.user?.id;
+    const userEmail = cliAuth?.email || session?.user?.email;
+    
+    if (!userId) {
+      console.log("No auth found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
+    const workspaceId = searchParams.get("workspaceId");
 
     if (!id) {
       // Get all projects accessible to the user
       const projects = await prisma.project.findMany({
         where: {
-          OR: [
-            { userId: session.user.id },
+          AND: [
+            workspaceId ? { workspaceId } : {},
             {
-              teamProjects: {
-                some: {
-                  team: {
-                    members: {
-                      some: {
-                        userId: session.user.id,
+              OR: [
+                { userId: userId },
+                {
+                  teamProjects: {
+                    some: {
+                      team: {
+                        members: {
+                          some: {
+                            userId: userId,
+                            status: "active",
+                          },
+                        },
                       },
                     },
                   },
                 },
-              },
-            },
-          ],
+              ],
+            }
+          ]
         },
         include: {
           branches: true,
@@ -77,14 +89,15 @@ export async function GET(request: NextRequest) {
       where: {
         id,
         OR: [
-          { userId: session.user.id },
+          { userId: userId },
           {
             teamProjects: {
               some: {
                 team: {
                   members: {
                     some: {
-                      userId: session.user.id,
+                      userId: userId,
+                      status: "active",
                     },
                   },
                 },
