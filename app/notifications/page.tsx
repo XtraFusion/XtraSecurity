@@ -169,6 +169,9 @@ export default function NotificationsPage() {
     },
   });
 
+  const [selectedAlert, setSelectedAlert] = useState<NotificationAlert | null>(null);
+  const [isViewDetailsOpen, setIsViewDetailsOpen] = useState(false);
+
   const { selectedWorkspace } = useGlobalContext();
 
   // Load all data
@@ -641,6 +644,75 @@ export default function NotificationsPage() {
               </DialogContent>
             </Dialog>
 
+            {/* View Details Dialog */}
+            {/* Custom View Details Modal */}
+            {isViewDetailsOpen && selectedAlert && (
+              <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                <div className="bg-background border rounded-lg shadow-lg w-full max-w-md p-6 relative animate-in zoom-in-95 duration-200" onClick={(e) => e.stopPropagation()}>
+                  <button
+                    onClick={() => setIsViewDetailsOpen(false)}
+                    className="absolute top-4 right-4 p-1 rounded-full hover:bg-muted transition-colors"
+                  >
+                    <XCircle className="h-5 w-5 text-muted-foreground" />
+                  </button>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-2 pr-8">
+                      {getTypeIcon(selectedAlert.type)}
+                      <span className="font-semibold text-lg">{selectedAlert.title}</span>
+                    </div>
+
+                    <div className="space-y-1">
+                      <Label className="text-muted-foreground text-xs uppercase tracking-wider">Message</Label>
+                      <div className="text-sm bg-muted p-3 rounded-md max-h-40 overflow-y-auto">{selectedAlert.message}</div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <Label className="text-muted-foreground text-xs uppercase tracking-wider">Severity</Label>
+                        <div><Badge className={getSeverityColor(selectedAlert.severity)}>{selectedAlert.severity}</Badge></div>
+                      </div>
+                      <div className="space-y-1">
+                        <Label className="text-muted-foreground text-xs uppercase tracking-wider">Date</Label>
+                        <div className="text-sm">{formatDate(selectedAlert.timestamp)}</div>
+                      </div>
+                      {selectedAlert.project && (
+                        <div className="space-y-1">
+                          <Label className="text-muted-foreground text-xs uppercase tracking-wider">Project</Label>
+                          <div className="text-sm truncate" title={selectedAlert.project}>{selectedAlert.project}</div>
+                        </div>
+                      )}
+                      {selectedAlert.branch && (
+                        <div className="space-y-1">
+                          <Label className="text-muted-foreground text-xs uppercase tracking-wider">Branch</Label>
+                          <div className="text-sm truncate" title={selectedAlert.branch}>{selectedAlert.branch}</div>
+                        </div>
+                      )}
+                      {selectedAlert.user && (
+                        <div className="space-y-1">
+                          <Label className="text-muted-foreground text-xs uppercase tracking-wider">User</Label>
+                          <div className="text-sm truncate" title={selectedAlert.user}>{selectedAlert.user}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {selectedAlert.metadata && Object.keys(selectedAlert.metadata).length > 0 && (
+                      <div className="space-y-2">
+                        <Label className="text-muted-foreground text-xs uppercase tracking-wider">Metadata</Label>
+                        <div className="bg-muted p-2 rounded-md overflow-x-auto max-h-32">
+                          <pre className="text-xs">{JSON.stringify(selectedAlert.metadata, null, 2)}</pre>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="mt-6 flex justify-end">
+                    <Button onClick={() => setIsViewDetailsOpen(false)}>Close</Button>
+                  </div>
+                </div>
+              </div>
+            )}
+
             {/* Create Rule Dialog */}
             <Dialog open={isCreateRuleOpen} onOpenChange={setIsCreateRuleOpen}>
               <DialogTrigger asChild>
@@ -891,14 +963,12 @@ export default function NotificationsPage() {
                                     Mark as Read
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem>
-                                  <Settings className="mr-2 h-4 w-4" />
+                                <DropdownMenuItem onClick={() => {
+                                  setSelectedAlert(alert);
+                                  setIsViewDetailsOpen(true);
+                                }}>
+                                  <Eye className="mr-2 h-4 w-4" />
                                   View Details
-                                </DropdownMenuItem>
-                                <DropdownMenuSeparator />
-                                <DropdownMenuItem onClick={() => handleDeleteAlert(alert.id)} className="text-destructive">
-                                  <Trash2 className="mr-2 h-4 w-4" />
-                                  Delete
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

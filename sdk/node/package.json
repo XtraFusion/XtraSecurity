@@ -1,18 +1,48 @@
 {
     "name": "xtra-node-sdk",
-    "version": "0.1.0",
-    "description": "Node.js client for XtraSecurity",
+    "version": "0.2.0",
+    "description": "The official Node.js SDK for XtraSecurity — securely manage environment secrets in your applications.",
     "main": "dist/index.js",
     "types": "dist/index.d.ts",
+    "files": [
+        "dist",
+        "README.md",
+        "LICENSE"
+    ],
+    "keywords": [
+        "secrets",
+        "secret-management",
+        "environment-variables",
+        "env",
+        "security",
+        "xtrasecurity",
+        "devops",
+        "vault"
+    ],
+    "author": "XtraSecurity Team",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xtrasecurity/xtra-node-sdk.git"
+    },
+    "homepage": "https://xtrasecurity.dev/docs/sdk/node",
+    "bugs": {
+        "url": "https://github.com/xtrasecurity/xtra-node-sdk/issues"
+    },
     "scripts": {
-        "build": "tsc"
+        "build": "tsc",
+        "build:watch": "tsc --watch",
+        "clean": "rm -rf dist",
+        "prepublishOnly": "npm run clean && npm run build"
     },
     "dependencies": {
-        "axios": "^1.6.0",
-        "dotenv": "^16.3.1"
+        "axios": "^1.6.0"
     },
     "devDependencies": {
         "typescript": "^5.1.3",
-        "@types/node": "^18.0.0"
+        "@types/node": "^20.0.0"
+    },
+    "engines": {
+        "node": ">=18.0.0"
     }
 }
