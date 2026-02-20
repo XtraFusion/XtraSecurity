@@ -61,7 +61,7 @@
     --radius-xl: 16px;
 }
 
-.dark {
+:root.dark, .dark {
   /* Dark mode colors with blue/teal theme */
   --background: oklch(0.12 0.02 220);
   --foreground: oklch(0.95 0.01 200);

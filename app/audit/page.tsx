@@ -250,38 +250,73 @@ export default function AuditLogsPage() {
         })
       });
 
-      if (res.ok) {
-        const blob = await res.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `audit-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        window.URL.revokeObjectURL(url);
-        document.body.removeChild(a);
-
-        toast({
-          title: "Export Successful",
-          description: "Audit log exported to CSV",
-        });
-      } else {
-        throw new Error("Export failed");
+      if (res.status === 403) {
+        throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
       }
-    } catch (e) {
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Successful",
+        description: "Audit log exported to CSV",
+      });
+    } catch (e: any) {
       toast({
         title: "Export Failed",
-        description: "Could not generate CSV report",
+        description: e.message || "Could not generate CSV report",
         variant: "destructive"
       });
     }
   }
 
-  const handleExportPDF = () => {
-    toast({
-      title: "Coming Soon",
-      description: "PDF export is currently under development.",
-    });
+  const handleExportJSON = async () => {
+    try {
+      const res = await fetch("/api/audit/export", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          format: "json",
+          projectId: selectedWorkspace?.id,
+          startDate: dateRange.from,
+          endDate: dateRange.to
+        })
+      });
+
+      if (res.status === 403) {
+        throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
+      }
+      if (!res.ok) throw new Error("Export failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-report-${format(new Date(), "yyyy-MM-dd")}.json`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast({
+        title: "Export Successful",
+        description: "Audit log exported to JSON",
+      });
+    } catch (e: any) {
+      toast({
+        title: "Export Failed",
+        description: e.message || "Could not generate JSON report",
+        variant: "destructive"
+      });
+    }
   }
 
   const handleRefresh = () => { loadLogs(); fetchStats(); }
@@ -305,7 +340,6 @@ export default function AuditLogsPage() {
             </p>
           </div>
           <div className="flex items-center gap-2">
-            {/* Controls ... */}
             <div className="flex items-center space-x-2">
               <Switch
                 id="real-time"
@@ -318,7 +352,25 @@ export default function AuditLogsPage() {
             <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
               <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
             </Button>
-            {/* ... Export & Pagination ... */}
+
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Download className="h-4 w-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuLabel>Download Format</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleExportCSV}>
+                  CSV Document (.csv)
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportJSON}>
+                  JSON Format (.json)
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
 

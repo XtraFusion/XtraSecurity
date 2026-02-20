@@ -38,6 +38,7 @@ import {
   Database,
   Globe,
   FileKey,
+  Loader2
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -408,6 +409,13 @@ const VaultManager: React.FC = () => {
     router.replace(`?${params.toString()}`, { scroll: false });
   };
 
+  // Action Loading States
+  const [isSavingSecret, setIsSavingSecret] = React.useState(false);
+  const [isEditingSecret, setIsEditingSecret] = React.useState(false);
+  // We can't really track delete easily per-row here without a record of deleting IDs, so tracking a specific deleting ID
+  const [deletingSecretId, setDeletingSecretId] = React.useState<string | null>(null);
+  const [isCreatingBranch, setIsCreatingBranch] = React.useState(false);
+
   // --- Data Loading ---
 
   const loadProject = React.useCallback(async (silent = false) => {
@@ -524,6 +532,7 @@ const VaultManager: React.FC = () => {
       expiryDate: newSecret.expiryDate || undefined,
     };
 
+    setIsSavingSecret(true);
     try {
       const response = await axios.post("/api/secret", secretData);
       const createdSecret = response.data;
@@ -545,6 +554,8 @@ const VaultManager: React.FC = () => {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to create secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
+    } finally {
+      setIsSavingSecret(false);
     }
   };
 
@@ -561,6 +572,7 @@ const VaultManager: React.FC = () => {
       return;
     }
 
+    setIsEditingSecret(true);
     try {
       await axios.put(`/api/secret?id=${editingSecret.id}`, editingSecret);
       setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? editingSecret : s)));
@@ -570,10 +582,13 @@ const VaultManager: React.FC = () => {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
+    } finally {
+      setIsEditingSecret(false);
     }
   };
 
   const handleDeleteSecret = async (secretId: string) => {
+    setDeletingSecretId(secretId);
     try {
       await axios.delete(`/api/secret?id=${secretId}`);
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
@@ -581,6 +596,8 @@ const VaultManager: React.FC = () => {
     } catch (error: any) {
       const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
+    } finally {
+      setDeletingSecretId(null);
     }
   };
 
@@ -591,6 +608,7 @@ const VaultManager: React.FC = () => {
       return;
     }
 
+    setIsCreatingBranch(true);
     try {
       const res = await axios.post("/api/branch", {
         projectId,
@@ -606,6 +624,8 @@ const VaultManager: React.FC = () => {
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || "Failed to create branch";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
+    } finally {
+      setIsCreatingBranch(false);
     }
   };
 
@@ -1109,7 +1129,10 @@ const VaultManager: React.FC = () => {
           <Button variant="outline" onClick={() => setIsAddSecretOpen(false)}>
             Cancel
           </Button>
-          <Button onClick={handleAddSecret}>Create Secret</Button>
+          <Button onClick={handleAddSecret} disabled={isSavingSecret}>
+            {isSavingSecret && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Create Secret
+          </Button>
         </div>
       </Dialog>
 
@@ -1142,7 +1165,10 @@ const VaultManager: React.FC = () => {
               <Button variant="outline" onClick={() => { setIsEditSecretOpen(false); setEditingSecret(null); }}>
                 Cancel
               </Button>
-              <Button onClick={handleEditSecret}>Save Changes</Button>
+              <Button onClick={handleEditSecret} disabled={isEditingSecret}>
+                {isEditingSecret && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                Save Changes
+              </Button>
             </div>
           </div>
         )}
@@ -1188,7 +1214,10 @@ const VaultManager: React.FC = () => {
             <Button variant="outline" onClick={() => setIsAddBranchOpen(false)}>
               Cancel
             </Button>
-            <Button onClick={createBranch}>Create Branch</Button>
+            <Button onClick={createBranch} disabled={isCreatingBranch}>
+              {isCreatingBranch && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Create Branch
+            </Button>
           </div>
         </div>
       </Dialog>

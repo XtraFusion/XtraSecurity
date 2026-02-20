@@ -118,7 +118,7 @@ export async function PUT(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { id, name, description, workspaceType, subscriptionPlan, projectLimit, subscriptionEnd } = body;
+    const { id, name, description, workspaceType, subscriptionPlan, projectLimit, subscriptionEnd, icon } = body;
 
     if (!id) {
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
@@ -141,7 +141,8 @@ export async function PUT(request: NextRequest) {
     const workspace = await prisma.workspace.update({
       where: { id },
       data: {
-        name: name ?? existing.name,
+        name: name !== undefined ? name : existing.name,
+        icon: icon !== undefined ? icon : existing.icon,
         description: description ?? existing.description,
         workspaceType: workspaceType ?? existing.workspaceType,
         subscriptionPlan: subscriptionPlan ?? existing.subscriptionPlan,

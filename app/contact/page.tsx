@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { Mail, Send, CheckCircle2 } from "lucide-react";
+import { Mail, Send, CheckCircle2, Loader2 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 
 export default function ContactPage() {
@@ -130,7 +130,9 @@ export default function ContactPage() {
                                     </div>
                                     <Button type="submit" disabled={loading} className="w-full">
                                         {loading ? (
-                                            "Sending..."
+                                            <>
+                                                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending...
+                                            </>
                                         ) : (
                                             <>
                                                 <Send className="mr-2 h-4 w-4" /> Send Message

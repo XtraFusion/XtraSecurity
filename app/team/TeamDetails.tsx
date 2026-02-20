@@ -56,7 +56,8 @@ import {
   Sparkles,
   Activity,
   ChevronRight,
-  Filter
+  Filter,
+  Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
@@ -300,6 +301,7 @@ const TeamDetail = () => {
     message: "",
     department: "",
   });
+  const [isInviting, setIsInviting] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     type: "remove" | "role-change";
@@ -336,7 +338,7 @@ const TeamDetail = () => {
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleInviteMember = () => {
+  const handleInviteMember = async () => {
     if (!canInviteMembers(currentUser.role)) {
       toast({
         title: "Access Denied",
@@ -364,27 +366,35 @@ const TeamDetail = () => {
       return;
     }
 
-    const newMember: TeamMember = {
-      id: Date.now().toString(),
-      name: inviteForm.email.split("@")[0],
-      email: inviteForm.email,
-      role: inviteForm.role,
-      status: "pending",
-      joinedAt: new Date().toISOString().split("T")[0],
-      lastActive: "Never",
-      projects: 0,
-      invitedBy: currentUser.name,
-      department: inviteForm.department,
-    };
+    setIsInviting(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 800));
 
-    setMembers([...members, newMember]);
-    setInviteForm({ email: "", role: "viewer", message: "", department: "" });
-    setInviteDialogOpen(false);
+      const newMember: TeamMember = {
+        id: Date.now().toString(),
+        name: inviteForm.email.split("@")[0],
+        email: inviteForm.email,
+        role: inviteForm.role,
+        status: "pending",
+        joinedAt: new Date().toISOString().split("T")[0],
+        lastActive: "Never",
+        projects: 0,
+        invitedBy: currentUser.name,
+        department: inviteForm.department,
+      };
 
-    toast({
-      title: "Invitation sent",
-      description: `Invitation sent to ${inviteForm.email}`,
-    });
+      setMembers([...members, newMember]);
+      setInviteForm({ email: "", role: "viewer", message: "", department: "" });
+      setInviteDialogOpen(false);
+
+      toast({
+        title: "Invitation sent",
+        description: `Invitation sent to ${inviteForm.email}`,
+      });
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const handleRoleChangeRequest = (memberId: string, newRole: TeamMember["role"]) => {
@@ -586,7 +596,10 @@ const TeamDetail = () => {
                     <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                       Cancel
                     </Button>
-                    <Button onClick={handleInviteMember}>Send Invitation</Button>
+                    <Button onClick={handleInviteMember} disabled={isInviting}>
+                      {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Send Invitation
+                    </Button>
                   </DialogFooter>
                 </DialogContent>
               </Dialog>

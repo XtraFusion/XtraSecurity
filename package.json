@@ -1,8 +1,7 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "xtrasecurity",
+  "version": "1.0.0",
   "private": true,
-  "proxy": "https://tedx-backend-657e5.firebaseapp.com/",
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -47,6 +46,7 @@
     "autoprefixer": "^10.4.20",
     "axios": "^1.11.0",
     "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "1.0.4",
@@ -84,6 +84,7 @@
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.9",
+    "@types/bcryptjs": "^2.4.6",
     "@types/geoip-lite": "^1.4.4",
     "@types/ioredis": "^4.28.10",
     "@types/jest": "^30.0.0",

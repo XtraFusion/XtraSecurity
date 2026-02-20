@@ -69,6 +69,7 @@ import {
   Key,
   CheckCircle2,
   XOctagon,
+  Loader2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { useSession } from "next-auth/react";
@@ -145,6 +146,11 @@ export default function NotificationsPage() {
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [teamInvites, setTeamInvites] = useState([]);
+  const [isCreatingRule, setIsCreatingRule] = useState(false);
+  const [isCreatingChannel, setIsCreatingChannel] = useState(false);
+  const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [decliningId, setDecliningId] = useState<string | null>(null);
+
   const [newRule, setNewRule] = useState({
     name: "",
     description: "",
@@ -324,6 +330,7 @@ export default function NotificationsPage() {
   const handleCreateRule = async () => {
     if (!newRule.name || !newRule.triggers.length) return;
 
+    setIsCreatingRule(true);
     try {
       const res = await apiClient.post("/api/notification-rules", {
         ...newRule,
@@ -343,12 +350,15 @@ export default function NotificationsPage() {
     } catch (err) {
       console.error(err);
       setNotification({ type: "error", message: "Failed to create rule" });
+    } finally {
+      setIsCreatingRule(false);
     }
   };
 
   const handleCreateChannel = async () => {
     if (!newChannel.name) return;
 
+    setIsCreatingChannel(true);
     try {
       const res = await apiClient.post("/api/notification-channels", {
         ...newChannel,
@@ -366,6 +376,8 @@ export default function NotificationsPage() {
     } catch (err) {
       console.error(err);
       setNotification({ type: "error", message: "Failed to create channel" });
+    } finally {
+      setIsCreatingChannel(false);
     }
   };
 
@@ -470,23 +482,29 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleAcceptInvite = async (inviteId: string) => {
+  const handleAcceptInvite = async (teamId: string) => {
+    setAcceptingId(teamId);
     try {
-      await apiClient.post(`/api/team/invite/accept`, { teamId: inviteId, status: "active" });
+      await apiClient.post(`/api/team/invite/accept`, { teamId, status: "active" });
       setNotification({ type: "success", message: "Invite accepted successfully" });
       getTeamInvites();
     } catch {
       setNotification({ type: "error", message: "Failed to accept invite" });
+    } finally {
+      setAcceptingId(null);
     }
   };
 
-  const handleDeclineInvite = async (inviteId: string) => {
+  const handleDeclineInvite = async (teamId: string) => {
+    setDecliningId(teamId);
     try {
-      await apiClient.post(`/api/team/invite/accept`, { teamId: inviteId, status: "decline" });
+      await apiClient.post(`/api/team/invite/accept`, { teamId, status: "decline" });
       setNotification({ type: "success", message: "Invite declined successfully" });
       getTeamInvites();
     } catch {
       setNotification({ type: "error", message: "Failed to decline invite" });
+    } finally {
+      setDecliningId(null);
     }
   };
 
@@ -637,8 +655,11 @@ export default function NotificationsPage() {
                     </div>
                   )}
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsCreateChannelOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-                    <Button onClick={handleCreateChannel} className="w-full sm:w-auto">Create Channel</Button>
+                    <Button variant="outline" onClick={() => setIsCreateChannelOpen(false)} className="w-full sm:w-auto" disabled={isCreatingChannel}>Cancel</Button>
+                    <Button onClick={handleCreateChannel} className="w-full sm:w-auto" disabled={isCreatingChannel}>
+                      {isCreatingChannel && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Channel
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -820,8 +841,11 @@ export default function NotificationsPage() {
                     </div>
                   </div>
                   <div className="flex flex-col-reverse sm:flex-row sm:justify-end gap-2">
-                    <Button variant="outline" onClick={() => setIsCreateRuleOpen(false)} className="w-full sm:w-auto">Cancel</Button>
-                    <Button onClick={handleCreateRule} className="w-full sm:w-auto">Create Rule</Button>
+                    <Button variant="outline" onClick={() => setIsCreateRuleOpen(false)} className="w-full sm:w-auto" disabled={isCreatingRule}>Cancel</Button>
+                    <Button onClick={handleCreateRule} className="w-full sm:w-auto" disabled={isCreatingRule}>
+                      {isCreatingRule && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Rule
+                    </Button>
                   </div>
                 </div>
               </DialogContent>
@@ -1229,18 +1253,20 @@ export default function NotificationsPage() {
                           <Button
                             size="sm"
                             className="flex-1 gap-1"
-                            onClick={() => handleAcceptInvite(invite.id)}
+                            onClick={() => handleAcceptInvite(invite.teamId)}
+                            disabled={acceptingId === invite.teamId || decliningId === invite.teamId}
                           >
-                            <CheckCircle2 className="h-4 w-4" />
+                            {acceptingId === invite.teamId ? <Loader2 className="h-4 w-4 animate-spin" /> : <CheckCircle2 className="h-4 w-4" />}
                             Accept
                           </Button>
                           <Button
                             size="sm"
                             variant="destructive"
                             className="flex-1 gap-1"
-                            onClick={() => handleDeclineInvite(invite.id)}
+                            onClick={() => handleDeclineInvite(invite.teamId)}
+                            disabled={acceptingId === invite.teamId || decliningId === invite.teamId}
                           >
-                            <XOctagon className="h-4 w-4" />
+                            {decliningId === invite.teamId ? <Loader2 className="h-4 w-4 animate-spin" /> : <XOctagon className="h-4 w-4" />}
                             Decline
                           </Button>
                         </div>

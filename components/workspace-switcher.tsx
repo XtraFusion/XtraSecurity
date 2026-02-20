@@ -92,9 +92,11 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
       await refreshWorkspaces();
 
       setSelectedWorkspace(mapped);
+      localStorage.setItem("selectedWorkspace", JSON.stringify(mapped));
       setShowNewWorkspaceDialog(false);
       setCreatingName("");
       setCreatingPlan("free");
+      window.location.reload();
     } catch (err) {
       console.error("Error creating workspace", err);
     } finally {
@@ -113,14 +115,20 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
             aria-label="Select a workspace"
             className={cn("w-full justify-between", className)}
           >
-            <Avatar className="mr-2 h-5 w-5">
-              <AvatarImage
-                src={`https://avatar.vercel.sh/${selectedWorkspace?.value}.png`}
-                alt={selectedWorkspace?.label}
-                className="grayscale"
-              />
-              <AvatarFallback>SC</AvatarFallback>
-            </Avatar>
+            {selectedWorkspace?.icon && !selectedWorkspace.icon.startsWith("http") ? (
+              <div className="mr-2 h-5 w-5 flex items-center justify-center text-sm">
+                {selectedWorkspace.icon}
+              </div>
+            ) : (
+              <Avatar className="mr-2 h-5 w-5">
+                <AvatarImage
+                  src={selectedWorkspace?.icon?.startsWith("http") ? selectedWorkspace.icon : `https://avatar.vercel.sh/${selectedWorkspace?.value}.png`}
+                  alt={selectedWorkspace?.label}
+                  className={selectedWorkspace?.icon?.startsWith("http") ? "object-cover" : "grayscale"}
+                />
+                <AvatarFallback>WS</AvatarFallback>
+              </Avatar>
+            )}
             <span className="truncate flex-1 text-left">
               {selectedWorkspace?.label || "Select workspace"}
             </span>
@@ -138,18 +146,26 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
                     key={workspace.value}
                     onSelect={() => {
                       setSelectedWorkspace(workspace);
+                      localStorage.setItem("selectedWorkspace", JSON.stringify(workspace));
                       setOpen(false);
+                      window.location.reload();
                     }}
                     className="text-sm"
                   >
-                    <Avatar className="mr-2 h-5 w-5">
-                      <AvatarImage
-                        src={`https://avatar.vercel.sh/${workspace.value}.png`}
-                        alt={workspace.label}
-                        className="grayscale"
-                      />
-                      <AvatarFallback>SC</AvatarFallback>
-                    </Avatar>
+                    {workspace.icon && !workspace.icon.startsWith("http") ? (
+                      <div className="mr-2 h-5 w-5 flex items-center justify-center text-sm">
+                        {workspace.icon}
+                      </div>
+                    ) : (
+                      <Avatar className="mr-2 h-5 w-5">
+                        <AvatarImage
+                          src={workspace.icon?.startsWith("http") ? workspace.icon : `https://avatar.vercel.sh/${workspace.value}.png`}
+                          alt={workspace.label}
+                          className={workspace.icon?.startsWith("http") ? "object-cover" : "grayscale"}
+                        />
+                        <AvatarFallback>WS</AvatarFallback>
+                      </Avatar>
+                    )}
                     {workspace.label}
                     <Check
                       className={cn(

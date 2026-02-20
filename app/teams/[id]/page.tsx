@@ -67,6 +67,7 @@ import {
   ArrowLeft,
   Sparkles,
   Activity,
+  Loader2,
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
@@ -195,6 +196,7 @@ const TeamDetail = () => {
     message: "",
     department: "",
   });
+  const [isInviting, setIsInviting] = useState(false);
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     type: "remove" | "role-change";
@@ -374,29 +376,40 @@ const TeamDetail = () => {
       return;
     }
 
-    const newMember: TeamMember = {
-      id: Date.now().toString(),
-      name: inviteForm.email.split("@")[0],
-      email: inviteForm.email,
-      teamId,
-      role: inviteForm.role,
-      status: "pending",
-      joinedAt: new Date().toISOString().split("T")[0],
-      lastActive: "Never",
-      projects: 0,
-      invitedBy: currentUser.name,
-      department: inviteForm.department,
-    };
-    console.log(newMember)
-    const resp = await apiClient.post("/api/team/invite", { member: newMember });
-    setMembers([...members, newMember]);
-    setInviteForm({ email: "", role: "viewer", message: "", department: "" });
-    setInviteDialogOpen(false);
+    setIsInviting(true);
+    try {
+      const newMember: TeamMember = {
+        id: Date.now().toString(),
+        name: inviteForm.email.split("@")[0],
+        email: inviteForm.email,
+        teamId,
+        role: inviteForm.role,
+        status: "pending",
+        joinedAt: new Date().toISOString().split("T")[0],
+        lastActive: "Never",
+        projects: 0,
+        invitedBy: currentUser.name,
+        department: inviteForm.department,
+      };
+      console.log(newMember)
+      const resp = await apiClient.post("/api/team/invite", { member: newMember });
+      setMembers([...members, newMember]);
+      setInviteForm({ email: "", role: "viewer", message: "", department: "" });
+      setInviteDialogOpen(false);
 
-    toast({
-      title: "Invitation sent",
-      description: `Invitation sent to ${inviteForm.email}`,
-    });
+      toast({
+        title: "Invitation sent",
+        description: `Invitation sent to ${inviteForm.email}`,
+      });
+    } catch (e: any) {
+      toast({
+        title: "Error",
+        description: e.response?.data?.error || "Failed to invite member",
+        variant: "destructive",
+      });
+    } finally {
+      setIsInviting(false);
+    }
   };
 
   const handleRoleChangeRequest = async (
@@ -699,7 +712,8 @@ const TeamDetail = () => {
                       >
                         Cancel
                       </Button>
-                      <Button onClick={handleInviteMember}>
+                      <Button onClick={handleInviteMember} disabled={isInviting}>
+                        {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                         Send Invitation
                       </Button>
                     </DialogFooter>
@@ -901,8 +915,6 @@ const TeamDetail = () => {
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Send Message</DropdownMenuItem>
                         {member.status === "pending" &&
                           canInviteMembers(currentUser.role) && (
                             <DropdownMenuItem

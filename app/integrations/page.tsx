@@ -32,6 +32,7 @@ import { toast } from "@/hooks/use-toast";
 import { Project } from "@/util/Interface";
 import { ProjectController } from "@/util/ProjectController";
 import { DashboardLayout } from "@/components/dashboard-layout";
+import { useUser } from "@/hooks/useUser";
 
 interface IntegrationStatus {
   connected: boolean;
@@ -51,6 +52,7 @@ interface GitHubRepo {
 }
 
 export default function IntegrationsPage() {
+  const { user, selectedWorkspace } = useUser();
   const [githubStatus, setGithubStatus] = useState<IntegrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -174,6 +176,26 @@ export default function IntegrationsPage() {
     }
   };
 
+  const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
+  const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+  const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
+
+  if (!hasAdminAccess) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+          <div className="p-4 rounded-full bg-destructive/10">
+            <Shield className="h-10 w-10 text-destructive" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Access Denied</h2>
+          <p className="text-muted-foreground max-w-md text-center">
+            You do not have permission to view integrations. This page is restricted to workspace admins and owners.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -227,8 +249,8 @@ export default function IntegrationsPage() {
 
             {/* GitHub Card */}
             <div className={`relative rounded-xl border p-5 transition-all duration-200 ${githubStatus?.connected
-                ? "border-green-500/30 bg-green-500/5"
-                : "border-border bg-card hover:border-primary/30"
+              ? "border-green-500/30 bg-green-500/5"
+              : "border-border bg-card hover:border-primary/30"
               }`}>
               {githubStatus?.connected && (
                 <div className="absolute top-3 right-3">

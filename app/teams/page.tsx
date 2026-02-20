@@ -55,8 +55,11 @@ import {
   Edit3,
   ArrowRight,
   ShieldCheck,
+  ArrowRight,
+  ShieldCheck,
   LayoutGrid,
-  List
+  List,
+  Loader2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
@@ -95,6 +98,7 @@ const Teams = () => {
     team?: Team;
   }>({ open: false });
   const [isLoading, setIsLoading] = useState(true);
+  const [isCreating, setIsCreating] = useState(false);
   const [newTeam, setNewTeam] = useState({
     name: "",
     description: "",
@@ -168,6 +172,7 @@ const Teams = () => {
       return;
     }
 
+    setIsCreating(true);
     try {
       const team: any = {
         name: newTeam.name,
@@ -198,6 +203,8 @@ const Teams = () => {
         description: error.response?.data?.error || "Failed to create team. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -379,7 +386,10 @@ const Teams = () => {
                   >
                     Cancel
                   </Button>
-                  <Button onClick={handleCreateTeam}>Create Team</Button>
+                  <Button onClick={handleCreateTeam} disabled={isCreating}>
+                    {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                    Create Team
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>

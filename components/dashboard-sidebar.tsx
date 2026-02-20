@@ -70,8 +70,12 @@ const NAV_GROUPS = [
 
 export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user } = useUser();
+    const { user, selectedWorkspace } = useUser();
     const { theme, setTheme } = useTheme();
+
+    const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
+    const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+    const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
 
     return (
         <div className={`flex flex-col h-full bg-card text-card-foreground border-r border-border ${className}`}>
@@ -100,6 +104,11 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                             </h4>
                             {group.items.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                                // Filter restricted links for non-admins in shared workspaces
+                                if (!hasAdminAccess && ["Integrations", "Settings", "Notifications", "Documentation"].includes(item.name)) {
+                                    if (["Integrations", "Settings"].includes(item.name)) return null;
+                                }
+
                                 return (
                                     <Link
                                         key={item.href}
@@ -142,9 +151,11 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                             {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                             <span>Toggle Theme</span>
                         </DropdownMenuItem>
-                        <DropdownMenuItem asChild>
-                            <Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
-                        </DropdownMenuItem>
+                        {hasAdminAccess && (
+                            <DropdownMenuItem asChild>
+                                <Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                            </DropdownMenuItem>
+                        )}
                         <DropdownMenuSeparator />
                         <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => logout()}>
                             <LogOut className="mr-2 h-4 w-4" /> Log out
