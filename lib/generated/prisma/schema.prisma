@@ -32,8 +32,16 @@ model User {
   breakGlassSessions BreakGlassSession[]
   integrations       Integration[]
 
+  // Access Review Relations
+  reviewsReceived AccessReview[]
+  reviewsGiven    AccessReview[] @relation("ReviewerRelation")
+
+  // Custom Auth Fields
+  password       String?
+  emailOtp       String?
+  emailOtpExpiry DateTime?
   // MFA Fields
-  mfaEnabled     Boolean  @default(false)
+  mfaEnabled     Boolean   @default(false)
   mfaSecret      String? // Encrypted TOTP secret
   mfaBackupCodes String[] // Encrypted backup codes
 
@@ -114,6 +122,7 @@ model Workspace {
   id               String    @id @default(auto()) @map("_id") @db.ObjectId
   name             String
   description      String
+  icon             String?
   workspaceType    String // "personal" or "shared"
   createdBy        String    @db.ObjectId
   user             User      @relation(fields: [createdBy], references: [id])
@@ -554,4 +563,20 @@ model ServiceAccount {
   createdBy String?
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+// ACCESS REVIEW MODEL
+model AccessReview {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  reviewerId String   @db.ObjectId
+  status     String // "approved", "revoked"
+  notes      String?
+  reviewedAt DateTime @default(now())
+
+  user     User @relation(fields: [userId], references: [id])
+  reviewer User @relation("ReviewerRelation", fields: [reviewerId], references: [id])
+
+  @@index([userId])
+  @@index([reviewedAt])
 }

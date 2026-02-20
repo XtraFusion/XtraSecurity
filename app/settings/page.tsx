@@ -10,10 +10,12 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { User, Lock, Bell, Smartphone, Monitor } from "lucide-react";
+import { User, Lock, Bell, Smartphone, Monitor, Loader2, Shield, Briefcase } from "lucide-react";
 import { useTheme } from "next-themes";
+import { useUser } from "@/hooks/useUser";
 
 export default function SettingsPage() {
+    const { user: globalUser, selectedWorkspace } = useUser();
     const { theme, setTheme } = useTheme();
     const [loading, setLoading] = useState(true);
     const [user, setUser] = useState<any>(null);
@@ -22,10 +24,21 @@ export default function SettingsPage() {
     const [name, setName] = useState("");
     const [email, setEmail] = useState("");
     const [mfaEnabled, setMfaEnabled] = useState(false);
+    const [isUpdatingProfile, setIsUpdatingProfile] = useState(false);
+    const [isUpdatingSecurity, setIsUpdatingSecurity] = useState(false);
+
+    // Workspace specific states
+    const [workspaceName, setWorkspaceName] = useState("");
+    const [workspaceIcon, setWorkspaceIcon] = useState("");
+    const [isUpdatingWorkspace, setIsUpdatingWorkspace] = useState(false);
 
     useEffect(() => {
         fetchSettings();
-    }, []);
+        if (selectedWorkspace) {
+            setWorkspaceName(selectedWorkspace.name || "");
+            setWorkspaceIcon(selectedWorkspace.icon || "");
+        }
+    }, [selectedWorkspace]);
 
     const fetchSettings = async () => {
         try {
@@ -47,6 +60,7 @@ export default function SettingsPage() {
 
     const handleProfileUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
+        setIsUpdatingProfile(true);
         try {
             const res = await fetch("/api/user/settings", {
                 method: "PATCH",
@@ -64,11 +78,14 @@ export default function SettingsPage() {
             }
         } catch (error) {
             toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+        } finally {
+            setIsUpdatingProfile(false);
         }
     };
 
     const handleSecurityUpdate = async (newMfaStatus: boolean) => {
         // Toggle MFA
+        setIsUpdatingSecurity(true);
         try {
             const res = await fetch("/api/user/settings", {
                 method: "PATCH",
@@ -91,8 +108,61 @@ export default function SettingsPage() {
         } catch (error) {
             // Revert state if needed, but handled by opt-in usually
             toast({ title: "Error", description: "Failed to update security settings.", variant: "destructive" });
+        } finally {
+            setIsUpdatingSecurity(false);
         }
     };
+
+    const handleWorkspaceUpdate = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!selectedWorkspace?.id) return;
+
+        setIsUpdatingWorkspace(true);
+        try {
+            const res = await fetch("/api/workspace", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    id: selectedWorkspace.id,
+                    name: workspaceName,
+                    icon: workspaceIcon
+                })
+            });
+
+            if (res.ok) {
+                toast({ title: "Workspace Updated", description: "Your workspace settings have been saved." });
+                // We could force a reload here, or let the user context auto-refresh if we implement swr or equivalent
+                // For now a soft reload of the page to hydrate new context:
+                window.location.reload();
+            } else {
+                throw new Error("Failed to update workspace");
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to update workspace settings.", variant: "destructive" });
+        } finally {
+            setIsUpdatingWorkspace(false);
+        }
+    };
+
+    const isWorkspaceOwner = selectedWorkspace?.createdBy === globalUser?.id;
+    const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+    const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
+
+    if (!hasAdminAccess) {
+        return (
+            <DashboardLayout>
+                <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+                    <div className="p-4 rounded-full bg-destructive/10">
+                        <Shield className="h-10 w-10 text-destructive" />
+                    </div>
+                    <h2 className="text-2xl font-bold tracking-tight">Access Denied</h2>
+                    <p className="text-muted-foreground max-w-md text-center">
+                        You do not have permission to view settings. This page is restricted to workspace admins and owners.
+                    </p>
+                </div>
+            </DashboardLayout>
+        );
+    }
 
     if (loading) {
         return (
@@ -120,6 +190,9 @@ export default function SettingsPage() {
                         <TabsTrigger value="general" className="gap-2"><User className="h-4 w-4" /> General</TabsTrigger>
                         <TabsTrigger value="security" className="gap-2"><Lock className="h-4 w-4" /> Security</TabsTrigger>
                         <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>
+                        {hasAdminAccess && (
+                            <TabsTrigger value="workspace" className="gap-2"><Briefcase className="h-4 w-4" /> Workspace</TabsTrigger>
+                        )}
                     </TabsList>
 
                     {/* GENERAL TAB */}
@@ -136,11 +209,15 @@ export default function SettingsPage() {
                                         <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
                                     </div>
                                     <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                                        <Label htmlFor="email">Registered Email</Label>
+                                        <Input id="email" type="email" value={email} disabled />
+                                        <p className="text-xs text-muted-foreground">Your email address cannot be changed.</p>
                                     </div>
                                     <div className="flex justify-end">
-                                        <Button type="submit">Save Changes</Button>
+                                        <Button type="submit" disabled={isUpdatingProfile}>
+                                            {isUpdatingProfile && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                            Save Changes
+                                        </Button>
                                     </div>
                                 </form>
                             </CardContent>
@@ -184,7 +261,7 @@ export default function SettingsPage() {
                                             <p className="text-sm text-muted-foreground">Use an app like Google Authenticator to generate verification codes.</p>
                                         </div>
                                     </div>
-                                    <Switch checked={mfaEnabled} onCheckedChange={handleSecurityUpdate} />
+                                    <Switch checked={mfaEnabled} onCheckedChange={handleSecurityUpdate} disabled={isUpdatingSecurity} />
                                 </div>
                             </CardContent>
                         </Card>
@@ -245,6 +322,43 @@ export default function SettingsPage() {
                             </CardContent>
                         </Card>
                     </TabsContent>
+
+                    {/* WORKSPACE TAB */}
+                    {hasAdminAccess && (
+                        <TabsContent value="workspace" className="space-y-4">
+                            <Card>
+                                <CardHeader>
+                                    <CardTitle>Workspace Customization</CardTitle>
+                                    <CardDescription>Update your workspace's primary details.</CardDescription>
+                                </CardHeader>
+                                <CardContent>
+                                    <form onSubmit={handleWorkspaceUpdate} className="space-y-4">
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="wsName">Workspace Name</Label>
+                                            <Input id="wsName" value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} required />
+                                        </div>
+                                        <div className="grid gap-2">
+                                            <Label htmlFor="wsIcon">Workspace Icon / Emoji</Label>
+                                            <Input
+                                                id="wsIcon"
+                                                value={workspaceIcon}
+                                                onChange={(e) => setWorkspaceIcon(e.target.value)}
+                                                placeholder="e.g. 🚀, 💼, or an image URL"
+                                                maxLength={128}
+                                            />
+                                            <p className="text-xs text-muted-foreground">This icon shows up in the sidebar dropdown.</p>
+                                        </div>
+                                        <div className="flex justify-end">
+                                            <Button type="submit" disabled={isUpdatingWorkspace}>
+                                                {isUpdatingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                                Save Workspace
+                                            </Button>
+                                        </div>
+                                    </form>
+                                </CardContent>
+                            </Card>
+                        </TabsContent>
+                    )}
                 </Tabs>
             </div>
         </DashboardLayout>

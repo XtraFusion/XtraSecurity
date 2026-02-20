@@ -70,13 +70,13 @@ export const authOptions: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" },
+        otp: { label: "OTP", type: "text" },
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null
+        if (!credentials?.email) return null;
 
-        // Demo admin credentials
-        if (credentials.email === "admin@example.com" && credentials.password === "password") {
+        // Legacy Demo admin credentials bypass
+        if (credentials.email === "admin@example.com" && credentials.otp === "password") {
           try {
             let user = await prisma.user.findUnique({ where: { email: credentials.email } })
 
@@ -129,6 +129,41 @@ export const authOptions: NextAuthOptions = {
             console.error("[auth] Database error during credentials auth:", error)
             return null
           }
+        }
+
+        // Standard OTP Flow
+        if (!credentials.otp) return null;
+
+        try {
+          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+          if (!user || !user.emailOtp || !user.emailOtpExpiry) {
+            return null; // Invalid email or OTP not requested
+          }
+
+          if (user.emailOtp !== credentials.otp) {
+             return null; // Incorrect OTP
+          }
+
+          if (new Date() > user.emailOtpExpiry) {
+             return null; // Expired OTP
+          }
+
+          // Valid! Clear the OTP.
+          await prisma.user.update({
+            where: { id: user.id },
+            data: { emailOtp: null, emailOtpExpiry: null },
+          });
+
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            role: user.role,
+            tier: user.tier || "free",
+          };
+        } catch (error) {
+           console.error("[auth] OTP validation error:", error);
+           return null;
         }
 
         return null

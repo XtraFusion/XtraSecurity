@@ -9,7 +9,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Copy, Plus, Trash2, Key } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Copy, Plus, Trash2, Key, Loader2, Shield } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { format } from "date-fns";
 import axios from "axios";
@@ -41,6 +42,8 @@ export default function ProfilePage() {
   const [newKeyLabel, setNewKeyLabel] = useState("");
   const [generatedKey, setGeneratedKey] = useState<string | null>(null);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
 
   const { user, selectedWorkspace, loading: userLoading } = useGlobalContext();
 
@@ -63,12 +66,15 @@ export default function ProfilePage() {
   };
 
   const handleDelete = async (id: string) => {
+    setDeletingId(id);
     try {
       await axios.delete(`/api/auth/api-keys/${id}`);
       setKeys(keys.filter((k) => k.id !== id));
       toast.success("API Key revoked");
     } catch (error) {
       toast.error("Failed to revoke key");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -78,6 +84,7 @@ export default function ProfilePage() {
       return;
     }
 
+    setIsGenerating(true);
     try {
       const response = await axios.post("/api/auth/api-keys", {
         label: newKeyLabel,
@@ -90,6 +97,8 @@ export default function ProfilePage() {
       toast.success("API Key generated");
     } catch (error) {
       toast.error("Failed to generate key");
+    } finally {
+      setIsGenerating(false);
     }
   };
 
@@ -97,6 +106,26 @@ export default function ProfilePage() {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard");
   };
+
+  const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
+  const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+  const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
+
+  if (!hasAdminAccess) {
+    return (
+      <DashboardLayout>
+        <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
+          <div className="p-4 rounded-full bg-destructive/10">
+            <Shield className="h-10 w-10 text-destructive" />
+          </div>
+          <h2 className="text-2xl font-bold tracking-tight">Access Denied</h2>
+          <p className="text-muted-foreground max-w-md text-center">
+            You do not have permission to view this profile. This page is restricted to workspace admins and owners.
+          </p>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout>
@@ -202,7 +231,10 @@ export default function ProfilePage() {
 
                   <DialogFooter>
                     {!generatedKey ? (
-                      <Button onClick={handleCreate}>Generate</Button>
+                      <Button onClick={handleCreate} disabled={isGenerating}>
+                        {isGenerating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Generate
+                      </Button>
                     ) : (
                       <Button onClick={() => setIsGenerateOpen(false)}>Done</Button>
                     )}
@@ -247,9 +279,14 @@ export default function ProfilePage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDelete(key.id)}
+                          disabled={deletingId === key.id}
                           className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
                         >
-                          <Trash2 className="h-4 w-4" />
+                          {deletingId === key.id ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                          ) : (
+                            <Trash2 className="h-4 w-4" />
+                          )}
                         </Button>
                       </TableCell>
                     </TableRow>

@@ -26,7 +26,8 @@ import {
   Key,
   Clock,
   ShieldOff,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import Link from "next/link";
@@ -70,6 +71,7 @@ export default function ProjectsPage() {
     description: "",
   });
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const loadProjects = async () => {
@@ -123,6 +125,7 @@ export default function ProjectsPage() {
       secrets: [],
     };
 
+    setIsCreating(true);
     try {
       await ProjectController.createProject(project); // Assuming this returns void or the created project?
       setNewProject({ name: "", description: "" });
@@ -132,6 +135,8 @@ export default function ProjectsPage() {
     } catch (e) {
       console.error("Error creating project", e);
       toast.error("Failed to create project");
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -264,7 +269,10 @@ export default function ProjectsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateProject}>Create Project</Button>
+                    <Button onClick={handleCreateProject} disabled={isCreating}>
+                      {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Project
+                    </Button>
                   </div>
                 </div>
               </DialogContent>

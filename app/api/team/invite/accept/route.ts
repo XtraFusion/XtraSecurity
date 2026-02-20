@@ -41,9 +41,8 @@ export async function POST(req: Request) {
 
       // notify inviter if available
       try {
-        const teamUser = await prisma.teamUser.findUnique({ where: { id: teamId } });
-        if (teamUser && (teamUser as any).invitedBy) {
-          const inviter = await prisma.user.findUnique({ where: { id: (teamUser as any).invitedBy } });
+        if (acceptInvite.invitedBy) {
+          const inviter = await prisma.user.findUnique({ where: { id: acceptInvite.invitedBy } });
           if (inviter) {
             await prisma.notification.create({
               data: {

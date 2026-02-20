@@ -24,6 +24,24 @@ const {id} = await params;
         },
       },
     });
+
+    if (data) {
+      // Check current user's role in the team
+      const myMembership = data.members.find(
+        (m) => m.user.id === session.user.id
+      );
+
+      // If they are only a viewer, restrict visibility of other members
+      if (myMembership?.role === "viewer") {
+        data.members = data.members.filter(
+          (m) =>
+            m.role === "owner" ||
+            m.role === "admin" ||
+            m.user.id === session.user.id
+        );
+      }
+    }
+
     return NextResponse.json(data, { status: 200 });
   } catch (error: any) {
     console.error("GET /team error:", error);

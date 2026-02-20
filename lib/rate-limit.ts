@@ -96,8 +96,10 @@ export async function checkRateLimit(userId: string, tier: Tier = 'free'): Promi
         tier
     };
 
-  } catch (err) {
-    console.error('Rate Limit Error:', err);
+  } catch (err: any) {
+    if (err && err.message && !err.message.includes("Stream isn't writeable")) {
+        console.error('Rate Limit Error:', err);
+    }
     return {
         success: true,
         limit: dailyConfig.points,
@@ -122,8 +124,10 @@ export async function getRateLimitStats(userId: string, tier: Tier = 'free'): Pr
       tier
     };
 
-  } catch (err) {
-    console.error('Rate Limit Stats Error:', err);
+  } catch (err: any) {
+    if (err && err.message && !err.message.includes("Stream isn't writeable")) {
+        console.error('Rate Limit Stats Error:', err);
+    }
     return {
         success: true,
         limit: dailyConfig.points,

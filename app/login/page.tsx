@@ -15,6 +15,8 @@ import Link from "next/link"
 export default function LoginPage() {
   const [email, setEmail] = useState("admin@example.com")
   const [password, setPassword] = useState("password")
+  const [otp, setOtp] = useState("")
+  const [step, setStep] = useState<1 | 2>(1)
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
@@ -34,7 +36,7 @@ export default function LoginPage() {
     }
   }, [session])
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
     setIsLoading(true)
@@ -52,14 +54,50 @@ export default function LoginPage() {
     }
 
     try {
+      // Step 1: Verify Password and Trigger OTP Email
+      const res = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password })
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        throw new Error(data.message || "Invalid credentials")
+      }
+
+      if (data.requireOtp) {
+        setStep(2) // Move to OTP entry step
+      }
+    } catch (err: any) {
+      setError(err.message || "An error occurred. Please try again.")
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleOtpSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError("")
+    setIsLoading(true)
+
+    if (!otp) {
+      setError("Please enter the verification code")
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      // Step 2: Verify OTP via NextAuth credentials provider
       const result = await signIn("credentials", {
         email,
-        password,
+        otp, // Note: passing OTP down to the 'otp' credential field
         redirect: false,
       })
 
       if (result?.error) {
-        setError("Invalid email or password")
+        setError("Invalid or expired verification code")
       } else if (result?.ok) {
         window.location.href = "/dashboard"
       }
@@ -100,83 +138,110 @@ export default function LoginPage() {
           </div>
 
           <div className="flex flex-col space-y-2 text-center">
-            <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+            <h1 className="text-2xl font-semibold tracking-tight">
+              {step === 1 ? "Sign in to your account" : "Verify Your Identity"}
+            </h1>
             <p className="text-sm text-muted-foreground">
-              Enter your email below to create your account
+              {step === 1 ? "Enter your email below to log in" : `Enter the 6-digit code sent to ${email}`}
             </p>
           </div>
 
           <div className="grid gap-6">
-            <form onSubmit={handleSubmit}>
+            <form onSubmit={step === 1 ? handlePasswordSubmit : handleOtpSubmit}>
               <div className="grid gap-4">
                 {error && (
                   <Alert variant="destructive">
                     <AlertDescription>{error}</AlertDescription>
                   </Alert>
                 )}
-                <div className="grid gap-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    placeholder="name@example.com"
-                    type="email"
-                    autoCapitalize="none"
-                    autoComplete="email"
-                    autoCorrect="off"
-                    disabled={isLoading}
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                  />
-                </div>
-                <div className="grid gap-2">
-                  <Label htmlFor="password">Password</Label>
-                  <div className="relative">
+
+                {step === 1 ? (
+                  <>
+                    <div className="grid gap-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        placeholder="name@example.com"
+                        type="email"
+                        autoCapitalize="none"
+                        autoComplete="email"
+                        autoCorrect="off"
+                        disabled={isLoading}
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="password">Password</Label>
+                      <div className="relative">
+                        <Input
+                          id="password"
+                          placeholder="Password"
+                          type={showPassword ? "text" : "password"}
+                          autoCapitalize="none"
+                          autoCorrect="off"
+                          disabled={isLoading}
+                          value={password}
+                          onChange={(e) => setPassword(e.target.value)}
+                          className="pr-10"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                          onClick={() => setShowPassword(!showPassword)}
+                        >
+                          {showPassword ? (
+                            <EyeOff className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <Eye className="h-4 w-4 text-muted-foreground" />
+                          )}
+                        </Button>
+                      </div>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox
+                          id="remember"
+                          checked={rememberMe}
+                          onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                        />
+                        <Label htmlFor="remember" className="text-sm font-normal">
+                          Remember me
+                        </Label>
+                      </div>
+                      <Link href="#" className="text-sm font-medium hover:underline">
+                        Forgot password?
+                      </Link>
+                    </div>
+                  </>
+                ) : (
+                  <div className="grid gap-2">
+                    <Label htmlFor="otp">Verification Code</Label>
                     <Input
-                      id="password"
-                      placeholder="Password"
-                      type={showPassword ? "text" : "password"}
+                      id="otp"
+                      placeholder="123456"
+                      type="text"
+                      inputMode="numeric"
+                      pattern="[0-9]*"
+                      maxLength={6}
                       autoCapitalize="none"
                       autoCorrect="off"
+                      autoComplete="one-time-code"
                       disabled={isLoading}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      className="pr-10"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value)}
+                      className="text-center font-mono text-lg tracking-widest"
                     />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-4 w-4 text-muted-foreground" />
-                      ) : (
-                        <Eye className="h-4 w-4 text-muted-foreground" />
-                      )}
-                    </Button>
                   </div>
-                </div>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="remember"
-                      checked={rememberMe}
-                      onCheckedChange={(checked) => setRememberMe(checked as boolean)}
-                    />
-                    <Label htmlFor="remember" className="text-sm font-normal">
-                      Remember me
-                    </Label>
-                  </div>
-                  <Link href="#" className="text-sm font-medium hover:underline">
-                    Forgot password?
-                  </Link>
-                </div>
-                <Button disabled={isLoading}>
+                )}
+
+                <Button disabled={isLoading} className="mt-2 text-white bg-primary hover:bg-primary/90">
                   {isLoading && (
-                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent"></div>
+                    <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   )}
-                  Sign In with Email
+                  {step === 1 ? "Sign In" : "Verify & Log In"}
                 </Button>
               </div>
             </form>

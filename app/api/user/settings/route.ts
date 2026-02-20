@@ -49,10 +49,10 @@ export async function PATCH(req: Request) {
         if (!type || !data) return NextResponse.json({ error: "Invalid request" }, { status: 400 });
 
         if (type === "profile") {
-            const { name, email } = data;
+            const { name } = data;
             const updatedUser = await prisma.user.update({
                 where: { id: session.user.id },
-                data: { name, email }
+                data: { name } // ONLY update name, never email
             });
             return NextResponse.json({ success: true, user: updatedUser });
         }

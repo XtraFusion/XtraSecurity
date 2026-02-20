@@ -4166,6 +4166,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     role: string | null
+    password: string | null
+    emailOtp: string | null
+    emailOtpExpiry: Date | null
     mfaEnabled: boolean | null
     mfaSecret: string | null
     tier: string | null
@@ -4180,6 +4183,9 @@ export namespace Prisma {
     createdAt: Date | null
     updatedAt: Date | null
     role: string | null
+    password: string | null
+    emailOtp: string | null
+    emailOtpExpiry: Date | null
     mfaEnabled: boolean | null
     mfaSecret: string | null
     tier: string | null
@@ -4194,6 +4200,9 @@ export namespace Prisma {
     createdAt: number
     updatedAt: number
     role: number
+    password: number
+    emailOtp: number
+    emailOtpExpiry: number
     mfaEnabled: number
     mfaSecret: number
     mfaBackupCodes: number
@@ -4212,6 +4221,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    password?: true
+    emailOtp?: true
+    emailOtpExpiry?: true
     mfaEnabled?: true
     mfaSecret?: true
     tier?: true
@@ -4226,6 +4238,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    password?: true
+    emailOtp?: true
+    emailOtpExpiry?: true
     mfaEnabled?: true
     mfaSecret?: true
     tier?: true
@@ -4240,6 +4255,9 @@ export namespace Prisma {
     createdAt?: true
     updatedAt?: true
     role?: true
+    password?: true
+    emailOtp?: true
+    emailOtpExpiry?: true
     mfaEnabled?: true
     mfaSecret?: true
     mfaBackupCodes?: true
@@ -4329,6 +4347,9 @@ export namespace Prisma {
     createdAt: Date
     updatedAt: Date
     role: string
+    password: string | null
+    emailOtp: string | null
+    emailOtpExpiry: Date | null
     mfaEnabled: boolean
     mfaSecret: string | null
     mfaBackupCodes: string[]
@@ -4362,6 +4383,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    password?: boolean
+    emailOtp?: boolean
+    emailOtpExpiry?: boolean
     mfaEnabled?: boolean
     mfaSecret?: boolean
     mfaBackupCodes?: boolean
@@ -4396,6 +4420,9 @@ export namespace Prisma {
     createdAt?: boolean
     updatedAt?: boolean
     role?: boolean
+    password?: boolean
+    emailOtp?: boolean
+    emailOtpExpiry?: boolean
     mfaEnabled?: boolean
     mfaSecret?: boolean
     mfaBackupCodes?: boolean
@@ -4403,7 +4430,7 @@ export namespace Prisma {
     tier?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "mfaEnabled" | "mfaSecret" | "mfaBackupCodes" | "ipAllowlist" | "tier", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "password" | "emailOtp" | "emailOtpExpiry" | "mfaEnabled" | "mfaSecret" | "mfaBackupCodes" | "ipAllowlist" | "tier", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -4451,6 +4478,9 @@ export namespace Prisma {
       createdAt: Date
       updatedAt: Date
       role: string
+      password: string | null
+      emailOtp: string | null
+      emailOtpExpiry: Date | null
       mfaEnabled: boolean
       mfaSecret: string | null
       mfaBackupCodes: string[]
@@ -4871,6 +4901,9 @@ export namespace Prisma {
     readonly createdAt: FieldRef<"User", 'DateTime'>
     readonly updatedAt: FieldRef<"User", 'DateTime'>
     readonly role: FieldRef<"User", 'String'>
+    readonly password: FieldRef<"User", 'String'>
+    readonly emailOtp: FieldRef<"User", 'String'>
+    readonly emailOtpExpiry: FieldRef<"User", 'DateTime'>
     readonly mfaEnabled: FieldRef<"User", 'Boolean'>
     readonly mfaSecret: FieldRef<"User", 'String'>
     readonly mfaBackupCodes: FieldRef<"User", 'String[]'>
@@ -7927,6 +7960,7 @@ export namespace Prisma {
     id: string | null
     name: string | null
     description: string | null
+    icon: string | null
     workspaceType: string | null
     createdBy: string | null
     subscriptionPlan: string | null
@@ -7940,6 +7974,7 @@ export namespace Prisma {
     id: string | null
     name: string | null
     description: string | null
+    icon: string | null
     workspaceType: string | null
     createdBy: string | null
     subscriptionPlan: string | null
@@ -7953,6 +7988,7 @@ export namespace Prisma {
     id: number
     name: number
     description: number
+    icon: number
     workspaceType: number
     createdBy: number
     subscriptionPlan: number
@@ -7976,6 +8012,7 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
+    icon?: true
     workspaceType?: true
     createdBy?: true
     subscriptionPlan?: true
@@ -7989,6 +8026,7 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
+    icon?: true
     workspaceType?: true
     createdBy?: true
     subscriptionPlan?: true
@@ -8002,6 +8040,7 @@ export namespace Prisma {
     id?: true
     name?: true
     description?: true
+    icon?: true
     workspaceType?: true
     createdBy?: true
     subscriptionPlan?: true
@@ -8102,6 +8141,7 @@ export namespace Prisma {
     id: string
     name: string
     description: string
+    icon: string | null
     workspaceType: string
     createdBy: string
     subscriptionPlan: string
@@ -8134,6 +8174,7 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
+    icon?: boolean
     workspaceType?: boolean
     createdBy?: boolean
     subscriptionPlan?: boolean
@@ -8152,6 +8193,7 @@ export namespace Prisma {
     id?: boolean
     name?: boolean
     description?: boolean
+    icon?: boolean
     workspaceType?: boolean
     createdBy?: boolean
     subscriptionPlan?: boolean
@@ -8161,7 +8203,7 @@ export namespace Prisma {
     updatedAt?: boolean
   }
 
-  export type WorkspaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "workspaceType" | "createdBy" | "subscriptionPlan" | "projectLimit" | "subscriptionEnd" | "createdAt" | "updatedAt", ExtArgs["result"]["workspace"]>
+  export type WorkspaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "icon" | "workspaceType" | "createdBy" | "subscriptionPlan" | "projectLimit" | "subscriptionEnd" | "createdAt" | "updatedAt", ExtArgs["result"]["workspace"]>
   export type WorkspaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     projects?: boolean | Workspace$projectsArgs<ExtArgs>
@@ -8178,6 +8220,7 @@ export namespace Prisma {
       id: string
       name: string
       description: string
+      icon: string | null
       workspaceType: string
       createdBy: string
       subscriptionPlan: string
@@ -8582,6 +8625,7 @@ export namespace Prisma {
     readonly id: FieldRef<"Workspace", 'String'>
     readonly name: FieldRef<"Workspace", 'String'>
     readonly description: FieldRef<"Workspace", 'String'>
+    readonly icon: FieldRef<"Workspace", 'String'>
     readonly workspaceType: FieldRef<"Workspace", 'String'>
     readonly createdBy: FieldRef<"Workspace", 'String'>
     readonly subscriptionPlan: FieldRef<"Workspace", 'String'>
@@ -38139,6 +38183,9 @@ export namespace Prisma {
     createdAt: 'createdAt',
     updatedAt: 'updatedAt',
     role: 'role',
+    password: 'password',
+    emailOtp: 'emailOtp',
+    emailOtpExpiry: 'emailOtpExpiry',
     mfaEnabled: 'mfaEnabled',
     mfaSecret: 'mfaSecret',
     mfaBackupCodes: 'mfaBackupCodes',
@@ -38202,6 +38249,7 @@ export namespace Prisma {
     id: 'id',
     name: 'name',
     description: 'description',
+    icon: 'icon',
     workspaceType: 'workspaceType',
     createdBy: 'createdBy',
     subscriptionPlan: 'subscriptionPlan',
@@ -38735,6 +38783,9 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     role?: StringFilter<"User"> | string
+    password?: StringNullableFilter<"User"> | string | null
+    emailOtp?: StringNullableFilter<"User"> | string | null
+    emailOtpExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     mfaEnabled?: BoolFilter<"User"> | boolean
     mfaSecret?: StringNullableFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
@@ -38766,6 +38817,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    password?: SortOrder
+    emailOtp?: SortOrder
+    emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
@@ -38800,6 +38854,9 @@ export namespace Prisma {
     createdAt?: DateTimeFilter<"User"> | Date | string
     updatedAt?: DateTimeFilter<"User"> | Date | string
     role?: StringFilter<"User"> | string
+    password?: StringNullableFilter<"User"> | string | null
+    emailOtp?: StringNullableFilter<"User"> | string | null
+    emailOtpExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     mfaEnabled?: BoolFilter<"User"> | boolean
     mfaSecret?: StringNullableFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
@@ -38831,6 +38888,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    password?: SortOrder
+    emailOtp?: SortOrder
+    emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
@@ -38853,6 +38913,9 @@ export namespace Prisma {
     createdAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"User"> | Date | string
     role?: StringWithAggregatesFilter<"User"> | string
+    password?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailOtp?: StringNullableWithAggregatesFilter<"User"> | string | null
+    emailOtpExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     mfaEnabled?: BoolWithAggregatesFilter<"User"> | boolean
     mfaSecret?: StringNullableWithAggregatesFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
@@ -39113,6 +39176,7 @@ export namespace Prisma {
     id?: StringFilter<"Workspace"> | string
     name?: StringFilter<"Workspace"> | string
     description?: StringFilter<"Workspace"> | string
+    icon?: StringNullableFilter<"Workspace"> | string | null
     workspaceType?: StringFilter<"Workspace"> | string
     createdBy?: StringFilter<"Workspace"> | string
     subscriptionPlan?: StringFilter<"Workspace"> | string
@@ -39128,6 +39192,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    icon?: SortOrder
     workspaceType?: SortOrder
     createdBy?: SortOrder
     subscriptionPlan?: SortOrder
@@ -39146,6 +39211,7 @@ export namespace Prisma {
     NOT?: WorkspaceWhereInput | WorkspaceWhereInput[]
     name?: StringFilter<"Workspace"> | string
     description?: StringFilter<"Workspace"> | string
+    icon?: StringNullableFilter<"Workspace"> | string | null
     workspaceType?: StringFilter<"Workspace"> | string
     createdBy?: StringFilter<"Workspace"> | string
     subscriptionPlan?: StringFilter<"Workspace"> | string
@@ -39161,6 +39227,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    icon?: SortOrder
     workspaceType?: SortOrder
     createdBy?: SortOrder
     subscriptionPlan?: SortOrder
@@ -39182,6 +39249,7 @@ export namespace Prisma {
     id?: StringWithAggregatesFilter<"Workspace"> | string
     name?: StringWithAggregatesFilter<"Workspace"> | string
     description?: StringWithAggregatesFilter<"Workspace"> | string
+    icon?: StringNullableWithAggregatesFilter<"Workspace"> | string | null
     workspaceType?: StringWithAggregatesFilter<"Workspace"> | string
     createdBy?: StringWithAggregatesFilter<"Workspace"> | string
     subscriptionPlan?: StringWithAggregatesFilter<"Workspace"> | string
@@ -41330,6 +41398,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -41361,6 +41432,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -41391,6 +41465,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -41421,6 +41498,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -41452,6 +41532,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -41467,6 +41550,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -41482,6 +41568,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -41785,6 +41874,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     subscriptionPlan?: string
     projectLimit?: number
@@ -41799,6 +41889,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     createdBy: string
     subscriptionPlan?: string
@@ -41812,6 +41903,7 @@ export namespace Prisma {
   export type WorkspaceUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
@@ -41825,6 +41917,7 @@ export namespace Prisma {
   export type WorkspaceUncheckedUpdateInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     createdBy?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
@@ -41839,6 +41932,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     createdBy: string
     subscriptionPlan?: string
@@ -41851,6 +41945,7 @@ export namespace Prisma {
   export type WorkspaceUpdateManyMutationInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
@@ -41862,6 +41957,7 @@ export namespace Prisma {
   export type WorkspaceUncheckedUpdateManyInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     createdBy?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
@@ -44282,6 +44378,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    password?: SortOrder
+    emailOtp?: SortOrder
+    emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
@@ -44298,6 +44397,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    password?: SortOrder
+    emailOtp?: SortOrder
+    emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     tier?: SortOrder
@@ -44312,6 +44414,9 @@ export namespace Prisma {
     createdAt?: SortOrder
     updatedAt?: SortOrder
     role?: SortOrder
+    password?: SortOrder
+    emailOtp?: SortOrder
+    emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     tier?: SortOrder
@@ -44632,6 +44737,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    icon?: SortOrder
     workspaceType?: SortOrder
     createdBy?: SortOrder
     subscriptionPlan?: SortOrder
@@ -44649,6 +44755,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    icon?: SortOrder
     workspaceType?: SortOrder
     createdBy?: SortOrder
     subscriptionPlan?: SortOrder
@@ -44662,6 +44769,7 @@ export namespace Prisma {
     id?: SortOrder
     name?: SortOrder
     description?: SortOrder
+    icon?: SortOrder
     workspaceType?: SortOrder
     createdBy?: SortOrder
     subscriptionPlan?: SortOrder
@@ -48366,6 +48474,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     subscriptionPlan?: string
     projectLimit?: number
@@ -48379,6 +48488,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     subscriptionPlan?: string
     projectLimit?: number
@@ -48858,6 +48968,7 @@ export namespace Prisma {
     id?: StringFilter<"Workspace"> | string
     name?: StringFilter<"Workspace"> | string
     description?: StringFilter<"Workspace"> | string
+    icon?: StringNullableFilter<"Workspace"> | string | null
     workspaceType?: StringFilter<"Workspace"> | string
     createdBy?: StringFilter<"Workspace"> | string
     subscriptionPlan?: StringFilter<"Workspace"> | string
@@ -49172,6 +49283,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49202,6 +49316,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49247,6 +49364,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49276,6 +49396,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49306,6 +49429,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49336,6 +49462,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49448,6 +49577,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49477,6 +49609,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49523,6 +49658,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49553,6 +49691,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -49583,6 +49724,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     subscriptionPlan?: string
     projectLimit?: number
@@ -49596,6 +49738,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     createdBy: string
     subscriptionPlan?: string
@@ -49889,6 +50032,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49918,6 +50064,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -49953,6 +50102,7 @@ export namespace Prisma {
   export type WorkspaceUpdateWithoutProjectsInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
@@ -49965,6 +50115,7 @@ export namespace Prisma {
   export type WorkspaceUncheckedUpdateWithoutProjectsInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     createdBy?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
@@ -51252,6 +51403,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51282,6 +51436,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51360,6 +51517,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51389,6 +51549,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51611,6 +51774,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51641,6 +51807,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51686,6 +51855,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51715,6 +51887,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51745,6 +51920,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51775,6 +51953,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51820,6 +52001,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51849,6 +52033,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51879,6 +52066,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51909,6 +52099,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -51954,6 +52147,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -51983,6 +52179,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52013,6 +52212,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52043,6 +52245,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52088,6 +52293,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52117,6 +52325,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52147,6 +52358,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52177,6 +52391,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52222,6 +52439,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52251,6 +52471,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52281,6 +52504,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52311,6 +52537,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52383,6 +52612,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52412,6 +52644,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52473,6 +52708,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52503,6 +52741,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -52666,6 +52907,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -52695,6 +52939,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -53073,6 +53320,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -53103,6 +53353,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -53234,6 +53487,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -53263,6 +53519,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -53387,6 +53646,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -53417,6 +53679,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -53525,6 +53790,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -53554,6 +53822,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -53960,6 +54231,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -53990,6 +54264,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -54025,6 +54302,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -54055,6 +54335,9 @@ export namespace Prisma {
     createdAt?: Date | string
     updatedAt?: Date | string
     role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
@@ -54100,6 +54383,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -54129,6 +54415,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -54169,6 +54458,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -54198,6 +54490,9 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
@@ -54264,6 +54559,7 @@ export namespace Prisma {
     id?: string
     name: string
     description: string
+    icon?: string | null
     workspaceType: string
     subscriptionPlan?: string
     projectLimit?: number
@@ -54513,6 +54809,7 @@ export namespace Prisma {
   export type WorkspaceUpdateWithoutUserInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
@@ -54525,6 +54822,7 @@ export namespace Prisma {
   export type WorkspaceUncheckedUpdateWithoutUserInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
@@ -54537,6 +54835,7 @@ export namespace Prisma {
   export type WorkspaceUncheckedUpdateManyWithoutUserInput = {
     name?: StringFieldUpdateOperationsInput | string
     description?: StringFieldUpdateOperationsInput | string
+    icon?: NullableStringFieldUpdateOperationsInput | string | null
     workspaceType?: StringFieldUpdateOperationsInput | string
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number

@@ -10,11 +10,18 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   // Check ownership
   const project = await prisma.project.findUnique({
       where: { id: projectId },
-      select: { userId: true }
+      select: { userId: true, workspaceId: true }
   });
   
   if (!project) return null;
   if (project.userId === userId) return "owner";
+
+  // Check workspace ownership
+  const workspace = await prisma.workspace.findUnique({
+      where: { id: project.workspaceId },
+      select: { createdBy: true }
+  });
+  if (workspace?.createdBy === userId) return "owner";
 
   // Check team membership
   // fetch teams linked to project where user is a member
