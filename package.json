@@ -64,6 +64,7 @@
     "next": "15.5.12",
     "next-auth": "^4.24.11",
     "next-themes": "latest",
+    "nodemailer": "^6.10.1",
     "otplib": "^13.2.1",
     "prisma": "^6.14.0",
     "qrcode": "^1.5.4",
