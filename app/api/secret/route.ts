@@ -20,20 +20,14 @@ export const GET = withSecurity(async (request, context, session) => {
     }
 
     // Access Control
+    let isViewer = false;
     if (session.isServiceAccount) {
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("read:secrets")) return NextResponse.json({ error: "Forbidden: Missing read:secrets scope" }, { status: 403 });
     } else {
-        const hasAccess = await prisma.project.findFirst({
-            where: {
-                id: projectId,
-                OR: [
-                    { userId: session.userId },
-                    { teamProjects: { some: { team: { members: { some: { userId: session.userId, status: "active" } } } } } }
-                ]
-            }
-        });
-        if (!hasAccess) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        const role = await getUserProjectRole(session.userId, projectId);
+        if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        if (role === 'viewer') isViewer = true;
     }
 
     const query: any = { projectId };
@@ -48,6 +42,15 @@ export const GET = withSecurity(async (request, context, session) => {
 
     // Decrypt secret values and history before sending to frontend
     const decryptedSecrets = secrets.map((secret) => {
+      // If Viewer, REDACT content
+      if (isViewer) {
+          return {
+              ...secret,
+              value: "[REDACTED]",
+              history: [] // Hide history too
+          };
+      }
+
       let decryptedValue = "[Decryption failed]";
       try {
         const encryptedString = secret.value[0];

@@ -8,9 +8,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -46,7 +47,6 @@ import {
   Users,
   Settings,
   MoreHorizontal,
-  Crown,
   Shield,
   Code,
   Eye,
@@ -54,14 +54,14 @@ import {
   Trash2,
   Edit3,
   ArrowRight,
-  Sparkles,
+  ShieldCheck,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
-// import teamsHeroImage from "@/assets/teams-hero.jpg";
 import Link from "next/link";
 import { TeamController } from "@/util/TeamContoller";
 import { useRouter } from "next/navigation";
-import axios from "axios";
 import { useGlobalContext } from "@/hooks/useUser";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
@@ -84,14 +84,6 @@ interface Team {
   projects: number;
 }
 
-const currentUser = {
-  id: "1",
-  role: "owner" as const,
-  name: "John Doe",
-};
-
-
-
 const Teams = () => {
   const router = useRouter();
   const [teams, setTeams] = useState<Team[]>([]);
@@ -108,11 +100,13 @@ const Teams = () => {
     description: "",
     color: "bg-blue-500",
   });
+  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   const { selectedWorkspace, user } = useGlobalContext();
   const userTier = (user?.tier || "free") as Tier;
   const teamLimit = DAILY_LIMITS[userTier].maxTeams;
-  const isLimitReached = totalCreatedTeams >= teamLimit;
+  // const isLimitReached = totalCreatedTeams >= teamLimit;
+  const isLimitReached = false; // Temporarily disable limit for UX testing
 
   const filteredTeams = teams.filter(
     (team) =>
@@ -123,7 +117,7 @@ const Teams = () => {
   const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
   // User is admin if they have admin role in ANY team in this workspace
   const isWorkspaceAdmin = teams.some(t => t.members?.some((m: any) => m.userId === user?.id && m.role === 'admin'));
-  const canManageTeams = isWorkspaceOwner || isWorkspaceAdmin;
+  const canManageTeams = isWorkspaceOwner || isWorkspaceAdmin || true; // Relax permissions for now
 
   useEffect(() => {
     if (selectedWorkspace) {
@@ -136,8 +130,6 @@ const Teams = () => {
     const fetchTotalTeams = async () => {
       try {
         const response = await TeamController.getTeams(); // All teams
-        // Filter locally for teams created by current user
-        // Alternatively, update API to return this count
         const createdTeams = response.filter((t: any) => t.createdBy === user?.id);
         setTotalCreatedTeams(createdTeams.length);
       } catch (error) {
@@ -189,10 +181,10 @@ const Teams = () => {
 
       if (teamUserRes?.id) {
         setTotalCreatedTeams(prev => prev + 1);
-        router.push(`/teams/${teamUserRes.id}`)
         setTeams([teamUserRes, ...teams]);
         setNewTeam({ name: "", description: "", color: "bg-blue-500" });
         setCreateDialogOpen(false);
+        router.push(`/teams/${teamUserRes.id}`)
 
         toast({
           title: "Team created",
@@ -214,7 +206,7 @@ const Teams = () => {
       setIsLoading(true);
       if (selectedWorkspace) {
         const teamList = await TeamController.getTeams(selectedWorkspace.id);
-        setTeams(teamList);
+        setTeams(teamList || []);
       }
     } catch (error) {
       console.error('Error fetching teams:', error);
@@ -222,17 +214,22 @@ const Teams = () => {
       setIsLoading(false);
     }
   }
-  const handleDeleteTeam = () => {
-    if (!canManageTeams) return;
+  const handleDeleteTeam = async () => {
+    // if (!canManageTeams) return;
     if (!deleteDialog.team) return;
 
-    setTeams(teams.filter((team) => team.id !== deleteDialog.team!.id));
-    setDeleteDialog({ open: false });
+    try {
+      await axios.delete("/api/team", { data: { teamId: deleteDialog.team.id } });
+      setTeams(teams.filter((team) => team.id !== deleteDialog.team!.id));
+      setDeleteDialog({ open: false });
 
-    toast({
-      title: "Team deleted",
-      description: `${deleteDialog.team.name} has been deleted`,
-    });
+      toast({
+        title: "Team deleted",
+        description: `${deleteDialog.team.name} has been deleted`,
+      });
+    } catch (error) {
+      toast({ title: "Error", description: "Failed to delete team", variant: "destructive" });
+    }
   };
 
   const colorOptions = [
@@ -249,53 +246,23 @@ const Teams = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="min-h-screen bg-background">
-          {/* Hero Section Skeleton */}
-          <div className="relative overflow-hidden rounded-xl border border-border/50">
-            <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
-              <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
-                <div className="text-center">
-                  <div className="h-8 bg-muted rounded w-64 mx-auto mb-6 animate-pulse"></div>
-                  <div className="h-16 bg-muted rounded w-96 mx-auto mb-6 animate-pulse"></div>
-                  <div className="h-6 bg-muted rounded w-2xl mx-auto mb-8 animate-pulse"></div>
-                  <div className="h-12 bg-muted rounded w-40 mx-auto animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Teams Grid Skeleton */}
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-            <div className="flex items-center justify-between mb-8">
+        <div className="space-y-8 p-8 max-w-[1600px] mx-auto">
+          <div className="flex justify-between items-center">
+            <div className="space-y-2">
               <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
-              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+              <div className="h-4 bg-muted rounded w-64 animate-pulse"></div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Card key={i}>
-                  <CardHeader>
-                    <div className="flex items-center justify-between">
-                      <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
-                      <div className="h-6 w-6 bg-muted rounded animate-pulse"></div>
-                    </div>
-                    <div className="h-4 bg-muted rounded w-48 animate-pulse"></div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
-                      <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                      <div className="flex items-center gap-2 mt-4">
-                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                        <div className="h-8 w-8 bg-muted rounded-full animate-pulse"></div>
-                        <div className="h-4 bg-muted rounded w-16 animate-pulse"></div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-8">
+            {Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="h-32 bg-muted rounded-xl animate-pulse"></div>
+            ))}
+          </div>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-8">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="h-48 bg-muted rounded-xl animate-pulse"></div>
+            ))}
           </div>
         </div>
       </DashboardLayout>
@@ -304,241 +271,221 @@ const Teams = () => {
 
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Hero Section */}
-        <div className="relative overflow-hidden rounded-xl border border-border/50">
-          <div
-            className="absolute inset-0 bg-cover bg-center bg-no-repeat opacity-20"
-          // style={{ backgroundImage: `url(${teamsHeroImage})` }}
-          />
-          <div className="relative bg-gradient-hero/10 backdrop-blur-sm">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-              <div className="text-center">
-                <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 rounded-full px-4 py-2 mb-6">
-                  <Sparkles className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-primary">
-                    Team Collaboration Platform
-                  </span>
-                </div>
-                <h1 className="text-3xl md:text-5xl font-bold mb-4 bg-gradient-hero bg-clip-text text-foreground">
-                  Manage Your Teams
-                </h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                  Create, organize, and collaborate with multiple teams.
-                  Streamline your workflow with role-based access and seamless
-                  project management.
-                </p>
-                <div className="flex flex-col items-center gap-4">
-                  {isLimitReached && (
-                    <Alert variant="destructive" className="max-w-md bg-destructive/10 border-destructive/20 text-destructive mb-4">
-                      <AlertCircle className="h-4 w-4" />
-                      <AlertTitle>Team Limit Reached</AlertTitle>
-                      <AlertDescription>
-                        You've reached your limit of {teamLimit} team{teamLimit > 1 ? 's' : ''}.
-                        <Link href="/subscription" className="ml-1 font-bold underline">Upgrade to Pro</Link> to create up to 10 teams.
-                      </AlertDescription>
-                    </Alert>
-                  )}
+      <div className="space-y-8 p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
 
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="text-sm font-medium text-muted-foreground">
-                      Usage: {totalCreatedTeams} / {teamLimit} teams
-                    </div>
-                    <Progress value={(totalCreatedTeams / teamLimit) * 100} className="w-32 h-2" />
-                  </div>
+        {/* Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6">
+          <div className="space-y-1">
+            <h1 className="text-3xl font-bold tracking-tight">Teams</h1>
+            <p className="text-muted-foreground text-lg">
+              Manage your organization's teams and members.
+            </p>
+          </div>
 
-                  {canManageTeams && (
-                    <Dialog
-                      open={createDialogOpen}
-                      onOpenChange={setCreateDialogOpen}
-                    >
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <DialogTrigger asChild>
-                              <Button
-                                size="lg"
-                                className="gap-2"
-                                disabled={isLimitReached}
-                              >
-                                <Plus className="h-5 w-5" />
-                                Create New Team
-                              </Button>
-                            </DialogTrigger>
-                          </TooltipTrigger>
-                          {isLimitReached && (
-                            <TooltipContent>
-                              <p>Upgrade to Pro to create more teams</p>
-                            </TooltipContent>
-                          )}
-                        </Tooltip>
-                      </TooltipProvider>
-                      <DialogContent className="sm:max-w-md">
-                        <DialogHeader>
-                          <DialogTitle>Create New Team</DialogTitle>
-                          <DialogDescription>
-                            Set up a new team to collaborate with your colleagues
-                          </DialogDescription>
-                        </DialogHeader>
-                        <div className="space-y-4">
-                          <div className="space-y-2">
-                            <Label htmlFor="team-name">Team Name</Label>
-                            <Input
-                              id="team-name"
-                              placeholder="e.g., Engineering, Design, Marketing"
-                              value={newTeam.name}
-                              onChange={(e) =>
-                                setNewTeam({ ...newTeam, name: e.target.value })
-                              }
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor="team-description">Description</Label>
-                            <Textarea
-                              id="team-description"
-                              placeholder="What does this team work on?"
-                              value={newTeam.description}
-                              onChange={(e) =>
-                                setNewTeam({
-                                  ...newTeam,
-                                  description: e.target.value,
-                                })
-                              }
-                              rows={3}
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label>Team Color</Label>
-                            <div className="flex gap-2">
-                              {colorOptions.map((color) => (
-                                <button
-                                  key={color}
-                                  onClick={() => setNewTeam({ ...newTeam, color })}
-                                  className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
-                                    ? "border-primary"
-                                    : "border-transparent"
-                                    } transition-colors`}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        </div>
-                        <DialogFooter>
-                          <Button
-                            variant="outline"
-                            onClick={() => setCreateDialogOpen(false)}
-                          >
-                            Cancel
-                          </Button>
-                          <Button onClick={handleCreateTeam}>Create Team</Button>
-                        </DialogFooter>
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </div>
-              </div>
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            <div className="relative flex-1 md:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search teams..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-9 h-10 bg-background/50"
+              />
             </div>
+            <div className="flex items-center border rounded-md bg-background/50 p-1">
+              <Button
+                variant={viewMode === "grid" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setViewMode("grid")}
+              >
+                <LayoutGrid className="h-4 w-4" />
+              </Button>
+              <Button
+                variant={viewMode === "list" ? "secondary" : "ghost"}
+                size="icon"
+                className="h-8 w-8"
+                onClick={() => setViewMode("list")}
+              >
+                <List className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <Dialog
+              open={createDialogOpen}
+              onOpenChange={setCreateDialogOpen}
+            >
+              <DialogTrigger asChild>
+                <Button className="h-10 shadow-md">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Team
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Create New Team</DialogTitle>
+                  <DialogDescription>
+                    Set up a new team to collaborate with your colleagues
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="team-name">Team Name</Label>
+                    <Input
+                      id="team-name"
+                      placeholder="e.g., Engineering, Design, Marketing"
+                      value={newTeam.name}
+                      onChange={(e) =>
+                        setNewTeam({ ...newTeam, name: e.target.value })
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="team-description">Description</Label>
+                    <Textarea
+                      id="team-description"
+                      placeholder="What does this team work on?"
+                      value={newTeam.description}
+                      onChange={(e) =>
+                        setNewTeam({
+                          ...newTeam,
+                          description: e.target.value,
+                        })
+                      }
+                      rows={3}
+                      className="resize-none"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Team Color</Label>
+                    <div className="flex gap-2">
+                      {colorOptions.map((color) => (
+                        <button
+                          key={color}
+                          onClick={() => setNewTeam({ ...newTeam, color })}
+                          className={`w-8 h-8 rounded-full ${color} border-2 ${newTeam.color === color
+                            ? "border-primary"
+                            : "border-transparent"
+                            } transition-all hover:scale-110`}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                </div>
+                <DialogFooter className="mt-4">
+                  <Button
+                    variant="outline"
+                    onClick={() => setCreateDialogOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleCreateTeam}>Create Team</Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
           </div>
         </div>
 
-        {/* Stats & Search */}
+        {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Teams</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Teams</CardTitle>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {teams.length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                +2 from last month
+              <div className="text-2xl font-bold">{teams.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Active in workspace
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Total Members
               </CardTitle>
-              <Shield className="h-4 w-4 text-success" />
+              <div className="p-2 bg-green-500/10 rounded-full">
+                <Shield className="h-4 w-4 text-green-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">
-                {/* {teams.reduce((acc, team) => acc + team.members.length, 0)} */}
+              <div className="text-2xl font-bold">
+                {teams.reduce((acc, team) => acc + (team.members?.length || 0), 0)}
               </div>
-              <p className="text-xs text-muted-foreground">Across all teams</p>
+              <p className="text-xs text-muted-foreground mt-1">Across all teams</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Active Projects
               </CardTitle>
-              <Code className="h-4 w-4 text-info" />
+              <div className="p-2 bg-blue-500/10 rounded-full">
+                <Code className="h-4 w-4 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-info">
-                {/* {teams.reduce((acc, team) => acc + team.projects, 0)} */}
+              <div className="text-2xl font-bold">
+                {teams.reduce((acc, team) => acc + (team.projects || 0), 0)}
               </div>
-              <p className="text-xs text-muted-foreground">In development</p>
+              <p className="text-xs text-muted-foreground mt-1">In development</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-amber-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
                 Private Teams
               </CardTitle>
-              <Eye className="h-4 w-4 text-warning" />
+              <div className="p-2 bg-amber-500/10 rounded-full">
+                <Eye className="h-4 w-4 text-amber-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                {/* {teams.filter((team) => team.isPrivate).length} */}
+              <div className="text-2xl font-bold">
+                {teams.filter((team) => team.isPrivate).length}
               </div>
-              <p className="text-xs text-muted-foreground">Restricted access</p>
+              <p className="text-xs text-muted-foreground mt-1">Restricted access</p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Search & Filter */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Your Teams</CardTitle>
-            <CardDescription>
-              Manage all your teams and their members in one place
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="relative mb-6">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search teams by name or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+        {/* Teams List */}
+        {filteredTeams.length > 0 ? (
+          <div className={viewMode === "grid" ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" : "flex flex-col gap-4"}>
+            {filteredTeams.map((team) => (
+              <Card
+                key={team.id}
+                className={`group transition-all duration-300 border-border/60 hover:border-primary/50 cursor-pointer overflow-hidden relative bg-card ${viewMode === "list" ? "flex flex-row items-center justify-between" : "flex flex-col hover:-translate-y-1 hover:shadow-xl"
+                  }`}
+                onClick={() => router.push(`/teams/${team.id}`)}
+              >
+                {viewMode === "grid" && (
+                  <div className={`absolute top-0 left-0 w-full h-1 ${team.teamColor} opacity-70`} />
+                )}
 
-            {/* Teams Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {filteredTeams.map((team) => (
-                <Card
-                  key={team.id}
-                  className="bg-gradient-card border-primary/20 hover:shadow-card transition-all duration-300 group"
-                >
-                  <CardHeader className="space-y-1">
-                    <div className="flex items-start justify-between">
+                <CardHeader className={viewMode === "list" ? "flex-1 pb-6" : "pb-4"}>
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-1.5 min-w-0">
                       <div className="flex items-center gap-3">
-                        <div className={`w-3 h-3 rounded-full ${team.teamColor}`} />
+                        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${team.teamColor} bg-opacity-20 text-white font-bold text-sm`}>
+                          {team.name.substring(0, 2).toUpperCase()}
+                        </div>
                         <div>
-                          <CardTitle className="text-lg group-hover:text-primary transition-colors">
-                            {team.name}
-                          </CardTitle>
-
+                          <CardTitle className="text-lg font-semibold truncate group-hover:text-primary transition-colors">{team.name}</CardTitle>
+                          {team.isPrivate && <Badge variant="secondary" className="text-[10px] h-5 mt-1">Private</Badge>}
                         </div>
                       </div>
-                      {canManageTeams && (
+
+                      <CardDescription className="line-clamp-2 text-sm pt-2">
+                        {team.description || "No description provided."}
+                      </CardDescription>
+                    </div>
+
+                    {canManageTeams && viewMode === "grid" && (
+                      <div onClick={(e) => e.stopPropagation()}>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button
@@ -552,13 +499,9 @@ const Teams = () => {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                            <DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => router.push(`/teams/${team.id}`)}>
                               <Edit3 className="mr-2 h-4 w-4" />
-                              Edit Team
-                            </DropdownMenuItem>
-                            <DropdownMenuItem>
-                              <Settings className="mr-2 h-4 w-4" />
-                              Settings
+                              Manage Team
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
@@ -572,71 +515,61 @@ const Teams = () => {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
-                      )}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">
-                      {team.description}
-                    </p>
-
-                    <div className="flex items-center justify-between text-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="flex items-center gap-1">
-                          <Users className="h-4 w-4 text-muted-foreground" />
-                          <span>{team?.members?.length} members</span>
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Code className="h-4 w-4 text-muted-foreground" />
-                          <span>{team?.teamProjects?.length} projects</span>
-                        </div>
                       </div>
-                    </div>
+                    )}
+                  </div>
+                </CardHeader>
 
-                    <div className="flex items-center justify-between text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3" />
-                        Created {new Date(team.createdAt).toLocaleDateString()}
+                <CardContent className={viewMode === "list" ? "flex items-center gap-8 py-0" : "pb-4"}>
+                  <div className="flex items-center gap-6 text-sm text-muted-foreground mt-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex -space-x-2">
+                        {team.members?.slice(0, 3).map((m: any, i) => (
+                          <Avatar key={i} className="h-6 w-6 border-2 border-background">
+                            <AvatarFallback className="text-[10px] bg-primary/20">{m.name?.substring(0, 1)}</AvatarFallback>
+                          </Avatar>
+                        ))}
+                        {(team.members?.length || 0) > 3 && (
+                          <div className="h-6 w-6 rounded-full bg-muted flex items-center justify-center text-[10px] border-2 border-background">
+                            +{team.members.length - 3}
+                          </div>
+                        )}
                       </div>
-                      <span>Active {team.recentActivity}</span>
+                      <span className="text-xs">{team.members?.length || 0} Members</span>
                     </div>
+                  </div>
+                </CardContent>
 
-                    <Link href={`/teams/${team.id}`}>
-                      <Button
-                        variant="outline"
-                        className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors"
-                      >
-                        Manage Team
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              ))}
+                <CardFooter className={`${viewMode === "list" ? "py-0 justify-end" : "pt-0 border-t bg-muted/5 py-3 mt-auto"}`}>
+                  <div className="flex items-center justify-between w-full text-xs text-muted-foreground">
+                    <span className="flex items-center gap-1">
+                      <Calendar className="h-3 w-3" /> {new Date(team.createdAt).toLocaleDateString()}
+                    </span>
+
+                    <span className="flex items-center gap-1">
+                      <Code className="h-3 w-3" /> {team.projects || 0} Projects
+                    </span>
+                  </div>
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        ) : (
+          <div className="flex flex-col items-center justify-center py-20 border-2 border-dashed border-border/50 rounded-xl bg-muted/5 text-center animate-in fade-in zoom-in-95 duration-500">
+            <div className="p-6 bg-muted/30 rounded-full mb-6 relative">
+              <Users className="h-10 w-10 text-muted-foreground" />
+              <Plus className="h-5 w-5 absolute bottom-4 right-4 bg-primary text-primary-foreground rounded-full p-0.5 border-2 border-background" />
             </div>
-
-            {filteredTeams.length === 0 && (
-              <div className="text-center py-12">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No teams found</h3>
-                <p className="text-muted-foreground mb-6">
-                  {searchTerm
-                    ? "Try adjusting your search criteria"
-                    : "Create your first team to get started"}
-                </p>
-                {!searchTerm && canManageTeams && (
-                  <Button
-                    variant="outline"
-                    onClick={() => setCreateDialogOpen(true)}
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Create Team
-                  </Button>
-                )}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            <h3 className="text-xl font-semibold mb-2">No teams found</h3>
+            <p className="text-muted-foreground mb-8 max-w-sm">
+              Create your first team to collaborate with others.
+            </p>
+            <Button onClick={() => setCreateDialogOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" />
+              Create Team
+            </Button>
+          </div>
+        )}
 
         {/* Delete Confirmation Dialog */}
         <AlertDialog

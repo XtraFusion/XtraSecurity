@@ -43,6 +43,7 @@ export default function AccessReviewsPage() {
             }
         } catch (error) {
             console.error("Failed to fetch reviews", error);
+            toast({ title: "Error", description: "Failed to load reviews", variant: "destructive" });
         } finally {
             setLoading(false);
         }
@@ -54,21 +55,37 @@ export default function AccessReviewsPage() {
             if (res.ok) {
                 toast({ title: "Review Cycle Started", description: "Audit logs updated." });
                 fetchReviews();
+            } else {
+                throw new Error("Failed to start cycle");
             }
         } catch (e) {
             toast({ title: "Error", description: "Failed to start cycle", variant: "destructive" });
         }
     }
 
-    const handleAction = (userId: string, action: "approve" | "revoke") => {
-        // Mock action for now, ideally calls an API to update status
-        setReviews(prev => prev.map(r =>
-            r.userId === userId ? { ...r, status: action === "approve" ? "approved" : "revoked" } : r
-        ));
-        toast({
-            title: action === "approve" ? "Access Approved" : "Access Revoked",
-            description: `User ${action}d successfully`
-        });
+    const handleAction = async (userId: string, action: "approve" | "revoke") => {
+        try {
+            const res = await fetch("/api/access-reviews", {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ userId, decision: action })
+            });
+
+            if (res.ok) {
+                // Optimistic update or refetch
+                setReviews(prev => prev.map(r =>
+                    r.userId === userId ? { ...r, status: action === "approve" ? "approved" : "revoked" } : r
+                ));
+                toast({
+                    title: action === "approve" ? "Access Approved" : "Access Revoked",
+                    description: `User access has been ${action}d.`
+                });
+            } else {
+                throw new Error("Failed to submit review");
+            }
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to submit review", variant: "destructive" });
+        }
     }
 
     return (

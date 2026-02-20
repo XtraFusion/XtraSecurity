@@ -628,41 +628,7 @@ const VaultManager: React.FC = () => {
     }
   };
 
-  const handleRevert = async (secret: Secret, version: SecretVersion) => {
-    // Confirm revert? Maybe not needed for now as it's non-destructive (adds new version)
-
-    try {
-      const revertData = {
-        key: secret.key, // Keep original key
-        value: version.value,
-        description: version.description,
-        changeReason: `Reverted to v${version.version}`,
-        environmentType: secret.environmentType,
-        type: secret.type,
-      };
-
-      await axios.put(`/api/secret?id=${secret.id}`, revertData);
-
-      // Update local state - maybe reload all secrets to be safe or update manually
-      // Reloading secrets for simplicity to ensure history is clear
-      const branchesRes = await axios.get(`/api/branch?projectId=${projectId}`);
-      const branchData = branchesRes.data || [];
-      const updatedBranch = branchData.find((b: any) => b.id === selectedBranch?.id);
-      if (updatedBranch) {
-        setSecrets(updatedBranch.secrets || []);
-        // Also update historySecret if it's open, or close it
-        const updatedSecret = updatedBranch.secrets.find((s: any) => s.id === secret.id);
-        if (updatedSecret) {
-          setHistorySecret(updatedSecret);
-        }
-      }
-
-      setNotification({ type: "default", message: `✓ Reverted to version ${version.version} successfully` });
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.message || "Failed to revert secret";
-      setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
-    }
-  };
+  // handleRevert removed as rollback is handled inside SecretHistoryModal
 
   // --- Derived State ---
 

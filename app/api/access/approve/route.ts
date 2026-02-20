@@ -13,14 +13,6 @@ export async function POST(req: NextRequest) {
     // Role check: Only admin or high privileged user can approve
     // For MVP, we assume any authenticated user with "admin" role
     // Or anyone for demo purposes? Let's stick to "admin" strictly if role exists.
-    const userRole = auth.role || "user";
-    if (userRole !== "admin") {
-         // return NextResponse.json({ error: "Forbidden: Only admins can approve" }, { status: 403 });
-         // WARN: User role might not be populated correctly in all auth flows.
-         // Let's allow for now but log warning.
-         console.warn(`User ${auth.userId} approving request without verified admin role.`);
-    }
-
     const { requestId, decision } = await req.json(); // decision: "approved" | "rejected"
     
     if (!requestId || !decision) {
@@ -30,6 +22,22 @@ export async function POST(req: NextRequest) {
     const request = await prisma.accessRequest.findUnique({ where: { id: requestId } });
     if (!request) {
         return NextResponse.json({ error: "Request not found" }, { status: 404 });
+    }
+
+    // Enforce Workspace RBAC
+    // The request has a workspaceId. The approver must be Admin/Owner of THAT workspace.
+    // If workspaceId is missing (legacy?), fallback to global admin check or deny.
+    if (!request.workspaceId) {
+         // Fallback or stricter check
+         return NextResponse.json({ error: "Invalid request (missing workspaceId)" }, { status: 400 });
+    }
+
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(auth.userId, request.workspaceId);
+
+    if (!role || (role !== "owner" && role !== "admin")) {
+         await import("@/lib/permissions"); // Ensure import? (already done)
+         return NextResponse.json({ error: "Forbidden: Only workspace admins can approve requests" }, { status: 403 });
     }
 
     if (request.status !== "pending") {

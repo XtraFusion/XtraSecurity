@@ -141,6 +141,7 @@ export async function GET(req: Request) {
         whereClause.workspaceId = workspaceId;
     }
 
+    // Fetch teams
     const getTeamData = await prisma.team.findMany({
       where: whereClause,
       include:{
@@ -148,6 +149,25 @@ export async function GET(req: Request) {
         members:true
       }
     });
+
+    // Check permissions if workspaceId is present
+    let isRestricted = true;
+    if (workspaceId) {
+        const { getUserWorkspaceRole } = await import("@/lib/permissions");
+        const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+        if (role === 'owner' || role === 'admin') {
+            isRestricted = false;
+        }
+    }
+
+    // If restricted (member/viewer or no workspace specified), filter members
+    if (isRestricted) {
+        getTeamData.forEach((team: any) => {
+             team.members = team.members.filter((m: any) => 
+                m.role === 'owner' || m.userId === session.user.id
+             );
+        });
+    }
 
     return NextResponse.json(getTeamData, { status: 200 });
   } catch (error: any) {

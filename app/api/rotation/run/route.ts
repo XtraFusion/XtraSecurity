@@ -18,6 +18,24 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Schedule ID required" }, { status: 400 });
     }
 
+    // RBAC Check
+    // 1. Get Schedule -> Secret -> Project
+    const schedule = await prisma.rotationSchedule.findUnique({
+        where: { id: scheduleId },
+        include: { secret: true }
+    });
+
+    if (!schedule || !schedule.secret) {
+        return NextResponse.json({ error: "Schedule not found" }, { status: 404 });
+    }
+
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(session.user.id, schedule.secret.projectId);
+
+    if (!role || (role !== "owner" && role !== "admin" && role !== "developer")) {
+         return NextResponse.json({ error: "Forbidden: Insufficient permissions to rotate secrets" }, { status: 403 });
+    }
+
     const result = await RotationService.rotateSecret(scheduleId, session.user.email || "user");
 
     return NextResponse.json(result);

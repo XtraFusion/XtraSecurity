@@ -32,6 +32,12 @@ model User {
   breakGlassSessions BreakGlassSession[]
   integrations       Integration[]
 
+  // Access Review Relations
+  reviewsReceived    AccessReview[]
+  reviewsGiven       AccessReview[]      @relation("ReviewerRelation")
+  
+
+
   // MFA Fields
   mfaEnabled     Boolean  @default(false)
   mfaSecret      String?  // Encrypted TOTP secret
@@ -413,7 +419,8 @@ model Integration {
 
 model ApiKey {
   id        String    @id @default(auto()) @map("_id") @db.ObjectId
-  key       String    @unique
+  key       String    @unique // Stores the HASH of the key
+  keyMask   String?   // e.g. "xsk_...abcd" for display
   label     String
   lastUsed  DateTime?
   expiresAt DateTime?
@@ -555,4 +562,21 @@ model ServiceAccount {
   createdBy   String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+}
+
+// ACCESS REVIEW MODEL
+model AccessReview {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String   @db.ObjectId
+  reviewerId String   @db.ObjectId
+  status     String   // "approved", "revoked"
+  notes      String?
+  reviewedAt DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+  reviewer   User     @relation("ReviewerRelation", fields: [reviewerId], references: [id])
+  
+  @@index([userId])
+  @@index([reviewedAt])
 }

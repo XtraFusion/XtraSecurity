@@ -12,8 +12,16 @@ export async function GET(req: Request) {
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get("workspaceId");
 
-  const filter: any = {};
-  if (workspaceId) filter.workspaceId = workspaceId;
+  if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace ID required" }, { status: 400 });
+  }
+
+  // RBAC
+  const { getUserWorkspaceRole } = await import("@/lib/permissions");
+  const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+  if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+
+  const filter: any = { workspaceId };
 
   const result = await (prisma as any).$runCommandRaw({
     find: "NotificationChannel",
@@ -40,8 +48,15 @@ export async function POST(req: Request) {
   const body = await req.json();
   const { type, name, config, workspaceId } = body;
 
-  if (!name || !type) {
-    return NextResponse.json({ error: "Name and type are required" }, { status: 400 });
+  if (!name || !type || !workspaceId) {
+    return NextResponse.json({ error: "Name, type and workspaceId are required" }, { status: 400 });
+  }
+
+  // RBAC
+  const { getUserWorkspaceRole } = await import("@/lib/permissions");
+  const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+  if (!role || (role !== "owner" && role !== "admin")) {
+       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
   const now = new Date().toISOString();
@@ -49,7 +64,7 @@ export async function POST(req: Request) {
     type,
     name,
     config: config || {},
-    workspaceId: workspaceId || null,
+    workspaceId,
     enabled: true,
     createdAt: { $date: now },
     updatedAt: { $date: now },
@@ -72,6 +87,21 @@ export async function PATCH(req: Request) {
 
   const { id, ...data } = await req.json();
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+  // Pre-fetch for RBAC
+  const findResult: any = await (prisma as any).$runCommandRaw({
+      find: "NotificationChannel",
+      filter: { _id: { $oid: id } },
+      limit: 1
+  });
+  const channel = findResult?.cursor?.firstBatch?.[0];
+  if (!channel) return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+
+  const { getUserWorkspaceRole } = await import("@/lib/permissions");
+  const role = await getUserWorkspaceRole(session.user.id, channel.workspaceId);
+  if (!role || (role !== "owner" && role !== "admin")) {
+       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   const now = new Date().toISOString();
   await (prisma as any).$runCommandRaw({
@@ -96,6 +126,21 @@ export async function DELETE(req: Request) {
   const url = new URL(req.url);
   const id = url.searchParams.get("id");
   if (!id) return NextResponse.json({ error: "ID required" }, { status: 400 });
+
+   // Pre-fetch for RBAC
+  const findResult: any = await (prisma as any).$runCommandRaw({
+      find: "NotificationChannel",
+      filter: { _id: { $oid: id } },
+      limit: 1
+  });
+  const channel = findResult?.cursor?.firstBatch?.[0];
+  if (!channel) return NextResponse.json({ error: "Channel not found" }, { status: 404 });
+
+  const { getUserWorkspaceRole } = await import("@/lib/permissions");
+  const role = await getUserWorkspaceRole(session.user.id, channel.workspaceId);
+  if (!role || (role !== "owner" && role !== "admin")) {
+       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
 
   await (prisma as any).$runCommandRaw({
     delete: "NotificationChannel",

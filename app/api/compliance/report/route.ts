@@ -13,6 +13,15 @@ export async function GET(req: Request) {
     const url = new URL(req.url);
     const workspaceId = url.searchParams.get("workspaceId");
 
+    // Enforce WS Access check
+    if (workspaceId) {
+        const { getUserWorkspaceRole } = await import("@/lib/permissions");
+        const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+        if (!role) {
+             return NextResponse.json({ error: "Forbidden: No access to workspace" }, { status: 403 });
+        }
+    }
+
     const generatedAt = new Date().toISOString();
 
     // ── 1. Workspaces the user owns ──────────────────────────────────────────

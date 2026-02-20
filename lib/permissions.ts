@@ -90,7 +90,63 @@ export async function getUserWorkspaceRole(userId: string, workspaceId: string) 
   const roles = teamUsers.map(tu => tu.role);
 
   if (roles.includes("admin")) return "admin";
-  if (roles.includes("member")) return "member";
+  if (roles.includes("member") || roles.includes("owner")) return "member";
   
   return "viewer"; // Default fallback
+}
+
+// ACCESS REVIEW PERMISSIONS
+export const AccessReviewPermissions = {
+  READ: "access_review.read",
+  WRITE: "access_review.write",
+  START_CYCLE: "access_review.start_cycle"
+};
+
+/**
+ * Checks if a user has a specific permission.
+ * Falls back to "admin" role check for backward compatibility.
+ */
+export async function hasPermission(userId: string, permissionAction: string) {
+  // 1. Fetch user to check global role (Legacy/Fallback)
+  const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true }
+  });
+
+  if (user?.role === "admin") return true;
+
+  // 2. RBAC Check (V2)
+  // Split permissionAction into resource/action (e.g. "access_review.read" -> res="access_review", act="read")
+  const parts = permissionAction.split(".");
+  if (parts.length < 2) return false;
+  
+  const resource = parts[0];
+  const action = parts.slice(1).join("."); // join remainder
+
+  // Find if user has a role that maps to this permission
+  const userRoles = await prisma.userRole.findMany({
+      where: { userId },
+      include: {
+          role: {
+              include: {
+                  permissions: {
+                      include: {
+                          permission: true
+                      }
+                  }
+              }
+          }
+      }
+  });
+
+  for (const ur of userRoles) {
+      for (const rp of ur.role.permissions) {
+          if (rp.permission.resource === resource && rp.permission.action === action) {
+              return true; // Found a match!
+          }
+           // Handle "all" or specific constraints if needed, but for now simple match
+      }
+  }
+
+  return false;
 }

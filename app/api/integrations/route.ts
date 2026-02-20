@@ -51,7 +51,17 @@ export async function DELETE(req: Request) {
     const id = searchParams.get("id");
     if (!id) return NextResponse.json({ error: "id required" }, { status: 400 });
 
-    await prisma.integration.delete({ where: { id } });
+    const count = await prisma.integration.deleteMany({ 
+        where: { 
+            id, 
+            createdBy: session.user.email || "" 
+        } 
+    });
+
+    if (count.count === 0) {
+        return NextResponse.json({ error: "Integration not found or unauthorized" }, { status: 404 });
+    }
+
     return NextResponse.json({ message: "Deleted" }, { status: 200 });
   } catch (error) {
     console.error(error);
