@@ -55,7 +55,18 @@ export async function GET(request: NextRequest) {
         },
         include: {
           branches: true,
-          secrets: true,
+          secrets: {
+            select: {
+              id: true,
+              key: true,
+              description: true,
+              environmentType: true,
+              type: true,
+              lastUpdated: true,
+              expiryDate: true,
+              rotationPolicy: true
+            }
+          },
           teamProjects: {
             include: {
               team: true,
@@ -108,6 +119,18 @@ export async function GET(request: NextRequest) {
       },
       include: {
         branches: true,
+        secrets: {
+            select: {
+              id: true,
+              key: true,
+              description: true,
+              environmentType: true,
+              type: true,
+              lastUpdated: true,
+              expiryDate: true,
+              rotationPolicy: true
+            }
+        },
         teamProjects: {
           include: {
             team: true,
@@ -137,6 +160,11 @@ export async function GET(request: NextRequest) {
         project.branches?.map((b: any) => ({
           ...b,
           createdAt: b.createdAt?.toISOString?.() ?? null,
+        })) ?? [],
+      secrets:
+        project.secrets?.map((s: any) => ({
+            ...s,
+            lastUpdated: s.lastUpdated?.toISOString?.() ?? null,
         })) ?? [],
     };
 
@@ -183,6 +211,15 @@ export async function POST(request: NextRequest) {
         { error: "Authenticated user not found" },
         { status: 401 }
       );
+    }
+
+    // RBAC Check: Workspace Owner/Admin
+    if (newProject.workspaceId) {
+        const { getUserWorkspaceRole } = await import("@/lib/permissions");
+        const role = await getUserWorkspaceRole(authUser.id, newProject.workspaceId);
+        if (!role || (role !== "owner" && role !== "admin")) {
+             return NextResponse.json({ error: "Only workspace owners and admins can create projects." }, { status: 403 });
+        }
     }
 
     console.log("Received project data:", newProject);
@@ -233,7 +270,18 @@ export async function POST(request: NextRequest) {
       },
       include: {
         branches: true,
-        secrets: true,
+        secrets: {
+            select: {
+              id: true,
+              key: true,
+              description: true,
+              environmentType: true,
+              type: true,
+              lastUpdated: true,
+              expiryDate: true,
+              rotationPolicy: true
+            }
+        },
         user: {
           select: {
             id: true,
@@ -297,11 +345,13 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
-    // Check permission: Owner only
-    // We can check direct ownership or use getUserProjectRole if we want to support "Owner" role in team context (future proof)
-    // For now, strict Creator/UserId matching is safest for "Delete Project" as per ACL
-    if (project.userId !== session.user.id) {
-         return NextResponse.json({ error: "Only the project owner can delete this project" }, { status: 403 });
+    // Check permission: Workspace Admin/Owner OR Project Creator
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, project.workspaceId);
+    const isCreator = project.userId === session.user.id;
+
+    if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
+         return NextResponse.json({ error: "Only the project owner or workspace admin can delete this project" }, { status: 403 });
     }
 
     await prisma.$transaction(async (prisma) => {

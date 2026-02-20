@@ -1,0 +1,557 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+// USER MODEL
+model User {
+  id                 String              @id @default(auto()) @map("_id") @db.ObjectId
+  name               String?
+  email              String?             @unique
+  emailVerified      DateTime?
+  image              String?
+  accounts           Account[]
+  sessions           Session[]
+  projects           Project[]
+  userSubscription   UserSubscription?   @relation("UserToUserSubscription")
+  workspaces         Workspace[]
+  createdAt          DateTime            @default(now())
+  updatedAt          DateTime            @default(now()) @updatedAt
+  role               String              @default("user") // "admin", "member"
+  teamUsers          TeamUser[] // Explicit relation table
+  notification       Notification[]
+  auditLogs          AuditLog[]
+  apiKeys            ApiKey[]
+  accessRequests     AccessRequest[]
+  userRoles          UserRole[]
+  breakGlassSessions BreakGlassSession[]
+  integrations       Integration[]
+
+  // MFA Fields
+  mfaEnabled     Boolean  @default(false)
+  mfaSecret      String? // Encrypted TOTP secret
+  mfaBackupCodes String[] // Encrypted backup codes
+
+  // IP Allowlist (global user-level)
+  ipAllowlist String[] // Array of allowed IP addresses
+  tier        String   @default("free") // "free", "pro", "enterprise"
+
+  @@map("users")
+}
+
+// SECURITY EVENT MODEL (Audit/Traffic/Attacks)
+model SecurityEvent {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  eventId   String   @unique // UUID
+  timestamp DateTime @default(now())
+
+  // Actor Information
+  userId    String? @db.ObjectId
+  userEmail String?
+  tier      String?
+  apiKeyId  String? @db.ObjectId
+
+  // Network Context
+  ipAddress String?
+  userAgent String?
+  country   String?
+  city      String?
+  asn       String?
+
+  // Request Details
+  method      String
+  endpoint    String
+  queryParams Json?
+  requestSize Int?
+
+  // Resource Accessed
+  workspaceId String? @db.ObjectId
+  projectId   String? @db.ObjectId
+  environment String?
+  secretId    String? // Hashed
+
+  // Response
+  statusCode   Int
+  responseSize Int?
+  duration     Int // ms
+  errorMessage String?
+
+  // Risk Indicators
+  isAnomaly    Boolean  @default(false)
+  anomalyScore Int      @default(0)
+  riskFactors  String[]
+
+  // Rate Limiting
+  rateLimitHit Boolean @default(false)
+
+  @@index([timestamp])
+  @@index([userId])
+  @@index([ipAddress])
+  @@map("security_events")
+}
+
+// USER-SUBSCRIPTION MODEL (per-user workspace limits)
+model UserSubscription {
+  id             String   @id @default(auto()) @map("_id") @db.ObjectId
+  user           User     @relation("UserToUserSubscription", fields: [userId], references: [id])
+  userId         String   @unique @db.ObjectId
+  plan           String
+  workspaceLimit Int      @default(3) // Free plan allows 3 workspaces
+  status         String   @default("active")
+  startDate      DateTime @default(now())
+  endDate        DateTime
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
+// WORKSPACE MODEL (per-workspace project limits and subscription)
+model Workspace {
+  id               String    @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  description      String
+  workspaceType    String // "personal" or "shared"
+  createdBy        String    @db.ObjectId
+  user             User      @relation(fields: [createdBy], references: [id])
+  subscriptionPlan String    @default("free") // "free", "pro", etc
+  projectLimit     Int       @default(5) // Free plan allows 5 projects
+  subscriptionEnd  DateTime?
+  projects         Project[]
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+// PROJECT MODEL
+model Project {
+  id              String           @id @default(auto()) @map("_id") @db.ObjectId
+  name            String
+  description     String
+  status          String           @default("active")
+  userId          String           @db.ObjectId
+  workspaceId     String           @db.ObjectId
+  user            User             @relation(fields: [userId], references: [id])
+  workspace       Workspace        @relation(fields: [workspaceId], references: [id])
+  branches        Branch[]
+  secrets         Secret[]
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  teamProjects    TeamProject[]
+  serviceAccounts ServiceAccount[]
+
+  // Access control fields
+  accessControl String? @default("private") // "private", "team", "public"
+  securityLevel String? @default("low") // "low", "medium", "high"
+  isBlocked     Boolean @default(false)
+
+  // Security settings
+  twoFactorRequired           Boolean @default(false)
+  passwordMinLength           Int     @default(8)
+  passwordRequireSpecialChars Boolean @default(false)
+  passwordRequireNumbers      Boolean @default(false)
+  passwordExpiryDays          Int     @default(90)
+  ipRestrictions              Json[] // Array of { ip: string, description: string }
+
+  // Audit settings
+  auditLogging      Boolean   @default(false)
+  lastSecurityAudit DateTime?
+
+  userRoles          UserRole[]
+  breakGlassSessions BreakGlassSession[]
+  webhooks           Webhook[]
+  accessRequests     AccessRequest[]
+}
+
+// BRANCH MODEL
+model Branch {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  createdBy   String   @db.ObjectId
+  projectId   String   @db.ObjectId
+  project     Project  @relation(fields: [projectId], references: [id])
+  secrets     Secret[] @relation("BranchToSecret")
+  versionNo   String
+  permissions String[] // Roles/User IDs
+  createdAt   DateTime @default(now())
+}
+
+// SECRET MODEL
+model Secret {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  key             String
+  value           String[]
+  description     String
+  environmentType String
+  version         String
+  projectId       String    @db.ObjectId
+  branchId        String?   @db.ObjectId
+  project         Project   @relation(fields: [projectId], references: [id])
+  branch          Branch?   @relation("BranchToSecret", fields: [branchId], references: [id])
+  type            String
+  history         Json // Array of secret versions
+  lastUpdated     DateTime  @updatedAt
+  updatedBy       String // userId
+  permission      String[] // Roles/User IDs
+  expiryDate      DateTime?
+  rotationPolicy  String // "auto", "manual", etc.
+
+  // Smart Referencing
+  isReference    Boolean  @default(false)
+  sourceSecretId String?  @db.ObjectId
+  sourceSecret   Secret?  @relation("SecretReferences", fields: [sourceSecretId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  referencedBy   Secret[] @relation("SecretReferences")
+
+  // Shadow Rotation
+  shadowValue     String[]
+  shadowStatus    String?
+  shadowExpiresAt DateTime?
+
+  accessRequests   AccessRequest[]
+  rotationSchedule RotationSchedule?
+}
+
+// ROTATION MODEL
+model RotationSchedule {
+  id           String    @id @default(auto()) @map("_id") @db.ObjectId
+  secretId     String    @unique @db.ObjectId
+  projectId    String    @db.ObjectId
+  environment  String
+  frequency    String // "daily", "weekly", "monthly", "custom"
+  customDays   Int?
+  nextRotation DateTime
+  lastRotation DateTime?
+  status       String    @default("active") // "active", "paused"
+  method       String // "auto-generate", "webhook", "manual"
+  webhookUrl   String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  secret Secret @relation(fields: [secretId], references: [id])
+
+  logs RotationLog[]
+}
+
+model RotationLog {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  scheduleId  String    @db.ObjectId
+  status      String // "success", "failed"
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+  error       String?
+
+  schedule RotationSchedule @relation(fields: [scheduleId], references: [id])
+}
+
+// TEAM-RELATED MODELS
+model Team {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  name         String
+  description  String
+  createdAt    DateTime      @default(now())
+  teamColor    String
+  members      TeamUser[] // User-Team relation
+  teamProjects TeamProject[] // Team-Project relation
+  roles        String[] // Roles/permissions per user
+  createdBy    String        @db.ObjectId
+  workspaceId  String?       @db.ObjectId
+}
+
+// Many-to-Many Team-User
+model TeamUser {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String   @db.ObjectId
+  userId    String   @db.ObjectId
+  role      String // e.g. "owner", "member"
+  status    String   @default("pending") // "active", "pending", "removed"
+  joinedAt  DateTime @default(now())
+  invitedBy String?  @db.ObjectId
+  team      Team     @relation(fields: [teamId], references: [id])
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([teamId, userId])
+}
+
+// Many-to-Many Team-Project
+model TeamProject {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String  @db.ObjectId
+  projectId String  @db.ObjectId
+  team      Team    @relation(fields: [teamId], references: [id])
+  project   Project @relation(fields: [projectId], references: [id])
+
+  @@unique([teamId, projectId])
+}
+
+// AUTHENTICATION MODELS
+model Account {
+  id                String  @id @default(auto()) @map("_id") @db.ObjectId
+  userId            String  @db.ObjectId
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionToken String   @unique
+  userId       String   @db.ObjectId
+  expires      DateTime
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model VerificationToken {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}
+
+model Notification {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  userEmail   String
+  taskTitle   String
+  description String
+  message     String
+  status      String
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  workspaceId String?  @db.ObjectId
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model NotificationRule {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String
+  enabled     Boolean  @default(true)
+  triggers    String[]
+  channels    String[]
+  conditions  Json
+  createdBy   String
+  workspaceId String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model NotificationChannel {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  type        String
+  name        String
+  enabled     Boolean  @default(true)
+  config      Json
+  workspaceId String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId       String   @db.ObjectId
+  action       String
+  entity       String
+  entityId     String
+  changes      Json
+  timestamp    DateTime @default(now())
+  workspaceId  String?  @db.ObjectId
+  previousHash String? // Hash of the previous log
+  currentHash  String? // Hash of this log: SHA256(timestamp + action + entityId + userId + prevHash)
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+// Team SSO (enterprise feature)
+model TeamSSO {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  teamId    String   @db.ObjectId
+  provider  String
+  config    Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// Integration storage (GitHub, AWS, etc.)
+model Integration {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  provider    String // "github", "aws"
+  username    String?
+  avatarUrl   String?
+  accessToken String? // Encrypted
+
+  enabled Boolean @default(true)
+  status  String  @default("disconnected")
+  config  Json?
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User?   @relation(fields: [userId], references: [id])
+  userId String? @db.ObjectId
+
+  @@unique([userId, provider])
+}
+
+model ApiKey {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  key       String    @unique // Stores the HASH of the key
+  keyMask   String? // e.g. "xsk_...abcd" for display
+  label     String
+  lastUsed  DateTime?
+  expiresAt DateTime?
+  createdAt DateTime  @default(now())
+
+  userId String? @db.ObjectId
+  user   User?   @relation(fields: [userId], references: [id])
+
+  serviceAccountId String?         @db.ObjectId
+  serviceAccount   ServiceAccount? @relation(fields: [serviceAccountId], references: [id])
+
+  workspaceId String? @db.ObjectId
+}
+
+model AccessRequest {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  secretId  String?  @db.ObjectId
+  secret    Secret?  @relation(fields: [secretId], references: [id])
+  projectId String?  @db.ObjectId // Optional: Request scope (Project level)
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  reason   String
+  duration Int // Minutes
+  status   String @default("pending") // pending, approved, rejected, expired, revoked
+
+  approvedBy String?   @db.ObjectId
+  approvedAt DateTime?
+  expiresAt  DateTime?
+
+  requestedAt DateTime @default(now())
+  workspaceId String?  @db.ObjectId
+}
+
+// RBAC & ABAC MODELS (V2)
+
+model Role {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  name        String  @unique // viewer, developer, admin, custom...
+  description String?
+  isSystem    Boolean @default(false)
+
+  permissions RolePermission[]
+  userRoles   UserRole[]
+
+  createdAt DateTime @default(now())
+}
+
+model Permission {
+  id        String @id @default(auto()) @map("_id") @db.ObjectId
+  resource  String // "secret", "project", "audit"
+  action    String // "read", "write", "delete", "rotate"
+  condition Json? // Default conditions (e.g. {"env": "prod"})
+
+  roles RolePermission[]
+
+  @@unique([resource, action])
+}
+
+model RolePermission {
+  id           String     @id @default(auto()) @map("_id") @db.ObjectId
+  roleId       String     @db.ObjectId
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  permissionId String     @db.ObjectId
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  environment String @default("all") // "dev", "prod", "all"
+  constraints Json? // Time windows, etc.
+
+  @@unique([roleId, permissionId, environment])
+}
+
+model UserRole {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  roleId    String   @db.ObjectId
+  role      Role     @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  projectId String?  @db.ObjectId // Optional scope
+  project   Project? @relation(fields: [projectId], references: [id])
+
+  expiresAt DateTime? // For temporary grants
+  grantedAt DateTime  @default(now())
+
+  @@unique([userId, roleId, projectId])
+}
+
+model AbacPolicy {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  policyType String // "ip_restriction", "time_restriction"
+  rules      Json // The logic
+  appliesTo  Json // Target roles/envs
+  priority   Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model BreakGlassSession {
+  id         String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String    @db.ObjectId
+  user       User      @relation(fields: [userId], references: [id])
+  projectId  String?   @db.ObjectId
+  project    Project?  @relation(fields: [projectId], references: [id])
+  incidentId String
+  reason     String
+  startedAt  DateTime  @default(now())
+  expiresAt  DateTime
+  endedAt    DateTime?
+  isActive   Boolean   @default(true)
+}
+
+// WEBHOOK MODEL
+model Webhook {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId String   @db.ObjectId
+  url       String
+  events    String[] // "secret.create", "secret.update", "secret.access"
+  active    Boolean  @default(true)
+  project   Project  @relation(fields: [projectId], references: [id])
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("webhooks")
+}
+
+// SERVICE ACCOUNT MODEL
+model ServiceAccount {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  projectId   String   @db.ObjectId
+  project     Project  @relation(fields: [projectId], references: [id])
+  permissions String[]
+
+  apiKeys ApiKey[]
+
+  createdBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

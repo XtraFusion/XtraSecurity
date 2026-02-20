@@ -231,7 +231,7 @@ const TeamDetail = () => {
 
   const handleDeleteTeam = async () => {
     try {
-      await apiClient.delete(`/api/team/${teamId}`);
+      await axios.delete(`/api/team`, { data: { teamId } });
       toast({ title: "Team deleted", description: `${team?.name} has been deleted.` });
       router.push("/teams");
     } catch (error) {

@@ -19,24 +19,27 @@ export async function GET(req: Request) {
     else startDate.setDate(startDate.getDate() - 7);
 
     // --- Summary Stats ---
+    // Filter by userEmail to prevent global data leak
+    const userFilter = { userEmail: session.user.email };
+
     const [totalEvents, anomalyCount, rateLimitCount] = await Promise.all([
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate } },
+        where: { timestamp: { gte: startDate }, ...userFilter },
       }),
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate }, isAnomaly: true },
+        where: { timestamp: { gte: startDate }, isAnomaly: true, ...userFilter },
       }),
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate }, rateLimitHit: true },
+        where: { timestamp: { gte: startDate }, rateLimitHit: true, ...userFilter },
       }),
     ]);
 
-    // Unique IPs via aggregation
+    // Unique IPs via aggregation (filtered)
     let uniqueIps = 0;
     try {
       const ipAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } } } },
+          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, userEmail: session.user.email } },
           { $group: { _id: "$ipAddress" } },
           { $count: "total" },
         ],
@@ -51,7 +54,7 @@ export async function GET(req: Request) {
     try {
       const trendAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } } } },
+          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, userEmail: session.user.email } },
           {
             $group: {
               _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
@@ -76,7 +79,7 @@ export async function GET(req: Request) {
     try {
       const countryAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, country: { $ne: null } } },
+          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, country: { $ne: null }, userEmail: session.user.email } },
           { $group: { _id: "$country", count: { $sum: 1 } } },
           { $sort: { count: -1 } },
           { $limit: 8 },
@@ -92,7 +95,7 @@ export async function GET(req: Request) {
 
     // --- Recent Anomalies ---
     const recentAnomalies = await prisma.securityEvent.findMany({
-      where: { isAnomaly: true, timestamp: { gte: startDate } },
+      where: { isAnomaly: true, timestamp: { gte: startDate }, ...userFilter },
       orderBy: { timestamp: "desc" },
       take: 10,
       select: {

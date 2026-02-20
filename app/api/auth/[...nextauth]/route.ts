@@ -1,11 +1,12 @@
 import NextAuth from "next-auth"
 import GoogleProvider from "next-auth/providers/google"
+import GithubProvider from "next-auth/providers/github"
 import CredentialsProvider from "next-auth/providers/credentials"
 import type { NextAuthOptions } from "next-auth"
 import prisma from "@/lib/db"
 
-// Helper: upsert a Google user and create their workspace + subscription on first sign-in
-async function upsertGoogleUser(profile: { email: string; name?: string | null; image?: string | null }) {
+// Helper: upsert an OAuth user (Google or GitHub)
+async function upsertOAuthUser(profile: { email: string; name?: string | null; image?: string | null }) {
   let user = await prisma.user.findUnique({ where: { email: profile.email } })
 
   if (!user) {
@@ -47,7 +48,7 @@ async function upsertGoogleUser(profile: { email: string; name?: string | null; 
         },
       })
     } catch (e) {
-      console.error("[auth] Failed to create workspace/subscription for new Google user:", e)
+      console.error("[auth] Failed to create workspace/subscription for new OAuth user:", e)
     }
   } else {
     // Update profile image if changed
@@ -137,6 +138,10 @@ export const authOptions: NextAuthOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID!,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
+    GithubProvider({
+      clientId: process.env.GITHUB_CLIENT_ID!,
+      clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+    }),
   ],
   secret: process.env.NEXTAUTH_SECRET,
   session: {
@@ -144,10 +149,10 @@ export const authOptions: NextAuthOptions = {
   },
   callbacks: {
     async signIn({ user, account }) {
-      // For Google OAuth: upsert the user in our DB and attach their DB id to the token
-      if (account?.provider === "google" && user.email) {
+      // For OAuth (Google/GitHub): upsert the user in our DB and attach their DB id to the token
+      if ((account?.provider === "google" || account?.provider === "github") && user.email) {
         try {
-          const dbUser = await upsertGoogleUser({
+          const dbUser = await upsertOAuthUser({
             email: user.email,
             name: user.name,
             image: user.image,
@@ -157,7 +162,7 @@ export const authOptions: NextAuthOptions = {
           ;(user as any).role = dbUser.role
           ;(user as any).tier = (dbUser as any).tier || "free"
         } catch (e) {
-          console.error("[auth] Failed to upsert Google user:", e)
+          console.error(`[auth] Failed to upsert ${account.provider} user:`, e)
           return false // Deny sign-in if DB write fails
         }
       }

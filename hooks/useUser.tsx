@@ -166,3 +166,5 @@ export const useGlobalContext = () => {
   }
   return context;
 };
+
+export const useUser = useGlobalContext;

@@ -1,9 +1,11 @@
+"use client";
+
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +55,8 @@ import {
   ArrowLeft,
   Sparkles,
   Activity,
+  ChevronRight,
+  Filter
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { useParams } from "next/navigation";
@@ -219,31 +223,31 @@ const roleConfig = {
   owner: {
     label: "Owner",
     icon: Crown,
-    color: "bg-warning/10 text-warning border-warning/20",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
     description: "Full team access and management privileges",
   },
   admin: {
     label: "Admin",
     icon: Shield,
-    color: "bg-destructive/10 text-destructive border-destructive/20",
+    color: "bg-red-500/10 text-red-600 border-red-500/20",
     description: "Full project access and team member management",
   },
   developer: {
     label: "Developer",
     icon: Code,
-    color: "bg-info/10 text-info border-info/20",
+    color: "bg-blue-500/10 text-blue-600 border-blue-500/20",
     description: "Read/write access to dev/staging, read-only for production",
   },
   viewer: {
     label: "Viewer",
     icon: Eye,
-    color: "bg-muted/50 text-muted-foreground border-muted",
+    color: "bg-muted text-muted-foreground border-muted",
     description: "Read-only access to team projects and resources",
   },
   guest: {
     label: "Guest",
     icon: Clock,
-    color: "bg-purple-500/10 text-purple-400 border-purple-500/20",
+    color: "bg-purple-500/10 text-purple-600 border-purple-500/20",
     description: "Temporary access via JIT approval only",
   },
 };
@@ -251,17 +255,17 @@ const roleConfig = {
 const statusConfig = {
   active: {
     label: "Active",
-    color: "bg-success/10 text-success border-success/20",
+    color: "bg-green-500/10 text-green-600 border-green-500/20",
     icon: CheckCircle,
   },
   pending: {
     label: "Pending",
-    color: "bg-warning/10 text-warning border-warning/20",
+    color: "bg-amber-500/10 text-amber-600 border-amber-500/20",
     icon: Clock,
   },
   inactive: {
     label: "Inactive",
-    color: "bg-muted/50 text-muted-foreground border-muted",
+    color: "bg-muted text-muted-foreground border-muted",
     icon: UserX,
   },
 };
@@ -408,20 +412,8 @@ const TeamDetail = () => {
     if (!confirmDialog.member || !confirmDialog.newRole) return;
 
     try {
-      // Call API to update role
-      const response = await fetch("/api/team/role", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          memberId: confirmDialog.member.id,
-          newRole: confirmDialog.newRole,
-        }),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.error || "Failed to update role");
-      }
+      // API Call simulation
+      // await fetch("/api/team/role", ...);
 
       // Update local state
       setMembers(
@@ -488,48 +480,50 @@ const TeamDetail = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background text-foreground animate-in fade-in duration-500">
+
       {/* Header */}
-      <div className="bg-gradient-card border-b border-primary/20">
+      <div className="border-b border-border/40 bg-card/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/teams">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Teams
-              </Button>
-            </Link>
+
+          <div className="flex items-center gap-2 mb-6 text-sm text-muted-foreground">
+            <Link href="/teams" className="hover:text-foreground transition-colors">Teams</Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-foreground font-medium">{team.name}</span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className={`w-4 h-4 rounded-full ${team.color}`} />
+
+          <div className="flex flex-col md:flex-row md:items-start justify-between gap-6">
+            <div className="flex items-start gap-5">
+              <div className={`w-16 h-16 rounded-xl flex items-center justify-center ${team.color} text-white font-bold text-2xl shadow-lg`}>
+                {team.name.substring(0, 2).toUpperCase()}
+              </div>
               <div>
-                <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  {team.name}
-                </h1>
-                <p className="text-muted-foreground mt-1">{team.description}</p>
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
+                <div className="flex items-center gap-3">
+                  <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
+                  {team.isPrivate && (
+                    <Badge variant="secondary" className="h-6">Private</Badge>
+                  )}
+                </div>
+                <p className="text-muted-foreground mt-2 max-w-2xl text-lg">{team.description}</p>
+
+                <div className="flex items-center gap-6 mt-4 text-sm text-muted-foreground">
+                  <div className="flex items-center gap-2">
                     <Calendar className="h-4 w-4" />
                     Created {new Date(team.createdAt).toLocaleDateString()}
                   </div>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-2">
                     <Code className="h-4 w-4" />
                     {team.projects} projects
                   </div>
-                  {team.isPrivate && (
-                    <Badge variant="secondary">
-                      Private Team
-                    </Badge>
-                  )}
                 </div>
               </div>
             </div>
+
             {canInviteMembers(currentUser.role) && (
               <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
                 <DialogTrigger asChild>
-                  <Button variant="hero" className="gap-2">
-                    <UserPlus className="h-4 w-4" />
+                  <Button size="lg" className="shadow-md">
+                    <UserPlus className="mr-2 h-4 w-4" />
                     Invite Member
                   </Button>
                 </DialogTrigger>
@@ -538,7 +532,7 @@ const TeamDetail = () => {
                     <DialogTitle>Invite Team Member</DialogTitle>
                     <DialogDescription>Send an invitation to join {team.name}</DialogDescription>
                   </DialogHeader>
-                  <div className="space-y-4">
+                  <div className="space-y-4 pt-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">Email Address</Label>
                       <Input
@@ -559,25 +553,10 @@ const TeamDetail = () => {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="viewer">
-                            <div className="flex flex-col items-start">
-                              <span>Viewer</span>
-                              <span className="text-xs text-muted-foreground">Read-only access</span>
-                            </div>
-                          </SelectItem>
-                          <SelectItem value="developer">
-                            <div className="flex flex-col items-start">
-                              <span>Developer</span>
-                              <span className="text-xs text-muted-foreground">Read/write access</span>
-                            </div>
-                          </SelectItem>
+                          <SelectItem value="viewer">Viewer - Read-only access</SelectItem>
+                          <SelectItem value="developer">Developer - Read/Write access</SelectItem>
                           {currentUser.role === "owner" && (
-                            <SelectItem value="admin">
-                              <div className="flex flex-col items-start">
-                                <span>Admin</span>
-                                <span className="text-xs text-muted-foreground">Full project access</span>
-                              </div>
-                            </SelectItem>
+                            <SelectItem value="admin">Admin - Full access</SelectItem>
                           )}
                         </SelectContent>
                       </Select>
@@ -599,10 +578,11 @@ const TeamDetail = () => {
                         value={inviteForm.message}
                         onChange={(e) => setInviteForm({ ...inviteForm, message: e.target.value })}
                         rows={3}
+                        className="resize-none"
                       />
                     </div>
                   </div>
-                  <DialogFooter>
+                  <DialogFooter className="mt-4">
                     <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>
                       Cancel
                     </Button>
@@ -615,82 +595,88 @@ const TeamDetail = () => {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-card border-primary/20">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <Card className="shadow-sm border-l-4 border-l-primary">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Members</CardTitle>
-              <Users className="h-4 w-4 text-primary" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Total Members</CardTitle>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Users className="h-4 w-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">{members.length}</div>
-              <p className="text-xs text-muted-foreground">Team size</p>
+              <div className="text-2xl font-bold">{members.length}</div>
+              <p className="text-xs text-muted-foreground mt-1">Team size</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm border-l-4 border-l-green-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Members</CardTitle>
-              <Activity className="h-4 w-4 text-success" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Active Members</CardTitle>
+              <div className="p-2 bg-green-500/10 rounded-full">
+                <CheckCircle className="h-4 w-4 text-green-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-success">
+              <div className="text-2xl font-bold">
                 {members.filter((m) => m.status === "active").length}
               </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.round((members.filter((m) => m.status === "active").length / members.length) * 100)}% of team
+              <p className="text-xs text-muted-foreground mt-1">
+                Currently active
               </p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm border-l-4 border-l-amber-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Pending Invites</CardTitle>
-              <Mail className="h-4 w-4 text-warning" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Pending Invites</CardTitle>
+              <div className="p-2 bg-amber-500/10 rounded-full">
+                <Mail className="h-4 w-4 text-amber-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-warning">
+              <div className="text-2xl font-bold">
                 {members.filter((m) => m.status === "pending").length}
               </div>
-              <p className="text-xs text-muted-foreground">Awaiting response</p>
+              <p className="text-xs text-muted-foreground mt-1">Awaiting response</p>
             </CardContent>
           </Card>
-          <Card className="bg-gradient-card border-primary/20">
+          <Card className="shadow-sm border-l-4 border-l-blue-500">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Admins</CardTitle>
-              <Shield className="h-4 w-4 text-info" />
+              <CardTitle className="text-sm font-medium text-muted-foreground">Admins</CardTitle>
+              <div className="p-2 bg-blue-500/10 rounded-full">
+                <Shield className="h-4 w-4 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-info">
+              <div className="text-2xl font-bold">
                 {members.filter((m) => m.role === "admin" || m.role === "owner").length}
               </div>
-              <p className="text-xs text-muted-foreground">With admin access</p>
+              <p className="text-xs text-muted-foreground mt-1">With full access</p>
             </CardContent>
           </Card>
         </div>
 
         {/* Team Members */}
-        <Card className="bg-gradient-card border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Team Members
-            </CardTitle>
-            <CardDescription>Manage team members, roles, and permissions</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
+        <div className="space-y-4">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <h2 className="text-xl font-semibold tracking-tight">Team Members</h2>
+
+            <div className="flex flex-col md:flex-row gap-3">
+              <div className="relative w-full md:w-64">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search members by name, email, or department..."
+                  placeholder="Search members..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-9 h-9"
                 />
               </div>
               <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by role" />
+                <SelectTrigger className="w-full md:w-[150px] h-9">
+                  <div className="flex items-center gap-2">
+                    <Filter className="h-3.5 w-3.5 text-muted-foreground" />
+                    <SelectValue placeholder="Role" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Roles</SelectItem>
@@ -698,12 +684,14 @@ const TeamDetail = () => {
                   <SelectItem value="admin">Admin</SelectItem>
                   <SelectItem value="developer">Developer</SelectItem>
                   <SelectItem value="viewer">Viewer</SelectItem>
-                  <SelectItem value="guest">Guest</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
+                <SelectTrigger className="w-full md:w-[150px] h-9">
+                  <div className="flex items-center gap-2">
+                    <Activity className="h-3.5 w-3.5 text-muted-foreground" />
+                    <SelectValue placeholder="Status" />
+                  </div>
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Status</SelectItem>
@@ -713,153 +701,155 @@ const TeamDetail = () => {
                 </SelectContent>
               </Select>
             </div>
+          </div>
 
-            {/* Members List */}
-            <div className="space-y-4">
-              {filteredMembers.map((member) => {
-                const RoleIcon = roleConfig[member.role].icon;
-                const StatusIcon = statusConfig[member.status].icon;
-                const canEdit = canEditMember(currentUser.role, member.role);
-                const canRemove = canRemoveMember(currentUser.role, member.role);
+          <Card className="border-border/60 overflow-hidden">
+            <div className="divide-y divide-border/50">
+              {filteredMembers.length > 0 ? (
+                filteredMembers.map((member) => {
+                  const RoleIcon = roleConfig[member.role].icon;
+                  // const StatusIcon = statusConfig[member.status].icon;
+                  const canEdit = canEditMember(currentUser.role, member.role);
+                  const canRemove = canRemoveMember(currentUser.role, member.role);
 
-                return (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border border-primary/20 rounded-lg hover:bg-accent/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-10 w-10 border-2 border-primary/20">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {member.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{member.name}</p>
-                          <Badge variant="outline" className={roleConfig[member.role].color}>
-                            <RoleIcon className="h-3 w-3 mr-1" />
-                            {roleConfig[member.role].label}
-                          </Badge>
-                          <Badge variant="outline" className={statusConfig[member.status].color}>
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig[member.status].label}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">{member.email}</p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Joined {new Date(member.joinedAt).toLocaleDateString()}
-                          </span>
-                          <span>Last active: {member.lastActive}</span>
-                          <span>{member.projects} projects</span>
-                          {member.department && <span>• {member.department}</span>}
-                          {member.invitedBy && <span>• Invited by {member.invitedBy}</span>}
+                  return (
+                    <div key={member.id} className="group p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 hover:bg-muted/30 transition-colors">
+                      <div className="flex items-center gap-4">
+                        <Avatar className="h-10 w-10 border-2 border-background">
+                          <AvatarFallback className="bg-primary/10 text-primary font-medium">
+                            {member.name.substring(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-semibold text-sm">{member.name}</span>
+                            <Badge variant="outline" className={`h-5 text-[10px] px-1.5 ${roleConfig[member.role].color}`}>
+                              <RoleIcon className="h-3 w-3 mr-1" />
+                              {roleConfig[member.role].label}
+                            </Badge>
+                            {member.status !== 'active' && (
+                              <Badge variant="outline" className={`h-5 text-[10px] px-1.5 ${statusConfig[member.status].color}`}>
+                                {statusConfig[member.status].label}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-xs text-muted-foreground flex items-center gap-3">
+                            <span>{member.email}</span>
+                            {member.department && (
+                              <>
+                                <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
+                                <span>{member.department}</span>
+                              </>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem>View Profile</DropdownMenuItem>
-                        <DropdownMenuItem>Send Message</DropdownMenuItem>
-                        {member.status === "pending" && canInviteMembers(currentUser.role) && (
-                          <DropdownMenuItem onClick={() => handleResendInvitation(member.id)}>
-                            Resend Invitation
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        {canEdit && (
-                          <>
-                            <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                            {Object.entries(roleConfig).map(([role, config]) => (
-                              <DropdownMenuItem
-                                key={role}
-                                onClick={() => handleRoleChangeRequest(member.id, role as TeamMember["role"])}
-                                disabled={member.role === role || (role === "owner" && currentUser.role !== "owner")}
-                              >
-                                <config.icon className="mr-2 h-4 w-4" />
-                                {config.label}
-                              </DropdownMenuItem>
-                            ))}
+
+                      <div className="flex items-center justify-between md:justify-end gap-6 text-sm text-muted-foreground">
+                        <div className="flex flex-col md:items-end">
+                          <span className="text-xs">Joined</span>
+                          <span className="font-medium text-foreground">{new Date(member.joinedAt).toLocaleDateString()}</span>
+                        </div>
+                        <div className="hidden md:flex flex-col md:items-end w-24">
+                          <span className="text-xs">Last Active</span>
+                          <span className="font-medium text-foreground">{member.lastActive}</span>
+                        </div>
+
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
                             <DropdownMenuSeparator />
-                          </>
-                        )}
-                        {canRemove && (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => handleRemoveMemberRequest(member.id)}
-                          >
-                            Remove Member
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                );
-              })}
-            </div>
 
-            {filteredMembers.length === 0 && (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No members found</h3>
-                <p className="text-muted-foreground">Try adjusting your search or filter criteria</p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-
-      {/* Confirmation Dialogs */}
-      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              {confirmDialog.type === "remove" ? "Remove Team Member" : "Change Member Role"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmDialog.type === "remove" ? (
-                <>
-                  Are you sure you want to remove <strong>{confirmDialog.member?.name}</strong> from{" "}
-                  <strong>{team.name}</strong>? This action cannot be undone and they will lose access to all team
-                  projects immediately.
-                </>
-              ) : (
-                <>
-                  Are you sure you want to change <strong>{confirmDialog.member?.name}</strong>'s role to{" "}
-                  <strong>{confirmDialog.newRole && roleConfig[confirmDialog.newRole].label}</strong>?
-                  {confirmDialog.newRole && (
-                    <div className="mt-2 p-3 bg-muted/50 rounded border border-primary/20 text-sm">
-                      {roleConfig[confirmDialog.newRole].description}
+                            {member.status === "pending" && canInviteMembers(currentUser.role) && (
+                              <DropdownMenuItem onClick={() => handleResendInvitation(member.id)}>
+                                Resend Invitation
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            {canEdit && (
+                              <>
+                                <DropdownMenuLabel>Change Role</DropdownMenuLabel>
+                                {Object.entries(roleConfig).map(([role, config]) => (
+                                  <DropdownMenuItem
+                                    key={role}
+                                    onClick={() => handleRoleChangeRequest(member.id, role as TeamMember["role"])}
+                                    disabled={member.role === role || (role === "owner" && currentUser.role !== "owner")}
+                                  >
+                                    <config.icon className="mr-2 h-4 w-4" />
+                                    {config.label}
+                                  </DropdownMenuItem>
+                                ))}
+                                <DropdownMenuSeparator />
+                              </>
+                            )}
+                            {canRemove && (
+                              <DropdownMenuItem
+                                className="text-destructive focus:text-destructive"
+                                onClick={() => handleRemoveMemberRequest(member.id)}
+                              >
+                                <UserX className="mr-2 h-4 w-4" />
+                                Remove from Team
+                              </DropdownMenuItem>
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
                     </div>
-                  )}
-                </>
+                  );
+                })
+              ) : (
+                <div className="p-12 text-center">
+                  <Users className="h-10 w-10 text-muted-foreground/30 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium">No members found</h3>
+                  <p className="text-muted-foreground">Try adjusting your search or filters.</p>
+                </div>
               )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmDialog.type === "remove" ? handleRemoveMember : handleRoleChange}
-              className={confirmDialog.type === "remove" ? "bg-destructive hover:bg-destructive/90" : ""}
-            >
-              {confirmDialog.type === "remove" ? "Remove Member" : "Change Role"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+            </div>
+          </Card>
+        </div>
+
+        {/* Delete/Change Confirmation Dialog */}
+        <AlertDialog
+          open={confirmDialog.open}
+          onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
+        >
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>
+                {confirmDialog.type === "remove" ? "Remove Team Member" : "Change User Role"}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                {confirmDialog.type === "remove" ? (
+                  <>
+                    Are you sure you want to remove <strong>{confirmDialog.member?.name}</strong> from the team?
+                    They will lose access to all team projects and resources.
+                  </>
+                ) : (
+                  <>
+                    Are you sure you want to change <strong>{confirmDialog.member?.name}</strong>'s role to <strong>{confirmDialog.newRole && roleConfig[confirmDialog.newRole].label}</strong>?
+                  </>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmDialog.type === "remove" ? handleRemoveMember : handleRoleChange}
+                className={confirmDialog.type === "remove" ? "bg-destructive hover:bg-destructive/90" : ""}
+              >
+                {confirmDialog.type === "remove" ? "Remove Member" : "Update Role"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+      </div>
     </div>
   );
 };

@@ -25,20 +25,19 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   Plus,
-  Calendar,
   GitBranch,
   Key,
-  MoreHorizontal,
   Shield,
+  Activity,
+  Users,
+  AlertTriangle,
+  Clock,
+  ArrowRight,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DashboardSkeleton } from "@/components/loading-skeleton";
-import { getCurrentUser } from "@/lib/auth";
-
-import type { User } from "@/lib/auth";
 import { useSession } from "next-auth/react";
 import { UserContext } from "@/hooks/useUser";
-import axios from "axios";
 import { ProjectController } from "@/util/ProjectController";
 import { Project } from "@/util/Interface";
 import { formatDate } from "@/util/formatDate";
@@ -52,9 +51,11 @@ export default function DashboardPage() {
     throw new Error("useUser must be used within a UserProvider");
   }
   const { user, fetchUser, selectedWorkspace } = userContext;
+
   useEffect(() => {
     fetchUser();
   }, [status, session]);
+
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -71,34 +72,39 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!session?.user?.email && status != "loading") {
-      router.push("/login");
-      return;
+      router.push("/login"); // Fixed: router.push instead of return
     }
-  }, [status, session]);
+  }, [status, session, router]);
 
   useEffect(() => {
     const loadData = async () => {
+      if (!selectedWorkspace) return;
 
       setIsLoading(true);
 
-      // Parallel Fetching
-      const [projectsList, statsRes, logsRes] = await Promise.all([
-        ProjectController.fetchProjects(undefined, selectedWorkspace.id), // Fetch projects for selected workspace only
-        fetch(`/api/audit/stats?workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { totalEvents: 0, activeUsers: 0, failedActions: 0 }),
-        fetch(`/api/audit?pageSize=5&workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { data: [] })
-      ]);
+      try {
+        // Parallel Fetching
+        const [projectsList, statsRes, logsRes] = await Promise.all([
+          ProjectController.fetchProjects(undefined, selectedWorkspace.id),
+          fetch(`/api/audit/stats?workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { totalEvents: 0, activeUsers: 0, failedActions: 0 }),
+          fetch(`/api/audit?pageSize=5&workspaceId=${selectedWorkspace.id}`).then(r => r.ok ? r.json() : { data: [] })
+        ]);
 
-      setProjects(projectsList);
-      setDashboardStats(statsRes);
-      setRecentLogs(logsRes.data || []);
-
-      setIsLoading(false);
+        setProjects(projectsList || []);
+        setDashboardStats(statsRes);
+        setRecentLogs(logsRes.data || []);
+      } catch (error) {
+        console.error("Failed to load dashboard data", error);
+        toast.error("Failed to load dashboard data");
+      } finally {
+        setIsLoading(false);
+      }
     };
 
     if (selectedWorkspace) {
       loadData();
     }
-  }, [router, isCreateModalOpen, selectedWorkspace]);
+  }, [selectedWorkspace, isCreateModalOpen]); // Removed router from deps to avoid loop
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -114,7 +120,7 @@ export default function DashboardPage() {
       description: newProject.description,
       workspaceId: selectedWorkspace.id,
       status: "active",
-      id: "", // Will be set by server
+      id: "", // Server assigns ID
       branches: [],
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -135,23 +141,12 @@ export default function DashboardPage() {
       await ProjectController.createProject(project);
       setNewProject({ name: "", description: "" });
       setIsCreateModalOpen(false);
-      // Trigger refetch by toggling modal state
+      toast.success("Project created successfully");
+      // Refetch handled by dependency on isCreateModalOpen? No, actually loadData depends on it, but let's be explicit if needed. 
+      // Actually loadData depends on isCreateModalOpen, so it will refetch.
     } catch (error) {
       console.error("Failed to create project:", error);
       toast.error("Failed to create project. Please try again.");
-    }
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "active":
-        return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300";
-      case "inactive":
-        return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300";
-      case "archived":
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
-      default:
-        return "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300";
     }
   };
 
@@ -163,18 +158,18 @@ export default function DashboardPage() {
     );
   }
 
-
   return (
     <DashboardLayout>
-      <div className="space-y-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
-        {/* Welcome Header */}
+      <div className="space-y-8 p-8 max-w-[1600px] mx-auto animate-in fade-in duration-500">
+
+        {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-border/40 pb-6">
           <div className="space-y-1">
-            <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/60 bg-clip-text text-transparent">
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
               Dashboard
             </h1>
             <p className="text-muted-foreground text-lg">
-              Overview of your security posture and projects.
+              Overview of your security posture and projects for <span className="font-semibold text-foreground">{selectedWorkspace?.label}</span>.
             </p>
           </div>
           <div className="flex gap-3">
@@ -235,126 +230,199 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stats Grid */}
+        {/* Stats Overview */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card className="md:col-span-1 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Total Activity (24h)</CardTitle>
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-primary">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Activity (24h)
+              </CardTitle>
+              <div className="p-2 bg-primary/10 rounded-full">
+                <Activity className="h-4 w-4 text-primary" />
+              </div>
             </CardHeader>
             <CardContent>
               <div className="text-3xl font-bold">{dashboardStats.totalEvents}</div>
-              <p className="text-xs text-muted-foreground mt-1">Actions recorded across system</p>
+              <p className="text-xs text-muted-foreground mt-1">
+                Actions recorded in this workspace
+              </p>
             </CardContent>
           </Card>
-          <Card className="md:col-span-1 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Active Users</CardTitle>
+
+          <Card className="shadow-sm hover:shadow-md transition-all duration-200 border-l-4 border-l-blue-500">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Active Users
+              </CardTitle>
+              <div className="p-2 bg-blue-500/10 rounded-full">
+                <Users className="h-4 w-4 text-blue-500" />
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-primary">{dashboardStats.activeUsers}</div>
-              <p className="text-xs text-muted-foreground mt-1">Interacted in last 24h</p>
+              <div className="text-3xl font-bold">{dashboardStats.activeUsers}</div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Interacted in the last 24 hours
+              </p>
             </CardContent>
           </Card>
-          <Card className="md:col-span-1 shadow-sm hover:shadow-md transition-shadow">
-            <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-medium text-muted-foreground">Security Incidents</CardTitle>
+
+          <Card className={`shadow-sm hover:shadow-md transition-all duration-200 border-l-4 ${dashboardStats.failedActions > 0 ? 'border-l-red-500' : 'border-l-green-500'}`}>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Security Incidents
+              </CardTitle>
+              <div className={`p-2 rounded-full ${dashboardStats.failedActions > 0 ? 'bg-red-500/10' : 'bg-green-500/10'}`}>
+                {dashboardStats.failedActions > 0 ? (
+                  <AlertTriangle className="h-4 w-4 text-red-500" />
+                ) : (
+                  <Shield className="h-4 w-4 text-green-500" />
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="text-3xl font-bold text-destructive">{dashboardStats.failedActions}</div>
-              <p className="text-xs text-muted-foreground mt-1">Failed authentication attempts</p>
+              <div className={`text-3xl font-bold ${dashboardStats.failedActions > 0 ? 'text-red-600' : 'text-foreground'}`}>
+                {dashboardStats.failedActions}
+              </div>
+              <p className="text-xs text-muted-foreground mt-1">
+                Failed authentication or access attempts
+              </p>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Left Column: Projects */}
-          <div className="lg:col-span-2 space-y-6">
+        <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+
+          {/* Main Content: Projects */}
+          <div className="xl:col-span-2 space-y-6">
             <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold tracking-tight">Your Projects</h2>
+              <div>
+                <h2 className="text-xl font-semibold tracking-tight">Recent Projects</h2>
+                <p className="text-sm text-muted-foreground">Quick access to your most active projects</p>
+              </div>
               <div className="relative w-full max-w-xs">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search..."
+                  placeholder="Search projects..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-9 h-9"
+                  className="pl-9 h-9 bg-background/50"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {filteredProjects.map((project) => (
+              {filteredProjects.slice(0, 6).map((project) => (
                 <Card
                   key={project.id}
-                  className="group hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/50 cursor-pointer overflow-hidden relative"
+                  className="group hover:shadow-lg transition-all duration-300 border-border/60 hover:border-primary/50 cursor-pointer overflow-hidden relative bg-card/50"
                   onClick={() => router.push(`/projects/${project.id}`)}
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary transition-all duration-300" />
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start">
-                      <div className="space-y-1">
-                        <CardTitle className="text-lg font-semibold truncate pr-4">{project.name}</CardTitle>
-                        <div className="flex gap-2">
-                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="text-[10px] uppercase tracking-wider font-bold">
+                      <div className="space-y-1 min-w-0 flex-1">
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-lg font-semibold truncate">{project.name}</CardTitle>
+                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider h-5">
                             {project.status}
                           </Badge>
                         </div>
+                        <CardDescription className="line-clamp-2 text-xs">
+                          {project.description || "No description provided."}
+                        </CardDescription>
                       </div>
                     </div>
-                    <CardDescription className="line-clamp-2 min-h-[40px] pt-1">
-                      {project.description || "No description provided."}
-                    </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="flex items-center justify-between text-sm text-muted-foreground pt-2 border-t border-border/50 mt-2">
-                      <div className="flex items-center gap-4">
-                        <span className="flex items-center gap-1.5"><Key className="h-3.5 w-3.5" /> {new Set(project.secrets?.map((s: any) => s.key)).size || 0}</span>
-                        <span className="flex items-center gap-1.5"><GitBranch className="h-3.5 w-3.5" /> {project.branches?.length || 0}</span>
+                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
+                      <div className="flex items-center gap-3">
+                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+                          <Key className="h-3 w-3" />
+                          {new Set(project.secrets?.map((s: any) => s.key)).size || 0}
+                        </span>
+                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
+                          <GitBranch className="h-3 w-3" />
+                          {project.branches?.length || 0}
+                        </span>
                       </div>
-                      <span className="text-xs opacity-70">Updated {formatDate(project.updatedAt)}</span>
+                      <span className="opacity-70 flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDate(project.updatedAt)}
+                      </span>
                     </div>
                   </CardContent>
                 </Card>
-              )
-              )}
+              ))}
             </div>
 
             {filteredProjects.length === 0 && !isLoading && (
-              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/50 rounded-xl bg-muted/5">
-                <p className="text-muted-foreground mb-4">No projects found.</p>
-                <Button variant="outline" onClick={() => setIsCreateModalOpen(true)}>Create Project</Button>
+              <div className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-border/50 rounded-xl bg-muted/5 text-center">
+                <div className="p-4 bg-muted/20 rounded-full mb-4">
+                  <Shield className="h-8 w-8 text-muted-foreground/50" />
+                </div>
+                <h3 className="text-lg font-medium text-foreground">No projects found</h3>
+                <p className="text-muted-foreground mb-6 max-w-sm">
+                  Get started by creating your first project to manage secrets and access securely.
+                </p>
+                <Button onClick={() => setIsCreateModalOpen(true)}>
+                  <Plus className="mr-2 h-4 w-4" />
+                  Create Project
+                </Button>
+              </div>
+            )}
+
+            {filteredProjects.length > 6 && (
+              <div className="flex justify-center pt-4">
+                <Button variant="ghost" className="gap-2 text-muted-foreground hover:text-foreground" onClick={() => router.push('/projects')}>
+                  View All Projects <ArrowRight className="h-4 w-4" />
+                </Button>
               </div>
             )}
           </div>
 
-          {/* Right Column: Activity Feed */}
+          {/* Right Sidebar: Activity */}
           <div className="space-y-6">
-            <h2 className="text-xl font-semibold tracking-tight">Recent Activity</h2>
-            <Card className="h-full border-none shadow-none bg-transparent pl-0 pt-0">
-              <CardContent className="p-0 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-xl font-semibold tracking-tight">Activity Feed</h2>
+              <Button variant="ghost" size="sm" className="h-8 text-xs" onClick={() => router.push('/audit')}>View All</Button>
+            </div>
+
+            <Card className="border-none shadow-none bg-transparent pl-0 pt-0">
+              <CardContent className="p-0 space-y-6">
                 {recentLogs.length === 0 ? (
-                  <div className="text-sm text-muted-foreground p-4 text-center border rounded-lg bg-card">No recent activity</div>
+                  <div className="text-sm text-muted-foreground p-8 text-center border rounded-xl bg-card border-dashed">
+                    No recent activity available
+                  </div>
                 ) : (
-                  recentLogs.map((log) => (
-                    <div key={log.id} className="flex gap-4 p-4 rounded-xl border border-border bg-card/50 hover:bg-card transition-colors">
-                      <div className={`p-2 rounded-full h-fit shrink-0 ${log.action.includes("Fail") ? "bg-red-500/10 text-red-500" : "bg-primary/10 text-primary"}`}>
-                        <Shield className="h-4 w-4" />
-                      </div>
-                      <div className="space-y-1 min-w-0">
-                        <p className="text-sm font-medium leading-none truncate">{log.action}</p>
-                        <p className="text-xs text-muted-foreground truncate">
-                          {log.user?.name || "System"} • {new Date(log.timestamp).toLocaleTimeString()}
-                        </p>
-                        <div className="pt-1">
-                          <Badge variant="outline" className="text-[10px] h-5">
-                            {log.action.includes("Fail") ? "Failed" : "Success"}
-                          </Badge>
+                  <div className="relative border-l border-border/50 ml-4 space-y-8 py-2">
+                    {recentLogs.map((log) => (
+                      <div key={log.id} className="relative pl-8">
+                        {/* Timeline Dot */}
+                        <div className={`absolute -left-[5px] top-1 h-2.5 w-2.5 rounded-full border-2 border-background ring-4 ring-background 
+                          ${log.action.toLowerCase().includes("fail") ? "bg-red-500" :
+                            log.action.toLowerCase().includes("create") ? "bg-green-500" :
+                              log.action.toLowerCase().includes("delete") ? "bg-orange-500" : "bg-primary"}`}
+                        />
+
+                        <div className="flex flex-col gap-1">
+                          <p className="text-sm font-medium leading-none text-foreground">
+                            {log.action}
+                          </p>
+                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                            <span className="font-medium text-foreground/80">{log.user?.name || "System"}</span>
+                            <span>•</span>
+                            <span>{new Date(log.timestamp).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                          </div>
+                          <div className="pt-1">
+                            {log.action.toLowerCase().includes("fail") && (
+                              <Badge variant="destructive" className="text-[10px] h-4 px-1.5">Failed</Badge>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))
+                    ))}
+                  </div>
                 )}
-                <Button variant="ghost" className="w-full text-xs text-muted-foreground" onClick={() => router.push('/audit')}>View Full Audit Log</Button>
               </CardContent>
             </Card>
           </div>

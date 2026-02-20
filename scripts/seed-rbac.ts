@@ -24,7 +24,12 @@ async function main() {
     { resource: 'project', action: 'create' },
     { resource: 'project', action: 'delete' },
     { resource: 'project', action: 'manage.members' },
+    { resource: 'project', action: 'manage.members' },
     { resource: 'project', action: 'read' }, 
+    // Access Review
+    { resource: 'access_review', action: 'read' },
+    { resource: 'access_review', action: 'write' },
+    { resource: 'access_review', action: 'start_cycle' }, 
   ];
 
   const permissions: Record<string, any> = {};

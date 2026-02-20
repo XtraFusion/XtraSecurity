@@ -63,6 +63,7 @@ export async function POST(
         // I will use `label` to store mask? No that's hacky.
         // I skipped adding `keyMask` in the schema update. I should verify schema.
         
+        keyMask: mask,
         serviceAccountId: saId,
         expiresAt
       }
@@ -102,7 +103,7 @@ export async function GET(
             lastUsed: true,
             expiresAt: true,
             createdAt: true,
-            // key: true // Don't return the hash
+            keyMask: true // Return masked key
         },
         orderBy: { createdAt: 'desc' }
     });

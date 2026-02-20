@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
 
+
 // Helper function to check authentication
 // GET /api/branch - Get all branches or filter by projectId
 // Force Rebuild
@@ -15,6 +16,19 @@ export async function GET(request: NextRequest) {
 
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
+
+    // Access Control & Redaction Check
+    let isViewer = false;
+    if (projectId) {
+        const { getUserProjectRole } = await import("@/lib/permissions");
+        const role = await getUserProjectRole(auth.userId, projectId);
+        if (!role) {
+             // If implicit access (e.g. from Team), getUserProjectRole might return null?
+             // getUserProjectRole handles team logic. So if null, really no access.
+             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        if (role === 'viewer') isViewer = true;
+    }
 
     const branches = await prisma.branch.findMany({
       where: projectId ? { projectId } : undefined,
@@ -42,6 +56,15 @@ export async function GET(request: NextRequest) {
     const branchesWithDecryptedSecrets = branchesWithUsers.map((branch) => ({
       ...branch,
       secrets: branch.secrets?.map((secret) => {
+        // Redact for Viewers
+        if (isViewer) {
+            return {
+                ...secret,
+                value: "[REDACTED]",
+                history: []
+            };
+        }
+
         let decryptedValue = "";
         try {
           const encryptedString = secret.value[0];
@@ -103,7 +126,19 @@ export async function POST(request: NextRequest) {
     const operation = searchParams.get("operation");
     const branchId = searchParams.get("branchId");
 
+    // Operations might need permissions too
     if (operation === "clear" && branchId) {
+      // Fetch branch to check project
+      const branchToClear = await prisma.branch.findUnique({ where: { id: branchId } });
+      if (!branchToClear) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+
+      // RBAC
+      const { getUserProjectRole } = await import("@/lib/permissions");
+      const role = await getUserProjectRole(auth.userId, branchToClear.projectId);
+      if (!role || role === 'viewer') {
+           return NextResponse.json({ error: "Forbidden: Viewers cannot clear branches" }, { status: 403 });
+      }
+
       // Clear branch operation
       await prisma.secret.deleteMany({
         where: { branchId }
@@ -121,6 +156,17 @@ export async function POST(request: NextRequest) {
         { error: "Name and projectId are required" },
         { status: 400 }
       );
+    }
+
+    // RBAC: Check Project Permissions
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(auth.userId, projectId);
+    
+    if (!role) {
+         return NextResponse.json({ error: "Forbidden: No access to project" }, { status: 403 });
+    }
+    if (role === 'viewer') {
+         return NextResponse.json({ error: "Forbidden: Viewers cannot create branches" }, { status: 403 });
     }
 
     // Check if branch with same name exists in project
@@ -192,6 +238,14 @@ export async function DELETE(request: NextRequest) {
       );
     }
 
+    // RBAC Check
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(auth.userId, existingBranch.projectId);
+    
+    if (!role || role === 'viewer') {
+         return NextResponse.json({ error: "Forbidden: Viewers cannot delete branches" }, { status: 403 });
+    }
+    
     // Prevent deletion of main branch
     if (existingBranch.name.toLowerCase() === "main") {
       return NextResponse.json(

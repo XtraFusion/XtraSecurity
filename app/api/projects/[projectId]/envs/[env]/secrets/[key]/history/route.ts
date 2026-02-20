@@ -132,16 +132,27 @@ export async function POST(
 
         const historyEntry = {
             version: newVersion,
-            value: targetVersion.value, // Keep original encrypted value
+            value: targetVersion.value, // Keep plain text in history
             updatedAt: new Date().toISOString(),
             updatedBy: userId,
             description: `Rolled back to version ${version}`
         };
 
+        // Encrypt the target value for the main storage
+        let encryptedValueToStore: string[] = [];
+        try {
+            // targetVersion.value might be plain text
+            const encryptedValue = encrypt(targetVersion.value);
+            const encryptedString = JSON.stringify(encryptedValue);
+            encryptedValueToStore = [encryptedString];
+        } catch (e) {
+            return NextResponse.json({ error: "Failed to process target version value" }, { status: 500 });
+        }
+
         const updated = await prisma.secret.update({
             where: { id: secret.id },
             data: {
-                value: targetVersion.value,
+                value: encryptedValueToStore, // Array of JSON string (encrypted)
                 version: newVersion,
                 updatedBy: userId,
                 history: [historyEntry, ...history]
@@ -149,14 +160,16 @@ export async function POST(
         });
 
         // Trigger Webhook
-        triggerWebhooks(projectId, "secret.rollback", {
-            key,
-            environment: env,
-            fromVersion: secret.version,
-            toVersion: newVersion,
-            targetOriginalVersion: version,
-            updatedBy: userId
-        });
+        try {
+            triggerWebhooks(projectId, "secret.rollback", {
+                key,
+                environment: env,
+                fromVersion: secret.version,
+                toVersion: newVersion,
+                targetOriginalVersion: version,
+                updatedBy: userId
+            });
+        } catch(e) { /* ignore webhook error */ }
 
         return NextResponse.json({ success: true, version: newVersion });
 

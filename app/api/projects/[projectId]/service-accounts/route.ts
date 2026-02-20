@@ -76,33 +76,21 @@ export async function POST(
 
     // Verify project access (Must be owner or have write permissions - simplified to project access for now)
     // TODO: stricter permission check
-    const project = await prisma.project.findFirst({
-      where: {
-        id: projectId,
-        OR: [
-          { userId: session.user.id },
-          {
-            teamProjects: {
-              some: {
-                team: {
-                  members: {
-                    some: {
-                      userId: session.user.id,
-                      status: "active",
-                      role: { in: ["owner", "admin", "member"] } // Review roles
-                    }
-                  }
-                }
-              }
-            }
-          }
-        ]
-      }
-    });
+    // Verify project access and RBAC
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(session.user.id, projectId);
 
-    if (!project) {
-      return NextResponse.json({ error: "Project not found or access denied" }, { status: 404 });
+    if (!role) {
+         return NextResponse.json({ error: "Project not found or access denied" }, { status: 404 });
     }
+
+    // RBAC: Only Owner/Admin can create Service Accounts
+    // Developers cannot create SAs (strict security)
+    if (role !== "owner" && role !== "admin") {
+         return NextResponse.json({ error: "Only project owners and admins can create Service Accounts" }, { status: 403 });
+    }
+
+
 
     const serviceAccount = await prisma.serviceAccount.create({
       data: {

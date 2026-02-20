@@ -37,6 +37,7 @@ interface ServiceAccount {
 interface ApiKey {
     id: string;
     label: string;
+    keyMask?: string;
     lastUsed: string | null;
     createdAt: string;
     expiresAt: string | null;
@@ -144,6 +145,17 @@ export function ServiceAccountsTab() {
             setIsViewKeysOpen(true);
         } catch (error) {
             toast({ title: "Error", description: "Failed to load keys", variant: "destructive" });
+        }
+    };
+
+    const handleDeleteKey = async (keyId: string) => {
+        if (!confirm("Start revocation? This API key will stop working immediately.")) return;
+        try {
+            await axios.delete(`/api/projects/${projectId}/service-accounts/${selectedSaId}/keys/${keyId}`);
+            toast({ title: "Revoked", description: "API Key revoked successfully" });
+            if (selectedSaId) viewKeys(selectedSaId);
+        } catch (error) {
+            toast({ title: "Error", description: "Failed to revoke key", variant: "destructive" });
         }
     };
 
@@ -294,21 +306,29 @@ export function ServiceAccountsTab() {
                             <TableHeader>
                                 <TableRow>
                                     <TableHead>Label</TableHead>
+                                    <TableHead>Key Mask</TableHead>
                                     <TableHead>Created</TableHead>
                                     <TableHead>Last Used</TableHead>
+                                    <TableHead className="text-right">Action</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {saKeys.map(key => (
                                     <TableRow key={key.id}>
-                                        <TableCell>{key.label}</TableCell>
+                                        <TableCell className="font-medium">{key.label}</TableCell>
+                                        <TableCell className="font-mono text-xs">{key.keyMask || "••••"}</TableCell>
                                         <TableCell>{new Date(key.createdAt).toLocaleDateString()}</TableCell>
                                         <TableCell>{key.lastUsed ? new Date(key.lastUsed).toLocaleDateString() : "Never"}</TableCell>
+                                        <TableCell className="text-right">
+                                            <Button variant="ghost" size="sm" onClick={() => handleDeleteKey(key.id)} className="text-destructive hover:text-destructive hover:bg-destructive/10">
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </TableCell>
                                     </TableRow>
                                 ))}
                                 {saKeys.length === 0 && (
                                     <TableRow>
-                                        <TableCell colSpan={3} className="text-center text-muted-foreground">No active keys.</TableCell>
+                                        <TableCell colSpan={5} className="text-center text-muted-foreground">No active keys.</TableCell>
                                     </TableRow>
                                 )}
                             </TableBody>

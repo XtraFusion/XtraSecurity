@@ -1,11 +1,43 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import * as React from "react";
+import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 import {
-  ChevronsUpDown,
-  CheckIcon,
-  PlusCircleIcon,
-} from "lucide-react";
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+  CommandSeparator,
+} from "@/components/ui/command";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useGlobalContext } from "@/hooks/useUser";
 
 type Workspace = {
@@ -14,9 +46,9 @@ type Workspace = {
   value: string;
 };
 
-export default function WorkspaceSwitcher() {
-  const [open, setOpen] = useState(false);
-  const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = useState(false);
+export default function WorkspaceSwitcher({ className }: { className?: string }) {
+  const [open, setOpen] = React.useState(false);
+  const [showNewWorkspaceDialog, setShowNewWorkspaceDialog] = React.useState(false);
 
   const {
     selectedWorkspace,
@@ -25,11 +57,12 @@ export default function WorkspaceSwitcher() {
     refreshWorkspaces
   } = useGlobalContext();
 
-  const [creatingName, setCreatingName] = useState("");
-  const [creatingPlan, setCreatingPlan] = useState("free");
+  const [creatingName, setCreatingName] = React.useState("");
+  const [creatingPlan, setCreatingPlan] = React.useState("free");
+  const [isLoading, setIsLoading] = React.useState(false);
 
   // Select first workspace if none selected 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!selectedWorkspace && workspaces && workspaces.length > 0) {
       setSelectedWorkspace(workspaces[0]);
     }
@@ -37,6 +70,7 @@ export default function WorkspaceSwitcher() {
 
   const createWorkspace = async () => {
     if (!creatingName) return;
+    setIsLoading(true);
     try {
       const res = await fetch(`/api/workspace`, {
         method: "POST",
@@ -48,6 +82,7 @@ export default function WorkspaceSwitcher() {
       });
       if (!res.ok) {
         console.error("Failed to create workspace");
+        setIsLoading(false);
         return;
       }
       const w = await res.json();
@@ -62,163 +97,138 @@ export default function WorkspaceSwitcher() {
       setCreatingPlan("free");
     } catch (err) {
       console.error("Error creating workspace", err);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <div className="relative w-full">
-      {/* Trigger Button */}
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between border rounded-md px-3 py-2 text-sm 
-                   bg-white hover:bg-gray-50 text-black 
-                   dark:bg-gray-900 dark:border-gray-700 dark:hover:bg-gray-800 dark:text-white
-                   focus:outline-none"
-      >
-        <div className="flex items-center space-x-2">
-          <img
-            src={`https://avatar.vercel.sh/${selectedWorkspace?.value ?? "default"}.png`}
-            alt={selectedWorkspace?.label ?? "Workspace"}
-            className="h-5 w-5 rounded-full"
-          />
-          <span>
-            {selectedWorkspace && selectedWorkspace?.label?.length > 10
-              ? selectedWorkspace?.label.slice(0, 10) + "..."
-              : selectedWorkspace?.label ?? "Select workspace"}
-          </span>
-        </div>
-        <ChevronsUpDown className="h-4 w-4 opacity-50" />
-      </button>
-
-      {/* Dropdown */}
-      {open && (
-        <div className="absolute mt-2 w-[200px] shadow-lg rounded-md border z-20
-                        bg-white border-gray-200 
-                        dark:bg-gray-900 dark:border-gray-700">
-          <div className="p-2">
-            <input
-              type="text"
-              placeholder="Search Workspace..."
-              className="w-full px-2 py-1 border rounded-md text-sm 
-                         bg-white text-black border-gray-300 focus:outline-none 
-                         dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+    <Dialog open={showNewWorkspaceDialog} onOpenChange={setShowNewWorkspaceDialog}>
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button
+            variant="outline"
+            role="combobox"
+            aria-expanded={open}
+            aria-label="Select a workspace"
+            className={cn("w-full justify-between", className)}
+          >
+            <Avatar className="mr-2 h-5 w-5">
+              <AvatarImage
+                src={`https://avatar.vercel.sh/${selectedWorkspace?.value}.png`}
+                alt={selectedWorkspace?.label}
+                className="grayscale"
+              />
+              <AvatarFallback>SC</AvatarFallback>
+            </Avatar>
+            <span className="truncate flex-1 text-left">
+              {selectedWorkspace?.label || "Select workspace"}
+            </span>
+            <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
+          </Button>
+        </PopoverTrigger>
+        <PopoverContent className="w-[200px] p-0">
+          <Command>
+            <CommandList>
+              <CommandInput placeholder="Search workspace..." />
+              <CommandEmpty>No workspace found.</CommandEmpty>
+              <CommandGroup heading="Workspaces">
+                {workspaces?.map((workspace: any) => (
+                  <CommandItem
+                    key={workspace.value}
+                    onSelect={() => {
+                      setSelectedWorkspace(workspace);
+                      setOpen(false);
+                    }}
+                    className="text-sm"
+                  >
+                    <Avatar className="mr-2 h-5 w-5">
+                      <AvatarImage
+                        src={`https://avatar.vercel.sh/${workspace.value}.png`}
+                        alt={workspace.label}
+                        className="grayscale"
+                      />
+                      <AvatarFallback>SC</AvatarFallback>
+                    </Avatar>
+                    {workspace.label}
+                    <Check
+                      className={cn(
+                        "ml-auto h-4 w-4",
+                        selectedWorkspace?.value === workspace.value
+                          ? "opacity-100"
+                          : "opacity-0"
+                      )}
+                    />
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </CommandList>
+            <CommandSeparator />
+            <CommandList>
+              <CommandGroup>
+                <CommandItem
+                  onSelect={() => {
+                    setOpen(false);
+                    setShowNewWorkspaceDialog(true);
+                  }}
+                >
+                  <PlusCircle className="mr-2 h-5 w-5" />
+                  Create Workspace
+                </CommandItem>
+              </CommandGroup>
+            </CommandList>
+          </Command>
+        </PopoverContent>
+      </Popover>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Create workspace</DialogTitle>
+          <DialogDescription>
+            Add a new workspace to manage products and customers.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="space-y-4 py-2 pb-4">
+          <div className="space-y-2">
+            <Label htmlFor="name">Workspace name</Label>
+            <Input
+              id="name"
+              placeholder="Acme Inc."
+              value={creatingName}
+              onChange={(e) => setCreatingName(e.target.value)}
             />
           </div>
-          <div className="max-h-48 overflow-y-auto">
-            {(!workspaces || workspaces.length === 0) && (
-              <p className="px-3 py-2 text-sm text-gray-500 dark:text-gray-400">
-                No Workspace found.
-              </p>
-            )}
-            {workspaces?.map((ws: any) => (
-              <div
-                key={ws.id}
-                onClick={() => {
-                  setSelectedWorkspace(ws);
-                  setOpen(false);
-                }}
-                className="flex items-center px-3 py-2 text-sm cursor-pointer 
-                           hover:bg-gray-100 dark:hover:bg-gray-800"
-              >
-                <img
-                  src={`https://avatar.vercel.sh/${ws.value}.png`}
-                  alt={ws.label}
-                  className="h-5 w-5 rounded-full grayscale mr-2"
-                />
-                <span>{ws.label}</span>
-                {selectedWorkspace?.value === ws.value && (
-                  <CheckIcon className="ml-auto h-4 w-4" />
-                )}
-              </div>
-            ))}
-          </div>
-          <div className="border-t dark:border-gray-700">
-            <div
-              onClick={() => {
-                setOpen(false);
-                setShowNewWorkspaceDialog(true);
-              }}
-              className="flex items-center px-3 py-2 text-sm cursor-pointer 
-                         hover:bg-gray-100 dark:hover:bg-gray-800"
-            >
-              <PlusCircleIcon className="mr-2 h-5 w-5" />
-              Create Workspace
-            </div>
+          <div className="space-y-2">
+            <Label htmlFor="plan">Subscription plan</Label>
+            <Select value={creatingPlan} onValueChange={setCreatingPlan}>
+              <SelectTrigger>
+                <SelectValue placeholder="Select a plan" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="free">
+                  <span className="font-medium">Free</span> -{" "}
+                  <span className="text-muted-foreground">
+                    Trial for two weeks
+                  </span>
+                </SelectItem>
+                <SelectItem value="pro">
+                  <span className="font-medium">Pro</span> -{" "}
+                  <span className="text-muted-foreground">
+                    $9/month per user
+                  </span>
+                </SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      )}
-
-      {/* Create Workspace Modal */}
-      {showNewWorkspaceDialog && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/50">
-          <div className="bg-white dark:bg-gray-900 rounded-md shadow-lg w-full max-w-md p-6 border dark:border-gray-700">
-            <h2 className="text-lg font-semibold text-black dark:text-white">
-              Create Workspace
-            </h2>
-            <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
-              Add a new Workspace to manage products and customers.
-            </p>
-            <div className="space-y-4">
-              <div>
-                <label
-                  htmlFor="name"
-                  className="block text-sm font-medium mb-1 text-black dark:text-white"
-                >
-                  Workspace name
-                </label>
-                <input
-                  id="name"
-                  value={creatingName}
-                  onChange={(e) => setCreatingName(e.target.value)}
-                  placeholder="Acme Inc."
-                  className="w-full border rounded-md px-3 py-2 text-sm 
-                             bg-white text-black border-gray-300 focus:outline-none 
-                             dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="plan"
-                  className="block text-sm font-medium mb-1 text-black dark:text-white"
-                >
-                  Subscription plan
-                </label>
-                <select
-                  id="plan"
-                  value={creatingPlan}
-                  onChange={(e) => setCreatingPlan(e.target.value)}
-                  className="w-full border rounded-md px-3 py-2 text-sm 
-                             bg-white text-black border-gray-300 focus:outline-none 
-                             dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                >
-                  <option value="free">Free - Trial for two weeks</option>
-                  <option value="pro">Pro - $9/month per user</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex justify-end space-x-2 mt-6">
-              <button
-                onClick={() => setShowNewWorkspaceDialog(false)}
-                className="px-4 py-2 border rounded-md text-sm 
-                           hover:bg-gray-50 dark:hover:bg-gray-800 
-                           border-gray-300 dark:border-gray-600 
-                           text-black dark:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={createWorkspace}
-                className="px-4 py-2 rounded-md text-sm 
-                           bg-black text-white hover:bg-gray-800 
-                           dark:bg-white dark:text-black dark:hover:bg-gray-200"
-              >
-                Continue
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
+        <DialogFooter>
+          <Button variant="outline" onClick={() => setShowNewWorkspaceDialog(false)}>
+            Cancel
+          </Button>
+          <Button type="submit" onClick={createWorkspace} disabled={isLoading}>
+            {isLoading ? "Creating..." : "Continue"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

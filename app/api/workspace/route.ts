@@ -15,13 +15,20 @@ export async function GET(request: NextRequest) {
     const id = searchParams.get("id");
 
     if (id) {
+      // Security Check: User must be member/owner using getUserWorkspaceRole (which checks teams/ownership)
+      const { getUserWorkspaceRole } = await import("@/lib/permissions");
+      const role = await getUserWorkspaceRole(session.user.id, id);
+      
+      if (!role) {
+           return NextResponse.json({ error: "Workspace not found or access denied" }, { status: 404 });
+      }
+
       const workspace = await prisma.workspace.findUnique({
         where: { id },
         include: { projects: true },
       });
-      if (!workspace) {
-        return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
-      }
+      // Logic for getUserWorkspaceRole confirms existence and access, so workspace should exist if role exists
+      // unless race condition
       return NextResponse.json(workspace);
     }
 
@@ -117,12 +124,19 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
     }
 
-    const existing = await prisma.workspace.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    // RBAC Check
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, id);
+
+    if (!role || (role !== "owner" && role !== "admin")) {
+         return NextResponse.json({ error: "Only workspace owners and admins can update settings" }, { status: 403 });
     }
 
-    // Optional: restrict who can update (owner/admin). For now allow any authenticated user.
+    const existing = await prisma.workspace.findUnique({ where: { id } });
+    if (!existing) {
+       // Should rely on role check but safe to keep
+       return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
 
     const workspace = await prisma.workspace.update({
       where: { id },
@@ -158,9 +172,12 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
     }
 
-    const existing = await prisma.workspace.findUnique({ where: { id } });
-    if (!existing) {
-      return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    // RBAC Check: Only Owner can delete
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, id);
+
+    if (role !== "owner") {
+         return NextResponse.json({ error: "Only the workspace owner can delete the workspace" }, { status: 403 });
     }
 
     await prisma.workspace.delete({ where: { id } });
