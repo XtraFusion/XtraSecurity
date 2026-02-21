@@ -138,6 +138,31 @@ export const POST = withSecurity(async (request, context, session) => {
       );
     }
 
+    // Rate Limiting Logic for Secrets
+    const projectRecord = await prisma.project.findUnique({
+      where: { id: projectId },
+      include: { user: true }
+    });
+
+    if (!projectRecord || !projectRecord.user) {
+        return NextResponse.json({ error: "Project or owner not found" }, { status: 404 });
+    }
+
+    const ownerTier = (projectRecord.user.tier || "free") as import("@/lib/rate-limit-config").Tier;
+    const maxSecretsPerProject = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[ownerTier].maxSecretsPerProject);
+    const resolvedMaxSecrets = await maxSecretsPerProject;
+
+    const secretCount = await prisma.secret.count({
+      where: { projectId: projectId }
+    });
+
+    if (secretCount >= resolvedMaxSecrets) {
+      return NextResponse.json({ 
+        error: "Secret limit reached", 
+        message: `The workspace owner's ${ownerTier} plan allows up to ${resolvedMaxSecrets} secrets per project. Please upgrade to add more.` 
+      }, { status: 403 });
+    }
+
     // Access Control
     if (session.isServiceAccount) {
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });

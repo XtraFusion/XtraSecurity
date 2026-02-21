@@ -263,7 +263,7 @@ export default function ProjectSettings() {
       });
       await fetchData();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to clear project";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to clear project";
       toast({
         title: "Error",
         description: errorMsg,
@@ -284,7 +284,7 @@ export default function ProjectSettings() {
       });
       await fetchData();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to toggle project block";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to toggle project block";
       toast({
         title: "Error",
         description: errorMsg,
@@ -307,7 +307,7 @@ export default function ProjectSettings() {
       });
       router.push('/projects');
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete project";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to delete project";
       toast({
         title: "Error",
         description: errorMsg,
@@ -341,7 +341,7 @@ export default function ProjectSettings() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data || "Failed to add team to project",
+        description: error.response?.data?.message || error.response?.data?.error || "Failed to add team to project",
         variant: "destructive"
       });
     } finally {
@@ -583,7 +583,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update access level";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update access level";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -618,7 +618,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update security level";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update security level";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -671,7 +671,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update 2FA requirement";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update 2FA requirement";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -701,7 +701,7 @@ export default function ProjectSettings() {
                               fetchData();
                             })
                             .catch((error) => {
-                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
+                              const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update password requirements";
                               toast({
                                 title: "Error",
                                 description: errorMsg,
@@ -733,7 +733,7 @@ export default function ProjectSettings() {
                               fetchData();
                             })
                             .catch((error) => {
-                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
+                              const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update password requirements";
                               toast({
                                 title: "Error",
                                 description: errorMsg,
@@ -771,7 +771,7 @@ export default function ProjectSettings() {
                           e.currentTarget.reset();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to add IP restriction";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to add IP restriction";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -819,7 +819,7 @@ export default function ProjectSettings() {
                                       fetchData();
                                     })
                                     .catch((error) => {
-                                      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to remove IP restriction";
+                                      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to remove IP restriction";
                                       toast({
                                         title: "Error",
                                         description: errorMsg,

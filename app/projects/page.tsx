@@ -132,9 +132,10 @@ export default function ProjectsPage() {
       setIsCreateModalOpen(false);
       toast.success("Project created successfully");
       loadProjects(); // Reload to get the new project with correct ID
-    } catch (e) {
+    } catch (e: any) {
       console.error("Error creating project", e);
-      toast.error("Failed to create project");
+      const errorMessage = e.response?.data?.message || "Failed to create project";
+      toast.error(errorMessage);
     } finally {
       setIsCreating(false);
     }

@@ -14,6 +14,8 @@ import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/hooks/useUser";
 import { RateLimitResult, Tier, DAILY_LIMITS } from "@/lib/rate-limit-config";
 import { formatDistanceToNow } from "date-fns";
+import confetti from "canvas-confetti";
+import { toast } from "@/hooks/use-toast";
 
 // Ensure Razorpay type is somewhat known
 declare global {
@@ -22,12 +24,22 @@ declare global {
     }
 }
 
+interface ResourceUsage {
+    used: number;
+    limit: number;
+}
+
 interface SubscriptionUIProps {
     tier: Tier;
     stats: RateLimitResult;
+    resourceUsage?: {
+        workspaces: ResourceUsage;
+        teams: ResourceUsage;
+        projects: ResourceUsage;
+    };
 }
 
-export default function SubscriptionUI({ tier, stats }: SubscriptionUIProps) {
+export default function SubscriptionUI({ tier, stats, resourceUsage }: SubscriptionUIProps) {
     const router = useRouter();
     const { fetchUser, user } = useGlobalContext();
     const [isProcessing, setIsProcessing] = useState<Tier | null>(null);
@@ -84,9 +96,20 @@ export default function SubscriptionUI({ tier, stats }: SubscriptionUIProps) {
             });
             const { order, isFree, promoMessage } = await orderRes.json();
 
-            // Show discount alert if applicable before proceeding
+            // Show discount toast & confetti if applicable before proceeding
             if (promoMessage && promoMessage.includes("discount")) {
-                alert(promoMessage);
+                confetti({
+                    particleCount: 150,
+                    spread: 80,
+                    origin: { y: 0.6 },
+                    colors: ['#6366f1', '#a855f7', '#ec4899']
+                });
+
+                toast({
+                    title: "Promo Code Applied! 🎉",
+                    description: promoMessage,
+                    duration: 5000,
+                });
             }
 
             // If the promo code made it free, skip razorpay
@@ -201,17 +224,49 @@ export default function SubscriptionUI({ tier, stats }: SubscriptionUIProps) {
                         Your API request usage for the current 24-hour window.
                     </CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                    <div className="flex justify-between text-sm font-medium">
-                        <span>Daily Requests Capacity</span>
-                        <span className="font-mono">{stats.limit - stats.remaining} / {stats.limit}</span>
+                <CardContent className="space-y-6">
+                    {/* API Requests */}
+                    <div className="space-y-2">
+                        <div className="flex justify-between text-sm font-medium">
+                            <span className="flex items-center gap-2">Daily API Requests</span>
+                            <span className="font-mono">{stats.limit - stats.remaining} / {stats.limit}</span>
+                        </div>
+                        <Progress value={percentage} className="h-2" />
+                        <p className="text-xs text-muted-foreground italic">
+                            {stats.reset > 0
+                                ? `Usage resets in ${formatDistanceToNow(new Date(stats.reset * 1000))}.`
+                                : 'Usage tracking not yet started (resets 24h after first request).'}
+                        </p>
                     </div>
-                    <Progress value={percentage} className="h-2" />
-                    <p className="text-xs text-muted-foreground italic">
-                        {stats.reset > 0
-                            ? `Usage resets in ${formatDistanceToNow(new Date(stats.reset * 1000))}.`
-                            : 'Usage tracking not yet started (resets 24h after first request).'}
-                    </p>
+
+                    {/* Resources */}
+                    {resourceUsage && (
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span>Workspaces</span>
+                                    <span className="font-mono">{resourceUsage.workspaces.used} / {resourceUsage.workspaces.limit}</span>
+                                </div>
+                                <Progress value={Math.min(100, Math.round((resourceUsage.workspaces.used / resourceUsage.workspaces.limit) * 100))} className="h-2" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span>Teams</span>
+                                    <span className="font-mono">{resourceUsage.teams.used} / {resourceUsage.teams.limit}</span>
+                                </div>
+                                <Progress value={Math.min(100, Math.round((resourceUsage.teams.used / resourceUsage.teams.limit) * 100))} className="h-2" />
+                            </div>
+
+                            <div className="space-y-2">
+                                <div className="flex justify-between text-sm font-medium">
+                                    <span title="Max projects used in a single workspace">Projects (per Workspace)</span>
+                                    <span className="font-mono">{resourceUsage.projects.used} / {resourceUsage.projects.limit}</span>
+                                </div>
+                                <Progress value={Math.min(100, Math.round((resourceUsage.projects.used / resourceUsage.projects.limit) * 100))} className="h-2" />
+                            </div>
+                        </div>
+                    )}
                 </CardContent>
             </Card>
 

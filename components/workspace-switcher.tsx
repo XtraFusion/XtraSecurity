@@ -5,6 +5,7 @@ import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/hooks/use-toast";
 import {
   Command,
   CommandEmpty,
@@ -81,7 +82,13 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
         }),
       });
       if (!res.ok) {
-        console.error("Failed to create workspace");
+        const errData = await res.json().catch(() => null);
+        const errorMessage = errData?.message || errData?.error || "Failed to create workspace";
+        toast({
+          title: "Error creating workspace",
+          description: errorMessage,
+          variant: "destructive",
+        });
         setIsLoading(false);
         return;
       }

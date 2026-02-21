@@ -236,8 +236,9 @@ const TeamDetail = () => {
       await axios.delete(`/api/team`, { data: { teamId } });
       toast({ title: "Team deleted", description: `${team?.name} has been deleted.` });
       router.push("/teams");
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete team", variant: "destructive" });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to delete team";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     }
   };
 
@@ -404,7 +405,7 @@ const TeamDetail = () => {
     } catch (e: any) {
       toast({
         title: "Error",
-        description: e.response?.data?.error || "Failed to invite member",
+        description: e.response?.data?.message || e.response?.data?.error || "Failed to invite member",
         variant: "destructive",
       });
     } finally {
@@ -444,7 +445,7 @@ const TeamDetail = () => {
       }
     }
 
-    await axios.put("/api/team/role", { memberId: member.id, newRole: newRole });
+    // Defer API call to handleRoleChange
 
     setConfirmDialog({
       open: true,
@@ -454,23 +455,30 @@ const TeamDetail = () => {
     });
   };
 
-  const handleRoleChange = () => {
+  const handleRoleChange = async () => {
     if (!confirmDialog.member || !confirmDialog.newRole) return;
 
-    setMembers(
-      members.map((member) =>
-        member.id === confirmDialog.member!.id
-          ? { ...member, role: confirmDialog.newRole! }
-          : member
-      )
-    );
+    try {
+      await axios.put("/api/team/role", { memberId: confirmDialog.member.id, newRole: confirmDialog.newRole });
 
-    setConfirmDialog({ open: false, type: "remove" });
-    toast({
-      title: "Role updated",
-      description: `${confirmDialog.member.user?.name || confirmDialog.member.name
-        }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
-    });
+      setMembers(
+        members.map((member) =>
+          member.id === confirmDialog.member!.id
+            ? { ...member, role: confirmDialog.newRole! }
+            : member
+        )
+      );
+
+      setConfirmDialog({ open: false, type: "remove" });
+      toast({
+        title: "Role updated",
+        description: `${confirmDialog.member.user?.name || confirmDialog.member.name
+          }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to change member role";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    }
   };
 
   const handleRemoveMemberRequest = async (memberId: string) => {
@@ -487,11 +495,9 @@ const TeamDetail = () => {
       });
       return;
     }
-    if (member) {
-      const dataReturn = await axios.delete("/api/team/remove", { data: { memberId: member.id } });
-    }
-    else {
-      console.log("Member not found")
+    if (!member) {
+      console.log("Member not found");
+      return;
     }
 
     setConfirmDialog({
@@ -502,18 +508,25 @@ const TeamDetail = () => {
 
   };
 
-  const handleRemoveMember = () => {
+  const handleRemoveMember = async () => {
     if (!confirmDialog.member) return;
 
-    setMembers(
-      members.filter((member) => member.id !== confirmDialog.member!.id)
-    );
-    setConfirmDialog({ open: false, type: "remove" });
+    try {
+      await axios.delete("/api/team/remove", { data: { memberId: confirmDialog.member.id } });
 
-    toast({
-      title: "Member removed",
-      description: `${confirmDialog.member.user?.name || confirmDialog.member.name} has been removed from the team`,
-    });
+      setMembers(
+        members.filter((member) => member.id !== confirmDialog.member!.id)
+      );
+      setConfirmDialog({ open: false, type: "remove" });
+
+      toast({
+        title: "Member removed",
+        description: `${confirmDialog.member.user?.name || confirmDialog.member.name} has been removed from the team`,
+      });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to remove member";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+    }
   };
 
   const handleResendInvitation = (memberId: string) => {
@@ -554,7 +567,7 @@ const TeamDetail = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Code className="h-4 w-4" />
-                    {team.teamProjects?.length || 0} projects
+                    {team.projects || 0} projects
                   </div>
                   {team.isPrivate && (
                     <Badge variant="secondary">Private Team</Badge>
@@ -886,7 +899,7 @@ const TeamDetail = () => {
                           </Badge>
                         </div>
                         <p className="text-sm text-muted-foreground">
-                          {member.user.email}
+                          {member.user?.email}
                           {/* {member?.user?.id} */}
                         </p>
                         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -954,7 +967,11 @@ const TeamDetail = () => {
                         {canRemove && (
                           <DropdownMenuItem
                             className="text-destructive"
-                            onClick={() => handleRemoveMemberRequest(member.user.id)}
+                            onClick={() => {
+                              if (member.user?.id) {
+                                handleRemoveMemberRequest(member.user.id);
+                              }
+                            }}
                           >
                             Remove Member
                           </DropdownMenuItem>

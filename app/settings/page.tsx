@@ -74,10 +74,11 @@ export default function SettingsPage() {
             if (res.ok) {
                 toast({ title: "Profile Updated", description: "Your profile information has been saved." });
             } else {
-                throw new Error("Failed to update profile");
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.message || errorData?.error || "Failed to update profile");
             }
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to update profile.", variant: "destructive" });
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message || "Failed to update profile.", variant: "destructive" });
         } finally {
             setIsUpdatingProfile(false);
         }
@@ -103,11 +104,12 @@ export default function SettingsPage() {
                     description: `Two-factor authentication is now ${newMfaStatus ? "active" : "inactive"}.`
                 });
             } else {
-                throw new Error("Failed to update security settings");
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.message || errorData?.error || "Failed to update security settings");
             }
-        } catch (error) {
+        } catch (error: any) {
             // Revert state if needed, but handled by opt-in usually
-            toast({ title: "Error", description: "Failed to update security settings.", variant: "destructive" });
+            toast({ title: "Error", description: error.message || "Failed to update security settings.", variant: "destructive" });
         } finally {
             setIsUpdatingSecurity(false);
         }
@@ -135,10 +137,11 @@ export default function SettingsPage() {
                 // For now a soft reload of the page to hydrate new context:
                 window.location.reload();
             } else {
-                throw new Error("Failed to update workspace");
+                const errorData = await res.json().catch(() => null);
+                throw new Error(errorData?.message || errorData?.error || "Failed to update workspace");
             }
-        } catch (error) {
-            toast({ title: "Error", description: "Failed to update workspace settings.", variant: "destructive" });
+        } catch (error: any) {
+            toast({ title: "Error", description: error.message || "Failed to update workspace settings.", variant: "destructive" });
         } finally {
             setIsUpdatingWorkspace(false);
         }

@@ -248,6 +248,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Rate Limit Check for Projects
+    const userTier = (authUser.tier || "free") as import("@/lib/rate-limit-config").Tier;
+    const projectLimit = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[userTier].maxProjectsPerWorkspace);
+    
+    const resolvedProjectLimit = await projectLimit;
+
+    const projectCount = await prisma.project.count({
+      where: { workspaceId: newProject.workspaceId }
+    });
+
+    if (projectCount >= resolvedProjectLimit) {
+      return NextResponse.json({ 
+        error: "Project limit reached", 
+        message: `Your ${userTier} plan allows creating up to ${resolvedProjectLimit} projects per workspace. Please upgrade for more capacity.` 
+      }, { status: 403 });
+    }
+
     // Create project with the data from frontend and initialize required fields
     const project = await prisma.project.create({
       data: {

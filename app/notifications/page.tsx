@@ -360,9 +360,10 @@ export default function NotificationsPage() {
       });
       setIsCreateRuleOpen(false);
       setEditingRuleId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setNotification({ type: "error", message: editingRuleId ? "Failed to update rule" : "Failed to create rule" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || (editingRuleId ? "Failed to update rule" : "Failed to create rule");
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setIsCreatingRule(false);
     }
@@ -397,9 +398,10 @@ export default function NotificationsPage() {
       });
       setIsCreateChannelOpen(false);
       setEditingChannelId(null);
-    } catch (err) {
+    } catch (err: any) {
       console.error(err);
-      setNotification({ type: "error", message: editingChannelId ? "Failed to update channel" : "Failed to create channel" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || (editingChannelId ? "Failed to update channel" : "Failed to create channel");
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setIsCreatingChannel(false);
     }
@@ -413,9 +415,10 @@ export default function NotificationsPage() {
     try {
       await apiClient.patch("/api/notification-rules", { id: ruleId, enabled: !rule.enabled });
       setNotification({ type: "success", message: "Rule updated successfully" });
-    } catch {
+    } catch (err: any) {
       setRules(rules.map((r) => r.id === ruleId ? { ...r, enabled: rule.enabled } : r));
-      setNotification({ type: "error", message: "Failed to update rule" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to update rule";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -426,9 +429,10 @@ export default function NotificationsPage() {
     try {
       await apiClient.patch("/api/notification-channels", { id: channelId, enabled: !channel.enabled });
       setNotification({ type: "success", message: "Channel updated successfully" });
-    } catch {
+    } catch (err: any) {
       setChannels(channels.map((c) => c.id === channelId ? { ...c, enabled: channel.enabled } : c));
-      setNotification({ type: "error", message: "Failed to update channel" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to update channel";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -452,8 +456,9 @@ export default function NotificationsPage() {
     try {
       await apiClient.delete(`/api/notification-rules?id=${ruleId}`);
       setNotification({ type: "success", message: "Rule deleted successfully" });
-    } catch {
-      setNotification({ type: "error", message: "Failed to delete rule" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to delete rule";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -462,8 +467,9 @@ export default function NotificationsPage() {
     try {
       await apiClient.delete(`/api/notification-channels?id=${channelId}`);
       setNotification({ type: "success", message: "Channel deleted successfully" });
-    } catch {
-      setNotification({ type: "error", message: "Failed to delete channel" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to delete channel";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -512,8 +518,9 @@ export default function NotificationsPage() {
       await apiClient.post(`/api/team/invite/accept`, { teamId, status: "active" });
       setNotification({ type: "success", message: "Invite accepted successfully" });
       getTeamInvites();
-    } catch {
-      setNotification({ type: "error", message: "Failed to accept invite" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to accept invite";
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setAcceptingId(null);
     }
@@ -525,8 +532,9 @@ export default function NotificationsPage() {
       await apiClient.post(`/api/team/invite/accept`, { teamId, status: "decline" });
       setNotification({ type: "success", message: "Invite declined successfully" });
       getTeamInvites();
-    } catch {
-      setNotification({ type: "error", message: "Failed to decline invite" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to decline invite";
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setDecliningId(null);
     }
@@ -1139,7 +1147,12 @@ export default function NotificationsPage() {
                                       description: rule.description,
                                       triggers: rule.triggers,
                                       channels: rule.channels,
-                                      conditions: rule.conditions || { projects: [], branches: [], environments: [], severity: [] },
+                                      conditions: {
+                                        projects: rule.conditions?.projects || [],
+                                        branches: rule.conditions?.branches || [],
+                                        environments: rule.conditions?.environments || [],
+                                        severity: rule.conditions?.severity || [],
+                                      },
                                     });
                                     setIsCreateRuleOpen(true);
                                   }}>
@@ -1237,7 +1250,12 @@ export default function NotificationsPage() {
                                     setNewChannel({
                                       type: channel.type,
                                       name: channel.name,
-                                      config: channel.config || { email: "", webhookUrl: "", slackChannel: "", teamsWebhook: "" },
+                                      config: {
+                                        email: channel.config?.email || "",
+                                        webhookUrl: channel.config?.webhookUrl || "",
+                                        slackChannel: channel.config?.slackChannel || "",
+                                        teamsWebhook: channel.config?.teamsWebhook || "",
+                                      },
                                     });
                                     setIsCreateChannelOpen(true);
                                   }}>

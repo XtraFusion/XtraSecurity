@@ -6,6 +6,9 @@ export interface RateLimitConfig {
   price: string;
   features: string[];
   maxTeams: number;
+  maxWorkspaces: number;
+  maxProjectsPerWorkspace: number;
+  maxSecretsPerProject: number;
 }
 
 export interface RateLimitResult {
@@ -32,7 +35,10 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
       "CLI & SDK access",
       "RBAC & Slack alerts"
     ],
-    maxTeams: 1
+    maxTeams: 1,
+    maxWorkspaces: 1,
+    maxProjectsPerWorkspace: 3,
+    maxSecretsPerProject: 50
   },
   pro: { 
     points: 10000, 
@@ -48,7 +54,10 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
       "IP Blocking & DDoS Detection",
       "RBAC + Slack Alerts"
     ],
-    maxTeams: 10
+    maxTeams: 10,
+    maxWorkspaces: 3,
+    maxProjectsPerWorkspace: 5,
+    maxSecretsPerProject: 100
   },
   enterprise: { 
     points: 100000, 
@@ -64,12 +73,15 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
       "SLA Guarantee",
       "Custom audit log retention"
     ],
-    maxTeams: 100
+    maxTeams: 100, // Practically unlimited
+    maxWorkspaces: 1000,
+    maxProjectsPerWorkspace: 1000,
+    maxSecretsPerProject: 10000
   },
 };
 
 export const BURST_LIMITS: Record<Tier, Omit<RateLimitConfig, 'price' | 'features'>> = {
-  free: { points: 100, duration: 60, maxTeams: 1 },
-  pro: { points: 1000, duration: 60, maxTeams: 10 },
-  enterprise: { points: 10000, duration: 60, maxTeams: 100 },
+  free: { points: 100, duration: 60, maxTeams: 1, maxWorkspaces: 1, maxProjectsPerWorkspace: 3, maxSecretsPerProject: 50 },
+  pro: { points: 1000, duration: 60, maxTeams: 10, maxWorkspaces: 3, maxProjectsPerWorkspace: 5, maxSecretsPerProject: 100 },
+  enterprise: { points: 10000, duration: 60, maxTeams: 100, maxWorkspaces: 1000, maxProjectsPerWorkspace: 1000, maxSecretsPerProject: 10000 },
 };

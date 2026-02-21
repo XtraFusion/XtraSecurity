@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 // GET /api/workspace - list workspaces or fetch by id
 export async function GET(request: NextRequest) {
@@ -81,6 +82,26 @@ export async function POST(request: NextRequest) {
     const session = await getServerSession(authOptions);
     if (!session?.user?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Fetch user with tier
+    const user = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { tier: true }
+    });
+
+    const userTier = (user?.tier || "free") as Tier;
+    const limit = DAILY_LIMITS[userTier].maxWorkspaces;
+    
+    const workspaceCount = await prisma.workspace.count({
+      where: { createdBy: session.user.id }
+    });
+
+    if (workspaceCount >= limit) {
+      return NextResponse.json({ 
+        error: "Workspace limit reached", 
+        message: `Your ${userTier} plan allows creating up to ${limit} workspaces. Please upgrade for more capacity.` 
+      }, { status: 403 });
     }
 
     const body = await request.json();
