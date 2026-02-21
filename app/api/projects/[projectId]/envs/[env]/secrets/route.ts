@@ -43,7 +43,25 @@ export const GET = withSecurity(async (
       }, { status: 403 });
   }
 
-  // 3. Authorization Success - Fetch Data
+  // 3. Determine whether the caller can see plaintext values
+  // Roles that allow reading plaintext: owner, admin, developer
+  // viewer role can see key names only — values are masked
+  const PLAINTEXT_ROLES = ["owner", "admin", "developer"];
+
+  const callerRole = await prisma.userRole.findFirst({
+    where: {
+      userId,
+      OR: [{ projectId }, { projectId: null }]
+    },
+    select: {
+      role: { select: { name: true } }
+    }
+  });
+
+  const roleName = callerRole?.role?.name?.toLowerCase() || "viewer";
+  const canReadValues = PLAINTEXT_ROLES.includes(roleName);
+
+  // 4. Authorization Success - Fetch Data
   const project = await prisma.project.findUnique({
     where: { id: projectId },
     include: {
@@ -96,19 +114,20 @@ export const GET = withSecurity(async (
          }
 
          if (rawValue) {
+             let decryptedValue = "";
              try {
                 const encryptedObj = JSON.parse(rawValue);
                 if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
-                    value = decrypt(encryptedObj);
+                    decryptedValue = decrypt(encryptedObj);
                 } else {
-                    value = rawValue;
+                    decryptedValue = rawValue;
                 }
              } catch (e) {
-                 value = rawValue;
+                 decryptedValue = rawValue;
              }
 
             detailedMap[secret.key] = { 
-                value, 
+                value: canReadValues ? decryptedValue : "***",
                 version: secret.version,
                 isReference: secret.isReference,
                 source: secret.isReference ? "linked" : "local"
@@ -121,32 +140,40 @@ export const GET = withSecurity(async (
   const secretsMap: Record<string, string> = {};
   
   envSecrets.forEach(secret => {
-     // Taking the first element as the current value
      let rawValue = "";
      if (secret.isReference && secret.sourceSecret && secret.sourceSecret.value.length > 0) {
-        // Resolve Reference
         rawValue = secret.sourceSecret.value[0];
      } else if (secret.value.length > 0) {
         rawValue = secret.value[0]; 
      }
 
      if (rawValue) {
-        try {
-            const encryptedObj = JSON.parse(rawValue);
-            // Check if it looks like our encrypted object
-            if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
-                secretsMap[secret.key] = decrypt(encryptedObj);
-            } else {
+        if (!canReadValues) {
+            // Viewer role: expose key name but mask value
+            secretsMap[secret.key] = "***";
+        } else {
+            try {
+                const encryptedObj = JSON.parse(rawValue);
+                if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
+                    secretsMap[secret.key] = decrypt(encryptedObj);
+                } else {
+                    secretsMap[secret.key] = rawValue;
+                }
+            } catch (e) {
                 secretsMap[secret.key] = rawValue;
             }
-        } catch (e) {
-            // Not JSON or Not Encrypted correctly
-            secretsMap[secret.key] = rawValue;
         }
      }
   });
 
-  return NextResponse.json(secretsMap);
+  // Attach viewer hint header so CLI can warn the user
+  const headers: Record<string, string> = {};
+  if (!canReadValues) {
+    headers["X-Values-Masked"] = "true";
+    headers["X-Mask-Reason"] = "viewer-role";
+  }
+
+  return NextResponse.json(secretsMap, { headers });
 });
 
 // POST logic also refactored to use verifyAuth
@@ -164,19 +191,33 @@ export const POST = withSecurity(async (
   }
   const userId = session.userId;
 
-  // 2. Access Control
-  // TODO: Refine role checks. For now, check if user is part of project.
-  const project = await prisma.project.findFirst({
+  // 2. RBAC Write Check — only owner, admin, developer can write secrets
+  const WRITE_ROLES = ["owner", "admin", "developer"];
+
+  const callerWriteRole = await prisma.userRole.findFirst({
     where: {
-      id: projectId,
-      OR: [
-        { userId: userId },
-      ]
-    }
+      userId,
+      OR: [{ projectId }, { projectId: null }]
+    },
+    select: { role: { select: { name: true } } }
+  });
+
+  const writeRoleName = callerWriteRole?.role?.name?.toLowerCase() || "viewer";
+
+  if (!WRITE_ROLES.includes(writeRoleName)) {
+    return NextResponse.json(
+      { error: "Forbidden: Your role does not permit writing secrets." },
+      { status: 403 }
+    );
+  }
+
+  // 3. Verify user has access to this project
+  const project = await prisma.project.findFirst({
+    where: { id: projectId }
   });
 
   if (!project) {
-    return NextResponse.json({ error: "Project not found or access denied" }, { status: 404 });
+    return NextResponse.json({ error: "Project not found" }, { status: 404 });
   }
 
   // 3. Parse Body
