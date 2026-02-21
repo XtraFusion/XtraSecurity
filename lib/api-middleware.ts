@@ -74,7 +74,36 @@ export function withSecurity(handler: SecureHandler) {
             });
         }
 
-        // 4. Execute Handler
+        // 4. Enforce Blocked Project status globally
+        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id");
+        
+        if (!projectIdToCheck && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+            try {
+                // Clone the request so the actual handler can still read the JSON body
+                const clonedReq = req.clone();
+                const body = await clonedReq.json();
+                projectIdToCheck = body?.projectId || body?.id || null;
+            } catch (e) {
+                // Ignore parse errors, body might not be JSON
+            }
+        }
+
+        if (projectIdToCheck) {
+            const projectStatus = await import("@/lib/db").then(mod => 
+                mod.default.project.findUnique({
+                    where: { id: projectIdToCheck as string },
+                    select: { isBlocked: true }
+                })
+            );
+
+            if (projectStatus?.isBlocked) {
+                return new NextResponse(JSON.stringify({ 
+                    error: "This project has been blocked by the owner and is currently inaccessible." 
+                }), { status: 403, headers: { "Content-Type": "application/json" } });
+            }
+        }
+
+        // 5. Execute Handler
         try {
             const res = await handler(req, context, session);
             

@@ -14,6 +14,7 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   });
   
   if (!project) return null;
+
   if (project.userId === userId) return "owner";
 
   // Check workspace ownership

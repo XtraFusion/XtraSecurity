@@ -97,15 +97,43 @@ export default function SecretRotationPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [rotatingSecrets, setRotatingSecrets] = useState<Set<string>>(new Set())
 
-  const [newSchedule, setNewSchedule] = useState({
+  const [newSchedule, setNewSchedule] = useState<{
+    secretKey: string;
+    projectId: string;
+    branch: string;
+    frequency: "daily" | "weekly" | "monthly" | "quarterly" | "custom";
+    customDays: number;
+    rotationMethod: "auto-generate" | "webhook" | "manual";
+    webhookUrl: string;
+  }>({
     secretKey: "",
     projectId: "",
     branch: "main",
-    frequency: "monthly" as const,
+    frequency: "monthly",
     customDays: 30,
-    rotationMethod: "auto-generate" as const,
+    rotationMethod: "auto-generate",
     webhookUrl: "",
   })
+
+  const [projectSecrets, setProjectSecrets] = useState<any[]>([]);
+
+  // Fetch secrets when a project is selected
+  useEffect(() => {
+    if (newSchedule.projectId) {
+      fetch(`/api/secret?projectId=${newSchedule.projectId}`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            setProjectSecrets(data);
+          } else {
+            setProjectSecrets([]);
+          }
+        })
+        .catch(err => console.error("Failed to load project secrets", err));
+    } else {
+      setProjectSecrets([]);
+    }
+  }, [newSchedule.projectId]);
 
   // Projects list for dropdown (Mock for passed in props, or fetch)
   // Ideally we fetch projects here too, but for now we can rely on manual entry or simple list
@@ -125,7 +153,7 @@ export default function SecretRotationPage() {
       const [schedRes, histRes, projRes] = await Promise.all([
         fetch("/api/rotation/schedules"),
         fetch("/api/rotation/history"),
-        fetch("/api/project?workspaceId=" + (session?.user as any)?.workspaceId || "") // simplified fetch
+        fetch("/api/project") // Fetch all accessible projects
       ]);
 
       if (schedRes.ok) setSchedules(await schedRes.json());
@@ -192,11 +220,17 @@ export default function SecretRotationPage() {
   const handleCreateSchedule = async () => {
     if (!newSchedule.secretKey || !newSchedule.projectId) return
 
+    const selectedSecret = projectSecrets.find(s => s.key === newSchedule.secretKey);
+    if (!selectedSecret) {
+      setNotification({ type: "error", message: "Please select a valid secret" });
+      return;
+    }
+
     try {
       const res = await fetch("/api/rotation/schedules", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(newSchedule)
+        body: JSON.stringify({ ...newSchedule, secretId: selectedSecret.id })
       });
 
       if (!res.ok) {
@@ -224,15 +258,28 @@ export default function SecretRotationPage() {
     }
   }
 
-  const handleToggleSchedule = (scheduleId: string) => {
-    // Only UI toggle for now, backend update endpoint needed for full toggle support
-    // For MVP, we just toggle local state
-    setSchedules(
-      schedules.map((schedule) =>
-        schedule.id === scheduleId ? { ...schedule, enabled: !schedule.enabled } : schedule,
-      ),
-    )
-    setNotification({ type: "success", message: "Schedule updated successfully" })
+  const handleToggleSchedule = async (scheduleId: string) => {
+    const schedule = schedules.find(s => s.id === scheduleId);
+    if (!schedule) return;
+
+    try {
+      const res = await fetch("/api/rotation/schedules", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: scheduleId, enabled: !schedule.enabled })
+      });
+
+      if (!res.ok) throw new Error("Failed to update schedule");
+
+      setSchedules(
+        schedules.map((s) =>
+          s.id === scheduleId ? { ...s, enabled: !s.enabled } : s,
+        ),
+      );
+      setNotification({ type: "success", message: "Schedule updated successfully" });
+    } catch (e) {
+      setNotification({ type: "error", message: "Failed to update schedule status" });
+    }
   }
 
   const handleRotateNow = async (schedule: RotationSchedule) => {
@@ -275,10 +322,19 @@ export default function SecretRotationPage() {
     setNotification({ type: "error", message: "Rollback not yet implemented via API" });
   }
 
-  const handleDeleteSchedule = (scheduleId: string) => {
-    // Need DELETE endpoint
-    setSchedules(schedules.filter((schedule) => schedule.id !== scheduleId))
-    setNotification({ type: "success", message: "Schedule deleted (Local only for MVP)" })
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    try {
+      const res = await fetch(`/api/rotation/schedules?id=${scheduleId}`, {
+        method: "DELETE"
+      });
+
+      if (!res.ok) throw new Error("Failed to delete schedule");
+
+      setSchedules(schedules.filter((schedule) => schedule.id !== scheduleId));
+      setNotification({ type: "success", message: "Schedule deleted successfully" });
+    } catch (e) {
+      setNotification({ type: "error", message: "Failed to delete schedule" });
+    }
   }
 
   const getNextRotationStatus = (nextRotation: string) => {
@@ -362,13 +418,28 @@ export default function SecretRotationPage() {
 
                 <div className="space-y-2">
                   <Label htmlFor="secret-key">Secret Key</Label>
-                  <Input
-                    id="secret-key"
-                    placeholder="Exact Key Name (e.g., DATABASE_URL)"
+                  <Select
                     value={newSchedule.secretKey}
-                    onChange={(e) => setNewSchedule({ ...newSchedule, secretKey: e.target.value })}
-                  />
-                  <p className="text-xs text-muted-foreground">Must match an existing key in the project.</p>
+                    onValueChange={(value) => {
+                      const selectedSecret = projectSecrets.find(s => s.key === value);
+                      setNewSchedule({
+                        ...newSchedule,
+                        secretKey: value,
+                        branch: selectedSecret?.branch?.name || "main"
+                      });
+                    }}
+                    disabled={!newSchedule.projectId || projectSecrets.length === 0}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={!newSchedule.projectId ? "Select a project first" : "Select a secret to rotate"} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {projectSecrets.map((s: any) => (
+                        <SelectItem key={s.id} value={s.key}>{s.key} ({s.branch?.name || "Global"})</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">Select from the project's existing secrets.</p>
                 </div>
 
                 <div className="space-y-2">
@@ -733,4 +804,4 @@ export default function SecretRotationPage() {
       </Dialog>
     </DashboardLayout>
   )
-}
+}

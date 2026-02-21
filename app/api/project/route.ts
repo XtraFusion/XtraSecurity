@@ -145,10 +145,18 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
-
+    
     // Compute currentUserRole for frontend permission checks
     const { getUserProjectRole } = await import("@/lib/permissions");
     const role = await getUserProjectRole(userId, project.id);
+
+    // Enforce Blocked status (Only owners and admins can access a blocked project to unblock it)
+    if (project.isBlocked && role !== "owner" && role !== "admin") {
+        return NextResponse.json(
+            { error: "This project has been blocked by the owner and is currently inaccessible." },
+            { status: 403 }
+        );
+    }
 
     // Serialize dates on single project response
     const safeProject = {

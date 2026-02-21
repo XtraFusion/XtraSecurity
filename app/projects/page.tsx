@@ -301,6 +301,7 @@ export default function ProjectsPage() {
                       <div className="flex items-center gap-2">
                         <CardTitle className="text-lg font-semibold truncate">{project.name}</CardTitle>
                         {project.status === 'archived' && <Badge variant="secondary" className="text-[10px]">Archived</Badge>}
+                        {project.isBlocked && <Badge variant="destructive" className="text-[10px]">Blocked</Badge>}
                       </div>
                       <CardDescription className="line-clamp-2 min-h-[40px] text-sm">
                         {project.description || "No description provided for this project."}
