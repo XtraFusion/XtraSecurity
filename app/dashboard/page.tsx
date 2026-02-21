@@ -144,9 +144,10 @@ export default function DashboardPage() {
       toast.success("Project created successfully");
       // Refetch handled by dependency on isCreateModalOpen? No, actually loadData depends on it, but let's be explicit if needed. 
       // Actually loadData depends on isCreateModalOpen, so it will refetch.
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to create project:", error);
-      toast.error("Failed to create project. Please try again.");
+      const errorMessage = error.response?.data?.message || "Failed to create project. Please try again.";
+      toast.error(errorMessage);
     }
   };
 

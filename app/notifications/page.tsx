@@ -150,6 +150,8 @@ export default function NotificationsPage() {
   const [isCreatingChannel, setIsCreatingChannel] = useState(false);
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
   const [decliningId, setDecliningId] = useState<string | null>(null);
+  const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
+  const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
 
   const [newRule, setNewRule] = useState({
     name: "",
@@ -332,12 +334,23 @@ export default function NotificationsPage() {
 
     setIsCreatingRule(true);
     try {
-      const res = await apiClient.post("/api/notification-rules", {
-        ...newRule,
-        workspaceId: selectedWorkspace?.id,
-      });
-      const created = res.data.rule;
-      setRules([{ ...created, conditions: created.conditions || {} }, ...rules]);
+      if (editingRuleId) {
+        const res = await apiClient.patch("/api/notification-rules", {
+          ...newRule,
+          id: editingRuleId,
+        });
+        setRules(rules.map(r => r.id === editingRuleId ? { ...r, ...newRule } : r));
+        setNotification({ type: "success", message: "Rule updated successfully" });
+      } else {
+        const res = await apiClient.post("/api/notification-rules", {
+          ...newRule,
+          workspaceId: selectedWorkspace?.id,
+        });
+        const created = res.data.rule;
+        setRules([{ ...created, conditions: created.conditions || {} }, ...rules]);
+        setNotification({ type: "success", message: "Notification rule created successfully" });
+      }
+
       setNewRule({
         name: "",
         description: "",
@@ -346,10 +359,11 @@ export default function NotificationsPage() {
         conditions: { projects: [], branches: [], environments: [], severity: [] },
       });
       setIsCreateRuleOpen(false);
-      setNotification({ type: "success", message: "Notification rule created successfully" });
-    } catch (err) {
+      setEditingRuleId(null);
+    } catch (err: any) {
       console.error(err);
-      setNotification({ type: "error", message: "Failed to create rule" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || (editingRuleId ? "Failed to update rule" : "Failed to create rule");
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setIsCreatingRule(false);
     }
@@ -360,22 +374,34 @@ export default function NotificationsPage() {
 
     setIsCreatingChannel(true);
     try {
-      const res = await apiClient.post("/api/notification-channels", {
-        ...newChannel,
-        workspaceId: selectedWorkspace?.id,
-      });
-      const created = res.data.channel;
-      setChannels([{ ...created, config: created.config || {} }, ...channels]);
+      if (editingChannelId) {
+        const res = await apiClient.patch("/api/notification-channels", {
+          ...newChannel,
+          id: editingChannelId,
+        });
+        setChannels(channels.map(c => c.id === editingChannelId ? { ...c, ...newChannel } : c));
+        setNotification({ type: "success", message: "Channel updated successfully" });
+      } else {
+        const res = await apiClient.post("/api/notification-channels", {
+          ...newChannel,
+          workspaceId: selectedWorkspace?.id,
+        });
+        const created = res.data.channel;
+        setChannels([{ ...created, config: created.config || {} }, ...channels]);
+        setNotification({ type: "success", message: "Notification channel created successfully" });
+      }
+
       setNewChannel({
         type: "email",
         name: "",
         config: { email: "", webhookUrl: "", slackChannel: "", teamsWebhook: "" },
       });
       setIsCreateChannelOpen(false);
-      setNotification({ type: "success", message: "Notification channel created successfully" });
-    } catch (err) {
+      setEditingChannelId(null);
+    } catch (err: any) {
       console.error(err);
-      setNotification({ type: "error", message: "Failed to create channel" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || (editingChannelId ? "Failed to update channel" : "Failed to create channel");
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setIsCreatingChannel(false);
     }
@@ -389,9 +415,10 @@ export default function NotificationsPage() {
     try {
       await apiClient.patch("/api/notification-rules", { id: ruleId, enabled: !rule.enabled });
       setNotification({ type: "success", message: "Rule updated successfully" });
-    } catch {
+    } catch (err: any) {
       setRules(rules.map((r) => r.id === ruleId ? { ...r, enabled: rule.enabled } : r));
-      setNotification({ type: "error", message: "Failed to update rule" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to update rule";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -402,9 +429,10 @@ export default function NotificationsPage() {
     try {
       await apiClient.patch("/api/notification-channels", { id: channelId, enabled: !channel.enabled });
       setNotification({ type: "success", message: "Channel updated successfully" });
-    } catch {
+    } catch (err: any) {
       setChannels(channels.map((c) => c.id === channelId ? { ...c, enabled: channel.enabled } : c));
-      setNotification({ type: "error", message: "Failed to update channel" });
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to update channel";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -428,8 +456,9 @@ export default function NotificationsPage() {
     try {
       await apiClient.delete(`/api/notification-rules?id=${ruleId}`);
       setNotification({ type: "success", message: "Rule deleted successfully" });
-    } catch {
-      setNotification({ type: "error", message: "Failed to delete rule" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to delete rule";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -438,8 +467,9 @@ export default function NotificationsPage() {
     try {
       await apiClient.delete(`/api/notification-channels?id=${channelId}`);
       setNotification({ type: "success", message: "Channel deleted successfully" });
-    } catch {
-      setNotification({ type: "error", message: "Failed to delete channel" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to delete channel";
+      setNotification({ type: "error", message: errorMessage });
     }
   };
 
@@ -488,8 +518,9 @@ export default function NotificationsPage() {
       await apiClient.post(`/api/team/invite/accept`, { teamId, status: "active" });
       setNotification({ type: "success", message: "Invite accepted successfully" });
       getTeamInvites();
-    } catch {
-      setNotification({ type: "error", message: "Failed to accept invite" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to accept invite";
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setAcceptingId(null);
     }
@@ -501,8 +532,9 @@ export default function NotificationsPage() {
       await apiClient.post(`/api/team/invite/accept`, { teamId, status: "decline" });
       setNotification({ type: "success", message: "Invite declined successfully" });
       getTeamInvites();
-    } catch {
-      setNotification({ type: "error", message: "Failed to decline invite" });
+    } catch (err: any) {
+      const errorMessage = err?.response?.data?.message || err?.response?.data?.error || "Failed to decline invite";
+      setNotification({ type: "error", message: errorMessage });
     } finally {
       setDecliningId(null);
     }
@@ -572,17 +604,27 @@ export default function NotificationsPage() {
           </div>
           <div className="flex gap-2">
             {/* Add Channel Dialog */}
-            <Dialog open={isCreateChannelOpen} onOpenChange={setIsCreateChannelOpen}>
+            <Dialog open={isCreateChannelOpen} onOpenChange={(open) => {
+              setIsCreateChannelOpen(open);
+              if (!open) {
+                setEditingChannelId(null);
+                setNewChannel({
+                  type: "email",
+                  name: "",
+                  config: { email: "", webhookUrl: "", slackChannel: "", teamsWebhook: "" },
+                });
+              }
+            }}>
               <DialogTrigger asChild>
-                <Button variant="outline" className="flex items-center gap-2 bg-transparent">
+                <Button variant="outline" className="flex items-center gap-2 bg-transparent" onClick={() => setEditingChannelId(null)}>
                   <Plus className="h-4 w-4" />
                   Add Channel
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-md">
                 <DialogHeader>
-                  <DialogTitle>Create Notification Channel</DialogTitle>
-                  <DialogDescription>Add a new channel to receive notifications</DialogDescription>
+                  <DialogTitle>{editingChannelId ? "Edit Notification Channel" : "Create Notification Channel"}</DialogTitle>
+                  <DialogDescription>{editingChannelId ? "Update existing notification channel" : "Add a new channel to receive notifications"}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -658,7 +700,7 @@ export default function NotificationsPage() {
                     <Button variant="outline" onClick={() => setIsCreateChannelOpen(false)} className="w-full sm:w-auto" disabled={isCreatingChannel}>Cancel</Button>
                     <Button onClick={handleCreateChannel} className="w-full sm:w-auto" disabled={isCreatingChannel}>
                       {isCreatingChannel && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Create Channel
+                      {editingChannelId ? "Save Channel" : "Create Channel"}
                     </Button>
                   </div>
                 </div>
@@ -735,17 +777,29 @@ export default function NotificationsPage() {
             )}
 
             {/* Create Rule Dialog */}
-            <Dialog open={isCreateRuleOpen} onOpenChange={setIsCreateRuleOpen}>
+            <Dialog open={isCreateRuleOpen} onOpenChange={(open) => {
+              setIsCreateRuleOpen(open);
+              if (!open) {
+                setEditingRuleId(null);
+                setNewRule({
+                  name: "",
+                  description: "",
+                  triggers: [],
+                  channels: [],
+                  conditions: { projects: [], branches: [], environments: [], severity: [] },
+                });
+              }
+            }}>
               <DialogTrigger asChild>
-                <Button className="flex items-center gap-2">
+                <Button className="flex items-center gap-2" onClick={() => setEditingRuleId(null)}>
                   <Plus className="h-4 w-4" />
                   Create Rule
                 </Button>
               </DialogTrigger>
               <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                  <DialogTitle>Create Notification Rule</DialogTitle>
-                  <DialogDescription>Set up automated alerts for specific events and conditions</DialogDescription>
+                  <DialogTitle>{editingRuleId ? "Edit Notification Rule" : "Create Notification Rule"}</DialogTitle>
+                  <DialogDescription>{editingRuleId ? "Update automation rules" : "Set up automated alerts for specific events and conditions"}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                   <div className="space-y-2">
@@ -844,7 +898,7 @@ export default function NotificationsPage() {
                     <Button variant="outline" onClick={() => setIsCreateRuleOpen(false)} className="w-full sm:w-auto" disabled={isCreatingRule}>Cancel</Button>
                     <Button onClick={handleCreateRule} className="w-full sm:w-auto" disabled={isCreatingRule}>
                       {isCreatingRule && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Create Rule
+                      {editingRuleId ? "Save Rule" : "Create Rule"}
                     </Button>
                   </div>
                 </div>
@@ -1086,7 +1140,22 @@ export default function NotificationsPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setEditingRuleId(rule.id);
+                                    setNewRule({
+                                      name: rule.name,
+                                      description: rule.description,
+                                      triggers: rule.triggers,
+                                      channels: rule.channels,
+                                      conditions: {
+                                        projects: rule.conditions?.projects || [],
+                                        branches: rule.conditions?.branches || [],
+                                        environments: rule.conditions?.environments || [],
+                                        severity: rule.conditions?.severity || [],
+                                      },
+                                    });
+                                    setIsCreateRuleOpen(true);
+                                  }}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit Rule
                                   </DropdownMenuItem>
@@ -1176,7 +1245,20 @@ export default function NotificationsPage() {
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuLabel>Actions</DropdownMenuLabel>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => {
+                                    setEditingChannelId(channel.id);
+                                    setNewChannel({
+                                      type: channel.type,
+                                      name: channel.name,
+                                      config: {
+                                        email: channel.config?.email || "",
+                                        webhookUrl: channel.config?.webhookUrl || "",
+                                        slackChannel: channel.config?.slackChannel || "",
+                                        teamsWebhook: channel.config?.teamsWebhook || "",
+                                      },
+                                    });
+                                    setIsCreateChannelOpen(true);
+                                  }}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     Edit Channel
                                   </DropdownMenuItem>

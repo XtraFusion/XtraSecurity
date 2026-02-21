@@ -174,7 +174,7 @@ export default function AuditLogsPage() {
           totalEvents: data.stats.totalEvents,
           criticalEvents: data.anomalies.length, // approximation or add to API
           failedActions: data.stats.failedLogins,
-          activeUsers: 0 // API doesn't return this yet, maybe add later or keep 0
+          activeUsers: data.stats.activeUsers || 0
         });
       }
     } catch (e) {
@@ -195,6 +195,8 @@ export default function AuditLogsPage() {
       if (severityFilter !== 'all') params.set('severity', severityFilter)
       if (statusFilter !== 'all') params.set('status', statusFilter)
       if (userFilter !== 'all') params.set('userId', userFilter)
+      if (dateRange.from) params.set('startDate', dateRange.from.toISOString())
+      if (dateRange.to) params.set('endDate', dateRange.to.toISOString())
 
       const res = await fetch(`/api/audit?${params.toString()}`)
       if (res.ok) {
@@ -253,7 +255,10 @@ export default function AuditLogsPage() {
       if (res.status === 403) {
         throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
       }
-      if (!res.ok) throw new Error("Export failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || errorData?.error || "Export failed");
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -294,7 +299,10 @@ export default function AuditLogsPage() {
       if (res.status === 403) {
         throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
       }
-      if (!res.ok) throw new Error("Export failed");
+      if (!res.ok) {
+        const errorData = await res.json().catch(() => null);
+        throw new Error(errorData?.message || errorData?.error || "Export failed");
+      }
 
       const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
@@ -427,10 +435,94 @@ export default function AuditLogsPage() {
             <CardDescription>Detailed audit trail of all system activities</CardDescription>
           </CardHeader>
           <CardContent>
-            {/* Filter UI Controls (Same as before) */}
-            <div className="space-y-4">
-              {/* ... Keep Search/Filter inputs ... */}
+            {/* Filter UI Controls */}
+            <div className="flex flex-col md:flex-row gap-4 mb-6">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  placeholder="Search activities..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
 
+              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <Filter className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {Object.entries(categoryConfig).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                <SelectTrigger className="w-[160px]">
+                  <AlertTriangle className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Severity" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Severities</SelectItem>
+                  {Object.entries(severityConfig).map(([key, config]) => (
+                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              {/* Date Filter Dropdown */}
+              <Select
+                value={
+                  !dateRange.from && !dateRange.to ? "all" :
+                    dateRange.from && !dateRange.to ? "custom" :
+                      "custom" // simplified tracking for standard vs custom
+                }
+                onValueChange={(val) => {
+                  const now = new Date();
+                  switch (val) {
+                    case "1h":
+                      setDateRange({ from: new Date(now.getTime() - 60 * 60 * 1000), to: now });
+                      break;
+                    case "1d":
+                      setDateRange({ from: new Date(now.getTime() - 24 * 60 * 60 * 1000), to: now });
+                      break;
+                    case "1w":
+                      setDateRange({ from: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), to: now });
+                      break;
+                    case "1m":
+                      setDateRange({ from: new Date(now.setMonth(now.getMonth() - 1)), to: new Date() });
+                      break;
+                    case "1y":
+                      setDateRange({ from: new Date(now.setFullYear(now.getFullYear() - 1)), to: new Date() });
+                      break;
+                    case "all":
+                      setDateRange({});
+                      break;
+                    case "custom":
+                      // Keep current or set to empty to allow calendar selection
+                      break;
+                  }
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <CalendarIcon className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Date Range" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="1h">Last 1 Hour</SelectItem>
+                  <SelectItem value="1d">Last 1 Day</SelectItem>
+                  <SelectItem value="1w">Last 1 Week</SelectItem>
+                  <SelectItem value="1m">Last 1 Month</SelectItem>
+                  <SelectItem value="1y">Last 1 Year</SelectItem>
+                  <SelectItem value="all">All Time</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-4">
               {/* Logs List */}
               <div className="space-y-4 mt-6">
                 {isLoading && logs.length === 0 ? (

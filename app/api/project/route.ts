@@ -145,10 +145,18 @@ export async function GET(request: NextRequest) {
         { status: 404 }
       );
     }
-
+    
     // Compute currentUserRole for frontend permission checks
     const { getUserProjectRole } = await import("@/lib/permissions");
     const role = await getUserProjectRole(userId, project.id);
+
+    // Enforce Blocked status (Only owners and admins can access a blocked project to unblock it)
+    if (project.isBlocked && role !== "owner" && role !== "admin") {
+        return NextResponse.json(
+            { error: "This project has been blocked by the owner and is currently inaccessible." },
+            { status: 403 }
+        );
+    }
 
     // Serialize dates on single project response
     const safeProject = {
@@ -246,6 +254,23 @@ export async function POST(request: NextRequest) {
         { error: "Workspace ID is required" },
         { status: 400 }
       );
+    }
+
+    // Rate Limit Check for Projects
+    const userTier = (authUser.tier || "free") as import("@/lib/rate-limit-config").Tier;
+    const projectLimit = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[userTier].maxProjectsPerWorkspace);
+    
+    const resolvedProjectLimit = await projectLimit;
+
+    const projectCount = await prisma.project.count({
+      where: { workspaceId: newProject.workspaceId }
+    });
+
+    if (projectCount >= resolvedProjectLimit) {
+      return NextResponse.json({ 
+        error: "Project limit reached", 
+        message: `Your ${userTier} plan allows creating up to ${resolvedProjectLimit} projects per workspace. Please upgrade for more capacity.` 
+      }, { status: 403 });
     }
 
     // Create project with the data from frontend and initialize required fields

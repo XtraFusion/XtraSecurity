@@ -32,7 +32,7 @@ export async function GET(req: Request) {
         },
         include: {
             userRoles: {
-                include: { project: true }
+                include: { project: true, role: true }
             },
             // Fetch reviews for this user that happened AFTER the cycle start
             reviewsReceived: {
@@ -60,7 +60,7 @@ export async function GET(req: Request) {
             name: u.name,
             email: u.email,
             roles: u.userRoles.map(r => ({
-                role: r.role,
+                role: r.role?.name || "Unknown",
                 project: r.project?.name || "Global"
             })),
             lastLogin: u.updatedAt, // Using updatedAt as proxy for now
@@ -137,9 +137,18 @@ export async function PUT(req: Request) {
             }
         });
 
-        // If revoked, perform revocation logic here (e.g. remove roles, disable user)
-        // For now, we just log it.
+        // If revoked, perform revocation logic
         if (decision === "revoke") {
+             // 1. Remove all Project Roles for this user
+             await prisma.userRole.deleteMany({
+                 where: { userId }
+             });
+
+             // 2. Remove team access assignments 
+             await prisma.teamUser.deleteMany({
+                 where: { userId }
+             });
+
              await prisma.auditLog.create({
                 data: {
                     userId: session.user.id,

@@ -55,12 +55,11 @@ import {
   Edit3,
   ArrowRight,
   ShieldCheck,
-  ArrowRight,
-  ShieldCheck,
   LayoutGrid,
   List,
   Loader2
 } from "lucide-react";
+import axios from "axios";
 import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { TeamController } from "@/util/TeamContoller";
@@ -198,9 +197,10 @@ const Teams = () => {
       }
     } catch (error: any) {
       console.error("Create team error:", error);
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to create team. Please try again.";
       toast({
         title: "Error creating team",
-        description: error.response?.data?.error || "Failed to create team. Please try again.",
+        description: errorMessage,
         variant: "destructive",
       });
     } finally {
@@ -234,8 +234,9 @@ const Teams = () => {
         title: "Team deleted",
         description: `${deleteDialog.team.name} has been deleted`,
       });
-    } catch (error) {
-      toast({ title: "Error", description: "Failed to delete team", variant: "destructive" });
+    } catch (error: any) {
+      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to delete team";
+      toast({ title: "Error", description: errorMessage, variant: "destructive" });
     }
   };
 
@@ -439,7 +440,7 @@ const Teams = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {teams.reduce((acc, team) => acc + (team.projects || 0), 0)}
+                {teams.reduce((acc, team) => acc + (team.teamProjects?.length || 0), 0)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">In development</p>
             </CardContent>
@@ -557,7 +558,7 @@ const Teams = () => {
                     </span>
 
                     <span className="flex items-center gap-1">
-                      <Code className="h-3 w-3" /> {team.projects || 0} Projects
+                      <Code className="h-3 w-3" /> {team.teamProjects?.length || 0} Projects
                     </span>
                   </div>
                 </CardFooter>

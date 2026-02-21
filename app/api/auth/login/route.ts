@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { compare } from "bcryptjs";
+import { compare, hash } from "bcryptjs";
 import crypto from "crypto";
 
 export async function POST(req: Request) {
@@ -15,39 +15,75 @@ export async function POST(req: Request) {
     }
 
     // 1. Find user by email
-    const user = await prisma.user.findUnique({
+    let user = await prisma.user.findUnique({
       where: { email },
     });
+    
+    let isNewUser = false;
 
     if (!user) {
-      // Return ambiguous generic error to prevent email enumeration
-      return NextResponse.json(
-        { message: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
+      isNewUser = true;
+      // Auto-register the user if they don't exist
+      const hashedPassword = await hash(password, 12);
+      user = await prisma.user.create({
+        data: {
+          email,
+          name: email.split("@")[0],
+          password: hashedPassword,
+          emailVerified: new Date(),
+          role: "user",
+        },
+      });
 
-    // Special logic for "admin@example.com" if no password exists for testing.
-    // In production, we'd remove this.
-    if (user.email === "admin@example.com" && password === "password" && !user.password) {
-      // Continue to OTP generation
-    } 
-    // Otherwise, standard password check
-    else if (!user.password) {
-       // Setup account if password not set? For now, just fail.
-       return NextResponse.json(
-        { message: "Invalid email or password" },
-        { status: 401 }
-      );
-    }
-    else {
-      // 2. Verify password
-      const isPasswordValid = await compare(password, user.password);
-      if (!isPasswordValid) {
-        return NextResponse.json(
+      // Create personal workspace + free subscription
+      try {
+        const workspaceName = user.name ? `${user.name}'s workspace` : "Personal Workspace";
+        await prisma.workspace.create({
+          data: {
+            name: workspaceName,
+            description: "Personal workspace",
+            workspaceType: "personal",
+            createdBy: user.id,
+            subscriptionPlan: "free",
+          },
+        });
+
+        const oneYear = 1000 * 60 * 60 * 24 * 365;
+        await prisma.userSubscription.create({
+          data: {
+            userId: user.id,
+            plan: "free",
+            workspaceLimit: 3,
+            status: "active",
+            startDate: new Date(),
+            endDate: new Date(Date.now() + oneYear),
+          },
+        });
+      } catch (e) {
+        console.error("[auth] Failed to create workspace for new user:", e);
+      }
+    } else {
+      // 2. User exists, verify password
+      // Special logic for "admin@example.com" if no password exists for testing.
+      // In production, we'd remove this.
+      if (user.email === "admin@example.com" && password === "password" && !user.password) {
+        // Continue to OTP generation
+      } 
+      // Otherwise, standard password check
+      else if (!user.password) {
+         return NextResponse.json(
           { message: "Invalid email or password" },
           { status: 401 }
         );
+      }
+      else {
+        const isPasswordValid = await compare(password, user.password);
+        if (!isPasswordValid) {
+          return NextResponse.json(
+            { message: "Invalid email or password" },
+            { status: 401 }
+          );
+        }
       }
     }
 
@@ -71,7 +107,7 @@ export async function POST(req: Request) {
     console.log(`[AUTH] OTP for ${user.email} is: ${otp}`);
 
     return NextResponse.json(
-      { message: "OTP sent to your email", requireOtp: true },
+      { message: "OTP sent to your email", requireOtp: true, isNewUser },
       { status: 200 }
     );
 

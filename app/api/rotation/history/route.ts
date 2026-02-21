@@ -16,12 +16,31 @@ export async function GET(req: Request) {
 
     // Fetch history logs
     // We navigate from Log -> Schedule -> Secret -> Project to filter
-    const history = await prisma.rotationLog.findMany({
-      where: projectId ? {
-        schedule: {
-            projectId: projectId
+    const whereClause: any = projectId ? {
+      schedule: {
+          projectId: projectId
+      }
+    } : {
+      schedule: {
+        secret: {
+          project: {
+            OR: [
+              { userId: session.user.id },
+              {
+                teamProjects: {
+                  some: {
+                    team: { members: { some: { userId: session.user.id, status: "active" } } }
+                  }
+                }
+              }
+            ]
+          }
         }
-      } : {},
+      }
+    };
+
+    const history = await prisma.rotationLog.findMany({
+      where: whereClause,
       include: {
         schedule: {
             include: {

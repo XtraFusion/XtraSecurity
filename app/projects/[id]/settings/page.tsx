@@ -12,7 +12,8 @@ import {
   Lock,
   Unlock,
   RefreshCw,
-  Plus
+  Plus,
+  ChevronRight
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
@@ -25,6 +26,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { AccessLevel, SecurityLevel, IpRestriction } from '@/util/ProjectController';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -107,6 +116,8 @@ export default function ProjectSettings() {
   const [newBranch, setNewBranch] = useState('');
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [deleteConfirmText, setDeleteConfirmText] = useState('');
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [clearConfirmText, setClearConfirmText] = useState('');
   const [isPageLoading, setIsPageLoading] = useState(true);
 
   const [isLoading, setIsLoading] = useState({
@@ -254,6 +265,8 @@ export default function ProjectSettings() {
 
   // Handle project operations
   const handleClearProject = async () => {
+    if (!project || clearConfirmText !== project.name) return;
+
     setIsLoading(prev => ({ ...prev, clearProject: true }));
     try {
       await ProjectController.clearProject(id as string);
@@ -263,7 +276,7 @@ export default function ProjectSettings() {
       });
       await fetchData();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to clear project";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to clear project";
       toast({
         title: "Error",
         description: errorMsg,
@@ -271,6 +284,8 @@ export default function ProjectSettings() {
       });
     } finally {
       setIsLoading(prev => ({ ...prev, clearProject: false }));
+      setShowClearConfirm(false);
+      setClearConfirmText('');
     }
   };
 
@@ -284,7 +299,7 @@ export default function ProjectSettings() {
       });
       await fetchData();
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to toggle project block";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to toggle project block";
       toast({
         title: "Error",
         description: errorMsg,
@@ -307,7 +322,7 @@ export default function ProjectSettings() {
       });
       router.push('/projects');
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete project";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to delete project";
       toast({
         title: "Error",
         description: errorMsg,
@@ -341,7 +356,7 @@ export default function ProjectSettings() {
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.response?.data || "Failed to add team to project",
+        description: error.response?.data?.message || error.response?.data?.error || "Failed to add team to project",
         variant: "destructive"
       });
     } finally {
@@ -391,6 +406,23 @@ export default function ProjectSettings() {
 
   return (
     <div className="container max-w-4xl mx-auto p-6 space-y-8">
+      {/* Breadcrumbs */}
+      <Breadcrumb>
+        <BreadcrumbList>
+          <BreadcrumbItem>
+            <BreadcrumbLink href="/projects">Projects</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbLink href={`/projects/${id}`}>{project?.name || 'Project'}</BreadcrumbLink>
+          </BreadcrumbItem>
+          <BreadcrumbSeparator />
+          <BreadcrumbItem>
+            <BreadcrumbPage>Settings</BreadcrumbPage>
+          </BreadcrumbItem>
+        </BreadcrumbList>
+      </Breadcrumb>
+
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -583,7 +615,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update access level";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update access level";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -618,7 +650,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update security level";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update security level";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -671,7 +703,7 @@ export default function ProjectSettings() {
                           fetchData();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update 2FA requirement";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update 2FA requirement";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -701,7 +733,7 @@ export default function ProjectSettings() {
                               fetchData();
                             })
                             .catch((error) => {
-                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
+                              const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update password requirements";
                               toast({
                                 title: "Error",
                                 description: errorMsg,
@@ -733,7 +765,7 @@ export default function ProjectSettings() {
                               fetchData();
                             })
                             .catch((error) => {
-                              const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update password requirements";
+                              const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update password requirements";
                               toast({
                                 title: "Error",
                                 description: errorMsg,
@@ -771,7 +803,7 @@ export default function ProjectSettings() {
                           e.currentTarget.reset();
                         })
                         .catch((error) => {
-                          const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to add IP restriction";
+                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to add IP restriction";
                           toast({
                             title: "Error",
                             description: errorMsg,
@@ -819,7 +851,7 @@ export default function ProjectSettings() {
                                       fetchData();
                                     })
                                     .catch((error) => {
-                                      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to remove IP restriction";
+                                      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to remove IP restriction";
                                       toast({
                                         title: "Error",
                                         description: errorMsg,
@@ -849,17 +881,62 @@ export default function ProjectSettings() {
               <CardDescription>Remove all data while keeping the project structure</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button
-                variant="outline"
-                onClick={handleClearProject}
-                disabled={isLoading.clearProject}
-              >
-                <RefreshCw className="w-4 h-4 mr-2" />
-                Clear All Project Data
-              </Button>
-              <p className="text-sm text-muted-foreground mt-2">
-                This will remove all secrets and data from all branches while keeping the project structure intact.
-              </p>
+              {!showClearConfirm ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowClearConfirm(true)}
+                    className="cursor-pointer"
+                  >
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Clear All Project Data
+                  </Button>
+                  <p className="text-sm text-muted-foreground mt-2">
+                    This will remove all secrets and data from all branches while keeping the project structure intact.
+                  </p>
+                </>
+              ) : (
+                <div className="space-y-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
+                  <div className="flex items-center gap-2 text-orange-800">
+                    <AlertTriangle className="w-4 h-4" />
+                    <span className="font-medium">Confirm Project Data Clearance</span>
+                  </div>
+
+                  <p className="text-sm text-orange-700">
+                    Type "{project?.name}" to confirm clearing all branch and secret data:
+                  </p>
+
+                  <Input
+                    value={clearConfirmText}
+                    onChange={(e) => setClearConfirmText(e.target.value)}
+                    className="border-orange-300 bg-white"
+                    disabled={isLoading.clearProject}
+                  />
+
+                  <div className="flex gap-2">
+                    <Button
+                      variant="outline"
+                      className="border-orange-600 text-orange-600 hover:bg-orange-100 cursor-pointer"
+                      onClick={handleClearProject}
+                      disabled={isLoading.clearProject || clearConfirmText !== project?.name}
+                    >
+                      {isLoading.clearProject ? 'Clearing...' : 'Clear Data'}
+                    </Button>
+
+                    <Button
+                      variant="ghost"
+                      onClick={() => {
+                        setShowClearConfirm(false);
+                        setClearConfirmText('');
+                      }}
+                      disabled={isLoading.clearProject}
+                      className="cursor-pointer hover:bg-orange-100 hover:text-orange-900"
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

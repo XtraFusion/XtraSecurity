@@ -6,7 +6,7 @@ import { generateApiKey } from "@/lib/auth/service-account";
 
 export async function POST(
   req: Request,
-  { params }: { params: { projectId: string; saId: string } }
+  { params }: { params: Promise<{ projectId: string; saId: string }> }
 ) {
   try {
     const session = await getServerSession(authOptions);
@@ -14,7 +14,7 @@ export async function POST(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectId, saId } = params;
+    const { projectId, saId } = await params;
     const body = await req.json();
     const { label, expiresInDays } = body;
 
@@ -86,14 +86,14 @@ export async function POST(
 
 export async function GET(
     req: Request,
-    { params }: { params: { projectId: string; saId: string } }
+    { params }: { params: Promise<{ projectId: string; saId: string }> }
 ) {
     // List keys (masked)
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const { saId } = params;
+    const { saId } = await params;
 
     const keys = await prisma.apiKey.findMany({
         where: { serviceAccountId: saId },
@@ -116,7 +116,7 @@ export async function GET(
 
 export async function DELETE(
     req: Request,
-    { params }: { params: { projectId: string; saId: string } } // Logic for deleting a specific key
+    { params }: { params: Promise<{ projectId: string; saId: string }> } // Logic for deleting a specific key
 ) {
     // Need keyId in params or body. Assuming separate route or body.
     // Making this route just for creation/list for now. Delete on nested resource usually needs Key ID in URL.

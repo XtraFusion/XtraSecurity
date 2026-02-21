@@ -552,7 +552,7 @@ const VaultManager: React.FC = () => {
       });
       setNotification({ type: "default", message: "✓ Secret created successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to create secret";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to create secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     } finally {
       setIsSavingSecret(false);
@@ -580,7 +580,7 @@ const VaultManager: React.FC = () => {
       setEditingSecret(null);
       setNotification({ type: "default", message: "✓ Secret updated successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to update secret";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     } finally {
       setIsEditingSecret(false);
@@ -594,7 +594,7 @@ const VaultManager: React.FC = () => {
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
       setNotification({ type: "default", message: "✓ Secret deleted successfully" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.error || error.response?.data?.message || "Failed to delete secret";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to delete secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     } finally {
       setDeletingSecretId(null);

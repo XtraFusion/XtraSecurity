@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import {
     Home,
@@ -17,7 +18,8 @@ import {
     Key,
     Lock,
     LayoutDashboard,
-    BookOpen
+    BookOpen,
+    CreditCard
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -63,6 +65,7 @@ const NAV_GROUPS = [
             { name: "Integrations", href: "/integrations", icon: Zap },
             { name: "Notifications", href: "/notifications", icon: Bell },
             { name: "Settings", href: "/settings", icon: Settings },
+            { name: "Subscription & Usages", href: "/subscription", icon: CreditCard },
             { name: "Documentation", href: "/docs", icon: BookOpen },
         ]
     }
@@ -82,9 +85,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
             {/* Header / Logo */}
             <div className="h-14 flex items-center px-6 border-b border-border/40">
                 <Link href="/dashboard" className="flex items-center gap-2 font-bold text-lg tracking-tight">
-                    <div className="bg-primary text-primary-foreground p-1 rounded-md">
-                        <Shield className="h-5 w-5" />
-                    </div>
+                    <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={28} height={28} className="rounded-md" />
                     XtraSecurity
                 </Link>
             </div>
@@ -154,6 +155,11 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                         {hasAdminAccess && (
                             <DropdownMenuItem asChild>
                                 <Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                            </DropdownMenuItem>
+                        )}
+                        {hasAdminAccess && (
+                            <DropdownMenuItem asChild>
+                                <Link href="/subscription"><CreditCard className="mr-2 h-4 w-4" /> Subscription & Usages</Link>
                             </DropdownMenuItem>
                         )}
                         <DropdownMenuSeparator />

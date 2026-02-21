@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { randomBytes } from "crypto";
+import { encrypt } from "@/lib/encription";
 
 export class RotationService {
   /**
@@ -52,10 +53,12 @@ export class RotationService {
         rotatedBy: runBy // system or user email
       };
 
+      const encryptedValue = JSON.stringify(encrypt(newValue));
+
       await prisma.secret.update({
         where: { id: schedule.secretId },
         data: {
-          value: [newValue], // Assuming single value replacement for simplicity
+          value: [encryptedValue], // Assuming single value replacement for simplicity
           version: newVersion,
           lastUpdated: new Date(),
           history: [...oldHistory, historyEntry],

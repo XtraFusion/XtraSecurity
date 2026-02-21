@@ -25,6 +25,27 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: "Unauthorized access to audit logs" }, { status: 403 });
     }
 
+    // Get Workspace Owner Tier for Retention Limits
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: workspaceId },
+      include: { user: { select: { tier: true } } }
+    });
+
+    if (!workspace) {
+        return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
+
+    const tier = workspace.user?.tier || "free";
+    let minAllowedDate = new Date(0); // Enterprise default (unlimited)
+
+    if (tier === "free") {
+        minAllowedDate = new Date();
+        minAllowedDate.setDate(minAllowedDate.getDate() - 30); // 30 days
+    } else if (tier === "pro") {
+        minAllowedDate = new Date();
+        minAllowedDate.setDate(minAllowedDate.getDate() - 365); // 1 year
+    }
+
     const page = parseInt(url.searchParams.get("page") || "1", 10);
     const pageSize = parseInt(url.searchParams.get("pageSize") || "25", 10);
     const search = url.searchParams.get("search") || undefined;
@@ -32,8 +53,26 @@ export async function GET(req: Request) {
     const severity = url.searchParams.get("severity") || undefined;
     const status = url.searchParams.get("status") || undefined;
     const userId = url.searchParams.get("userId") || undefined;
+    
+    // Parse Start & End Dates
+    const startDateParam = url.searchParams.get("startDate");
+    const endDateParam = url.searchParams.get("endDate");
+    
+    let queryStartDate = startDateParam ? new Date(startDateParam) : minAllowedDate;
+    let queryEndDate = endDateParam ? new Date(endDateParam) : new Date();
 
-    const where: any = {};
+    // Enforce Tier Limit: User cannot query older than their tier allows
+    if (queryStartDate < minAllowedDate) {
+        queryStartDate = minAllowedDate;
+    }
+
+    const where: any = {
+        timestamp: {
+            gte: queryStartDate,
+            lte: queryEndDate
+        }
+    };
+
     if (category) where.entity = category; // in schema 'entity' maps to e.g., 'auth','project', etc.
     if (severity) where.action = { contains: severity }; // simplistic mapping if severity stored elsewhere
     if (status) where.action = { contains: status }; // placeholder: AuditLog model doesn't have explicit status field
