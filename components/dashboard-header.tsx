@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "next-auth/react";
 import Link from "next/link"; // Assuming we might link to profile/settings
+import Image from "next/image";
 
 export function DashboardHeader({ setSidebarOpen }: { setSidebarOpen: (open: boolean) => void }) {
     const { user } = useUser();
@@ -28,7 +29,7 @@ export function DashboardHeader({ setSidebarOpen }: { setSidebarOpen: (open: boo
                     <span className="sr-only">Toggle menu</span>
                 </Button>
                 <div className="flex items-center gap-2 font-bold">
-                    <Shield className="h-5 w-5 text-primary" />
+                    <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={24} height={24} className="rounded-md" />
                     <span>XtraSecurity</span>
                 </div>
             </div>

@@ -32,6 +32,7 @@ export async function GET(req: Request) {
   const rules = (result?.cursor?.firstBatch ?? []).map((r: any) => ({
     ...r,
     id: r._id?.$oid ?? r._id,
+    channels: Array.isArray(r.channels) ? r.channels.map((c: any) => typeof c === "object" && c !== null && c.$oid ? c.$oid : String(c)) : [],
     createdAt: r.createdAt?.$date ?? r.createdAt,
     updatedAt: r.updatedAt?.$date ?? r.updatedAt,
   }));

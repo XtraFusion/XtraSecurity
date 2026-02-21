@@ -439,7 +439,7 @@ const Teams = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {teams.reduce((acc, team) => acc + (team.projects || 0), 0)}
+                {teams.reduce((acc, team) => acc + (team.teamProjects?.length || 0), 0)}
               </div>
               <p className="text-xs text-muted-foreground mt-1">In development</p>
             </CardContent>
@@ -557,7 +557,7 @@ const Teams = () => {
                     </span>
 
                     <span className="flex items-center gap-1">
-                      <Code className="h-3 w-3" /> {team.projects || 0} Projects
+                      <Code className="h-3 w-3" /> {team.teamProjects?.length || 0} Projects
                     </span>
                   </div>
                 </CardFooter>

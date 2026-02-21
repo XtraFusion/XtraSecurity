@@ -34,7 +34,10 @@ export async function GET(req: Request) {
     const failedActions = await prisma.auditLog.count({
         where: {
             ...whereClause,
-            action: { contains: "Failed" } 
+            OR: [
+              { action: { contains: "Fail" } },
+              { action: { contains: "fail" } }
+            ]
         }
     });
 

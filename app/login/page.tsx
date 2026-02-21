@@ -11,6 +11,7 @@ import { Eye, EyeOff, Shield, Moon, Sun, Github, Mail, Command } from "lucide-re
 import { useTheme } from "next-themes"
 import { signIn, useSession } from "next-auth/react"
 import Link from "next/link"
+import Image from "next/image"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("admin@example.com")
@@ -19,6 +20,7 @@ export default function LoginPage() {
   const [step, setStep] = useState<1 | 2>(1)
   const [rememberMe, setRememberMe] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [isNewUser, setIsNewUser] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const { theme, setTheme } = useTheme()
@@ -68,6 +70,7 @@ export default function LoginPage() {
       }
 
       if (data.requireOtp) {
+        if (data.isNewUser) setIsNewUser(true)
         setStep(2) // Move to OTP entry step
       }
     } catch (err: any) {
@@ -99,7 +102,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Invalid or expired verification code")
       } else if (result?.ok) {
-        window.location.href = "/dashboard"
+        window.location.href = isNewUser ? "/subscription" : "/dashboard"
       }
     } catch (err) {
       setError("An error occurred. Please try again.")
@@ -110,19 +113,12 @@ export default function LoginPage() {
 
   return (
     <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-zinc-900" />
+      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r overflow-hidden">
+        <Image src="/login page side image.png" alt="Login Background" fill className="object-cover opacity-50 absolute inset-0 z-0" quality={100} priority />
+        <div className="absolute inset-0 bg-zinc-900/40 mix-blend-multiply z-10" />
         <div className="relative z-20 flex items-center text-lg font-medium">
-          <Shield className="mr-2 h-6 w-6" />
+          <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={32} height={32} className="mr-3 rounded-md" />
           XtraSecurity
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              &ldquo;Security is not just a feature, it's a fundamental requirement. XtraSecurity gives us the peace of mind we need to focus on innovation.&rdquo;
-            </p>
-            <footer className="text-sm">Sofia Davis, CTO</footer>
-          </blockquote>
         </div>
       </div>
       <div className="lg:p-8">
@@ -139,10 +135,10 @@ export default function LoginPage() {
 
           <div className="flex flex-col space-y-2 text-center">
             <h1 className="text-2xl font-semibold tracking-tight">
-              {step === 1 ? "Sign in to your account" : "Verify Your Identity"}
+              {step === 1 ? "Welcome back" : "Verify Your Identity"}
             </h1>
             <p className="text-sm text-muted-foreground">
-              {step === 1 ? "Enter your email below to log in" : `Enter the 6-digit code sent to ${email}`}
+              {step === 1 ? "Log in or create a new account to continue" : `Enter the 6-digit code sent to ${email}`}
             </p>
           </div>
 
@@ -241,7 +237,7 @@ export default function LoginPage() {
                   {isLoading && (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
                   )}
-                  {step === 1 ? "Sign In" : "Verify & Log In"}
+                  {step === 1 ? "Continue" : "Verify & Log In"}
                 </Button>
               </div>
             </form>

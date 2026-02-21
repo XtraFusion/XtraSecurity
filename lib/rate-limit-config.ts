@@ -22,21 +22,48 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
     points: 1000, 
     duration: 86400, 
     price: "$0", 
-    features: ["1,000 requests/day", "Public Support", "Basic Access", "1 Team Limit"],
+    features: [
+      "1000 API requests / day",
+      "1 Workspace & 1 Team",
+      "3 Projects",
+      "50 secrets per project",
+      "20 branch limit",
+      "30-day audit logs",
+      "CLI & SDK access",
+      "RBAC & Slack alerts"
+    ],
     maxTeams: 1
   },
   pro: { 
     points: 10000, 
     duration: 86400, 
-    price: "$29", 
-    features: ["10,000 requests/day", "Priority Support", "Advanced Analytics", "Team Collaboration", "10 Team Limit"],
+    price: "$9", 
+    features: [
+      "10,000 API requests / day",
+      "3 Workspaces (5 projects each)",
+      "100 secrets per project",
+      "30 branch limit",
+      "1-year audit logs",
+      "JIT Access & Secret Rotation",
+      "IP Blocking & DDoS Detection",
+      "RBAC + Slack Alerts"
+    ],
     maxTeams: 10
   },
   enterprise: { 
     points: 100000, 
     duration: 86400, 
     price: "Custom", 
-    features: ["100,000+ requests/day", "Dedicated Support", "SLA", "Custom Integrations", "On-premise Options", "100+ Team Limit"],
+    features: [
+      "100,000+ API requests / day",
+      "Unlimited everything",
+      "SSO / SAML",
+      "On-Premise Deployment",
+      "SOC 2 / ISO 27001 Reports",
+      "Dedicated Support",
+      "SLA Guarantee",
+      "Custom audit log retention"
+    ],
     maxTeams: 100
   },
 };

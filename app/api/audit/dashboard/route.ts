@@ -10,40 +10,63 @@ export async function GET(req: Request) {
 
     const url = new URL(req.url);
     const timeRange = url.searchParams.get("range") || "7d"; // 24h, 7d, 30d
+    const workspaceId = url.searchParams.get("workspaceId");
 
     let startDate = new Date();
     if (timeRange === "24h") startDate.setHours(startDate.getHours() - 24);
     else if (timeRange === "30d") startDate.setDate(startDate.getDate() - 30);
     else startDate.setDate(startDate.getDate() - 7);
 
+    const whereClause: any = { timestamp: { gte: startDate } };
+    if (workspaceId) {
+        whereClause.workspaceId = workspaceId;
+    }
+
     // 1. Total events in range
     const totalEvents = await prisma.auditLog.count({
-      where: { timestamp: { gte: startDate } }
+      where: whereClause
     });
 
     // 2. Secret Accesses
     const secretAccesses = await prisma.auditLog.count({
       where: {
-        timestamp: { gte: startDate },
+        ...whereClause,
         action: { contains: "secret_access" }
       }
     });
 
-    // 3. Failed Logins
-    // Assuming 'login_failed' action exists or we look for 'LOGIN_FAILURE'
+    // 3. Failed Logins & Actions
     const failedLogins = await prisma.auditLog.count({
       where: {
-        timestamp: { gte: startDate },
-        action: { in: ["login_failed", "auth_failure"] }
+        ...whereClause,
+        OR: [
+          { action: { in: ["login_failed", "auth_failure"] } },
+          { action: { contains: "fail" } },
+          { action: { contains: "Fail" } }
+        ]
       }
     });
+
+    // Count Active Users
+    const activeUsersGroups = await prisma.auditLog.groupBy({
+        by: ['userId'],
+        where: whereClause,
+        _count: { userId: true }
+    });
+    const activeUsers = activeUsersGroups.length;
 
     // 4. Activity over time (grouped by day or hour)
     // Prisma doesn't support easy grouping by date part in all DBs without raw query.
     // For simplicity, we'll fetch recent high-level events or use raw query if MongoDB supports it (aggregate).
     // MongoDB raw aggregate:
-    const pipeline = [
-      { $match: { timestamp: { $gte: startDate } } },
+    const pipeline: any[] = [
+      { $match: { timestamp: { $gte: startDate } } }
+    ];
+    if (workspaceId) {
+        pipeline[0].$match.workspaceId = { $oid: workspaceId };
+    }
+    
+    pipeline.push(
       {
         $group: {
           _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
@@ -51,9 +74,9 @@ export async function GET(req: Request) {
         }
       },
       { $sort: { "_id": 1 } }
-    ];
+    );
 
-    let activityTrend = [];
+    let activityTrend: any[] = [];
     try {
         const rawStats = await prisma.auditLog.aggregateRaw({
             pipeline: pipeline as any
@@ -69,11 +92,11 @@ export async function GET(req: Request) {
         console.error("Aggregation failed, fallback to basic count", e);
     }
 
-    // 5. Recent Anomalies (e.g. implementation specific, maybe breaks glass or high severity)
+    // 5. Recent Anomalies
     const anomalies = await prisma.auditLog.findMany({
         where: {
-            timestamp: { gte: startDate },
-            action: { in: ["break_glass", "admin_override", "bulk_export"] }
+            ...whereClause,
+            action: { in: ["break_glass", "admin_override", "bulk_export", "access_revoked"] }
         },
         orderBy: { timestamp: "desc" },
         take: 5,
@@ -85,7 +108,8 @@ export async function GET(req: Request) {
         stats: {
             totalEvents,
             secretAccesses,
-            failedLogins
+            failedLogins,
+            activeUsers
         },
         trend: activityTrend,
         anomalies

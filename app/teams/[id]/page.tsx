@@ -554,7 +554,7 @@ const TeamDetail = () => {
                   </div>
                   <div className="flex items-center gap-1">
                     <Code className="h-4 w-4" />
-                    {team.projects} projects
+                    {team.teamProjects?.length || 0} projects
                   </div>
                   {team.isPrivate && (
                     <Badge variant="secondary">Private Team</Badge>

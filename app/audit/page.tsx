@@ -174,7 +174,7 @@ export default function AuditLogsPage() {
           totalEvents: data.stats.totalEvents,
           criticalEvents: data.anomalies.length, // approximation or add to API
           failedActions: data.stats.failedLogins,
-          activeUsers: 0 // API doesn't return this yet, maybe add later or keep 0
+          activeUsers: data.stats.activeUsers || 0
         });
       }
     } catch (e) {
