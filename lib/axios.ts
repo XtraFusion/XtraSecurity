@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Create axios instance with default configuration
 const apiClient = axios.create({
-  baseURL: process.env.NODE_ENV === 'production' ? '' : 'http://localhost:3000',
+  baseURL: process.env.NODE_ENV === 'production' ? 'https://xtra-security.vercel.app' : 'http://localhost:3000',
   withCredentials: true, // This ensures cookies are sent with requests
   headers: {
     'Content-Type': 'application/json',
