@@ -28,48 +28,48 @@ const FEATURES = [
   {
     icon: "🔒",
     title: "Centralized Secret Vault",
-    desc: "One encrypted home for API keys, DB passwords, OAuth tokens, and certificates. Organized by project and environment with full version history and rollback.",
-    chips: ["AES-256-GCM", "Env Branching", "Shadow Rotation"],
+    desc: "One encrypted home for API keys, DB passwords, and OAuth tokens. Organized by project and environment with full version history and instant rollback.",
+    chips: ["AES-256-GCM", "Versioning", "Shadow Rotation"],
     color: "#3b82f6",
     glow: "rgba(59,130,246,0.15)",
   },
   {
-    icon: "👥",
-    title: "Role-Based Access Control",
-    desc: "Fine-grained roles per project with IP-level controls. Viewer, Developer, Admin — backed by ABAC policies and temporary role grants with auto-expiry.",
-    chips: ["RBAC + ABAC", "IP Allowlisting", "Service Accounts"],
-    color: "#a855f7",
-    glow: "rgba(168,85,247,0.15)",
-  },
-  {
-    icon: "⏱️",
-    title: "Just-In-Time (JIT) Access",
-    desc: "No standing privileges. Access is granted on demand and auto-expires. Break Glass emergency mode with incident logging for zero-downtime incidents.",
-    chips: ["Time-Bound", "Break Glass", "Auto-Revoke"],
+    icon: "🌿",
+    title: "Git-like Versioning",
+    desc: "Branching, diffs, and merges for your secrets. Safely test changes in ephemeral branches before promoting to production. Roll back instantly if things go wrong.",
+    chips: ["Branching", "Diff Visualization", "Rollback"],
     color: "#10b981",
     glow: "rgba(16,185,129,0.15)",
   },
   {
-    icon: "💻",
-    title: "Developer Ecosystem",
-    desc: "Native tooling for every workflow. CLI injects secrets in-memory. SDK for Node.js, Python, Go. Zero .env files. Nothing ever written to disk.",
-    chips: ["xsec run --", "Node / Python / Go", "Browser Ext"],
+    icon: "🔍",
+    title: "Security Intelligence",
+    desc: "Automated scanning for leaked secrets in your repos. Real-time health dashboards and stale secret warnings. Proactive protection against accidental exposure.",
+    chips: ["Secret Scanning", "Health Dashboard", "Stale Warnings"],
+    color: "#a855f7",
+    glow: "rgba(168,85,247,0.15)",
+  },
+  {
+    icon: "🧩",
+    title: "Developer First",
+    desc: "Seamlessly integrate with your workflow. Native VS Code extension, multi-environment secret comparison, and a CLI that injects secrets in-memory.",
+    chips: ["VS Code Ext", "Direct CLI", "Multi-Env Sync"],
     color: "#f97316",
     glow: "rgba(249,115,22,0.15)",
   },
   {
-    icon: "👁️",
-    title: "Real-Time Audit Logging",
-    desc: "Immutable, tamper-proof, SHA-256 chained event log. Every read, write, login, and anomaly — permanently recorded with IP, device, and timestamp.",
-    chips: ["SHA-256 Chain", "Anomaly Detection", "CSV Export"],
+    icon: "👥",
+    title: "Enterprise Governance",
+    desc: "Fine-grained RBAC with IP-level controls. Service accounts for CI/CD, JIT access for developers, and automated quarterly access reviews.",
+    chips: ["RBAC + ABAC", "JIT Access", "Service Accounts"],
     color: "#06b6d4",
     glow: "rgba(6,182,212,0.15)",
   },
   {
-    icon: "🔄",
-    title: "Automated Compliance",
-    desc: "Scheduled secret rotation (daily/weekly/monthly). Quarterly Access Reviews. SOC 2 and ISO 27001 audit reports generated with one click.",
-    chips: ["Auto-Rotation", "Access Reviews", "SOC 2"],
+    icon: "👁️",
+    title: "Immutable Compliance",
+    desc: "Tamper-proof, SHA-256 chained audit logs. SOC 2 and ISO 27001 audit reports generated with one click. Every action is permanently recorded.",
+    chips: ["SHA-256 Logs", "SOC 2 Export", "Audit Chain"],
     color: "#ec4899",
     glow: "rgba(236,72,153,0.15)",
   },
@@ -186,21 +186,21 @@ const PRICING = [
 const AWS_ROWS = [
   { feature: "Setup complexity", competitor: "High — IAM, KMS, VPCs", us: "✓ Under 2 minutes" },
   { feature: "Pricing", competitor: "$0.40/secret/month + API costs", us: "✓ Flat $29/mo, unlimited secrets" },
-  { feature: "Access Reviews", competitor: "Manual / custom-built", us: "✓ Built-in quarterly reviews" },
+  { feature: "Versioning", competitor: "Simple numeric versioning", us: "✓ Git-like branching & diffs" },
   { feature: "JIT / Break Glass", competitor: "✗ Not built-in", us: "✓ Native JIT + Break Glass" },
-  { feature: "Developer CLI", competitor: "AWS CLI (generic)", us: "✓ xsec run — purpose-built" },
-  { feature: "Audit Logs", competitor: "CloudTrail (extra cost)", us: "✓ Included, immutable" },
+  { feature: "Developer CLI", competitor: "AWS CLI (generic)", us: "✓ xtra run — purpose-built" },
+  { feature: "VS Code Extension", competitor: "✗ No dedicated extension", us: "✓ Full-featured extension" },
+  { feature: "Audit Logs", competitor: "CloudTrail (extra cost)", us: "✓ Included, tamper-proof" },
   { feature: "Anomaly Detection", competitor: "✗ Not included", us: "✓ Built-in risk scoring" },
-  { feature: "On-premise", competitor: "✗ Cloud only", us: "✓ Self-host (Enterprise)" },
 ];
 
 const DOPPLER_ROWS = [
+  { feature: "Versioning", competitor: "✗ Simple log only", us: "✓ Git-like branching & diffs" },
+  { feature: "VS Code Extension", competitor: "⚠ Limited functionality", us: "✓ Premium full-featured extension" },
   { feature: "JIT Access", competitor: "✗ No time-bound access", us: "✓ Full JIT + auto-revocation" },
   { feature: "Break Glass", competitor: "✗ Not available", us: "✓ Emergency access + incident log" },
   { feature: "Access Reviews", competitor: "✗ No formal reviews", us: "✓ Built-in quarterly reviews" },
   { feature: "Anomaly Detection", competitor: "✗ Not available", us: "✓ Real-time risk scoring" },
-  { feature: "IP Allowlisting", competitor: "⚠ Limited", us: "✓ Per-project, per-workspace" },
-  { feature: "ABAC Policies", competitor: "✗ Not available", us: "✓ Attribute-based access control" },
   { feature: "Shadow Rotation", competitor: "✗ Not available", us: "✓ Zero-downtime background swap" },
   { feature: "On-premise", competitor: "✗ Not available", us: "✓ Enterprise self-hosting" },
 ];
@@ -217,12 +217,12 @@ const INTEGRATIONS = [
 
 const TERMINAL_LINES = [
   { type: "cmd", text: "" },
-  { type: "success", text: "✓ Authenticated via SSO + TOTP" },
-  { type: "success", text: "✓ Fetching secrets for environment: production" },
-  { type: "success", text: "✓ Injecting 12 secrets into process memory" },
-  { type: "success", text: "✓ Zero secrets written to disk" },
-  { type: "warn", text: "⚑ Audit log entry created → event_id: evt_1a2b3c" },
-  { type: "dim", text: "→ Starting server on port 3000..." },
+  { type: "success", text: "✓ Found 12 secrets for environment: production" },
+  { type: "success", text: "✓ Branch 'fix/api-keys' merged into 'main'" },
+  { type: "success", text: "✓ Injecting secrets into process memory..." },
+  { type: "success", text: "✓ Running application without .env files" },
+  { type: "warn", text: "⚑ Audit log entry: secrets accessed by UserID: 412" },
+  { type: "dim", text: "→ Server started on port 3000" },
 ];
 
 // ─────────────────────────────────────────────
@@ -452,7 +452,7 @@ function Terminal() {
         <span className="w-3 h-3 rounded-full bg-[#ff5f57]" />
         <span className="w-3 h-3 rounded-full bg-[#febc2e]" />
         <span className="w-3 h-3 rounded-full bg-[#28c840]" />
-        <span className="flex-1 text-center text-xs text-slate-500 font-mono">xsec — terminal</span>
+        <span className="flex-1 text-center text-xs text-slate-500 font-mono">xtra — terminal</span>
       </div>
       {/* Body */}
       <div className="bg-[#0d1117] p-6 min-h-[200px] font-mono text-sm leading-8">
@@ -468,7 +468,7 @@ function Terminal() {
                 <div className="flex gap-3">
                   <span className="text-cyan-400">$</span>
                   <span className="text-slate-200">
-                    <span className="text-cyan-400">xsec</span>
+                    <span className="text-cyan-400">xtra</span>
                     <span className="text-slate-200"> run </span>
                     <span className="text-amber-400">--env production</span>
                     <span className="text-slate-500"> -- npm start</span>
@@ -528,17 +528,17 @@ function HeroSection() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 text-4xl md:text-6xl font-black tracking-tight leading-[1.05] max-w-4xl mb-6"
+        className="relative z-10 text-5xl md:text-7xl font-black tracking-tight leading-[1.02] max-w-4xl mb-6"
       >
-        <span className="text-white">The Secrets Manager</span>
+        <span className="text-white">Secrets Management</span>
         <br />
         <span style={{
-          background: "linear-gradient(135deg, #38bdf8, #0ea5e9, #06b6d4)",
+          background: "linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1, #a855f7)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          Built for Modern Teams
+          Reimagined for DevOps.
         </span>
       </motion.h1>
 
@@ -660,9 +660,9 @@ function FeaturesSection() {
             <motion.div
               key={f.title}
               variants={fadeUp}
-              whileHover={{ y: -5, transition: { duration: 0.25 } }}
-              className="group relative rounded-2xl border border-white/[0.07] bg-white/[0.025] p-7 overflow-hidden cursor-default transition-colors hover:border-white/[0.14]"
-              style={{ backdropFilter: "blur(8px)" }}
+              whileHover={{ y: -8, transition: { duration: 0.25 } }}
+              className="group relative rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 overflow-hidden cursor-default transition-all hover:bg-white/[0.05] hover:border-white/[0.18]"
+              style={{ backdropFilter: "blur(12px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.3)" }}
             >
               {/* Hover glow */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
