@@ -1,15 +1,12 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import {
     History, RotateCcw, Eye, EyeOff, ChevronDown, ChevronRight,
     Clock, User, Tag, X, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import {
-    Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
-} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -65,8 +62,8 @@ function VersionRow({
     return (
         <div
             className={`rounded-lg border transition-colors ${isCurrent
-                    ? "border-primary/40 bg-primary/5"
-                    : "border-border bg-muted/20 hover:bg-muted/40"
+                ? "border-primary/40 bg-primary/5"
+                : "border-border bg-muted/20 hover:bg-muted/40"
                 }`}
         >
             {/* Header row */}
@@ -172,9 +169,16 @@ export function SecretHistoryModal({
             const res = await fetch(
                 `/api/projects/${projectId}/envs/${env}/secrets/${encodeURIComponent(secretKey)}/history`
             );
-            if (!res.ok) throw new Error((await res.json()).error);
-            setData(await res.json());
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}));
+                console.error("History fetch failed:", res.status, errData);
+                throw new Error(errData.error || `HTTP ${res.status}`);
+            }
+            const resData = await res.json();
+            console.log("History response:", resData);
+            setData(resData);
         } catch (e: any) {
+            console.error("History fetch error:", e);
             toast({ title: "Error", description: e.message, variant: "destructive" });
         } finally {
             setLoading(false);
@@ -182,10 +186,13 @@ export function SecretHistoryModal({
     }, [open, projectId, env, secretKey]);
 
     // Fetch when modal opens
-    const handleOpenChange = (isOpen: boolean) => {
-        if (isOpen) fetchHistory();
-        else onClose();
-    };
+    useEffect(() => {
+        if (open) {
+            fetchHistory();
+        }
+    }, [open, fetchHistory]);
+
+    if (!open) return null;
 
     const handleRollback = async (version: string) => {
         if (confirmVersion !== version) {
@@ -218,38 +225,39 @@ export function SecretHistoryModal({
         }
     };
 
-    // All versions newest-first: current on top, then history
-    const allVersions: (HistoryEntry & { isCurrent: boolean })[] = data
-        ? [
-            { ...data.history[0] ?? { version: data.currentVersion, updatedAt: "", updatedBy: "", value: "" }, isCurrent: true },
-            ...data.history.slice(1).map((h) => ({ ...h, isCurrent: false })),
-        ]
-        : [];
-
-    // Simpler: just show history array as-is (newest first from API)
     const historyEntries = data?.history ?? [];
 
     return (
-        <Dialog open={open} onOpenChange={handleOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
-                <DialogHeader>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
+            <div
+                className="bg-background w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg border shadow-lg overflow-hidden m-4 relative"
+                onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
+            >
+                <div className="flex flex-col space-y-1.5 p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <History className="h-5 w-5 text-primary" />
                         </div>
-                        <div>
-                            <DialogTitle className="font-mono">{secretKey}</DialogTitle>
-                            <DialogDescription>
+                        <div className="flex-1">
+                            <h2 className="text-lg font-semibold font-mono leading-none tracking-tight">{secretKey}</h2>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 Version history · {env} environment
                                 {data && ` · Current: v${data.currentVersion}`}
-                            </DialogDescription>
+                            </p>
                         </div>
+                        <button
+                            onClick={onClose}
+                            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
+                        >
+                            <X className="h-4 w-4" />
+                            <span className="sr-only">Close</span>
+                        </button>
                     </div>
-                </DialogHeader>
+                </div>
 
                 {/* Confirm rollback banner */}
                 {confirmVersion && (
-                    <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-sm">
+                    <div className="flex items-center gap-3 mx-6 mt-4 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-sm shrink-0">
                         <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0" />
                         <span className="flex-1">
                             Click <strong>Rollback</strong> again on v{confirmVersion} to confirm. This will create a new version.
@@ -261,7 +269,7 @@ export function SecretHistoryModal({
                 )}
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto space-y-2 pr-1">
+                <div className="flex-1 overflow-y-auto space-y-2 p-6">
                     {loading ? (
                         <div className="space-y-2">
                             {[1, 2, 3].map((i) => (
@@ -285,7 +293,7 @@ export function SecretHistoryModal({
                         ))
                     )}
                 </div>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </div>
     );
 }

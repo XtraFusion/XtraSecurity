@@ -414,6 +414,7 @@ const VaultManager: React.FC = () => {
   const [isEditingSecret, setIsEditingSecret] = React.useState(false);
   // We can't really track delete easily per-row here without a record of deleting IDs, so tracking a specific deleting ID
   const [deletingSecretId, setDeletingSecretId] = React.useState<string | null>(null);
+  const [secretToDelete, setSecretToDelete] = React.useState<Secret | null>(null);
   const [isCreatingBranch, setIsCreatingBranch] = React.useState(false);
 
   // --- Data Loading ---
@@ -593,12 +594,17 @@ const VaultManager: React.FC = () => {
       await axios.delete(`/api/secret?id=${secretId}`);
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
       setNotification({ type: "default", message: "✓ Secret deleted successfully" });
+      setSecretToDelete(null);
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to delete secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     } finally {
       setDeletingSecretId(null);
     }
+  };
+
+  const confirmDeleteSecret = () => {
+    if (secretToDelete) handleDeleteSecret(secretToDelete.id);
   };
 
   const createBranch = async () => {
@@ -948,7 +954,10 @@ const VaultManager: React.FC = () => {
                                     <History className="h-4 w-4 mr-2" /> History
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
-                                  <DropdownMenuItem onClick={() => handleDeleteSecret(secret.id)} className="text-destructive">
+                                  <DropdownMenuItem
+                                    onClick={() => setSecretToDelete(secret)}
+                                    className="text-destructive cursor-pointer"
+                                  >
                                     <Trash2 className="h-4 w-4 mr-2" /> Delete
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
@@ -1175,16 +1184,14 @@ const VaultManager: React.FC = () => {
       </Dialog>
 
       {/* History Modal */}
-      {historySecret && (
-        <SecretHistoryModal
-          open={isHistoryOpen}
-          onClose={() => { setIsHistoryOpen(false); setHistorySecret(null); }}
-          projectId={projectId}
-          env={historySecret.environmentType}
-          secretKey={historySecret.key}
-          onRollbackSuccess={() => loadProject(true)}
-        />
-      )}
+      <SecretHistoryModal
+        open={isHistoryOpen}
+        onClose={() => setIsHistoryOpen(false)}
+        projectId={projectId}
+        env={historySecret?.environmentType || ""}
+        secretKey={historySecret?.key || ""}
+        onRollbackSuccess={() => loadProject(true)}
+      />
 
       {/* Add Branch Modal */}
       <Dialog
@@ -1221,6 +1228,33 @@ const VaultManager: React.FC = () => {
           </div>
         </div>
       </Dialog>
+
+      {/* Custom Delete Confirmation Modal */}
+      {secretToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => !deletingSecretId && setSecretToDelete(null)}>
+          <div
+            className="bg-background w-full max-w-md flex flex-col rounded-lg border shadow-lg overflow-hidden m-4 p-6 relative"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-3 mb-4 text-destructive">
+              <Trash2 className="h-6 w-6" />
+              <h2 className="text-lg font-semibold">Delete Secret</h2>
+            </div>
+            <p className="text-sm text-muted-foreground mb-6">
+              Are you sure you want to delete the secret <strong>{secretToDelete.key}</strong>? This action cannot be undone and will permanently remove all of its version history.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="outline" onClick={() => setSecretToDelete(null)} disabled={!!deletingSecretId}>
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={confirmDeleteSecret} disabled={!!deletingSecretId}>
+                {deletingSecretId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Delete
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </DashboardLayout>
   );
 };
