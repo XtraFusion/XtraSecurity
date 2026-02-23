@@ -16,14 +16,20 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectId, env, key } = await params;
+    const rawParams = await params;
+    const { projectId, env } = rawParams;
+    const keyArray = Array.isArray(rawParams.key) ? rawParams.key : [rawParams.key];
+    const key = decodeURIComponent(keyArray.join('/'));
+    
+    console.log("==== HISTORY ENDPOINT HIT ====");
+    console.log(`Project: ${projectId}, Env: ${env}, Key: ${key}`);
 
-    // Verify Project Access
-    const project = await prisma.project.findFirst({
-        where: { id: projectId, userId: auth.userId }
-    });
-
-    if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    // Verify Project Access using RBAC
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(auth.userId, projectId);
+    if (!role) {
+      return NextResponse.json({ error: "Forbidden: No access to this project" }, { status: 403 });
+    }
 
     const secret = await prisma.secret.findFirst({
         where: { projectId, environmentType: env, key }
@@ -40,12 +46,18 @@ export async function GET(
     const history = Array.isArray(secret.history) ? secret.history : [];
 
     // Fetch user details for all unique updateBy IDs
-    const userIds = Array.from(new Set(history.map((h: any) => h.updatedBy).filter(Boolean)));
-    const users = await prisma.user.findMany({
-        where: { id: { in: userIds as string[] } },
-        select: { id: true, email: true, name: true }
-    });
-    const userMap = new Map(users.map(u => [u.id, u]));
+    const userIds = Array.from(new Set(history.map((h: any) => h.updatedBy).filter(Boolean))) as string[];
+    // Filter out invalid ObjectIds (e.g., if emails were accidentally stored) to prevent Prisma/MongoDB BSON errors
+    const validObjectIds = userIds.filter(id => /^[a-fA-F0-9]{24}$/.test(id));
+    
+    let userMap = new Map();
+    if (validObjectIds.length > 0) {
+        const users = await prisma.user.findMany({
+            where: { id: { in: validObjectIds } },
+            select: { id: true, email: true, name: true }
+        });
+        userMap = new Map(users.map(u => [u.id, u]));
+    }
     
     // Format history for frontend
     const formattedHistory = history.map((h: any) => {
@@ -96,16 +108,29 @@ export async function POST(
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
         const userId = auth.userId;
-        const { projectId, env, key } = await params;
+        const rawParams = await params;
+        const { projectId, env } = rawParams;
+        const keyArray = Array.isArray(rawParams.key) ? rawParams.key : [rawParams.key];
+        const key = decodeURIComponent(keyArray.join('/'));
         const { version } = await req.json();
 
         if (!version) return NextResponse.json({ error: "Version required" }, { status: 400 });
 
-        const project = await prisma.project.findFirst({
-            where: { id: projectId, userId: auth.userId }
-        });
-    
-        if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        // Verify Project Access using RBAC
+        const { getUserProjectRole } = await import("@/lib/permissions");
+        const role = await getUserProjectRole(userId, projectId);
+        if (!role) {
+            return NextResponse.json({ error: "Forbidden: No access to this project" }, { status: 403 });
+        }
+        
+        // Only allow developers, admins, and owners to rollback
+        if (role === "viewer") {
+            return NextResponse.json({ error: "Forbidden: Viewers cannot rollback secrets" }, { status: 403 });
+        }
+        
+        if (role === "developer" && env === "production") {
+            return NextResponse.json({ error: "Forbidden: Developers cannot rollback production secrets" }, { status: 403 });
+        }
     
         const secret = await prisma.secret.findFirst({
             where: { projectId, environmentType: env, key }
@@ -130,24 +155,37 @@ export async function POST(
              newVersion = (parseInt(secret.version) + 1).toString();
         }
 
+        // Encrypt the target value for the main storage
+        let encryptedValueToStore: string[] = [];
+        try {
+            // targetVersion.value might be plain text or an encrypted array already
+            if (Array.isArray(targetVersion.value)) {
+                encryptedValueToStore = targetVersion.value;
+            } else if (typeof targetVersion.value === 'string') {
+                try {
+                    const parsed = JSON.parse(targetVersion.value);
+                    if (parsed.iv && parsed.encryptedData) {
+                        encryptedValueToStore = [targetVersion.value];
+                    } else {
+                        const encryptedValue = encrypt(targetVersion.value);
+                        encryptedValueToStore = [JSON.stringify(encryptedValue)];
+                    }
+                } catch(e) {
+                    const encryptedValue = encrypt(targetVersion.value);
+                    encryptedValueToStore = [JSON.stringify(encryptedValue)];
+                }
+            }
+        } catch (e) {
+            return NextResponse.json({ error: "Failed to process target version value" }, { status: 500 });
+        }
+
         const historyEntry = {
             version: newVersion,
-            value: targetVersion.value, // Keep plain text in history
+            value: encryptedValueToStore,
             updatedAt: new Date().toISOString(),
             updatedBy: userId,
             description: `Rolled back to version ${version}`
         };
-
-        // Encrypt the target value for the main storage
-        let encryptedValueToStore: string[] = [];
-        try {
-            // targetVersion.value might be plain text
-            const encryptedValue = encrypt(targetVersion.value);
-            const encryptedString = JSON.stringify(encryptedValue);
-            encryptedValueToStore = [encryptedString];
-        } catch (e) {
-            return NextResponse.json({ error: "Failed to process target version value" }, { status: 500 });
-        }
 
         const updated = await prisma.secret.update({
             where: { id: secret.id },

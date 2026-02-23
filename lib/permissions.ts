@@ -15,14 +15,14 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   
   if (!project) return null;
 
-  if (project.userId === userId) return "owner";
+  if (String(project.userId) === String(userId)) return "owner";
 
   // Check workspace ownership
   const workspace = await prisma.workspace.findUnique({
       where: { id: project.workspaceId },
       select: { createdBy: true }
   });
-  if (workspace?.createdBy === userId) return "owner";
+  if (String(workspace?.createdBy) === String(userId)) return "owner";
 
   // Check team membership
   // fetch teams linked to project where user is a member
@@ -79,7 +79,7 @@ export async function getUserWorkspaceRole(userId: string, workspaceId: string) 
     select: { createdBy: true }
   });
 
-  if (workspace && workspace.createdBy === userId) return "owner";
+  if (workspace && String(workspace.createdBy) === String(userId)) return "owner";
 
   // Check team membership in this workspace
   const teamUsers = await prisma.teamUser.findMany({

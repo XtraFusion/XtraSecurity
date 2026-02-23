@@ -561,7 +561,7 @@ function HeroSection() {
         className="relative z-10 flex flex-wrap items-center justify-center gap-3 mb-10"
       >
         <motion.a
-          href="#pricing"
+          href="/login"
           whileHover={{ scale: 1.03, y: -2 }}
           whileTap={{ scale: 0.98 }}
           className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white no-underline"
@@ -573,7 +573,7 @@ function HeroSection() {
           🚀 Start for free
         </motion.a>
         <motion.a
-          href="#"
+          href="/login"
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
           className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white border border-white/15 hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline"
@@ -975,7 +975,7 @@ function PricingSection() {
               </ul>
 
               <motion.a
-                href="#"
+                href={plan.plan === "Enterprise" ? "/contact" : "/login"}
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold no-underline transition-all"

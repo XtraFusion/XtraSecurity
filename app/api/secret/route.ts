@@ -296,8 +296,8 @@ export const PUT = withSecurity(async (request, context, session) => {
     }
 
     // Parse existing history and add new version
-    const history = existingSecret.history as any[];
-    const newVersion = (parseInt(existingSecret.version) + 1).toString();
+    const history = Array.isArray(existingSecret.history) ? existingSecret.history : [];
+    const newVersion = (parseInt(existingSecret.version || "1") + 1).toString();
 
     // Prepare update data
     const updateData: any = {
