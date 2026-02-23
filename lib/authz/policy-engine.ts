@@ -11,6 +11,21 @@ export class PolicyEngine {
     // Fetch active policies that apply
     // For MVP, we skip complex ABAC query and assume DENY only if explicit Deny Policy exists.
     // TODO: Implement full ABAC rule evaluation (IP, Time)
+
+    // Legacy Fallback for implicit project owners/team members
+    if (projectId) {
+        const { getUserProjectRole } = await import("@/lib/permissions");
+        const legacyRole = await getUserProjectRole(userId, projectId);
+        if (legacyRole === "owner" || legacyRole === "admin") {
+            return Decision.ALLOW;
+        }
+        if (legacyRole === "developer" && (action === "value.read" || action === "value.write")) {
+            return Decision.ALLOW;
+        }
+        if (legacyRole === "viewer" && action === "value.read") {
+            return Decision.ALLOW;
+        }
+    }
     
     // 2. RBAC Check
     // Get User Roles
