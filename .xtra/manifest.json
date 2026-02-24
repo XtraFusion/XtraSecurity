@@ -1,7 +1,7 @@
 {
   "projectId": "69777bc32b12bd573520520e",
   "environment": "development",
-  "lastSyncedAt": "2026-02-21T19:23:20.106Z",
+  "lastSyncedAt": "2026-02-24T04:28:02.207Z",
   "secrets": {
     "KEY": {
       "hash": "4310938b27daa3700617a4e8b900581a9d784c84186b15e74c2cc6d61b60c0c6",
@@ -12,8 +12,8 @@
       "updatedAt": "2026-02-21T19:23:20.111Z"
     },
     "DATABASE_URL": {
-      "hash": "8787cbacece8de066bdf8301ffc65e0b76e48e76318109432abb985cc45608ca",
-      "updatedAt": "2026-02-21T19:23:20.111Z"
+      "hash": "6158b9662e9e0835ba1c65fa80202ad91c97eab966a606551efb9a6e887fadd5",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
     },
     "OM2": {
       "hash": "2e23f8b81d15612b4207db47bbf507d085ed15e02bb33a7d8ac657c511f5ecdc",
@@ -22,6 +22,46 @@
     "VS": {
       "hash": "5694d08a2e53ffcae0c3103e5ad6f6076abd960eb1f8a56577040bc1028f702b",
       "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "DBB": {
+      "hash": "e5dc626f24c3fb32704ba600f1c9eb2bdac3d0c7eaa172d4bd7ab2162f02483d",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "API_KEss": {
+      "hash": "f027bd85da3a52f9e04ef0b9e5eb2b08d9942814749e823198d700077182cfe8",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "TEST_KEY": {
+      "hash": "7e46c7952c1dc64ab1145ae55f170daaf8ee02632e6686863595771227226e14",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "MANUAL_TEST_KEY": {
+      "hash": "bcfd09eb4f57c6fcea58ec1a9119757f54073f5619a26655e07f4efac9157ef0",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "hash": "067f88de5c4f895035bf7fc2d42ce59d2d23563c255d40b95c36d9c9ef8b6358",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "GOOGLE_CLIENT_ID": {
+      "hash": "1e39b972d8eb3381a6b497739c308194ca128df906e2f631436d8b0ba65c2732",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "NEXTAUTH_URL": {
+      "hash": "f1de9e489ba88cb15968b97f40f59e8ef0da5ca03ad1f37fc13a2aa45a2512a9",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "NEXTAUTH_SECRET": {
+      "hash": "28cb3fa3edde71498f2ba90026f1a94c1f13114125a8be4259d09878494e9572",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "ENCRYPTION_KEY": {
+      "hash": "889501f9154fe9869b79242d40c512a5d54580f0794518fe39f65d010d449681",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
+    },
+    "AT": {
+      "hash": "eb5442705969dc8da5dfac8f9658dc68acdab5bb7635ba7cc551e389416ac34e",
+      "updatedAt": "2026-02-24T04:28:02.209Z"
     }
   }
 }

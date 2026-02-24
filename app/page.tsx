@@ -253,7 +253,7 @@ const scaleIn = {
 // HOOKS
 // ─────────────────────────────────────────────
 
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
 import { Loader2 } from "lucide-react";
 
@@ -369,10 +369,19 @@ function Navbar() {
             <Loader2 className="h-4 w-4 animate-spin text-slate-400" />
           </div>
         ) : session ? (
-          <Link href="/dashboard" className="hidden md:flex px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all no-underline"
-            style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)" }}>
-            Go to Dashboard →
-          </Link>
+          <div className="hidden md:flex items-center gap-2">
+            <Link href="/dashboard" className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all no-underline"
+              style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)" }}>
+              Go to Dashboard →
+            </Link>
+            <button
+              onClick={() => signOut({ callbackUrl: "/" })}
+              className="px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer bg-transparent"
+              title="Sign out"
+            >
+              Sign out
+            </button>
+          </div>
         ) : (
           <Link href="/login" className="hidden md:flex px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all no-underline"
             style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)" }}>
@@ -412,8 +421,16 @@ function Navbar() {
                   <Loader2 className="h-5 w-5 animate-spin text-slate-400" />
                 </div>
               ) : session ? (
-                <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white no-underline"
-                  style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}>Dashboard</Link>
+                <>
+                  <Link href="/dashboard" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white no-underline"
+                    style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}>Dashboard</Link>
+                  <button
+                    onClick={() => { setMobileOpen(false); signOut({ callbackUrl: "/" }); }}
+                    className="px-4 py-2.5 rounded-lg text-sm font-medium text-red-400 border border-red-500/30 bg-red-500/10 cursor-pointer font-[inherit]"
+                  >
+                    Sign out
+                  </button>
+                </>
               ) : (
                 <Link href="/login" onClick={() => setMobileOpen(false)} className="flex-1 text-center px-4 py-2.5 rounded-lg text-sm font-semibold text-white no-underline"
                   style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}>Get started</Link>

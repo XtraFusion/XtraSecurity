@@ -59,7 +59,6 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
   } = useGlobalContext();
 
   const [creatingName, setCreatingName] = React.useState("");
-  const [creatingPlan, setCreatingPlan] = React.useState("free");
   const [isLoading, setIsLoading] = React.useState(false);
 
   // Select first workspace if none selected 
@@ -78,7 +77,6 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: creatingName,
-          subscriptionPlan: creatingPlan,
         }),
       });
       if (!res.ok) {
@@ -102,7 +100,6 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
       localStorage.setItem("selectedWorkspace", JSON.stringify(mapped));
       setShowNewWorkspaceDialog(false);
       setCreatingName("");
-      setCreatingPlan("free");
       window.location.reload();
     } catch (err) {
       console.error("Error creating workspace", err);
@@ -219,28 +216,6 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
               value={creatingName}
               onChange={(e) => setCreatingName(e.target.value)}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="plan">Subscription plan</Label>
-            <Select value={creatingPlan} onValueChange={setCreatingPlan}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a plan" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="free">
-                  <span className="font-medium">Free</span> -{" "}
-                  <span className="text-muted-foreground">
-                    Trial for two weeks
-                  </span>
-                </SelectItem>
-                <SelectItem value="pro">
-                  <span className="font-medium">Pro</span> -{" "}
-                  <span className="text-muted-foreground">
-                    $9/month per user
-                  </span>
-                </SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
         <DialogFooter>
