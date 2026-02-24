@@ -23,8 +23,6 @@ export async function GET(request: NextRequest) {
         const { getUserProjectRole } = await import("@/lib/permissions");
         const role = await getUserProjectRole(auth.userId, projectId);
         if (!role) {
-             // If implicit access (e.g. from Team), getUserProjectRole might return null?
-             // getUserProjectRole handles team logic. So if null, really no access.
              return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
         if (role === 'viewer') isViewer = true;
