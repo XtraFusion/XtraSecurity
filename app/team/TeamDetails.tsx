@@ -15,16 +15,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   DropdownMenu,
@@ -959,40 +950,39 @@ const TeamDetail = () => {
           </Card>
         </div>
 
-        {/* Delete/Change Confirmation Dialog */}
-        <AlertDialog
-          open={confirmDialog.open}
-          onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
-        >
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>
+        {/* Delete/Change Confirmation Dialog (Custom) */}
+        {confirmDialog.open && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+            <div className="bg-background border border-border rounded-xl shadow-lg w-full max-w-md p-6 animate-in zoom-in-95 duration-200">
+              <h3 className="text-lg font-semibold mb-2">
                 {confirmDialog.type === "remove" ? "Remove Team Member" : "Change User Role"}
-              </AlertDialogTitle>
-              <AlertDialogDescription>
+              </h3>
+              <p className="text-sm text-muted-foreground mb-6">
                 {confirmDialog.type === "remove" ? (
                   <>
-                    Are you sure you want to remove <strong>{confirmDialog.member?.name}</strong> from the team?
+                    Are you sure you want to remove <strong className="text-foreground">{confirmDialog.member?.name}</strong> from the team?
                     They will lose access to all team projects and resources.
                   </>
                 ) : (
                   <>
-                    Are you sure you want to change <strong>{confirmDialog.member?.name}</strong>'s role to <strong>{confirmDialog.newRole && roleConfig[confirmDialog.newRole].label}</strong>?
+                    Are you sure you want to change <strong className="text-foreground">{confirmDialog.member?.name}</strong>'s role to <strong className="text-foreground">{confirmDialog.newRole && roleConfig[confirmDialog.newRole].label}</strong>?
                   </>
                 )}
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={confirmDialog.type === "remove" ? handleRemoveMember : handleRoleChange}
-                className={confirmDialog.type === "remove" ? "bg-destructive hover:bg-destructive/90" : ""}
-              >
-                {confirmDialog.type === "remove" ? "Remove Member" : "Update Role"}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+              </p>
+              <div className="flex justify-end gap-3">
+                <Button variant="outline" onClick={() => setConfirmDialog({ ...confirmDialog, open: false })}>
+                  Cancel
+                </Button>
+                <Button
+                  onClick={confirmDialog.type === "remove" ? handleRemoveMember : handleRoleChange}
+                  className={confirmDialog.type === "remove" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+                >
+                  {confirmDialog.type === "remove" ? "Remove Member" : "Update Role"}
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
 
       </div>
     </div>

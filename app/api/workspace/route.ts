@@ -1,24 +1,22 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { withSecurity } from "@/lib/api-middleware";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 // GET /api/workspace - list workspaces or fetch by id
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
 
     if (id) {
-      // Security Check: User must be member/owner using getUserWorkspaceRole (which checks teams/ownership)
       const { getUserWorkspaceRole } = await import("@/lib/permissions");
-      const role = await getUserWorkspaceRole(session.user.id, id);
+      const role = await getUserWorkspaceRole(userId, id);
       
       if (!role) {
            return NextResponse.json({ error: "Workspace not found or access denied" }, { status: 404 });
@@ -28,21 +26,18 @@ export async function GET(request: NextRequest) {
         where: { id },
         include: { projects: true },
       });
-      // Logic for getUserWorkspaceRole confirms existence and access, so workspace should exist if role exists
-      // unless race condition
       return NextResponse.json(workspace);
     }
 
     // 1. Get workspaces created by user
     const ownedWorkspaces = await prisma.workspace.findMany({
-      where: { createdBy: session.user.id },
+      where: { createdBy: userId },
     });
 
     // 2. Get workspaces where user is a team member
-    // discrete query because Workspace -> Team relation is missing in schema
     const userTeams = await prisma.teamUser.findMany({
       where: { 
-        userId: session.user.id,
+        userId: userId,
         status: "active" 
       },
       select: { teamId: true }
@@ -62,8 +57,7 @@ export async function GET(request: NextRequest) {
     const memberWorkspaces = await prisma.workspace.findMany({
       where: { 
         id: { in: teamWorkspaceIds },
-        // Avoid duplicates if user is both owner and member (rare but possible)
-        NOT: { createdBy: session.user.id }
+        NOT: { createdBy: userId }
       },
     });
 
@@ -74,19 +68,19 @@ export async function GET(request: NextRequest) {
     console.error("Error fetching workspace(s):", error);
     return NextResponse.json({ error: "Failed to fetch workspace(s)" }, { status: 500 });
   }
-}
+});
 
 // POST /api/workspace - create a workspace
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
     // Fetch user with tier
     const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: userId },
       select: { tier: true }
     });
 
@@ -94,7 +88,7 @@ export async function POST(request: NextRequest) {
     const limit = DAILY_LIMITS[userTier].maxWorkspaces;
     
     const workspaceCount = await prisma.workspace.count({
-      where: { createdBy: session.user.id }
+      where: { createdBy: userId }
     });
 
     if (workspaceCount >= limit) {
@@ -116,7 +110,7 @@ export async function POST(request: NextRequest) {
         name,
         description,
         workspaceType,
-        createdBy: session.user.id,
+        createdBy: userId,
         subscriptionPlan,
         projectLimit,
         subscriptionEnd: subscriptionEnd ? new Date(subscriptionEnd) : undefined,
@@ -128,15 +122,15 @@ export async function POST(request: NextRequest) {
     console.error("Error creating workspace:", error);
     return NextResponse.json({ error: "Failed to create workspace" }, { status: 500 });
   }
-}
+});
 
 // PUT /api/workspace - update a workspace
-export async function PUT(request: NextRequest) {
+export const PUT = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
     const body = await request.json();
     const { id, name, description, workspaceType, subscriptionPlan, projectLimit, subscriptionEnd, icon } = body;
@@ -147,7 +141,7 @@ export async function PUT(request: NextRequest) {
 
     // RBAC Check
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, id);
+    const role = await getUserWorkspaceRole(userId, id);
 
     if (!role || (role !== "owner" && role !== "admin")) {
          return NextResponse.json({ error: "Only workspace owners and admins can update settings" }, { status: 403 });
@@ -155,7 +149,6 @@ export async function PUT(request: NextRequest) {
 
     const existing = await prisma.workspace.findUnique({ where: { id } });
     if (!existing) {
-       // Should rely on role check but safe to keep
        return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
     }
 
@@ -177,15 +170,15 @@ export async function PUT(request: NextRequest) {
     console.error("Error updating workspace:", error);
     return NextResponse.json({ error: "Failed to update workspace" }, { status: 500 });
   }
-}
+});
 
 // DELETE /api/workspace?id=<id> - delete a workspace
-export async function DELETE(request: NextRequest) {
+export const DELETE = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -196,7 +189,7 @@ export async function DELETE(request: NextRequest) {
 
     // RBAC Check: Only Owner can delete
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, id);
+    const role = await getUserWorkspaceRole(userId, id);
 
     if (role !== "owner") {
          return NextResponse.json({ error: "Only the workspace owner can delete the workspace" }, { status: 403 });
@@ -209,4 +202,4 @@ export async function DELETE(request: NextRequest) {
     console.error("Error deleting workspace:", error);
     return NextResponse.json({ error: "Failed to delete workspace" }, { status: 500 });
   }
-}
+});
