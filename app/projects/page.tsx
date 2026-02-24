@@ -420,7 +420,10 @@ export default function ProjectsPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateProject}>Create Project</Button>
+                    <Button onClick={handleCreateProject} disabled={isCreating}>
+                      {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Project
+                    </Button>
                   </div>
                 </div>
               </DialogContent>

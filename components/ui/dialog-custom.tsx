@@ -48,7 +48,7 @@ export function Dialog({ isOpen, onClose, title, description, className, childre
             {/* Dialog Content */}
             <div
                 className={cn(
-                    "relative z-50 w-full max-w-lg mx-4 bg-background rounded-lg border shadow-lg",
+                    "relative z-50 w-full max-w-lg mx-4 bg-background rounded-lg border shadow-lg flex flex-col max-h-[90vh]",
                     "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200",
                     className
                 )}
@@ -60,14 +60,14 @@ export function Dialog({ isOpen, onClose, title, description, className, childre
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none"
+                    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-10"
                     aria-label="Close"
                 >
                     <X className="h-4 w-4" />
                 </button>
 
                 {/* Content */}
-                <div className="p-6">
+                <div className="p-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
                     {title && (
                         <h2 id="dialog-title" className="text-lg font-semibold leading-none tracking-tight">
                             {title}

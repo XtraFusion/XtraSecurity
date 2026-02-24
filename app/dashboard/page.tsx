@@ -33,6 +33,7 @@ import {
   AlertTriangle,
   Clock,
   ArrowRight,
+  Loader2,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DashboardSkeleton } from "@/components/loading-skeleton";
@@ -58,6 +59,7 @@ export default function DashboardPage() {
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCreatingProject, setIsCreatingProject] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
 
@@ -137,6 +139,7 @@ export default function DashboardPage() {
       ipRestrictions: [],
     };
 
+    setIsCreatingProject(true);
     try {
       await ProjectController.createProject(project);
       setNewProject({ name: "", description: "" });
@@ -148,6 +151,8 @@ export default function DashboardPage() {
       console.error("Failed to create project:", error);
       const errorMessage = error.response?.data?.message || "Failed to create project. Please try again.";
       toast.error(errorMessage);
+    } finally {
+      setIsCreatingProject(false);
     }
   };
 
@@ -223,7 +228,10 @@ export default function DashboardPage() {
                     >
                       Cancel
                     </Button>
-                    <Button onClick={handleCreateProject}>Create Project</Button>
+                    <Button onClick={handleCreateProject} disabled={isCreatingProject}>
+                      {isCreatingProject && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Create Project
+                    </Button>
                   </div>
                 </div>
               </DialogContent>

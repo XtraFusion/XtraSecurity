@@ -1,7 +1,7 @@
 {
-  "projectId": "69777bc32b12bd573520520e",
+  "projectId": "699d2541582e008166c1837d",
   "environment": "development",
-  "lastSyncedAt": "2026-02-21T19:23:20.106Z",
+  "lastSyncedAt": "2026-02-24T05:26:52.758Z",
   "secrets": {
     "KEY": {
       "hash": "4310938b27daa3700617a4e8b900581a9d784c84186b15e74c2cc6d61b60c0c6",
@@ -12,8 +12,8 @@
       "updatedAt": "2026-02-21T19:23:20.111Z"
     },
     "DATABASE_URL": {
-      "hash": "8787cbacece8de066bdf8301ffc65e0b76e48e76318109432abb985cc45608ca",
-      "updatedAt": "2026-02-21T19:23:20.111Z"
+      "hash": "599c03067d8514fc01f7abe9a2e97227ce2eac32cfa92f909d9cf43a72f76ffe",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
     },
     "OM2": {
       "hash": "2e23f8b81d15612b4207db47bbf507d085ed15e02bb33a7d8ac657c511f5ecdc",
@@ -22,6 +22,74 @@
     "VS": {
       "hash": "5694d08a2e53ffcae0c3103e5ad6f6076abd960eb1f8a56577040bc1028f702b",
       "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "GOOGLE_CLIENT_ID": {
+      "hash": "1e39b972d8eb3381a6b497739c308194ca128df906e2f631436d8b0ba65c2732",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "GOOGLE_CLIENT_SECRET": {
+      "hash": "067f88de5c4f895035bf7fc2d42ce59d2d23563c255d40b95c36d9c9ef8b6358",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "GITHUB_CLIENT_ID": {
+      "hash": "587b5455f568774cf82844d8b017d3fbebe8acce499883422bce13d23555ffac",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "GITHUB_CLIENT_SECRET": {
+      "hash": "891e06a0ca3a9c4ebe2486712910b3b90ccf0a4b4837b9ed32c7bca457da066e",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "NEXTAUTH_SECRET": {
+      "hash": "28cb3fa3edde71498f2ba90026f1a94c1f13114125a8be4259d09878494e9572",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "REDIS_URL": {
+      "hash": "1a45d351210b8ae1e66ee0704b3c0eb0a472f9aad6e024ba233ecc324475ff64",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "ENCRYPTION_KEY": {
+      "hash": "889501f9154fe9869b79242d40c512a5d54580f0794518fe39f65d010d449681",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "SMTP_USER": {
+      "hash": "662e58ddad83ac6a2021ca5e99c5baf4dd5ed35ee93a5e927786d593ebeac916",
+      "updatedAt": "2026-02-24T05:26:52.917Z"
+    },
+    "SMTP_PASS": {
+      "hash": "8cd286b743ffcc8fc3c75754be1b8501b75ca36783a45526e9311fd9a90735b7",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "SMTP_FROM_EMAIL": {
+      "hash": "662e58ddad83ac6a2021ca5e99c5baf4dd5ed35ee93a5e927786d593ebeac916",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "RAZORRPAY_ID": {
+      "hash": "13bcdc1faa5bdf5f00cc42b1aac0ba9de320edf7380a9be3c54c64f9b72ade43",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "NEXT_PUBLIC_APP_URL": {
+      "hash": "a454c81b5230dd2773e9472043de3d3a4030745f8299726647e0fcf33658b70a",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "RAZORRPAY_SECRET": {
+      "hash": "1650279ef4c0ef9eb0f5fa93bdef623a146163bcbbf0b5ec5032c681f402b941",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "SMTP_HOST": {
+      "hash": "baf8948be444889e4c5309caa2da8bb3b3e14e4ebda34e5d87eaf4f5c44d22b2",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "SMTP_SECURE": {
+      "hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "NEXTAUTH_URL": {
+      "hash": "f1de9e489ba88cb15968b97f40f59e8ef0da5ca03ad1f37fc13a2aa45a2512a9",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
+    },
+    "SMTP_PORT": {
+      "hash": "82a93b152b275d4c8de67c3d05c9b00e92477eeb024f117c7632cdb26fd874aa",
+      "updatedAt": "2026-02-24T05:26:52.918Z"
     }
   }
 }
