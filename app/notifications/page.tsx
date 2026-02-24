@@ -152,6 +152,8 @@ export default function NotificationsPage() {
   const [decliningId, setDecliningId] = useState<string | null>(null);
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null);
   const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
   const [newRule, setNewRule] = useState({
     name: "",
@@ -261,9 +263,11 @@ export default function NotificationsPage() {
 
   const filteredAlerts = alerts.filter(
     (alert) =>
-      alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alert.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      alert.project?.toLowerCase().includes(searchQuery.toLowerCase())
+      (alert.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        alert.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        alert.project?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      (severityFilter === "all" || alert.severity === severityFilter) &&
+      (!showUnreadOnly || !alert.read)
   );
 
   const filteredRules = rules.filter(
@@ -449,6 +453,18 @@ export default function NotificationsPage() {
   const handleDeleteAlert = (alertId: string) => {
     setAlerts(alerts.filter((alert) => alert.id !== alertId));
     setNotification({ type: "success", message: "Alert deleted successfully" });
+  };
+
+  const handleMarkAllRead = async () => {
+    const unreadIds = alerts.filter(a => !a.read).map(a => a.id);
+    if (unreadIds.length === 0) return;
+    setAlerts(alerts.map(a => ({ ...a, read: true })));
+    try {
+      await Promise.all(unreadIds.map(id => apiClient.patch("/api/notifications", { id, read: true })));
+      setNotification({ type: "success", message: `Marked ${unreadIds.length} alerts as read` });
+    } catch {
+      setNotification({ type: "error", message: "Failed to mark all as read" });
+    }
   };
 
   const handleDeleteRule = async (ruleId: string) => {
@@ -994,8 +1010,44 @@ export default function NotificationsPage() {
           <TabsContent value="alerts" className="space-y-4">
             <Card>
               <CardHeader>
-                <CardTitle>Recent Alerts</CardTitle>
-                <CardDescription>View and manage recent notification alerts</CardDescription>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+                  <div>
+                    <CardTitle>Recent Alerts</CardTitle>
+                    <CardDescription>View and manage recent notification alerts</CardDescription>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    {/* Severity filter */}
+                    <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                      <SelectTrigger className="h-8 w-[130px] text-xs">
+                        <SelectValue placeholder="Severity" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="all">All Severities</SelectItem>
+                        <SelectItem value="info">Info</SelectItem>
+                        <SelectItem value="warning">Warning</SelectItem>
+                        <SelectItem value="error">Error</SelectItem>
+                        <SelectItem value="critical">Critical</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {/* Unread toggle */}
+                    <button
+                      onClick={() => setShowUnreadOnly(v => !v)}
+                      className={`h-8 px-3 rounded-md border text-xs font-medium transition-colors ${showUnreadOnly
+                          ? "bg-primary text-primary-foreground border-primary"
+                          : "bg-background border-border hover:bg-muted"
+                        }`}
+                    >
+                      {showUnreadOnly ? "● Unread only" : "All alerts"}
+                    </button>
+                    {/* Mark all read */}
+                    {stats.unreadAlerts > 0 && (
+                      <Button size="sm" variant="outline" className="h-8 text-xs" onClick={handleMarkAllRead}>
+                        <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
+                        Mark All Read
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 {filteredAlerts.length > 0 ? (

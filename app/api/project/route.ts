@@ -240,14 +240,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (!newProject.description) {
-      console.error("Project description is missing");
-      return NextResponse.json(
-        { error: "Project description is required" },
-        { status: 400 }
-      );
-    }
-
     if (!newProject.workspaceId) {
       console.error("Workspace ID is missing");
       return NextResponse.json(

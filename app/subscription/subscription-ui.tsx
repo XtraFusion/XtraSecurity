@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, Loader2, Sparkles } from "lucide-react";
+import { Check, Loader2, Sparkles, AlertTriangle, TrendingUp, ShieldAlert } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/hooks/useUser";
 import { RateLimitResult, Tier, DAILY_LIMITS } from "@/lib/rate-limit-config";
@@ -47,6 +47,18 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
     const [promoCode, setPromoCode] = useState("");
 
     const percentage = Math.min(100, Math.round(((stats.limit - stats.remaining) / stats.limit) * 100));
+
+    const getBarColor = (pct: number) => {
+        if (pct >= 90) return "[&>div]:bg-red-500";
+        if (pct >= 70) return "[&>div]:bg-amber-500";
+        return "[&>div]:bg-emerald-500";
+    };
+
+    const getBarLabel = (pct: number) => {
+        if (pct >= 90) return { text: "Critical", cls: "text-red-600 dark:text-red-400 font-semibold" };
+        if (pct >= 70) return { text: "Near limit", cls: "text-amber-600 dark:text-amber-400 font-semibold" };
+        return null;
+    };
 
     const initiateUpgradeProcess = (tierKey: Tier) => {
         if (tierKey === 'free') {
@@ -207,9 +219,36 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
 
             <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Subscription & Usage</h1>
+                <h1 className="text-3xl font-bold tracking-tight">Subscription &amp; Usage</h1>
                 <p className="text-muted-foreground">Manage your plan and monitor your API usage limits.</p>
             </div>
+
+            {/* Near-limit warning banner */}
+            {percentage >= 80 && (
+                <div className={`flex items-start gap-3 p-4 rounded-xl border ${percentage >= 90
+                        ? "bg-red-500/10 border-red-500/30"
+                        : "bg-amber-500/10 border-amber-500/30"
+                    }`}>
+                    <ShieldAlert className={`h-5 w-5 shrink-0 mt-0.5 ${percentage >= 90 ? "text-red-500" : "text-amber-500"
+                        }`} />
+                    <div className="flex-1">
+                        <p className={`font-semibold text-sm ${percentage >= 90 ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
+                            }`}>
+                            {percentage >= 90 ? "🚨 API limit almost exhausted" : "⚠️ Approaching API limit"}
+                        </p>
+                        <p className={`text-xs mt-0.5 ${percentage >= 90 ? "text-red-600 dark:text-red-500" : "text-amber-600 dark:text-amber-500"
+                            }`}>
+                            You've used <strong>{percentage}%</strong> of your daily {stats.limit} requests.
+                            {tier === 'free' && " Upgrade to Pro for 10× more capacity."}
+                        </p>
+                    </div>
+                    {tier === 'free' && (
+                        <Button size="sm" variant="outline" className="shrink-0" onClick={() => initiateUpgradeProcess('pro')}>
+                            <TrendingUp className="h-3.5 w-3.5 mr-1.5" /> Upgrade
+                        </Button>
+                    )}
+                </div>
+            )}
 
             {/* Current Usage */}
             <Card>
@@ -229,9 +268,15 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                     <div className="space-y-2">
                         <div className="flex justify-between text-sm font-medium">
                             <span className="flex items-center gap-2">Daily API Requests</span>
-                            <span className="font-mono">{stats.limit - stats.remaining} / {stats.limit}</span>
+                            <div className="flex items-center gap-2">
+                                {getBarLabel(percentage) && (
+                                    <span className={`text-xs ${getBarLabel(percentage)!.cls}`}>{getBarLabel(percentage)!.text}</span>
+                                )}
+                                <span className="font-mono">{stats.limit - stats.remaining} / {stats.limit}</span>
+                                <span className="text-muted-foreground text-xs">({percentage}%)</span>
+                            </div>
                         </div>
-                        <Progress value={percentage} className="h-2" />
+                        <Progress value={percentage} className={`h-2.5 ${getBarColor(percentage)}`} />
                         <p className="text-xs text-muted-foreground italic">
                             {stats.reset > 0
                                 ? `Usage resets in ${formatDistanceToNow(new Date(stats.reset * 1000))}.`
@@ -239,32 +284,29 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                         </p>
                     </div>
 
-                    {/* Resources */}
                     {resourceUsage && (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm font-medium">
-                                    <span>Workspaces</span>
-                                    <span className="font-mono">{resourceUsage.workspaces.used} / {resourceUsage.workspaces.limit}</span>
-                                </div>
-                                <Progress value={Math.min(100, Math.round((resourceUsage.workspaces.used / resourceUsage.workspaces.limit) * 100))} className="h-2" />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm font-medium">
-                                    <span>Teams</span>
-                                    <span className="font-mono">{resourceUsage.teams.used} / {resourceUsage.teams.limit}</span>
-                                </div>
-                                <Progress value={Math.min(100, Math.round((resourceUsage.teams.used / resourceUsage.teams.limit) * 100))} className="h-2" />
-                            </div>
-
-                            <div className="space-y-2">
-                                <div className="flex justify-between text-sm font-medium">
-                                    <span title="Max projects used in a single workspace">Projects (per Workspace)</span>
-                                    <span className="font-mono">{resourceUsage.projects.used} / {resourceUsage.projects.limit}</span>
-                                </div>
-                                <Progress value={Math.min(100, Math.round((resourceUsage.projects.used / resourceUsage.projects.limit) * 100))} className="h-2" />
-                            </div>
+                            {([
+                                { label: "Workspaces", data: resourceUsage.workspaces },
+                                { label: "Teams", data: resourceUsage.teams },
+                                { label: "Projects (per Workspace)", data: resourceUsage.projects, title: "Max projects used in a single workspace" },
+                            ] as const).map(({ label, data, title }: any) => {
+                                const pct = Math.min(100, Math.round((data.used / data.limit) * 100));
+                                const lbl = getBarLabel(pct);
+                                return (
+                                    <div key={label} className="space-y-2">
+                                        <div className="flex justify-between text-sm font-medium">
+                                            <span title={title}>{label}</span>
+                                            <div className="flex items-center gap-1.5">
+                                                {lbl && <span className={`text-xs ${lbl.cls}`}>{lbl.text}</span>}
+                                                <span className="font-mono">{data.used} / {data.limit}</span>
+                                                <span className="text-muted-foreground text-xs">({pct}%)</span>
+                                            </div>
+                                        </div>
+                                        <Progress value={pct} className={`h-2 ${getBarColor(pct)}`} />
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                 </CardContent>

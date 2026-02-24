@@ -147,7 +147,34 @@ export default function AuditLogsPage() {
   const [total, setTotal] = useState<number>(0)
   const [isMounted, setIsMounted] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [copiedField, setCopiedField] = useState<string | null>(null)
   const { selectedWorkspace } = useGlobalContext();
+
+  // --- Derived: compute daily bar chart data from current loaded logs ---
+  const chartData = (() => {
+    const buckets: Record<string, number> = {};
+    const now = new Date();
+    for (let i = 6; i >= 0; i--) {
+      const d = new Date(now);
+      d.setDate(d.getDate() - i);
+      buckets[d.toLocaleDateString('en-US', { weekday: 'short' })] = 0;
+    }
+    logs.forEach(log => {
+      const day = new Date(log.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
+      if (day in buckets) buckets[day]++;
+    });
+    return Object.entries(buckets);
+  })();
+
+  const maxChartVal = Math.max(1, ...chartData.map(([, v]) => v));
+
+  const quickCopy = (text: string, key: string) => {
+    navigator.clipboard?.writeText(text);
+    setCopiedField(key);
+    setTimeout(() => setCopiedField(null), 2000);
+  };
+
+  const activeFilterCount = [categoryFilter !== 'all', severityFilter !== 'all', statusFilter !== 'all', !!dateRange.from].filter(Boolean).length;
 
   useEffect(() => {
     setIsMounted(true)
@@ -426,13 +453,51 @@ export default function AuditLogsPage() {
           </Card>
         </div>
 
+        {/* Activity Chart */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-medium">Activity (Last 7 Days)</CardTitle>
+                <CardDescription className="text-xs">Log volume for current page — reload to refresh</CardDescription>
+              </div>
+              <span className="text-2xl font-bold text-primary">{logs.length}</span>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-end gap-2 h-24">
+              {chartData.map(([day, count]) => (
+                <div key={day} className="flex flex-col items-center gap-1 flex-1">
+                  <div className="text-xs text-muted-foreground font-medium">{count > 0 ? count : ''}</div>
+                  <div
+                    className="w-full rounded-t-md bg-primary/70 hover:bg-primary transition-colors"
+                    style={{ height: `${Math.max(4, (count / maxChartVal) * 64)}px` }}
+                    title={`${day}: ${count} events`}
+                  />
+                  <div className="text-xs text-muted-foreground">{day}</div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Filters & List ... (Keeping existing structure but removing client-side filtering logic for display, 
            as we are now server-side filtering via loadLogs params, but we can reuse the UI controls) */}
 
         <Card>
           <CardHeader>
-            <CardTitle>Activity Log</CardTitle>
-            <CardDescription>Detailed audit trail of all system activities</CardDescription>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle>Activity Log</CardTitle>
+                <CardDescription>Detailed audit trail of all system activities</CardDescription>
+              </div>
+              {activeFilterCount > 0 && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
+                  <Filter className="h-3 w-3" /> {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}
+                  <button className="ml-1 hover:text-destructive" onClick={() => { setCategoryFilter('all'); setSeverityFilter('all'); setStatusFilter('all'); setDateRange({}); }}>✕</button>
+                </span>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {/* Filter UI Controls */}
@@ -520,15 +585,45 @@ export default function AuditLogsPage() {
                   <SelectItem value="all">All Time</SelectItem>
                 </SelectContent>
               </Select>
+
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-[150px]">
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  <SelectValue placeholder="Status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Statuses</SelectItem>
+                  <SelectItem value="success">Success</SelectItem>
+                  <SelectItem value="failed">Failed</SelectItem>
+                  <SelectItem value="pending">Pending</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-4">
               {/* Logs List */}
               <div className="space-y-4 mt-6">
                 {isLoading && logs.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4" />
-                    <p>Loading audit logs...</p>
+                  <div className="space-y-3">
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <div key={i} className="flex items-start gap-4 p-4 border rounded-lg animate-pulse">
+                        {/* Avatar */}
+                        <div className="h-8 w-8 mt-1 rounded-full bg-muted shrink-0" />
+                        {/* Content */}
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-center justify-between gap-4">
+                            <div className="flex items-center gap-2">
+                              <div className="h-4 w-48 rounded bg-muted" />
+                              <div className="h-5 w-16 rounded-full bg-muted" />
+                              <div className="h-5 w-12 rounded-full bg-muted" />
+                            </div>
+                            <div className="h-4 w-28 rounded bg-muted shrink-0" />
+                          </div>
+                          <div className="h-3 w-3/4 rounded bg-muted" />
+                          <div className="h-3 w-1/2 rounded bg-muted" />
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 ) : logs.length === 0 ? (
                   <div className="text-center py-12 text-muted-foreground">
@@ -554,35 +649,84 @@ export default function AuditLogsPage() {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1 space-y-2">
-                              <div className="flex items-center justify-between">
-                                <div className="flex items-center gap-2">
-                                  <h4 className="font-medium">{log.action}</h4>
-                                  <Badge variant="outline">{log.category}</Badge>
-                                  <Badge variant="outline">{log.severity}</Badge>
+                              <div className="flex items-center justify-between gap-4">
+                                <div className="flex items-center gap-2 overflow-hidden">
+                                  <h4 className="font-medium truncate max-w-[200px] sm:max-w-[400px]">{log.action}</h4>
+                                  <Badge variant="outline" className="shrink-0">{log.category}</Badge>
+                                  <Badge variant="outline" className="shrink-0">{log.severity}</Badge>
                                 </div>
-                                <span className="text-sm text-muted-foreground">
-                                  {new Date(log.timestamp).toLocaleString()}
-                                </span>
+                                <div className="flex items-center gap-2 shrink-0">
+                                  <button
+                                    className="p-1 rounded hover:bg-muted transition-colors"
+                                    title="Copy IP"
+                                    onClick={(e) => { e.stopPropagation(); quickCopy(log.details.ip, `ip-${log.id}`); }}
+                                  >
+                                    {copiedField === `ip-${log.id}` ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <MapPin className="h-3.5 w-3.5 text-muted-foreground" />}
+                                  </button>
+                                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                                    {new Date(log.timestamp).toLocaleString()}
+                                  </span>
+                                </div>
                               </div>
-                              <p className="text-sm text-muted-foreground">{log.description}</p>
+                              <p className="text-sm text-muted-foreground line-clamp-2 max-w-full break-all">{log.description}</p>
                             </div>
                           </div>
                         </DialogTrigger>
-                        <DialogContent>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                           <DialogHeader>
-                            <DialogTitle>{log.action}</DialogTitle>
-                            <DialogDescription>{log.id}</DialogDescription>
+                            <DialogTitle className="break-all">{log.action}</DialogTitle>
+                            <DialogDescription>Event ID: {log.id}</DialogDescription>
                           </DialogHeader>
-                          <div className="space-y-2">
-                            <div>User: {log.user.name} ({log.user.email})</div>
-                            <div>IP: {log.details.ip}</div>
-                            <div>User Agent: {log.details.userAgent}</div>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-2 text-sm">
+                              <div className="font-medium">User:</div>
+                              <div>{log.user.name} ({log.user.email})</div>
+                              <div className="font-medium">IP Address:</div>
+                              <div>{log.details.ip}</div>
+                              <div className="font-medium">User Agent:</div>
+                              <div className="break-all">{log.details.userAgent}</div>
+                            </div>
+                            {log.description && (
+                              <div className="space-y-2">
+                                <div className="font-medium text-sm">Details:</div>
+                                <pre className="p-3 bg-muted rounded-md text-xs whitespace-pre-wrap break-all overflow-x-auto">
+                                  {log.description}
+                                </pre>
+                              </div>
+                            )}
                           </div>
                         </DialogContent>
                       </Dialog>
                     )
                   })
                 )}
+              </div>
+            </div>
+
+            {/* Pagination */}
+            <div className="flex items-center justify-between mt-6 pt-4 border-t">
+              <p className="text-sm text-muted-foreground">
+                Showing <strong>{logs.length}</strong> of <strong>{total}</strong> events
+              </p>
+              <div className="flex items-center gap-2">
+                <Button variant="outline" size="sm" disabled={page <= 1 || isLoading} onClick={() => setPage(p => p - 1)}>
+                  ← Prev
+                </Button>
+                <span className="text-sm px-2">Page {page}</span>
+                <Button variant="outline" size="sm" disabled={logs.length < pageSize || isLoading} onClick={() => setPage(p => p + 1)}>
+                  Next →
+                </Button>
+                <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
+                  <SelectTrigger className="w-20 h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="25">25</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </CardContent>

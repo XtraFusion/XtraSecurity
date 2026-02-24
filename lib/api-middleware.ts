@@ -17,12 +17,66 @@ export function withSecurity(handler: SecureHandler) {
         // 1. Authentication
         const session = await verifyAuth(req);
         
-        // Identify User
-        const userId = session?.userId || `ip_${ip}`;
-        const tier = (session?.tier as Tier) || 'free';
+        // Identify Original Requester
+        const requesterId = session?.userId || `ip_${ip}`;
+        const requesterTier = (session?.tier as Tier) || 'free';
 
-        // 2. Rate Limiting
-        const limitRes = await checkRateLimit(userId, tier);
+        // 2. Determine Rate Limit Target (Owner of Project/Workspace)
+        let targetUserId = requesterId;
+        let targetTier = requesterTier;
+        
+        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id");
+        let workspaceIdToCheck: string | null = req.nextUrl.searchParams.get("workspaceId");
+        
+        if (!projectIdToCheck && !workspaceIdToCheck && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
+            try {
+                // Clone the request so the actual handler can still read the JSON body
+                const clonedReq = req.clone();
+                const body = await clonedReq.json();
+                projectIdToCheck = body?.projectId || body?.id || null;
+                workspaceIdToCheck = body?.workspaceId || null;
+            } catch (e) {
+                // Ignore parse errors, body might not be JSON
+            }
+        }
+
+        let isBlocked = false;
+
+        if (projectIdToCheck || workspaceIdToCheck) {
+            try {
+                const db = await import("@/lib/db").then(mod => mod.default);
+                
+                if (projectIdToCheck) {
+                    const project = await db.project.findUnique({
+                        where: { id: projectIdToCheck as string },
+                        select: { isBlocked: true, user: { select: { id: true, tier: true } } }
+                    });
+                    
+                    if (project) {
+                        isBlocked = project.isBlocked;
+                        if (project.user) {
+                            targetUserId = project.user.id;
+                            targetTier = (project.user.tier as Tier) || 'free';
+                        }
+                    }
+                } else if (workspaceIdToCheck) {
+                    const workspace = await db.workspace.findUnique({
+                        where: { id: workspaceIdToCheck as string },
+                        select: { user: { select: { id: true, tier: true } } }
+                    });
+                    
+                    if (workspace && workspace.user) {
+                        targetUserId = workspace.user.id;
+                        targetTier = (workspace.user.tier as Tier) || 'free';
+                    }
+                }
+            } catch (e) {
+                // Silently fallback to current user
+            }
+        }
+
+        // 3. Rate Limiting (Using Target User's Quota)
+        const limitRes = await checkRateLimit(targetUserId, targetTier);
 
         // Prepare Log Data
         let geo: any = null;
@@ -41,7 +95,7 @@ export function withSecurity(handler: SecureHandler) {
         const baseLogData: Partial<SecurityEventLog> = {
             userId: session?.userId,
             userEmail: session?.email || undefined,
-            tier: tier,
+            tier: targetTier, // Record the tier that was used for the limit
             ipAddress: ip,
             userAgent: userAgent,
             country: geo?.country,
@@ -50,7 +104,14 @@ export function withSecurity(handler: SecureHandler) {
             endpoint: req.nextUrl.pathname,
         };
 
-        // 3. Enforce Limit
+        // 4. Enforce Blocked Project status globally
+        if (isBlocked) {
+            return new NextResponse(JSON.stringify({ 
+                error: "This project has been blocked by the owner and is currently inaccessible." 
+            }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
+        // 5. Enforce Limit
         if (!limitRes.success) {
             await logSecurityEvent({
                 ...baseLogData as any,
@@ -72,35 +133,6 @@ export function withSecurity(handler: SecureHandler) {
                     "X-RateLimit-Reset": String(limitRes.reset)
                 }
             });
-        }
-
-        // 4. Enforce Blocked Project status globally
-        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id");
-        
-        if (!projectIdToCheck && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
-            try {
-                // Clone the request so the actual handler can still read the JSON body
-                const clonedReq = req.clone();
-                const body = await clonedReq.json();
-                projectIdToCheck = body?.projectId || body?.id || null;
-            } catch (e) {
-                // Ignore parse errors, body might not be JSON
-            }
-        }
-
-        if (projectIdToCheck) {
-            const projectStatus = await import("@/lib/db").then(mod => 
-                mod.default.project.findUnique({
-                    where: { id: projectIdToCheck as string },
-                    select: { isBlocked: true }
-                })
-            );
-
-            if (projectStatus?.isBlocked) {
-                return new NextResponse(JSON.stringify({ 
-                    error: "This project has been blocked by the owner and is currently inaccessible." 
-                }), { status: 403, headers: { "Content-Type": "application/json" } });
-            }
         }
 
         // 5. Execute Handler

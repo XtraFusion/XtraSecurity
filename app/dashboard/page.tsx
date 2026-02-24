@@ -319,37 +319,40 @@ export default function DashboardPage() {
                   onClick={() => router.push(`/projects/${project.id}`)}
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary transition-all duration-300" />
-                  <CardHeader className="pb-3">
-                    <div className="flex justify-between items-start">
-                      <div className="space-y-1 min-w-0 flex-1">
-                        <div className="flex items-center gap-2">
+                  <CardHeader className="pb-3 px-5 pt-5">
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="space-y-1.5 min-w-0 flex-1">
+                        <div className="flex items-center gap-2.5">
                           <CardTitle className="text-lg font-semibold truncate">{project.name}</CardTitle>
-                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="px-1.5 py-0 text-[10px] uppercase font-bold tracking-wider h-5">
+                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-sm">
                             {project.status}
                           </Badge>
                         </div>
-                        <CardDescription className="line-clamp-2 text-xs">
+                        <CardDescription className="line-clamp-2 text-xs mt-1 leading-relaxed">
                           {project.description || "No description provided."}
                         </CardDescription>
                       </div>
                     </div>
                   </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center justify-between text-xs text-muted-foreground pt-3 border-t border-border/50">
+                  <CardContent className="px-5 pb-5 pt-2 mt-auto">
+                    <div className="flex items-end justify-between text-xs text-muted-foreground pt-4 border-t border-border/50">
                       <div className="flex items-center gap-3">
-                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
-                          <Key className="h-3 w-3" />
-                          {new Set(project.secrets?.map((s: any) => s.key)).size || 0}
-                        </span>
-                        <span className="flex items-center gap-1 bg-muted/50 px-2 py-1 rounded-md">
-                          <GitBranch className="h-3 w-3" />
-                          {project.branches?.length || 0}
-                        </span>
+                        <div className="flex items-center gap-1.5 bg-muted/40 hover:bg-muted/80 transition-colors px-2 py-1.5 rounded-md" title="Secrets">
+                          <Key className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          <span className="font-medium">{new Set(project.secrets?.map((s: any) => s.key)).size || 0}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5 bg-muted/40 hover:bg-muted/80 transition-colors px-2 py-1.5 rounded-md" title="Branches">
+                          <GitBranch className="h-3.5 w-3.5 text-muted-foreground/70" />
+                          <span className="font-medium">{project.branches?.length || 0}</span>
+                        </div>
                       </div>
-                      <span className="opacity-70 flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
-                        {formatDate(project.updatedAt)}
-                      </span>
+                      <div className="flex flex-col items-end gap-0.5 opacity-80 text-[11px]">
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {formatDate(project.updatedAt).split(',')[0]}
+                        </span>
+                        <span>{formatDate(project.updatedAt).split(',')[1]?.trim() || ''}</span>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>

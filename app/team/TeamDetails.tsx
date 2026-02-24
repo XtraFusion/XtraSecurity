@@ -311,6 +311,46 @@ const TeamDetail = () => {
     open: false,
     type: "remove",
   });
+  const [sortBy, setSortBy] = useState<"name" | "role" | "joinedAt" | "lastActive">("name");
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+
+  // --- Derived ---
+  const inactiveMembers = members.filter(m => {
+    if (m.status !== "active") return false;
+    const la = m.lastActive.toLowerCase();
+    // Flag if "Never" or contains "day" with a number
+    if (la === "never") return true;
+    const match = la.match(/(\d+)\s*day/);
+    return match && parseInt(match[1]) >= 30;
+  });
+
+  const roleCounts = ["owner", "admin", "developer", "viewer", "guest"].map(r => ({
+    role: r as TeamMember["role"],
+    count: members.filter(m => m.role === r).length,
+  })).filter(r => r.count > 0);
+  const maxRoleCount = Math.max(1, ...roleCounts.map(r => r.count));
+
+  const handleExportCSV = () => {
+    const header = "Name,Email,Role,Status,Department,Joined,Last Active";
+    const rows = members.map(m =>
+      `"${m.name}","${m.email}","${m.role}","${m.status}","${m.department || ''}","${m.joinedAt}","${m.lastActive}"`
+    );
+    const csv = [header, ...rows].join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `team-${team?.name || "members"}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast({ title: "Exported", description: `${members.length} members exported to CSV` });
+  };
+
+  const quickCopyEmail = (email: string) => {
+    navigator.clipboard?.writeText(email);
+    setCopiedEmail(email);
+    setTimeout(() => setCopiedEmail(null), 2000);
+  };
 
   if (!team) {
     return (
@@ -328,15 +368,23 @@ const TeamDetail = () => {
     );
   }
 
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch =
-      member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member.department?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || member.role === roleFilter;
-    const matchesStatus = statusFilter === "all" || member.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredMembers = [...members]
+    .filter((member) => {
+      const matchesSearch =
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        member.department?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesRole = roleFilter === "all" || member.role === roleFilter;
+      const matchesStatus = statusFilter === "all" || member.status === statusFilter;
+      return matchesSearch && matchesRole && matchesStatus;
+    })
+    .sort((a, b) => {
+      if (sortBy === "name") return a.name.localeCompare(b.name);
+      if (sortBy === "role") return a.role.localeCompare(b.role);
+      if (sortBy === "joinedAt") return new Date(b.joinedAt).getTime() - new Date(a.joinedAt).getTime();
+      if (sortBy === "lastActive") return a.lastActive.localeCompare(b.lastActive);
+      return 0;
+    });
 
   const handleInviteMember = async () => {
     if (!canInviteMembers(currentUser.role)) {
@@ -669,6 +717,62 @@ const TeamDetail = () => {
           </Card>
         </div>
 
+        {/* Inactive Member Alert */}
+        {inactiveMembers.length > 0 && (
+          <div className="flex items-start gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30">
+            <AlertTriangle className="h-5 w-5 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="font-semibold text-amber-700 dark:text-amber-400 text-sm">
+                {inactiveMembers.length} member{inactiveMembers.length > 1 ? "s have" : " has"} not been active in 30+ days
+              </p>
+              <p className="text-xs text-amber-600 dark:text-amber-500 mt-0.5">
+                {inactiveMembers.map(m => m.name).join(", ")} — consider reviewing their access
+              </p>
+            </div>
+            <Button size="sm" variant="outline" className="shrink-0 border-amber-500/40 text-amber-700 hover:bg-amber-500/10" onClick={() => setStatusFilter("active")}>
+              Review
+            </Button>
+          </div>
+        )}
+
+        {/* Role Distribution Chart */}
+        <Card className="shadow-sm">
+          <CardHeader className="pb-3">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-sm font-medium">Role Distribution</CardTitle>
+                <CardDescription className="text-xs mt-0.5">{members.length} members across {roleCounts.length} role{roleCounts.length > 1 ? "s" : ""}</CardDescription>
+              </div>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {roleCounts.map(({ role, count }) => {
+                const config = roleConfig[role];
+                const RoleIcon = config.icon;
+                const pct = Math.round((count / members.length) * 100);
+                return (
+                  <div key={role} className="flex items-center gap-3">
+                    <div className={`flex items-center gap-1.5 w-28 shrink-0 px-2 py-1 rounded-md border text-xs font-medium ${config.color}`}>
+                      <RoleIcon className="h-3 w-3" />
+                      {config.label}
+                    </div>
+                    <div className="flex-1 h-5 rounded-full bg-muted overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-primary/70 transition-all"
+                        style={{ width: `${(count / maxRoleCount) * 100}%` }}
+                      />
+                    </div>
+                    <span className="text-xs text-muted-foreground w-14 text-right shrink-0">
+                      {count} ({pct}%)
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Team Members */}
         <div className="space-y-4">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -713,6 +817,23 @@ const TeamDetail = () => {
                   <SelectItem value="inactive">Inactive</SelectItem>
                 </SelectContent>
               </Select>
+              <Select value={sortBy} onValueChange={(v: any) => setSortBy(v)}>
+                <SelectTrigger className="w-full md:w-[150px] h-9">
+                  <div className="flex items-center gap-2">
+                    <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
+                    <SelectValue placeholder="Sort by" />
+                  </div>
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="name">Sort: Name</SelectItem>
+                  <SelectItem value="role">Sort: Role</SelectItem>
+                  <SelectItem value="joinedAt">Sort: Join Date</SelectItem>
+                  <SelectItem value="lastActive">Sort: Last Active</SelectItem>
+                </SelectContent>
+              </Select>
+              <Button variant="outline" size="sm" className="h-9 shrink-0" onClick={handleExportCSV} title="Export member list as CSV">
+                <Sparkles className="h-3.5 w-3.5 mr-1.5" /> Export CSV
+              </Button>
             </div>
           </div>
 
@@ -748,7 +869,18 @@ const TeamDetail = () => {
                             )}
                           </div>
                           <div className="text-xs text-muted-foreground flex items-center gap-3">
-                            <span>{member.email}</span>
+                            <span
+                              className="cursor-pointer hover:text-primary transition-colors flex items-center gap-1"
+                              title="Click to copy email"
+                              onClick={() => quickCopyEmail(member.email)}
+                            >
+                              {copiedEmail === member.email ? (
+                                <CheckCircle className="h-3 w-3 text-emerald-500" />
+                              ) : (
+                                <Mail className="h-3 w-3" />
+                              )}
+                              {member.email}
+                            </span>
                             {member.department && (
                               <>
                                 <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
