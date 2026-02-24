@@ -6,19 +6,15 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "../auth/[...nextauth]/route";
 import { createNotification } from "@/lib/notifications";
 import { verifyAuth } from "@/lib/server-auth";
+import { withSecurity } from "@/lib/api-middleware";
 
 // GET /api/project - Get all projects or a specific project by ID
-export async function GET(request: NextRequest) {
+export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    // Try CLI auth first, then session
-    const cliAuth = await verifyAuth(request);
-    const session = await getServerSession(authOptions);
-    
-    const userId = cliAuth?.userId || session?.user?.id;
-    const userEmail = cliAuth?.email || session?.user?.email;
+    const userId = session?.userId;
+    const userEmail = session?.email;
     
     if (!userId) {
-      console.log("No auth found");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -184,37 +180,27 @@ export async function GET(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // POST /api/project - Create a new project
-export async function POST(request: NextRequest) {
+export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    console.log(session.user);
 
     const newProject = await request.json();
 
-    // Resolve the actual user record in the database. Depending on your
-    // NextAuth/session setup session.user.id may be undefined or contain
-    // an identifier that doesn't match Prisma's User.id (ObjectId). Try to
-    // find the user by id first, then fallback to email.
+    // Resolve the actual user record in the database.
     const authUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { id: session.user?.id ?? undefined },
-          { email: session.user?.email ?? undefined },
+          { id: session.userId },
+          { email: session.email ?? undefined },
         ].filter(Boolean) as any,
       },
     });
-    console.log(authUser);
     if (!authUser) {
-      console.error(
-        "Authenticated user not found in database for session:",
-        session.user
-      );
       return NextResponse.json(
         { error: "Authenticated user not found" },
         { status: 401 }
@@ -248,9 +234,19 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Rate Limit Check for Projects
-    const userTier = (authUser.tier || "free") as import("@/lib/rate-limit-config").Tier;
-    const projectLimit = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[userTier].maxProjectsPerWorkspace);
+    // Rate Limit Check for Projects based on Workspace
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: newProject.workspaceId },
+      include: { user: true } // Fetch the workspace owner
+    });
+
+    if (!workspace) {
+        return NextResponse.json({ error: "Workspace not found" }, { status: 404 });
+    }
+
+    // Determine the tier based on the workspace owner or workspace subscription
+    const workspaceTier = (workspace.user?.tier || workspace.subscriptionPlan || "free") as import("@/lib/rate-limit-config").Tier;
+    const projectLimit = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[workspaceTier].maxProjectsPerWorkspace);
     
     const resolvedProjectLimit = await projectLimit;
 
@@ -261,7 +257,7 @@ export async function POST(request: NextRequest) {
     if (projectCount >= resolvedProjectLimit) {
       return NextResponse.json({ 
         error: "Project limit reached", 
-        message: `Your ${userTier} plan allows creating up to ${resolvedProjectLimit} projects per workspace. Please upgrade for more capacity.` 
+        message: `The workspace's ${workspaceTier} plan allows creating up to ${resolvedProjectLimit} projects per workspace. Please upgrade the workspace owner's plan for more capacity.` 
       }, { status: 403 });
     }
 
@@ -330,15 +326,16 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // DELETE /api/project - Delete a project
-export async function DELETE(request: NextRequest) {
+export const DELETE = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
+    const userEmail = session.email;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -364,8 +361,8 @@ export async function DELETE(request: NextRequest) {
 
     // Check permission: Workspace Admin/Owner OR Project Creator
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, project.workspaceId);
-    const isCreator = project.userId === session.user.id;
+    const role = await getUserWorkspaceRole(userId, project.workspaceId);
+    const isCreator = project.userId === userId;
 
     if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
          return NextResponse.json({ error: "Only the project owner or workspace admin can delete this project" }, { status: 403 });
@@ -394,8 +391,8 @@ export async function DELETE(request: NextRequest) {
 
     // Notify user
     await createNotification(
-       session.user.id,
-       session.user.email!,
+       userId,
+       userEmail!,
        "Project Deleted",
        `Project "${project.name}" deleted`,
        `Project "${project.name}" and all associated data have been permanently deleted.`,
@@ -413,15 +410,16 @@ export async function DELETE(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
 
 // PUT /api/project - Update a project
-export async function PUT(request: NextRequest) {
+export const PUT = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
+    const userEmail = session.email;
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
@@ -453,7 +451,7 @@ export async function PUT(request: NextRequest) {
     // Import helper dynamically or use checking logic here
     const { getUserProjectRole } = await import("@/lib/permissions"); // Dynamic import to avoid circular dep if any? No, should be fine.
     
-    const role = await getUserProjectRole(session.user.id, id);
+    const role = await getUserProjectRole(userId, id);
     
     if (!role || (role !== "owner" && role !== "admin")) {
          return NextResponse.json({ error: "You do not have permission to update project settings" }, { status: 403 });
@@ -542,8 +540,8 @@ export async function PUT(request: NextRequest) {
     }
 
     await createNotification(
-       session.user.id, 
-       session.user.email!,
+       userId, 
+       userEmail!,
        action,
        details,
        details, 
@@ -558,4 +556,4 @@ export async function PUT(request: NextRequest) {
       { status: 500 }
     );
   }
-}
+});
