@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from "@/util/db";
-import crypto from 'crypto';
+import prisma from "@/lib/db";
+import { withSecurity } from "@/lib/api-middleware";
+import { encrypt } from "@/lib/encription";
 
-export async function POST(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export const POST = withSecurity(async (req: NextRequest, context: any, session: any) => {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -32,22 +32,33 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ message: "No secrets found to copy", count: 0 }, { status: 200 });
         }
 
-        // Verify Target Branch exists and user has access (checking via associated project)
+        // Verify Target Branch exists and user has access
         const targetBranch = await prisma.branch.findUnique({
             where: { id: targetBranchId },
-            include: { project: { include: { ProjectMembership: true } } },
         });
 
         if (!targetBranch) {
             return NextResponse.json({ error: "Target branch not found" }, { status: 404 });
         }
 
-        const isMember = targetBranch.project.ProjectMembership.some(
-            (m: any) => m.userId === session.user.id
-        );
+        // RBAC Write Check — only owner, admin, developer can write secrets
+        const WRITE_ROLES = ["owner", "admin", "developer"];
 
-        if (!isMember) {
-            return NextResponse.json({ error: "Access denied to target branch's project" }, { status: 403 });
+        const callerRole = await prisma.userRole.findFirst({
+            where: {
+              userId: session.userId,
+              OR: [{ projectId: targetBranch.projectId }, { projectId: null }]
+            },
+            select: { role: { select: { name: true } } }
+        });
+
+        const roleName = callerRole?.role?.name?.toLowerCase() || "viewer";
+
+        if (!WRITE_ROLES.includes(roleName)) {
+            return NextResponse.json(
+                { error: "Forbidden: Your role does not permit writing secrets to this project." },
+                { status: 403 }
+            );
         }
 
         const envDest = targetEnvironment && targetEnvironment !== "all" ? targetEnvironment : null;
@@ -58,7 +69,7 @@ export async function POST(req: NextRequest) {
         // Fetch existing target secrets to check for conflicts
         const existingTargetSecrets = await prisma.secret.findMany({
             where: { branchId: targetBranchId },
-            select: { key: true, environmentType: true, id: true, version: true }
+            select: { key: true, environmentType: true, id: true, version: true, history: true }
         });
 
         // Insert or Update the secrets in a transaction
@@ -71,48 +82,36 @@ export async function POST(req: NextRequest) {
                     (s: any) => s.key === secret.key && s.environmentType === targetEnvForSecret
                 );
 
+                const encryptedValueObj = encrypt(secret.value[0] || "");
+                const encryptedString = JSON.stringify(encryptedValueObj);
+
                 if (existing) {
                     if (overwrite) {
                         // Update existing secret
-                        const previousRecord = await tx.secret.findUnique({ where: { id: existing.id }});
-                        if(previousRecord) {
-                           await tx.secretHistory.create({
-                                data: {
-                                    secretId: existing.id,
-                                    version: existing.version,
-                                    value: previousRecord.value,
-                                    description: previousRecord.description || "",
-                                    changedBy: session.user.id,
-                                    changeReason: "Copied and overwritten from branch " + sourceBranchId,
-                                }
-                            });
+                        let newVersion = "2";
+                        if (existing.version && !isNaN(parseInt(existing.version))) {
+                            newVersion = (parseInt(existing.version) + 1).toString();
                         }
 
-                        // Encryption
-                        let finalValue = secret.value;
-                        const originalValue = secret.value;
-                        if (originalValue && !originalValue.startsWith('enc_') && process.env.ENCRYPTION_KEY) {
-                          try {
-                            const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY;
-                            const IV_LENGTH = 16;
-                            const iv = crypto.randomBytes(IV_LENGTH);
-                            const cipher = crypto.createCipheriv('aes-256-cbc', Buffer.from(ENCRYPTION_KEY, 'hex'), iv);
-                            let encrypted = cipher.update(originalValue, 'utf8', 'hex');
-                            encrypted += cipher.final('hex');
-                            finalValue = `enc_${iv.toString('hex')}:${encrypted}`;
-                          } catch (e) {
-                             // Fallback to plain if encryption fails
-                          }
-                        }
+                        const historyEntry = {
+                            version: newVersion,
+                            value: [encryptedString],
+                            updatedAt: new Date().toISOString(),
+                            updatedBy: session.userId,
+                            description: "Copied and overwritten from branch " + sourceBranchId,
+                        };
+
+                        const currentHistory = Array.isArray(existing.history) ? existing.history : [];
 
                         await tx.secret.update({
                             where: { id: existing.id },
                             data: {
-                                value: finalValue,
+                                value: [encryptedString],
                                 description: secret.description,
                                 type: secret.type,
-                                version: { increment: 1 },
-                                updatedBy: session.user.id,
+                                version: newVersion,
+                                updatedBy: session.userId,
+                                history: [...currentHistory, historyEntry]
                             }
                         });
                         successCount++;
@@ -122,27 +121,27 @@ export async function POST(req: NextRequest) {
                     }
                 } else {
                     // Create new secret
-                    // Ensure the value is encrypted before saving
-                    let finalValue = secret.value;
-                    const originalValue = secret.value; // The source secret value is already encrypted in DB if it was encrypted there. 
-                    // Wait, source secret is from our DB, so it's already encrypted if it was stored that way! 
-                    // We don't need to re-encrypt it unless we want a new IV, but reusing the encrypted string is safe and exact.
-
                     await tx.secret.create({
                         data: {
                             key: secret.key,
-                            value: secret.value, // It's already encrypted in the source record
+                            value: [encryptedString],
                             description: secret.description,
                             type: secret.type,
                             environmentType: targetEnvForSecret as any,
                             rotationPolicy: secret.rotationPolicy,
-                            rotationType: secret.rotationType,
-                            expiryDate: secret.expiryDate,
-                            permission: secret.permission || [],
                             projectId: targetBranch.projectId,
                             branchId: targetBranchId,
-                            updatedBy: session.user.id,
-                            version: 1,
+                            updatedBy: session.userId,
+                            version: "1",
+                            history: [
+                                {
+                                    version: "1",
+                                    value: [encryptedString],
+                                    updatedAt: new Date().toISOString(),
+                                    updatedBy: session.userId,
+                                    description: "Copied from branch " + sourceBranchId,
+                                }
+                            ]
                         }
                     });
                     successCount++;
@@ -160,4 +159,4 @@ export async function POST(req: NextRequest) {
         console.error("Copy secrets error:", error);
         return NextResponse.json({ error: error.message || "Failed to copy secrets" }, { status: 500 });
     }
-}
+});
