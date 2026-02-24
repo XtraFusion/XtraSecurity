@@ -49,6 +49,11 @@ export type Branch = $Result.DefaultSelection<Prisma.$BranchPayload>
  */
 export type Secret = $Result.DefaultSelection<Prisma.$SecretPayload>
 /**
+ * Model SecretShare
+ * 
+ */
+export type SecretShare = $Result.DefaultSelection<Prisma.$SecretSharePayload>
+/**
  * Model RotationSchedule
  * 
  */
@@ -328,6 +333,16 @@ export class PrismaClient<
     * ```
     */
   get secret(): Prisma.SecretDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.secretShare`: Exposes CRUD operations for the **SecretShare** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SecretShares
+    * const secretShares = await prisma.secretShare.findMany()
+    * ```
+    */
+  get secretShare(): Prisma.SecretShareDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.rotationSchedule`: Exposes CRUD operations for the **RotationSchedule** model.
@@ -1025,6 +1040,7 @@ export namespace Prisma {
     Project: 'Project',
     Branch: 'Branch',
     Secret: 'Secret',
+    SecretShare: 'SecretShare',
     RotationSchedule: 'RotationSchedule',
     RotationLog: 'RotationLog',
     Team: 'Team',
@@ -1068,7 +1084,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview"
       txIsolationLevel: never
     }
     model: {
@@ -1587,6 +1603,80 @@ export namespace Prisma {
           count: {
             args: Prisma.SecretCountArgs<ExtArgs>
             result: $Utils.Optional<SecretCountAggregateOutputType> | number
+          }
+        }
+      }
+      SecretShare: {
+        payload: Prisma.$SecretSharePayload<ExtArgs>
+        fields: Prisma.SecretShareFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SecretShareFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SecretShareFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          findFirst: {
+            args: Prisma.SecretShareFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SecretShareFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          findMany: {
+            args: Prisma.SecretShareFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>[]
+          }
+          create: {
+            args: Prisma.SecretShareCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          createMany: {
+            args: Prisma.SecretShareCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.SecretShareDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          update: {
+            args: Prisma.SecretShareUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          deleteMany: {
+            args: Prisma.SecretShareDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SecretShareUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SecretShareUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSharePayload>
+          }
+          aggregate: {
+            args: Prisma.SecretShareAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSecretShare>
+          }
+          groupBy: {
+            args: Prisma.SecretShareGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SecretShareGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.SecretShareFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.SecretShareAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.SecretShareCountArgs<ExtArgs>
+            result: $Utils.Optional<SecretShareCountAggregateOutputType> | number
           }
         }
       }
@@ -3526,6 +3616,7 @@ export namespace Prisma {
     project?: ProjectOmit
     branch?: BranchOmit
     secret?: SecretOmit
+    secretShare?: SecretShareOmit
     rotationSchedule?: RotationScheduleOmit
     rotationLog?: RotationLogOmit
     team?: TeamOmit
@@ -3937,11 +4028,13 @@ export namespace Prisma {
   export type SecretCountOutputType = {
     referencedBy: number
     accessRequests: number
+    shares: number
   }
 
   export type SecretCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     referencedBy?: boolean | SecretCountOutputTypeCountReferencedByArgs
     accessRequests?: boolean | SecretCountOutputTypeCountAccessRequestsArgs
+    shares?: boolean | SecretCountOutputTypeCountSharesArgs
   }
 
   // Custom InputTypes
@@ -3967,6 +4060,13 @@ export namespace Prisma {
    */
   export type SecretCountOutputTypeCountAccessRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AccessRequestWhereInput
+  }
+
+  /**
+   * SecretCountOutputType without action
+   */
+  export type SecretCountOutputTypeCountSharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecretShareWhereInput
   }
 
 
@@ -11754,6 +11854,7 @@ export namespace Prisma {
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
     accessRequests?: boolean | Secret$accessRequestsArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
+    shares?: boolean | Secret$sharesArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["secret"]>
 
@@ -11790,6 +11891,7 @@ export namespace Prisma {
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
     accessRequests?: boolean | Secret$accessRequestsArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
+    shares?: boolean | Secret$sharesArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -11802,6 +11904,7 @@ export namespace Prisma {
       referencedBy: Prisma.$SecretPayload<ExtArgs>[]
       accessRequests: Prisma.$AccessRequestPayload<ExtArgs>[]
       rotationSchedule: Prisma.$RotationSchedulePayload<ExtArgs> | null
+      shares: Prisma.$SecretSharePayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -12193,6 +12296,7 @@ export namespace Prisma {
     referencedBy<T extends Secret$referencedByArgs<ExtArgs> = {}>(args?: Subset<T, Secret$referencedByArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     accessRequests<T extends Secret$accessRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Secret$accessRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccessRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rotationSchedule<T extends Secret$rotationScheduleArgs<ExtArgs> = {}>(args?: Subset<T, Secret$rotationScheduleArgs<ExtArgs>>): Prisma__RotationScheduleClient<$Result.GetResult<Prisma.$RotationSchedulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+    shares<T extends Secret$sharesArgs<ExtArgs> = {}>(args?: Subset<T, Secret$sharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -12717,6 +12821,30 @@ export namespace Prisma {
   }
 
   /**
+   * Secret.shares
+   */
+  export type Secret$sharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    where?: SecretShareWhereInput
+    orderBy?: SecretShareOrderByWithRelationInput | SecretShareOrderByWithRelationInput[]
+    cursor?: SecretShareWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SecretShareScalarFieldEnum | SecretShareScalarFieldEnum[]
+  }
+
+  /**
    * Secret without action
    */
   export type SecretDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -12732,6 +12860,1078 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SecretInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SecretShare
+   */
+
+  export type AggregateSecretShare = {
+    _count: SecretShareCountAggregateOutputType | null
+    _avg: SecretShareAvgAggregateOutputType | null
+    _sum: SecretShareSumAggregateOutputType | null
+    _min: SecretShareMinAggregateOutputType | null
+    _max: SecretShareMaxAggregateOutputType | null
+  }
+
+  export type SecretShareAvgAggregateOutputType = {
+    maxViews: number | null
+    viewCount: number | null
+  }
+
+  export type SecretShareSumAggregateOutputType = {
+    maxViews: number | null
+    viewCount: number | null
+  }
+
+  export type SecretShareMinAggregateOutputType = {
+    id: string | null
+    secretId: string | null
+    token: string | null
+    createdBy: string | null
+    expiresAt: Date | null
+    maxViews: number | null
+    viewCount: number | null
+    isRevoked: boolean | null
+    createdAt: Date | null
+    label: string | null
+  }
+
+  export type SecretShareMaxAggregateOutputType = {
+    id: string | null
+    secretId: string | null
+    token: string | null
+    createdBy: string | null
+    expiresAt: Date | null
+    maxViews: number | null
+    viewCount: number | null
+    isRevoked: boolean | null
+    createdAt: Date | null
+    label: string | null
+  }
+
+  export type SecretShareCountAggregateOutputType = {
+    id: number
+    secretId: number
+    token: number
+    createdBy: number
+    expiresAt: number
+    maxViews: number
+    viewCount: number
+    isRevoked: number
+    createdAt: number
+    label: number
+    _all: number
+  }
+
+
+  export type SecretShareAvgAggregateInputType = {
+    maxViews?: true
+    viewCount?: true
+  }
+
+  export type SecretShareSumAggregateInputType = {
+    maxViews?: true
+    viewCount?: true
+  }
+
+  export type SecretShareMinAggregateInputType = {
+    id?: true
+    secretId?: true
+    token?: true
+    createdBy?: true
+    expiresAt?: true
+    maxViews?: true
+    viewCount?: true
+    isRevoked?: true
+    createdAt?: true
+    label?: true
+  }
+
+  export type SecretShareMaxAggregateInputType = {
+    id?: true
+    secretId?: true
+    token?: true
+    createdBy?: true
+    expiresAt?: true
+    maxViews?: true
+    viewCount?: true
+    isRevoked?: true
+    createdAt?: true
+    label?: true
+  }
+
+  export type SecretShareCountAggregateInputType = {
+    id?: true
+    secretId?: true
+    token?: true
+    createdBy?: true
+    expiresAt?: true
+    maxViews?: true
+    viewCount?: true
+    isRevoked?: true
+    createdAt?: true
+    label?: true
+    _all?: true
+  }
+
+  export type SecretShareAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecretShare to aggregate.
+     */
+    where?: SecretShareWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretShares to fetch.
+     */
+    orderBy?: SecretShareOrderByWithRelationInput | SecretShareOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SecretShareWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretShares from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretShares.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SecretShares
+    **/
+    _count?: true | SecretShareCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: SecretShareAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: SecretShareSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SecretShareMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SecretShareMaxAggregateInputType
+  }
+
+  export type GetSecretShareAggregateType<T extends SecretShareAggregateArgs> = {
+        [P in keyof T & keyof AggregateSecretShare]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSecretShare[P]>
+      : GetScalarType<T[P], AggregateSecretShare[P]>
+  }
+
+
+
+
+  export type SecretShareGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecretShareWhereInput
+    orderBy?: SecretShareOrderByWithAggregationInput | SecretShareOrderByWithAggregationInput[]
+    by: SecretShareScalarFieldEnum[] | SecretShareScalarFieldEnum
+    having?: SecretShareScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SecretShareCountAggregateInputType | true
+    _avg?: SecretShareAvgAggregateInputType
+    _sum?: SecretShareSumAggregateInputType
+    _min?: SecretShareMinAggregateInputType
+    _max?: SecretShareMaxAggregateInputType
+  }
+
+  export type SecretShareGroupByOutputType = {
+    id: string
+    secretId: string
+    token: string
+    createdBy: string
+    expiresAt: Date
+    maxViews: number | null
+    viewCount: number
+    isRevoked: boolean
+    createdAt: Date
+    label: string | null
+    _count: SecretShareCountAggregateOutputType | null
+    _avg: SecretShareAvgAggregateOutputType | null
+    _sum: SecretShareSumAggregateOutputType | null
+    _min: SecretShareMinAggregateOutputType | null
+    _max: SecretShareMaxAggregateOutputType | null
+  }
+
+  type GetSecretShareGroupByPayload<T extends SecretShareGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SecretShareGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SecretShareGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SecretShareGroupByOutputType[P]>
+            : GetScalarType<T[P], SecretShareGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SecretShareSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    secretId?: boolean
+    token?: boolean
+    createdBy?: boolean
+    expiresAt?: boolean
+    maxViews?: boolean
+    viewCount?: boolean
+    isRevoked?: boolean
+    createdAt?: boolean
+    label?: boolean
+    secret?: boolean | SecretDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["secretShare"]>
+
+
+
+  export type SecretShareSelectScalar = {
+    id?: boolean
+    secretId?: boolean
+    token?: boolean
+    createdBy?: boolean
+    expiresAt?: boolean
+    maxViews?: boolean
+    viewCount?: boolean
+    isRevoked?: boolean
+    createdAt?: boolean
+    label?: boolean
+  }
+
+  export type SecretShareOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "secretId" | "token" | "createdBy" | "expiresAt" | "maxViews" | "viewCount" | "isRevoked" | "createdAt" | "label", ExtArgs["result"]["secretShare"]>
+  export type SecretShareInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    secret?: boolean | SecretDefaultArgs<ExtArgs>
+  }
+
+  export type $SecretSharePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SecretShare"
+    objects: {
+      secret: Prisma.$SecretPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      secretId: string
+      token: string
+      createdBy: string
+      expiresAt: Date
+      maxViews: number | null
+      viewCount: number
+      isRevoked: boolean
+      createdAt: Date
+      label: string | null
+    }, ExtArgs["result"]["secretShare"]>
+    composites: {}
+  }
+
+  type SecretShareGetPayload<S extends boolean | null | undefined | SecretShareDefaultArgs> = $Result.GetResult<Prisma.$SecretSharePayload, S>
+
+  type SecretShareCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SecretShareFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SecretShareCountAggregateInputType | true
+    }
+
+  export interface SecretShareDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SecretShare'], meta: { name: 'SecretShare' } }
+    /**
+     * Find zero or one SecretShare that matches the filter.
+     * @param {SecretShareFindUniqueArgs} args - Arguments to find a SecretShare
+     * @example
+     * // Get one SecretShare
+     * const secretShare = await prisma.secretShare.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SecretShareFindUniqueArgs>(args: SelectSubset<T, SecretShareFindUniqueArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SecretShare that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SecretShareFindUniqueOrThrowArgs} args - Arguments to find a SecretShare
+     * @example
+     * // Get one SecretShare
+     * const secretShare = await prisma.secretShare.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SecretShareFindUniqueOrThrowArgs>(args: SelectSubset<T, SecretShareFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecretShare that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareFindFirstArgs} args - Arguments to find a SecretShare
+     * @example
+     * // Get one SecretShare
+     * const secretShare = await prisma.secretShare.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SecretShareFindFirstArgs>(args?: SelectSubset<T, SecretShareFindFirstArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecretShare that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareFindFirstOrThrowArgs} args - Arguments to find a SecretShare
+     * @example
+     * // Get one SecretShare
+     * const secretShare = await prisma.secretShare.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SecretShareFindFirstOrThrowArgs>(args?: SelectSubset<T, SecretShareFindFirstOrThrowArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SecretShares that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SecretShares
+     * const secretShares = await prisma.secretShare.findMany()
+     * 
+     * // Get first 10 SecretShares
+     * const secretShares = await prisma.secretShare.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const secretShareWithIdOnly = await prisma.secretShare.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SecretShareFindManyArgs>(args?: SelectSubset<T, SecretShareFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SecretShare.
+     * @param {SecretShareCreateArgs} args - Arguments to create a SecretShare.
+     * @example
+     * // Create one SecretShare
+     * const SecretShare = await prisma.secretShare.create({
+     *   data: {
+     *     // ... data to create a SecretShare
+     *   }
+     * })
+     * 
+     */
+    create<T extends SecretShareCreateArgs>(args: SelectSubset<T, SecretShareCreateArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SecretShares.
+     * @param {SecretShareCreateManyArgs} args - Arguments to create many SecretShares.
+     * @example
+     * // Create many SecretShares
+     * const secretShare = await prisma.secretShare.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SecretShareCreateManyArgs>(args?: SelectSubset<T, SecretShareCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a SecretShare.
+     * @param {SecretShareDeleteArgs} args - Arguments to delete one SecretShare.
+     * @example
+     * // Delete one SecretShare
+     * const SecretShare = await prisma.secretShare.delete({
+     *   where: {
+     *     // ... filter to delete one SecretShare
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SecretShareDeleteArgs>(args: SelectSubset<T, SecretShareDeleteArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SecretShare.
+     * @param {SecretShareUpdateArgs} args - Arguments to update one SecretShare.
+     * @example
+     * // Update one SecretShare
+     * const secretShare = await prisma.secretShare.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SecretShareUpdateArgs>(args: SelectSubset<T, SecretShareUpdateArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SecretShares.
+     * @param {SecretShareDeleteManyArgs} args - Arguments to filter SecretShares to delete.
+     * @example
+     * // Delete a few SecretShares
+     * const { count } = await prisma.secretShare.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SecretShareDeleteManyArgs>(args?: SelectSubset<T, SecretShareDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SecretShares.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SecretShares
+     * const secretShare = await prisma.secretShare.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SecretShareUpdateManyArgs>(args: SelectSubset<T, SecretShareUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SecretShare.
+     * @param {SecretShareUpsertArgs} args - Arguments to update or create a SecretShare.
+     * @example
+     * // Update or create a SecretShare
+     * const secretShare = await prisma.secretShare.upsert({
+     *   create: {
+     *     // ... data to create a SecretShare
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SecretShare we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SecretShareUpsertArgs>(args: SelectSubset<T, SecretShareUpsertArgs<ExtArgs>>): Prisma__SecretShareClient<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SecretShares that matches the filter.
+     * @param {SecretShareFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const secretShare = await prisma.secretShare.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: SecretShareFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a SecretShare.
+     * @param {SecretShareAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const secretShare = await prisma.secretShare.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: SecretShareAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of SecretShares.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareCountArgs} args - Arguments to filter SecretShares to count.
+     * @example
+     * // Count the number of SecretShares
+     * const count = await prisma.secretShare.count({
+     *   where: {
+     *     // ... the filter for the SecretShares we want to count
+     *   }
+     * })
+    **/
+    count<T extends SecretShareCountArgs>(
+      args?: Subset<T, SecretShareCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SecretShareCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SecretShare.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SecretShareAggregateArgs>(args: Subset<T, SecretShareAggregateArgs>): Prisma.PrismaPromise<GetSecretShareAggregateType<T>>
+
+    /**
+     * Group by SecretShare.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretShareGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SecretShareGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SecretShareGroupByArgs['orderBy'] }
+        : { orderBy?: SecretShareGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SecretShareGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSecretShareGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SecretShare model
+   */
+  readonly fields: SecretShareFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SecretShare.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SecretShareClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    secret<T extends SecretDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SecretDefaultArgs<ExtArgs>>): Prisma__SecretClient<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SecretShare model
+   */
+  interface SecretShareFieldRefs {
+    readonly id: FieldRef<"SecretShare", 'String'>
+    readonly secretId: FieldRef<"SecretShare", 'String'>
+    readonly token: FieldRef<"SecretShare", 'String'>
+    readonly createdBy: FieldRef<"SecretShare", 'String'>
+    readonly expiresAt: FieldRef<"SecretShare", 'DateTime'>
+    readonly maxViews: FieldRef<"SecretShare", 'Int'>
+    readonly viewCount: FieldRef<"SecretShare", 'Int'>
+    readonly isRevoked: FieldRef<"SecretShare", 'Boolean'>
+    readonly createdAt: FieldRef<"SecretShare", 'DateTime'>
+    readonly label: FieldRef<"SecretShare", 'String'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SecretShare findUnique
+   */
+  export type SecretShareFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretShare to fetch.
+     */
+    where: SecretShareWhereUniqueInput
+  }
+
+  /**
+   * SecretShare findUniqueOrThrow
+   */
+  export type SecretShareFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretShare to fetch.
+     */
+    where: SecretShareWhereUniqueInput
+  }
+
+  /**
+   * SecretShare findFirst
+   */
+  export type SecretShareFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretShare to fetch.
+     */
+    where?: SecretShareWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretShares to fetch.
+     */
+    orderBy?: SecretShareOrderByWithRelationInput | SecretShareOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecretShares.
+     */
+    cursor?: SecretShareWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretShares from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretShares.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecretShares.
+     */
+    distinct?: SecretShareScalarFieldEnum | SecretShareScalarFieldEnum[]
+  }
+
+  /**
+   * SecretShare findFirstOrThrow
+   */
+  export type SecretShareFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretShare to fetch.
+     */
+    where?: SecretShareWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretShares to fetch.
+     */
+    orderBy?: SecretShareOrderByWithRelationInput | SecretShareOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecretShares.
+     */
+    cursor?: SecretShareWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretShares from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretShares.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecretShares.
+     */
+    distinct?: SecretShareScalarFieldEnum | SecretShareScalarFieldEnum[]
+  }
+
+  /**
+   * SecretShare findMany
+   */
+  export type SecretShareFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretShares to fetch.
+     */
+    where?: SecretShareWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretShares to fetch.
+     */
+    orderBy?: SecretShareOrderByWithRelationInput | SecretShareOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SecretShares.
+     */
+    cursor?: SecretShareWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretShares from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretShares.
+     */
+    skip?: number
+    distinct?: SecretShareScalarFieldEnum | SecretShareScalarFieldEnum[]
+  }
+
+  /**
+   * SecretShare create
+   */
+  export type SecretShareCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SecretShare.
+     */
+    data: XOR<SecretShareCreateInput, SecretShareUncheckedCreateInput>
+  }
+
+  /**
+   * SecretShare createMany
+   */
+  export type SecretShareCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SecretShares.
+     */
+    data: SecretShareCreateManyInput | SecretShareCreateManyInput[]
+  }
+
+  /**
+   * SecretShare update
+   */
+  export type SecretShareUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SecretShare.
+     */
+    data: XOR<SecretShareUpdateInput, SecretShareUncheckedUpdateInput>
+    /**
+     * Choose, which SecretShare to update.
+     */
+    where: SecretShareWhereUniqueInput
+  }
+
+  /**
+   * SecretShare updateMany
+   */
+  export type SecretShareUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SecretShares.
+     */
+    data: XOR<SecretShareUpdateManyMutationInput, SecretShareUncheckedUpdateManyInput>
+    /**
+     * Filter which SecretShares to update
+     */
+    where?: SecretShareWhereInput
+    /**
+     * Limit how many SecretShares to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecretShare upsert
+   */
+  export type SecretShareUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SecretShare to update in case it exists.
+     */
+    where: SecretShareWhereUniqueInput
+    /**
+     * In case the SecretShare found by the `where` argument doesn't exist, create a new SecretShare with this data.
+     */
+    create: XOR<SecretShareCreateInput, SecretShareUncheckedCreateInput>
+    /**
+     * In case the SecretShare was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SecretShareUpdateInput, SecretShareUncheckedUpdateInput>
+  }
+
+  /**
+   * SecretShare delete
+   */
+  export type SecretShareDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
+    /**
+     * Filter which SecretShare to delete.
+     */
+    where: SecretShareWhereUniqueInput
+  }
+
+  /**
+   * SecretShare deleteMany
+   */
+  export type SecretShareDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecretShares to delete
+     */
+    where?: SecretShareWhereInput
+    /**
+     * Limit how many SecretShares to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecretShare findRaw
+   */
+  export type SecretShareFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * SecretShare aggregateRaw
+   */
+  export type SecretShareAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * SecretShare without action
+   */
+  export type SecretShareDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretShare
+     */
+    select?: SecretShareSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretShare
+     */
+    omit?: SecretShareOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretShareInclude<ExtArgs> | null
   }
 
 
@@ -38327,6 +39527,22 @@ export namespace Prisma {
   export type SecretScalarFieldEnum = (typeof SecretScalarFieldEnum)[keyof typeof SecretScalarFieldEnum]
 
 
+  export const SecretShareScalarFieldEnum: {
+    id: 'id',
+    secretId: 'secretId',
+    token: 'token',
+    createdBy: 'createdBy',
+    expiresAt: 'expiresAt',
+    maxViews: 'maxViews',
+    viewCount: 'viewCount',
+    isRevoked: 'isRevoked',
+    createdAt: 'createdAt',
+    label: 'label'
+  };
+
+  export type SecretShareScalarFieldEnum = (typeof SecretShareScalarFieldEnum)[keyof typeof SecretShareScalarFieldEnum]
+
+
   export const RotationScheduleScalarFieldEnum: {
     id: 'id',
     secretId: 'secretId',
@@ -39516,6 +40732,7 @@ export namespace Prisma {
     referencedBy?: SecretListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
+    shares?: SecretShareListRelationFilter
   }
 
   export type SecretOrderByWithRelationInput = {
@@ -39545,6 +40762,7 @@ export namespace Prisma {
     referencedBy?: SecretOrderByRelationAggregateInput
     accessRequests?: AccessRequestOrderByRelationAggregateInput
     rotationSchedule?: RotationScheduleOrderByWithRelationInput
+    shares?: SecretShareOrderByRelationAggregateInput
   }
 
   export type SecretWhereUniqueInput = Prisma.AtLeast<{
@@ -39577,6 +40795,7 @@ export namespace Prisma {
     referencedBy?: SecretListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
+    shares?: SecretShareListRelationFilter
   }, "id">
 
   export type SecretOrderByWithAggregationInput = {
@@ -39629,6 +40848,88 @@ export namespace Prisma {
     shadowValue?: StringNullableListFilter<"Secret">
     shadowStatus?: StringNullableWithAggregatesFilter<"Secret"> | string | null
     shadowExpiresAt?: DateTimeNullableWithAggregatesFilter<"Secret"> | Date | string | null
+  }
+
+  export type SecretShareWhereInput = {
+    AND?: SecretShareWhereInput | SecretShareWhereInput[]
+    OR?: SecretShareWhereInput[]
+    NOT?: SecretShareWhereInput | SecretShareWhereInput[]
+    id?: StringFilter<"SecretShare"> | string
+    secretId?: StringFilter<"SecretShare"> | string
+    token?: StringFilter<"SecretShare"> | string
+    createdBy?: StringFilter<"SecretShare"> | string
+    expiresAt?: DateTimeFilter<"SecretShare"> | Date | string
+    maxViews?: IntNullableFilter<"SecretShare"> | number | null
+    viewCount?: IntFilter<"SecretShare"> | number
+    isRevoked?: BoolFilter<"SecretShare"> | boolean
+    createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    label?: StringNullableFilter<"SecretShare"> | string | null
+    secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
+  }
+
+  export type SecretShareOrderByWithRelationInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    token?: SortOrder
+    createdBy?: SortOrder
+    expiresAt?: SortOrder
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+    isRevoked?: SortOrder
+    createdAt?: SortOrder
+    label?: SortOrder
+    secret?: SecretOrderByWithRelationInput
+  }
+
+  export type SecretShareWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    token?: string
+    AND?: SecretShareWhereInput | SecretShareWhereInput[]
+    OR?: SecretShareWhereInput[]
+    NOT?: SecretShareWhereInput | SecretShareWhereInput[]
+    secretId?: StringFilter<"SecretShare"> | string
+    createdBy?: StringFilter<"SecretShare"> | string
+    expiresAt?: DateTimeFilter<"SecretShare"> | Date | string
+    maxViews?: IntNullableFilter<"SecretShare"> | number | null
+    viewCount?: IntFilter<"SecretShare"> | number
+    isRevoked?: BoolFilter<"SecretShare"> | boolean
+    createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    label?: StringNullableFilter<"SecretShare"> | string | null
+    secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
+  }, "id" | "token">
+
+  export type SecretShareOrderByWithAggregationInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    token?: SortOrder
+    createdBy?: SortOrder
+    expiresAt?: SortOrder
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+    isRevoked?: SortOrder
+    createdAt?: SortOrder
+    label?: SortOrder
+    _count?: SecretShareCountOrderByAggregateInput
+    _avg?: SecretShareAvgOrderByAggregateInput
+    _max?: SecretShareMaxOrderByAggregateInput
+    _min?: SecretShareMinOrderByAggregateInput
+    _sum?: SecretShareSumOrderByAggregateInput
+  }
+
+  export type SecretShareScalarWhereWithAggregatesInput = {
+    AND?: SecretShareScalarWhereWithAggregatesInput | SecretShareScalarWhereWithAggregatesInput[]
+    OR?: SecretShareScalarWhereWithAggregatesInput[]
+    NOT?: SecretShareScalarWhereWithAggregatesInput | SecretShareScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SecretShare"> | string
+    secretId?: StringWithAggregatesFilter<"SecretShare"> | string
+    token?: StringWithAggregatesFilter<"SecretShare"> | string
+    createdBy?: StringWithAggregatesFilter<"SecretShare"> | string
+    expiresAt?: DateTimeWithAggregatesFilter<"SecretShare"> | Date | string
+    maxViews?: IntNullableWithAggregatesFilter<"SecretShare"> | number | null
+    viewCount?: IntWithAggregatesFilter<"SecretShare"> | number
+    isRevoked?: BoolWithAggregatesFilter<"SecretShare"> | boolean
+    createdAt?: DateTimeWithAggregatesFilter<"SecretShare"> | Date | string
+    label?: StringNullableWithAggregatesFilter<"SecretShare"> | string | null
   }
 
   export type RotationScheduleWhereInput = {
@@ -42247,6 +43548,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateInput = {
@@ -42273,6 +43575,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUpdateInput = {
@@ -42298,6 +43601,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateInput = {
@@ -42323,6 +43627,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretCreateManyInput = {
@@ -42387,6 +43692,92 @@ export namespace Prisma {
     shadowValue?: SecretUpdateshadowValueInput | string[]
     shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
     shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+  }
+
+  export type SecretShareCreateInput = {
+    id?: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+    secret: SecretCreateNestedOneWithoutSharesInput
+  }
+
+  export type SecretShareUncheckedCreateInput = {
+    id?: string
+    secretId: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+  }
+
+  export type SecretShareUpdateInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    secret?: SecretUpdateOneRequiredWithoutSharesNestedInput
+  }
+
+  export type SecretShareUncheckedUpdateInput = {
+    secretId?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretShareCreateManyInput = {
+    id?: string
+    secretId: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+  }
+
+  export type SecretShareUpdateManyMutationInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretShareUncheckedUpdateManyInput = {
+    secretId?: StringFieldUpdateOperationsInput | string
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type RotationScheduleCreateInput = {
@@ -44988,6 +46379,16 @@ export namespace Prisma {
     isNot?: RotationScheduleWhereInput | null
   }
 
+  export type SecretShareListRelationFilter = {
+    every?: SecretShareWhereInput
+    some?: SecretShareWhereInput
+    none?: SecretShareWhereInput
+  }
+
+  export type SecretShareOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type SecretCountOrderByAggregateInput = {
     id?: SortOrder
     key?: SortOrder
@@ -45066,6 +46467,55 @@ export namespace Prisma {
   export type SecretScalarRelationFilter = {
     is?: SecretWhereInput
     isNot?: SecretWhereInput
+  }
+
+  export type SecretShareCountOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    token?: SortOrder
+    createdBy?: SortOrder
+    expiresAt?: SortOrder
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+    isRevoked?: SortOrder
+    createdAt?: SortOrder
+    label?: SortOrder
+  }
+
+  export type SecretShareAvgOrderByAggregateInput = {
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+  }
+
+  export type SecretShareMaxOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    token?: SortOrder
+    createdBy?: SortOrder
+    expiresAt?: SortOrder
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+    isRevoked?: SortOrder
+    createdAt?: SortOrder
+    label?: SortOrder
+  }
+
+  export type SecretShareMinOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    token?: SortOrder
+    createdBy?: SortOrder
+    expiresAt?: SortOrder
+    maxViews?: SortOrder
+    viewCount?: SortOrder
+    isRevoked?: SortOrder
+    createdAt?: SortOrder
+    label?: SortOrder
+  }
+
+  export type SecretShareSumOrderByAggregateInput = {
+    maxViews?: SortOrder
+    viewCount?: SortOrder
   }
 
   export type RotationLogListRelationFilter = {
@@ -47217,6 +48667,13 @@ export namespace Prisma {
     connect?: RotationScheduleWhereUniqueInput
   }
 
+  export type SecretShareCreateNestedManyWithoutSecretInput = {
+    create?: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput> | SecretShareCreateWithoutSecretInput[] | SecretShareUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretShareCreateOrConnectWithoutSecretInput | SecretShareCreateOrConnectWithoutSecretInput[]
+    createMany?: SecretShareCreateManySecretInputEnvelope
+    connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+  }
+
   export type SecretUncheckedCreateNestedManyWithoutSourceSecretInput = {
     create?: XOR<SecretCreateWithoutSourceSecretInput, SecretUncheckedCreateWithoutSourceSecretInput> | SecretCreateWithoutSourceSecretInput[] | SecretUncheckedCreateWithoutSourceSecretInput[]
     connectOrCreate?: SecretCreateOrConnectWithoutSourceSecretInput | SecretCreateOrConnectWithoutSourceSecretInput[]
@@ -47235,6 +48692,13 @@ export namespace Prisma {
     create?: XOR<RotationScheduleCreateWithoutSecretInput, RotationScheduleUncheckedCreateWithoutSecretInput>
     connectOrCreate?: RotationScheduleCreateOrConnectWithoutSecretInput
     connect?: RotationScheduleWhereUniqueInput
+  }
+
+  export type SecretShareUncheckedCreateNestedManyWithoutSecretInput = {
+    create?: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput> | SecretShareCreateWithoutSecretInput[] | SecretShareUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretShareCreateOrConnectWithoutSecretInput | SecretShareCreateOrConnectWithoutSecretInput[]
+    createMany?: SecretShareCreateManySecretInputEnvelope
+    connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
   }
 
   export type SecretUpdatevalueInput = {
@@ -47318,6 +48782,20 @@ export namespace Prisma {
     update?: XOR<XOR<RotationScheduleUpdateToOneWithWhereWithoutSecretInput, RotationScheduleUpdateWithoutSecretInput>, RotationScheduleUncheckedUpdateWithoutSecretInput>
   }
 
+  export type SecretShareUpdateManyWithoutSecretNestedInput = {
+    create?: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput> | SecretShareCreateWithoutSecretInput[] | SecretShareUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretShareCreateOrConnectWithoutSecretInput | SecretShareCreateOrConnectWithoutSecretInput[]
+    upsert?: SecretShareUpsertWithWhereUniqueWithoutSecretInput | SecretShareUpsertWithWhereUniqueWithoutSecretInput[]
+    createMany?: SecretShareCreateManySecretInputEnvelope
+    set?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    disconnect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    delete?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    update?: SecretShareUpdateWithWhereUniqueWithoutSecretInput | SecretShareUpdateWithWhereUniqueWithoutSecretInput[]
+    updateMany?: SecretShareUpdateManyWithWhereWithoutSecretInput | SecretShareUpdateManyWithWhereWithoutSecretInput[]
+    deleteMany?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
+  }
+
   export type SecretUncheckedUpdateManyWithoutSourceSecretNestedInput = {
     create?: XOR<SecretCreateWithoutSourceSecretInput, SecretUncheckedCreateWithoutSourceSecretInput> | SecretCreateWithoutSourceSecretInput[] | SecretUncheckedCreateWithoutSourceSecretInput[]
     connectOrCreate?: SecretCreateOrConnectWithoutSourceSecretInput | SecretCreateOrConnectWithoutSourceSecretInput[]
@@ -47354,6 +48832,34 @@ export namespace Prisma {
     delete?: RotationScheduleWhereInput | boolean
     connect?: RotationScheduleWhereUniqueInput
     update?: XOR<XOR<RotationScheduleUpdateToOneWithWhereWithoutSecretInput, RotationScheduleUpdateWithoutSecretInput>, RotationScheduleUncheckedUpdateWithoutSecretInput>
+  }
+
+  export type SecretShareUncheckedUpdateManyWithoutSecretNestedInput = {
+    create?: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput> | SecretShareCreateWithoutSecretInput[] | SecretShareUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretShareCreateOrConnectWithoutSecretInput | SecretShareCreateOrConnectWithoutSecretInput[]
+    upsert?: SecretShareUpsertWithWhereUniqueWithoutSecretInput | SecretShareUpsertWithWhereUniqueWithoutSecretInput[]
+    createMany?: SecretShareCreateManySecretInputEnvelope
+    set?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    disconnect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    delete?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+    update?: SecretShareUpdateWithWhereUniqueWithoutSecretInput | SecretShareUpdateWithWhereUniqueWithoutSecretInput[]
+    updateMany?: SecretShareUpdateManyWithWhereWithoutSecretInput | SecretShareUpdateManyWithWhereWithoutSecretInput[]
+    deleteMany?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
+  }
+
+  export type SecretCreateNestedOneWithoutSharesInput = {
+    create?: XOR<SecretCreateWithoutSharesInput, SecretUncheckedCreateWithoutSharesInput>
+    connectOrCreate?: SecretCreateOrConnectWithoutSharesInput
+    connect?: SecretWhereUniqueInput
+  }
+
+  export type SecretUpdateOneRequiredWithoutSharesNestedInput = {
+    create?: XOR<SecretCreateWithoutSharesInput, SecretUncheckedCreateWithoutSharesInput>
+    connectOrCreate?: SecretCreateOrConnectWithoutSharesInput
+    upsert?: SecretUpsertWithoutSharesInput
+    connect?: SecretWhereUniqueInput
+    update?: XOR<XOR<SecretUpdateToOneWithWhereWithoutSharesInput, SecretUpdateWithoutSharesInput>, SecretUncheckedUpdateWithoutSharesInput>
   }
 
   export type SecretCreateNestedOneWithoutRotationScheduleInput = {
@@ -49807,6 +51313,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutProjectInput = {
@@ -49832,6 +51339,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutProjectInput = {
@@ -50415,6 +51923,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutBranchInput = {
@@ -50440,6 +51949,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutBranchInput = {
@@ -50647,6 +52157,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutReferencedByInput = {
@@ -50672,6 +52183,7 @@ export namespace Prisma {
     shadowExpiresAt?: Date | string | null
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutReferencedByInput = {
@@ -50702,6 +52214,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutSourceSecretInput = {
@@ -50727,6 +52240,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutSourceSecretInput = {
@@ -50810,6 +52324,39 @@ export namespace Prisma {
   export type RotationScheduleCreateOrConnectWithoutSecretInput = {
     where: RotationScheduleWhereUniqueInput
     create: XOR<RotationScheduleCreateWithoutSecretInput, RotationScheduleUncheckedCreateWithoutSecretInput>
+  }
+
+  export type SecretShareCreateWithoutSecretInput = {
+    id?: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+  }
+
+  export type SecretShareUncheckedCreateWithoutSecretInput = {
+    id?: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+  }
+
+  export type SecretShareCreateOrConnectWithoutSecretInput = {
+    where: SecretShareWhereUniqueInput
+    create: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput>
+  }
+
+  export type SecretShareCreateManySecretInputEnvelope = {
+    data: SecretShareCreateManySecretInput | SecretShareCreateManySecretInput[]
   }
 
   export type ProjectUpsertWithoutSecretsInput = {
@@ -50943,6 +52490,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutReferencedByInput = {
@@ -50967,6 +52515,7 @@ export namespace Prisma {
     shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUpsertWithWhereUniqueWithoutSourceSecretInput = {
@@ -51042,6 +52591,156 @@ export namespace Prisma {
     logs?: RotationLogUncheckedUpdateManyWithoutScheduleNestedInput
   }
 
+  export type SecretShareUpsertWithWhereUniqueWithoutSecretInput = {
+    where: SecretShareWhereUniqueInput
+    update: XOR<SecretShareUpdateWithoutSecretInput, SecretShareUncheckedUpdateWithoutSecretInput>
+    create: XOR<SecretShareCreateWithoutSecretInput, SecretShareUncheckedCreateWithoutSecretInput>
+  }
+
+  export type SecretShareUpdateWithWhereUniqueWithoutSecretInput = {
+    where: SecretShareWhereUniqueInput
+    data: XOR<SecretShareUpdateWithoutSecretInput, SecretShareUncheckedUpdateWithoutSecretInput>
+  }
+
+  export type SecretShareUpdateManyWithWhereWithoutSecretInput = {
+    where: SecretShareScalarWhereInput
+    data: XOR<SecretShareUpdateManyMutationInput, SecretShareUncheckedUpdateManyWithoutSecretInput>
+  }
+
+  export type SecretShareScalarWhereInput = {
+    AND?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
+    OR?: SecretShareScalarWhereInput[]
+    NOT?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
+    id?: StringFilter<"SecretShare"> | string
+    secretId?: StringFilter<"SecretShare"> | string
+    token?: StringFilter<"SecretShare"> | string
+    createdBy?: StringFilter<"SecretShare"> | string
+    expiresAt?: DateTimeFilter<"SecretShare"> | Date | string
+    maxViews?: IntNullableFilter<"SecretShare"> | number | null
+    viewCount?: IntFilter<"SecretShare"> | number
+    isRevoked?: BoolFilter<"SecretShare"> | boolean
+    createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    label?: StringNullableFilter<"SecretShare"> | string | null
+  }
+
+  export type SecretCreateWithoutSharesInput = {
+    id?: string
+    key: string
+    value?: SecretCreatevalueInput | string[]
+    description: string
+    environmentType: string
+    version: string
+    type: string
+    history: InputJsonValue
+    lastUpdated?: Date | string
+    updatedBy: string
+    permission?: SecretCreatepermissionInput | string[]
+    expiryDate?: Date | string | null
+    rotationPolicy: string
+    isReference?: boolean
+    shadowValue?: SecretCreateshadowValueInput | string[]
+    shadowStatus?: string | null
+    shadowExpiresAt?: Date | string | null
+    project: ProjectCreateNestedOneWithoutSecretsInput
+    branch?: BranchCreateNestedOneWithoutSecretsInput
+    sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
+    referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
+    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
+    rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+  }
+
+  export type SecretUncheckedCreateWithoutSharesInput = {
+    id?: string
+    key: string
+    value?: SecretCreatevalueInput | string[]
+    description: string
+    environmentType: string
+    version: string
+    projectId: string
+    branchId?: string | null
+    type: string
+    history: InputJsonValue
+    lastUpdated?: Date | string
+    updatedBy: string
+    permission?: SecretCreatepermissionInput | string[]
+    expiryDate?: Date | string | null
+    rotationPolicy: string
+    isReference?: boolean
+    sourceSecretId?: string | null
+    shadowValue?: SecretCreateshadowValueInput | string[]
+    shadowStatus?: string | null
+    shadowExpiresAt?: Date | string | null
+    referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
+    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
+    rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+  }
+
+  export type SecretCreateOrConnectWithoutSharesInput = {
+    where: SecretWhereUniqueInput
+    create: XOR<SecretCreateWithoutSharesInput, SecretUncheckedCreateWithoutSharesInput>
+  }
+
+  export type SecretUpsertWithoutSharesInput = {
+    update: XOR<SecretUpdateWithoutSharesInput, SecretUncheckedUpdateWithoutSharesInput>
+    create: XOR<SecretCreateWithoutSharesInput, SecretUncheckedCreateWithoutSharesInput>
+    where?: SecretWhereInput
+  }
+
+  export type SecretUpdateToOneWithWhereWithoutSharesInput = {
+    where?: SecretWhereInput
+    data: XOR<SecretUpdateWithoutSharesInput, SecretUncheckedUpdateWithoutSharesInput>
+  }
+
+  export type SecretUpdateWithoutSharesInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: SecretUpdatevalueInput | string[]
+    description?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    history?: InputJsonValue | InputJsonValue
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedBy?: StringFieldUpdateOperationsInput | string
+    permission?: SecretUpdatepermissionInput | string[]
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotationPolicy?: StringFieldUpdateOperationsInput | string
+    isReference?: BoolFieldUpdateOperationsInput | boolean
+    shadowValue?: SecretUpdateshadowValueInput | string[]
+    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
+    branch?: BranchUpdateOneWithoutSecretsNestedInput
+    sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
+    referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
+    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
+    rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+  }
+
+  export type SecretUncheckedUpdateWithoutSharesInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: SecretUpdatevalueInput | string[]
+    description?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    history?: InputJsonValue | InputJsonValue
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedBy?: StringFieldUpdateOperationsInput | string
+    permission?: SecretUpdatepermissionInput | string[]
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotationPolicy?: StringFieldUpdateOperationsInput | string
+    isReference?: BoolFieldUpdateOperationsInput | boolean
+    sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
+    shadowValue?: SecretUpdateshadowValueInput | string[]
+    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
+    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
+    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
+    rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+  }
+
   export type SecretCreateWithoutRotationScheduleInput = {
     id?: string
     key: string
@@ -51065,6 +52764,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutRotationScheduleInput = {
@@ -51090,6 +52790,7 @@ export namespace Prisma {
     shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutRotationScheduleInput = {
@@ -51155,6 +52856,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutRotationScheduleInput = {
@@ -51179,6 +52881,7 @@ export namespace Prisma {
     shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type RotationLogUpsertWithWhereUniqueWithoutScheduleInput = {
@@ -52793,6 +54496,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutAccessRequestsInput = {
@@ -52818,6 +54522,7 @@ export namespace Prisma {
     shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutAccessRequestsInput = {
@@ -52996,6 +54701,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutAccessRequestsInput = {
@@ -53020,6 +54726,7 @@ export namespace Prisma {
     shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type ProjectUpsertWithoutAccessRequestsInput = {
@@ -55375,6 +57082,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutProjectInput = {
@@ -55399,6 +57107,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutProjectInput = {
@@ -55621,6 +57330,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutBranchInput = {
@@ -55645,6 +57355,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutBranchInput = {
@@ -55704,6 +57415,18 @@ export namespace Prisma {
     workspaceId?: string | null
   }
 
+  export type SecretShareCreateManySecretInput = {
+    id?: string
+    token: string
+    createdBy: string
+    expiresAt: Date | string
+    maxViews?: number | null
+    viewCount?: number
+    isRevoked?: boolean
+    createdAt?: Date | string
+    label?: string | null
+  }
+
   export type SecretUpdateWithoutSourceSecretInput = {
     key?: StringFieldUpdateOperationsInput | string
     value?: SecretUpdatevalueInput | string[]
@@ -55726,6 +57449,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutSourceSecretInput = {
@@ -55750,6 +57474,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutSourceSecretInput = {
@@ -55810,6 +57535,39 @@ export namespace Prisma {
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretShareUpdateWithoutSecretInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretShareUncheckedUpdateWithoutSecretInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretShareUncheckedUpdateManyWithoutSecretInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    createdBy?: StringFieldUpdateOperationsInput | string
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxViews?: NullableIntFieldUpdateOperationsInput | number | null
+    viewCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type RotationLogCreateManyScheduleInput = {

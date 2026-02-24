@@ -1,11 +1,27 @@
 {
   "projectId": "69777bc32b12bd573520520e",
   "environment": "development",
-  "lastSyncedAt": "2026-02-06T05:15:04.995Z",
+  "lastSyncedAt": "2026-02-21T19:23:20.106Z",
   "secrets": {
     "KEY": {
-      "hash": "fe3d147c5902a7c7e0956b7074527202a4965789669a78478a636108b32c63f4",
-      "updatedAt": "2026-02-06T05:15:05.015Z"
+      "hash": "4310938b27daa3700617a4e8b900581a9d784c84186b15e74c2cc6d61b60c0c6",
+      "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "OM": {
+      "hash": "11507a0e2f5e69d5dfa40a62a1bd7b6ee57e6bcd85c67c9b8431b36fff21c437",
+      "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "DATABASE_URL": {
+      "hash": "8787cbacece8de066bdf8301ffc65e0b76e48e76318109432abb985cc45608ca",
+      "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "OM2": {
+      "hash": "2e23f8b81d15612b4207db47bbf507d085ed15e02bb33a7d8ac657c511f5ecdc",
+      "updatedAt": "2026-02-21T19:23:20.111Z"
+    },
+    "VS": {
+      "hash": "5694d08a2e53ffcae0c3103e5ad6f6076abd960eb1f8a56577040bc1028f702b",
+      "updatedAt": "2026-02-21T19:23:20.111Z"
     }
   }
 }

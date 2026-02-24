@@ -9,53 +9,57 @@ import {
 
 export type { Tier, RateLimitResult };
 
-let rateLimiterDaily: RateLimiterRedis | RateLimiterMemory;
-let rateLimiterBurst: RateLimiterRedis | RateLimiterMemory;
+declare global {
+  var _rateLimiterDaily: RateLimiterRedis | RateLimiterMemory | undefined;
+  var _rateLimiterBurst: RateLimiterRedis | RateLimiterMemory | undefined;
+}
 
 const redisUrl = process.env.REDIS_URL;
 
-// Initialize Limiters with high ceiling to allow custom logic
 const MAX_POINTS = 999999999; 
 
-if (redisUrl) {
-  console.log('Initializing Rate Limiter with Redis');
-  const redisClient = new Redis(redisUrl, {
-    enableOfflineQueue: false,
-    connectTimeout: 5000,
-    maxRetriesPerRequest: 1,
-  });
+if (!global._rateLimiterDaily || !global._rateLimiterBurst) {
+  if (redisUrl) {
+    console.log('Initializing Rate Limiter with Redis');
+    const redisClient = new Redis(redisUrl, {
+      enableOfflineQueue: false,
+      connectTimeout: 5000,
+      maxRetriesPerRequest: 1,
+    });
 
-  redisClient.on('error', (err) => {
-    // console.error('Redis Error:', err); 
-  });
+    redisClient.on('error', (err) => {});
 
-  rateLimiterDaily = new RateLimiterRedis({
-    storeClient: redisClient,
-    keyPrefix: 'rl_daily',
-    points: MAX_POINTS,
-    duration: 86400, // 24h
-  });
+    global._rateLimiterDaily = new RateLimiterRedis({
+      storeClient: redisClient,
+      keyPrefix: 'rl_daily',
+      points: MAX_POINTS,
+      duration: 86400, // 24h
+    });
 
-  rateLimiterBurst = new RateLimiterRedis({
-    storeClient: redisClient,
-    keyPrefix: 'rl_burst',
-    points: MAX_POINTS,
-    duration: 60, // 1m
-  });
+    global._rateLimiterBurst = new RateLimiterRedis({
+      storeClient: redisClient,
+      keyPrefix: 'rl_burst',
+      points: MAX_POINTS,
+      duration: 60, // 1m
+    });
 
-} else {
-  console.log('Initializing Rate Limiter with Memory (No REDIS_URL found)');
-  rateLimiterDaily = new RateLimiterMemory({
-    keyPrefix: 'rl_daily',
-    points: MAX_POINTS,
-    duration: 86400,
-  });
-  rateLimiterBurst = new RateLimiterMemory({
-    keyPrefix: 'rl_burst',
-    points: MAX_POINTS,
-    duration: 60,
-  });
+  } else {
+    console.log('Initializing Rate Limiter with Memory (No REDIS_URL found)');
+    global._rateLimiterDaily = new RateLimiterMemory({
+      keyPrefix: 'rl_daily',
+      points: MAX_POINTS,
+      duration: 86400,
+    });
+    global._rateLimiterBurst = new RateLimiterMemory({
+      keyPrefix: 'rl_burst',
+      points: MAX_POINTS,
+      duration: 60,
+    });
+  }
 }
+
+export const rateLimiterDaily = global._rateLimiterDaily!;
+export const rateLimiterBurst = global._rateLimiterBurst!;
 
 export async function checkRateLimit(userId: string, tier: Tier = 'free'): Promise<RateLimitResult> {
   const dailyConfig = DAILY_LIMITS[tier];

@@ -221,6 +221,23 @@ model Secret {
 
   accessRequests AccessRequest[]
   rotationSchedule RotationSchedule?
+  shares         SecretShare[]
+}
+
+// SECRET SHARE MODEL — for time-limited, view-count-limited sharing
+model SecretShare {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  secretId   String   @db.ObjectId
+  secret     Secret   @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  token      String   @unique // Random secure token for the URL
+  createdBy  String   @db.ObjectId
+  expiresAt  DateTime
+  maxViews   Int?     // null = unlimited
+  viewCount  Int      @default(0)
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  // Store the decrypted value at time of share creation for security audit
+  label      String?  // optional note e.g. "for new dev"
 }
 
 // ROTATION MODEL

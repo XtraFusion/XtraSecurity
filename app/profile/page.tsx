@@ -10,9 +10,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { Copy, Plus, Trash2, Key, Loader2, Shield } from "lucide-react";
+import { Copy, Plus, Trash2, Key, Loader2, Shield, Search, X, Clock, Activity, AlertCircle, Check } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
-import { format } from "date-fns";
+import { format, formatDistanceToNow } from "date-fns";
 import axios from "axios";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/ui/user-avatar";
@@ -44,6 +44,7 @@ export default function ProfilePage() {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { user, selectedWorkspace, loading: userLoading } = useGlobalContext();
 
@@ -77,6 +78,10 @@ export default function ProfilePage() {
       setDeletingId(null);
     }
   };
+
+  const filteredKeys = keys.filter((k) =>
+    k.label.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleCreate = async () => {
     if (!newKeyLabel) {
@@ -181,9 +186,33 @@ export default function ProfilePage() {
           </Card>
 
           <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>Access Keys</CardTitle>
+            <CardHeader className="flex flex-row items-start justify-between">
+              <div className="space-y-1.5 flex-1">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <CardTitle>Access Keys</CardTitle>
+                    <Badge variant="secondary" className="h-5 px-1.5 text-[10px] font-mono">
+                      {keys.length} Total
+                    </Badge>
+                  </div>
+                  <div className="relative flex-1 max-w-sm">
+                    <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+                    <Input
+                      placeholder="Search keys..."
+                      className="pl-8 h-8 text-xs"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                    {searchQuery && (
+                      <button
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2 top-1/2 -translate-y-1/2 p-0.5 hover:bg-muted rounded text-muted-foreground"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
                 <CardDescription>Manage keys access for the CLI and API.</CardDescription>
               </div>
               <Dialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen}>
@@ -245,8 +274,8 @@ export default function ProfilePage() {
             <CardContent>
               <Table>
                 <TableHeader>
-                  <TableRow>
-                    <TableHead>Label</TableHead>
+                  <TableRow className="bg-muted/30">
+                    <TableHead className="w-[250px]">Label</TableHead>
                     <TableHead>Key Prefix</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Last Used</TableHead>
@@ -254,43 +283,91 @@ export default function ProfilePage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {keys.length === 0 && !loading && (
+                  {loading ? (
+                    Array.from({ length: 3 }).map((_, i) => (
+                      <TableRow key={i}>
+                        <TableCell><div className="h-4 w-32 bg-muted animate-pulse rounded" /></TableCell>
+                        <TableCell><div className="h-4 w-20 bg-muted animate-pulse rounded font-mono" /></TableCell>
+                        <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                        <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
+                        <TableCell className="text-right"><div className="h-8 w-8 ml-auto bg-muted animate-pulse rounded" /></TableCell>
+                      </TableRow>
+                    ))
+                  ) : filteredKeys.length === 0 ? (
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center text-muted-foreground">
-                        No access keys found.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                  {keys.map((key) => (
-                    <TableRow key={key.id}>
-                      <TableCell className="font-medium">
-                        <div className="flex items-center">
-                          <Key className="mr-2 h-4 w-4 text-muted-foreground" />
-                          {key.label}
+                      <TableCell colSpan={5} className="h-32 text-center">
+                        <div className="flex flex-col items-center justify-center text-muted-foreground">
+                          {searchQuery ? (
+                            <>
+                              <Search className="h-8 w-8 mb-2 opacity-20" />
+                              <p>No keys matching "{searchQuery}"</p>
+                            </>
+                          ) : (
+                            <>
+                              <AlertCircle className="h-8 w-8 mb-2 opacity-20" />
+                              <p>No access keys generated yet.</p>
+                            </>
+                          )}
                         </div>
                       </TableCell>
-                      <TableCell className="font-mono text-muted-foreground">{key.key}</TableCell>
-                      <TableCell>{format(new Date(key.createdAt), "MMM d, yyyy")}</TableCell>
-                      <TableCell>
-                        {key.lastUsed ? format(new Date(key.lastUsed), "MMM d, HH:mm") : "-"}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDelete(key.id)}
-                          disabled={deletingId === key.id}
-                          className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
-                        >
-                          {deletingId === key.id ? (
-                            <Loader2 className="h-4 w-4 animate-spin" />
-                          ) : (
-                            <Trash2 className="h-4 w-4" />
-                          )}
-                        </Button>
-                      </TableCell>
                     </TableRow>
-                  ))}
+                  ) : (
+                    filteredKeys.map((key) => (
+                      <TableRow key={key.id}>
+                        <TableCell className="font-medium">
+                          <div className="flex items-center gap-2">
+                            <Key className="h-4 w-4 text-primary/70 shrink-0" />
+                            <span className="truncate max-w-[180px]">{key.label}</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          <div className="flex items-center gap-2 group">
+                            <code className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded border">
+                              {key.key}
+                            </code>
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                              onClick={() => copyToClipboard(key.key)}
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {format(new Date(key.createdAt), "MMM d, yyyy")}
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {key.lastUsed ? (
+                            <div className="flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
+                              <Activity className="h-3 w-3" />
+                              <span title={format(new Date(key.lastUsed), "PPPP p")}>
+                                {formatDistanceToNow(new Date(key.lastUsed), { addSuffix: true })}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground italic">Never</span>
+                          )}
+                        </TableCell>
+                        <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDelete(key.id)}
+                            disabled={deletingId === key.id}
+                            className="text-red-500 hover:text-red-700 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          >
+                            {deletingId === key.id ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Trash2 className="h-4 w-4" />
+                            )}
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  )}
                 </TableBody>
               </Table>
             </CardContent>

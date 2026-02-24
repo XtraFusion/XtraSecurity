@@ -431,19 +431,6 @@ export default function ProjectSettings() {
             Manage settings for "{project?.name}"
           </p>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant={project?.isBlocked ? "destructive" : "outline"}
-            onClick={handleToggleProjectBlock}
-            disabled={isLoading.blockProject}
-          >
-            {project?.isBlocked ? (
-              <><Lock className="w-4 h-4 mr-2" /> Blocked</>
-            ) : (
-              <><Unlock className="w-4 h-4 mr-2" /> Unblocked</>
-            )}
-          </Button>
-        </div>
       </div>
 
       <Tabs defaultValue="teams" className="space-y-4">
@@ -451,7 +438,6 @@ export default function ProjectSettings() {
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="service-accounts">Service Accounts</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
-          <TabsTrigger value="access">Access</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="clear">Clear Data</TabsTrigger>
@@ -592,87 +578,7 @@ export default function ProjectSettings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="access">
-          <Card>
-            <CardHeader>
-              <CardTitle>Access Control</CardTitle>
-              <CardDescription>Manage project access and permissions</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-4">
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Access Level</h3>
-                  <Select
-                    value={project?.accessControl}
-                    onValueChange={(value: 'private' | 'team' | 'public') => {
-                      if (!project) return;
-                      ProjectController.updateAccessLevel(id as string, value)
-                        .then(() => {
-                          toast({
-                            title: "Success",
-                            description: "Access level updated successfully",
-                          });
-                          fetchData();
-                        })
-                        .catch((error) => {
-                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update access level";
-                          toast({
-                            title: "Error",
-                            description: errorMsg,
-                            variant: "destructive"
-                          });
-                        });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select access level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="private">Private (Only owner)</SelectItem>
-                      <SelectItem value="team">Team (All team members)</SelectItem>
-                      <SelectItem value="public">Public (Anyone with link)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
 
-                <div>
-                  <h3 className="text-sm font-medium mb-2">Security Level</h3>
-                  <Select
-                    value={project?.securityLevel}
-                    onValueChange={(value: 'low' | 'medium' | 'high') => {
-                      if (!project) return;
-                      ProjectController.updateSecurityLevel(id as string, value)
-                        .then(() => {
-                          toast({
-                            title: "Success",
-                            description: "Security level updated successfully",
-                          });
-                          fetchData();
-                        })
-                        .catch((error) => {
-                          const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update security level";
-                          toast({
-                            title: "Error",
-                            description: errorMsg,
-                            variant: "destructive"
-                          });
-                        });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select security level" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="low">Low (Basic protection)</SelectItem>
-                      <SelectItem value="medium">Medium (Enhanced security)</SelectItem>
-                      <SelectItem value="high">High (Maximum security)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
 
         <TabsContent value="security">
           <div className="space-y-4">

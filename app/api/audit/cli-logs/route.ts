@@ -17,6 +17,10 @@ export async function POST(req: NextRequest) {
   const body = await req.json();
   const logs = body.logs; 
 
+  // Extract Network Metadata
+  const ip = (req.headers.get("x-forwarded-for") ?? "127.0.0.1").split(',')[0];
+  const userAgent = req.headers.get("user-agent") || "XtraSec CLI";
+
   if (!Array.isArray(logs)) {
       return NextResponse.json({ error: "Invalid format. Expected 'logs' array." }, { status: 400 });
   }
@@ -76,6 +80,8 @@ export async function POST(req: NextRequest) {
           previousHash: previousHash,
           currentHash: currentHash,
           workspaceId: workspaceId || null,
+          ipAddress: ip,
+          userAgent: userAgent,
       });
 
       previousHash = currentHash;
