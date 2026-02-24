@@ -27,13 +27,29 @@ export async function POST(req: NextRequest) {
         data: { lastUsed: new Date() },
       });
 
-      // Return a "session" token (in this case, just the apiKey itself acts as auth for CLI, 
-      // or we issue a temporary token. For simplicity, we return the key back as the token 
-      // or a signed JWT saying "authenticated via key")
-      // Let's just return the key as the token for this MVP phase, CLI will send it as Bearer
+      // Return a signed JWT acting as the session token
+      const jwt = await import("jsonwebtoken");
+      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+      
+      const payload = {
+          id: keyRecord.user?.id || `sa_${keyRecord.id}`,
+          email: keyRecord.user?.email || "service-account@bot",
+          role: keyRecord.user?.role || "service_account",
+          tier: keyRecord.user?.tier || "enterprise", // SA usually enterprise
+          type: "cli-token",
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60) // 14 days
+      };
+
+      const token = jwt.sign(payload, secret);
+
       return NextResponse.json({
-        token: apiKey, 
-        user: { email: keyRecord.user.email, id: keyRecord.user.id, role: keyRecord.user.role }
+        token: token, 
+        user: { 
+          email: keyRecord.user?.email || "service-account@bot", 
+          id: keyRecord.user?.id || `sa_${keyRecord.id}`, 
+          role: keyRecord.user?.role || "service_account" 
+        }
       });
     }
 
@@ -61,20 +77,21 @@ export async function POST(req: NextRequest) {
           }
       }
 
-      // Issue token. 
-      // Since we don't have a full JWT library usage setup visible in imports (NextAuth handles it usually), 
-      // I'll create a simple signed token if `jsonwebtoken` is available or just mimic it.
-      // Wait, I didn't verify jsonwebtoken installed.
-      // I'll use the user ID as a simple token for the MVP if forced, but better to request `jsonwebtoken` install.
-      // Let's assume I can install it or use what's there. 
-      // Actually `next-auth` uses `jose` or similar.
+      // Issue true JWT instead of base64 placeholder
+      const jwt = await import("jsonwebtoken");
+      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
       
-      // I'll install jsonwebtoken to be safe and clean.
-      // For this step I'll just return a base64 encoded string of userId:email as a "token" 
-      // and validation middleware will parse it. Not secure for prod but works for "implement now".
-      // OR better, I'll install jsonwebtoken in the next step to do it right.
-      
-      const token = Buffer.from(`${user.id}:${user.email}:${Date.now()}`).toString('base64');
+      const payload = {
+          id: user.id,
+          email: user.email,
+          role: user.role,
+          tier: user.tier || 'free',
+          type: "cli-token",
+          iat: Math.floor(Date.now() / 1000),
+          exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60) // 14 days
+      };
+
+      const token = jwt.sign(payload, secret);
 
       return NextResponse.json({
         token: token,

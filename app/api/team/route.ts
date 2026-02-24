@@ -1,20 +1,20 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "./../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { withSecurity } from "@/lib/api-middleware";
 import { createNotification } from "@/lib/notifications";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
-export async function POST(req: Request) {
+export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
+    const userEmail = session.email;
 
     // Fetch user with tier
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: userId },
       select: { id: true, tier: true }
     });
 
@@ -45,7 +45,7 @@ export async function POST(req: Request) {
       members = [],
       teamProjects = [],
       workspaceId,
-    } = await req.json();
+    } = await request.json();
 
     if (!workspaceId) {
         return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
@@ -53,7 +53,7 @@ export async function POST(req: Request) {
 
     // Permission Check: Owner or Admin of the workspace
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(userId, workspaceId);
 
     if (!role || (role !== "owner" && role !== "admin")) {
         return NextResponse.json({ 
@@ -65,7 +65,6 @@ export async function POST(req: Request) {
     const createTeam = await prisma.team.findFirst({
       where: { AND: [{ name: name }, { createdBy: user.id }, { workspaceId: workspaceId }] },
     });
-    console.log("Existing team check:", createTeam);
 
     if (createTeam) {
       return NextResponse.json({ error: "Already Exists" }, { status: 409 });
@@ -77,13 +76,12 @@ export async function POST(req: Request) {
         description,
         teamColor: teamColor || "blue",
         createdAt: new Date(),
-        createdBy: session.user.id,
+        createdBy: userId,
         workspaceId,
         roles,
-        
         members: {
           create: {
-            userId: session.user.id,
+            userId: userId,
             role: "admin",
             status: "active",
           },
@@ -95,19 +93,16 @@ export async function POST(req: Request) {
       },
     });
 
-    console.log("Team created in DB:", team);
-
     // Notify user
     try {
         await createNotification(
-          session.user.id,
-          session.user.email,
+          userId,
+          userEmail!,
           "Team Created",
           `Team "${team.name}" created`,
           `You successfully created team "${team.name}".`,
           "success"
         );
-        console.log("Notification created successfully");
     } catch (notifError) {
         console.error("Failed to create notification:", notifError);
     }
@@ -117,22 +112,22 @@ export async function POST(req: Request) {
     console.error("POST /team error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
-}
+});
 
-export async function GET(req: Request) {
+export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
-    const url = new URL(req.url);
+    const url = new URL(request.url);
     const workspaceId = url.searchParams.get("workspaceId");
 
     const whereClause: any = {
         members: {
           some: {
-            userId: session.user.id,
+            userId: userId,
           },
         },
     };
@@ -154,7 +149,7 @@ export async function GET(req: Request) {
     let isRestricted = true;
     if (workspaceId) {
         const { getUserWorkspaceRole } = await import("@/lib/permissions");
-        const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+        const role = await getUserWorkspaceRole(userId, workspaceId);
         if (role === 'owner' || role === 'admin') {
             isRestricted = false;
         }
@@ -164,7 +159,7 @@ export async function GET(req: Request) {
     if (isRestricted) {
         getTeamData.forEach((team: any) => {
              team.members = team.members.filter((m: any) => 
-                m.role === 'owner' || m.userId === session.user.id
+                m.role === 'owner' || m.userId === userId
              );
         });
     }
@@ -174,16 +169,17 @@ export async function GET(req: Request) {
     console.error("GET /team error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
-}
+});
 
-export async function DELETE(req: Request) {
+export const DELETE = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
+    const userEmail = session.email;
 
-    const { teamId } = await req.json();
+    const { teamId } = await request.json();
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -196,14 +192,12 @@ export async function DELETE(req: Request) {
 
     // Permission Check
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    // We need workspaceId, finding it from the team
     if (!team.workspaceId) {
         return NextResponse.json({ error: "Team not linked to a workspace" }, { status: 400 });
     }
-    const role = await getUserWorkspaceRole(session.user.id, team.workspaceId);
+    const role = await getUserWorkspaceRole(userId, team.workspaceId);
     
-    // Also allow if the user is the direct creator (though creator should be owner usually)
-    const isCreator = team.createdBy === session.user.id;
+    const isCreator = team.createdBy === userId;
 
     if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
         return NextResponse.json({ 
@@ -212,16 +206,14 @@ export async function DELETE(req: Request) {
         }, { status: 403 });
     }
 
-    const deleteTeam = await prisma.team.delete({
-      where: {
-        id: teamId,
-      },
+    await prisma.team.delete({
+      where: { id: teamId },
     });
 
     // Notify user
     await createNotification(
-      session.user.id,
-      session.user.email,
+      userId,
+      userEmail!,
       "Team Deleted",
       "Team deleted", 
       "The team has been successfully deleted.",
@@ -233,16 +225,16 @@ export async function DELETE(req: Request) {
     console.error("DELETE /team error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
-}
+});
 
-export async function PUT(req: Request) {
+export const PUT = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const userId = session.userId;
 
-    const { teamId, name, description } = await req.json();
+    const { teamId, name, description } = await request.json();
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -258,21 +250,16 @@ export async function PUT(req: Request) {
     if (!team.workspaceId) {
         return NextResponse.json({ error: "Team not linked to a workspace" }, { status: 400 });
     }
-    const role = await getUserWorkspaceRole(session.user.id, team.workspaceId);
-    const isCreator = team.createdBy === session.user.id;
+    const role = await getUserWorkspaceRole(userId, team.workspaceId);
+    const isCreator = team.createdBy === userId;
 
     if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {
         return NextResponse.json({ error: "Only workspace owners and admins can update teams." }, { status: 403 });
     }
 
     const updateTeam = await prisma.team.update({
-      where: {
-        id: teamId,
-      },
-      data: {
-        name,
-        description,
-      },
+      where: { id: teamId },
+      data: { name, description },
     });
 
     return NextResponse.json(updateTeam, { status: 200 });
@@ -280,4 +267,4 @@ export async function PUT(req: Request) {
     console.error("PUT /team error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
   }
-}
+});
