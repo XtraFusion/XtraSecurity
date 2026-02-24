@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth/next";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import prisma from "@/util/db"; // XtraSecurity seems to use util/db instead of lib/prisma
+import prisma from "@/lib/db";
+import { withSecurity } from "@/lib/api-middleware";
+import { decrypt } from "@/lib/encription";
 
-export async function GET(req: NextRequest) {
+export const dynamic = 'force-dynamic';
+
+export const GET = withSecurity(async (req: NextRequest, context: any, session: any) => {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        if (!session?.userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -24,11 +25,31 @@ export async function GET(req: NextRequest) {
             prisma.secret.findMany({ where: { branchId: compareBranchId } })
         ]);
 
+        const decryptSecretValue = (valArray: string[]) => {
+            if (!valArray || valArray.length === 0) return "";
+            const rawValue = valArray[0];
+            try {
+                const encryptedObj = JSON.parse(rawValue);
+                if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
+                    return decrypt(encryptedObj);
+                }
+                return rawValue;
+            } catch (e) {
+                return rawValue;
+            }
+        };
+
         const baseMap = new Map();
-        baseSecrets.forEach((s: any) => baseMap.set(`${s.environmentType}:${s.key}`, s));
+        baseSecrets.forEach((s: any) => {
+            const decValue = decryptSecretValue(s.value);
+            baseMap.set(`${s.environmentType}:${s.key}`, { ...s, decryptedValue: decValue });
+        });
 
         const compareMap = new Map();
-        compareSecrets.forEach((s: any) => compareMap.set(`${s.environmentType}:${s.key}`, s));
+        compareSecrets.forEach((s: any) => {
+            const decValue = decryptSecretValue(s.value);
+            compareMap.set(`${s.environmentType}:${s.key}`, { ...s, decryptedValue: decValue });
+        });
 
         const diffs = {
             added: [] as any[],    // In compare, not in base
@@ -42,13 +63,13 @@ export async function GET(req: NextRequest) {
             
             if (!baseSecret) {
                 diffs.added.push(compSecret);
-            } else if (baseSecret.value !== compSecret.value) {
+            } else if (baseSecret.decryptedValue !== compSecret.decryptedValue) {
                 // Modified
                 diffs.modified.push({
                     key: compSecret.key,
                     environmentType: compSecret.environmentType,
-                    baseValue: baseSecret.value,
-                    compareValue: compSecret.value,
+                    baseValue: baseSecret.decryptedValue,
+                    compareValue: compSecret.decryptedValue,
                     type: compSecret.type
                 });
             }
@@ -67,4 +88,4 @@ export async function GET(req: NextRequest) {
         console.error("Compare branch error:", error);
         return NextResponse.json({ error: error.message || "Failed to compare branches" }, { status: 500 });
     }
-}
+});
