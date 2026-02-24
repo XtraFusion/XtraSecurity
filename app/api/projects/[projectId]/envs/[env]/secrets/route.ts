@@ -48,18 +48,10 @@ export const GET = withSecurity(async (
   // viewer role can see key names only — values are masked
   const PLAINTEXT_ROLES = ["owner", "admin", "developer"];
 
-  const callerRole = await prisma.userRole.findFirst({
-    where: {
-      userId,
-      OR: [{ projectId }, { projectId: null }]
-    },
-    select: {
-      role: { select: { name: true } }
-    }
-  });
+  const { getUserProjectRole } = await import("@/lib/permissions");
+  const roleName = await getUserProjectRole(userId, projectId) || "viewer";
 
-  const roleName = callerRole?.role?.name?.toLowerCase() || "viewer";
-  const canReadValues = PLAINTEXT_ROLES.includes(roleName);
+  const canReadValues = PLAINTEXT_ROLES.includes(roleName.toLowerCase());
 
   // 4. Authorization Success - Fetch Data
   const project = await prisma.project.findUnique({
@@ -194,17 +186,10 @@ export const POST = withSecurity(async (
   // 2. RBAC Write Check — only owner, admin, developer can write secrets
   const WRITE_ROLES = ["owner", "admin", "developer"];
 
-  const callerWriteRole = await prisma.userRole.findFirst({
-    where: {
-      userId,
-      OR: [{ projectId }, { projectId: null }]
-    },
-    select: { role: { select: { name: true } } }
-  });
+  const { getUserProjectRole } = await import("@/lib/permissions");
+  const writeRoleName = await getUserProjectRole(userId, projectId) || "viewer";
 
-  const writeRoleName = callerWriteRole?.role?.name?.toLowerCase() || "viewer";
-
-  if (!WRITE_ROLES.includes(writeRoleName)) {
+  if (!WRITE_ROLES.includes(writeRoleName.toLowerCase())) {
     return NextResponse.json(
       { error: "Forbidden: Your role does not permit writing secrets." },
       { status: 403 }
