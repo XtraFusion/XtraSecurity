@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
+import { createTamperEvidentLog } from "@/lib/audit";
 // import { sign } from "jsonwebtoken"; // If separate JWT needed, but for now we might simple return a session token or basic mimic
 
 const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-me";
@@ -42,6 +43,16 @@ export async function POST(req: NextRequest) {
       };
 
       const token = jwt.sign(payload, secret);
+
+      // Audit Log
+      createTamperEvidentLog({
+        userId: keyRecord.user?.id || `sa_${keyRecord.id}`,
+        action: "user.login_cli",
+        entity: "apiKey",
+        entityId: keyRecord.id,
+        workspaceId: keyRecord.workspaceId || undefined,
+        changes: { method: "api_key" }
+      }).catch(err => console.error("Login audit failed:", err));
 
       return NextResponse.json({
         token: token, 
@@ -92,6 +103,18 @@ export async function POST(req: NextRequest) {
       };
 
       const token = jwt.sign(payload, secret);
+
+      // Audit Log
+      createTamperEvidentLog({
+        userId: user.id,
+        action: "user.login_cli",
+        entity: "user",
+        entityId: user.id,
+        // For email login, we'd need to fetch their default workspace if we want to log it to a specific WS
+        // but user.login is often global. If we have a workspace in user record, use it.
+        workspaceId: (user as any).workspaceId || undefined, 
+        changes: { method: "email" }
+      }).catch(err => console.error("Login audit failed:", err));
 
       return NextResponse.json({
         token: token,

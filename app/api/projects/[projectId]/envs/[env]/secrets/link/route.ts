@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db"; // Adjust path if needed
 import { verifyAuth } from "@/lib/server-auth"; // Adjust path if needed
+import { createTamperEvidentLog } from "@/lib/audit";
 
 // POST /api/projects/:projectId/envs/:env/secrets/link
 export async function POST(
@@ -76,6 +77,20 @@ export async function POST(
         rotationPolicy: "manual"
       },
     });
+
+    // Audit Log
+    createTamperEvidentLog({
+      userId: auth.userId,
+      action: "secret.link",
+      entity: "secret",
+      entityId: newSecret.id,
+      workspaceId: (await prisma.project.findUnique({ where: { id: params.projectId }, select: { workspaceId: true } }))?.workspaceId || undefined,
+      changes: { 
+        key, 
+        source: `${sourceProject.name}:${sourceEnv}:${sourceKey}`,
+        sourceProjectId: sourceProjectId
+      }
+    }).catch(err => console.error("Link audit failed:", err));
 
     return NextResponse.json(newSecret, { status: 201 });
   } catch (error: any) {

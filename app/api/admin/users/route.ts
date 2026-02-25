@@ -10,26 +10,11 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin — accept either the legacy User.role field
-    // OR an admin/owner role via the RBAC UserRole table
-    const currentUser = await prisma.user.findUnique({
-      where: { id: auth.userId },
-      include: {
-        userRoles: {
-          include: { role: { select: { name: true } } }
-        }
-      }
-    });
+    // Check if user is admin — verifyAuth already resolves the effective role
+    // (legacy User.role + RBAC UserRole table) and attaches it to the session.
+    const isAdmin = auth.role === "admin" || auth.role === "owner";
 
-    const hasAdminRole = currentUser?.userRoles?.some(
-      ur => ur.role.name === "admin" || ur.role.name === "owner"
-    );
-    const isAdmin =
-      currentUser?.role === "admin" ||
-      currentUser?.role === "owner" ||
-      hasAdminRole;
-
-    if (!currentUser || !isAdmin) {
+    if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 

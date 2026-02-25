@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { compare, hash } from "bcryptjs";
 import crypto from "crypto";
+import { sendEmail } from "@/lib/email";
 
 export async function POST(req: Request) {
   try {
@@ -102,9 +103,21 @@ export async function POST(req: Request) {
       }
     });
 
-    // 5. Send OTP via email (mocking for now, or using a basic console log if no mailer configured)
-    // TODO: Implement actual email sending logic here e.g. Resend, Nodemailer
-    console.log(`[AUTH] OTP for ${user.email} is: ${otp}`);
+    // 5. Send OTP via email
+    await sendEmail({
+      to: user.email,
+      subject: "🔒 Your XtraSecurity Login Code",
+      text: `Your login code is: ${otp}\nThis code will expire in 10 minutes.`,
+      html: `
+        <div style="font-family: sans-serif; max-w-md; margin: 0 auto; padding: 20px;">
+          <h2>Login Verification</h2>
+          <p>Your one-time passcode is:</p>
+          <h1 style="color: #0ea5e9; font-size: 32px; letter-spacing: 4px;">${otp}</h1>
+          <p>This code will expire in 10 minutes. Do not share this with anyone.</p>
+        </div>
+      `,
+    });
+    console.log(`[AUTH] Dispatched OTP email to ${user.email} (Code: ${otp})`);
 
     return NextResponse.json(
       { message: "OTP sent to your email", requireOtp: true, isNewUser },

@@ -45,6 +45,10 @@ model User {
   mfaSecret      String? // Encrypted TOTP secret
   mfaBackupCodes String[] // Encrypted backup codes
 
+  // Password Reset Fields
+  passwordResetToken  String?   @unique
+  passwordResetExpiry DateTime?
+
   // IP Allowlist (global user-level)
   ipAllowlist String[] // Array of allowed IP addresses
   tier        String   @default("free") // "free", "pro", "enterprise"
@@ -221,6 +225,23 @@ model Secret {
 
   accessRequests   AccessRequest[]
   rotationSchedule RotationSchedule?
+  shares           SecretShare[]
+}
+
+// SECRET SHARE MODEL — for time-limited, view-count-limited sharing
+model SecretShare {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  secretId  String   @db.ObjectId
+  secret    Secret   @relation(fields: [secretId], references: [id], onDelete: Cascade)
+  token     String   @unique // Random secure token for the URL
+  createdBy String   @db.ObjectId
+  expiresAt DateTime
+  maxViews  Int? // null = unlimited
+  viewCount Int      @default(0)
+  isRevoked Boolean  @default(false)
+  createdAt DateTime @default(now())
+  // Store the decrypted value at time of share creation for security audit
+  label     String? // optional note e.g. "for new dev"
 }
 
 // ROTATION MODEL
@@ -384,6 +405,8 @@ model AuditLog {
   workspaceId  String?  @db.ObjectId
   previousHash String? // Hash of the previous log
   currentHash  String? // Hash of this log: SHA256(timestamp + action + entityId + userId + prevHash)
+  ipAddress    String? // IP address of the client (CLI or browser)
+  userAgent    String? // User agent string of the client
   user         User     @relation(fields: [userId], references: [id])
 }
 
