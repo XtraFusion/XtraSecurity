@@ -145,10 +145,37 @@ export async function POST(req: Request) {
         method: rotationMethod,
         webhookUrl,
         status: "active"
+      },
+      include: {
+        secret: {
+          select: {
+            id: true,
+            key: true,
+            branch: { select: { name: true } },
+            project: { select: { name: true } }
+          }
+        }
       }
     });
 
-    return NextResponse.json(schedule, { status: 201 });
+    const formattedSchedule = {
+      id: schedule.id,
+      secretId: schedule.secretId,
+      secretKey: schedule.secret.key,
+      projectId: schedule.projectId,
+      projectName: schedule.secret.project.name,
+      branch: schedule.secret.branch?.name || "Global",
+      frequency: schedule.frequency,
+      customDays: schedule.customDays,
+      enabled: schedule.status === "active",
+      nextRotation: schedule.nextRotation?.toISOString(),
+      lastRotation: schedule.lastRotation?.toISOString(),
+      rotationMethod: schedule.method,
+      webhookUrl: schedule.webhookUrl,
+      createdAt: schedule.createdAt?.toISOString(),
+    };
+
+    return NextResponse.json(formattedSchedule, { status: 201 });
   } catch (error: any) {
     console.error("POST /rotation/schedules error:", error);
     return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
