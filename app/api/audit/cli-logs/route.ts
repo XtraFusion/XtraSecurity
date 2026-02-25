@@ -11,7 +11,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const userId = auth.userId;
+  // Resolve a real MongoDB ObjectId userId.
+  // Service accounts have userId = "sa_<serviceAccountId>" which is not a valid ObjectId.
+  // In that case, resolve the owning user of the project instead.
+  let userId = auth.userId;
+  if (auth.isServiceAccount && auth.projectId) {
+    try {
+      const project = await prisma.project.findUnique({
+        where: { id: auth.projectId },
+        select: { userId: true },
+      });
+      if (project?.userId) userId = project.userId;
+    } catch (_) { /* leave userId as-is */ }
+  }
+
+  // If userId is still not a plain ObjectId (e.g. still prefixed), bail gracefully.
+  const isValidObjectId = /^[a-f\d]{24}$/i.test(userId ?? "");
+  if (!isValidObjectId) {
+    return NextResponse.json({ success: true, count: 0, note: "Service account logs skipped (no resolvable user)." });
+  }
 
   // 2. Parse Logs
   const body = await req.json();

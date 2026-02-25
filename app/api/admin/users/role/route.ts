@@ -12,12 +12,25 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if current user is admin or owner
+    // Check if current user is admin or owner (User.role OR RBAC UserRole table)
     const currentUser = await prisma.user.findUnique({
-      where: { id: auth.userId }
+      where: { id: auth.userId },
+      include: {
+        userRoles: {
+          include: { role: { select: { name: true } } }
+        }
+      }
     });
 
-    if (!currentUser || (currentUser.role !== "admin" && currentUser.role !== "owner")) {
+    const hasAdminRole = currentUser?.userRoles?.some(
+      ur => ur.role.name === "admin" || ur.role.name === "owner"
+    );
+    const isAdmin =
+      currentUser?.role === "admin" ||
+      currentUser?.role === "owner" ||
+      hasAdminRole;
+
+    if (!currentUser || !isAdmin) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
 

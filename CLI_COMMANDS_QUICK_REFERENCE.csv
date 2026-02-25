@@ -1,0 +1,59 @@
+Command,Category,Subcommands,Description,Required Options,Optional Options,Example,Key Features
+login,Authentication,,Authenticate with XtraSecurity,None,-k --key | -e --email | --sso,xtra login,SSO/Email/Access Key support
+init,Project & Setup,,Initialize project configuration,None,--project --env --branch -y,xtra init -y,Creates .xtrarc
+run,Execution,,Execute command with injected secrets,<command>,-p -e -b --shell,xtra run npm start,In-memory injection
+secrets,Secrets Management,list,List all secrets,None,-p -e -b --show,xtra secrets list,Mask/Show values
+secrets,Secrets Management,set,Set one or more secrets,<KEY=VALUE>...,-p -e -b -f,xtra secrets set API_KEY=xyz,Batch operations
+secrets,Secrets Management,delete,Delete a secret,<key>,-p -e -b,xtra secrets delete OLD_KEY,Preserve history
+branch,Project Management,list,List project branches,None,-p,xtra branch list,Table format output
+branch,Project Management,create,Create new branch,<name>,-p -d,xtra branch create staging,Description optional
+branch,Project Management,delete,Delete a branch,<name>,-p -y,xtra branch delete staging -y,Can't delete main
+branch,Project Management,update,Update branch details,<name>,-p -n -d,xtra branch update develop -n dev,Rename/update
+checkout,Project Management,,Switch active branch,[branchName],None,xtra checkout staging,Interactive if no arg
+project,Project Management,set,Set default project,[projectId],None,xtra project set,Interactive list
+project,Project Management,current,Show current project,None,None,xtra project current,Read-only
+generate,Configuration,,Generate config files (env/json/yaml),None,-p -e -b -o -f --force,xtra generate -f json -o config.json,Merge or overwrite mode
+import,Configuration,,Import secrets from file,<file>,-p -e -b -f --prefix,xtra import secrets.json,Auto-detect format
+export,Configuration,,Export secrets to file,None,-p -e -b -f -o,xtra export -o secrets.json,Pipe to stdout
+rotate,Secrets Management,,Rotate secret with shadow mode,<key>,-p -e --value --promote,xtra rotate API_KEY --promote,Zero-downtime rotation
+history,Version Control,,View secret version history,<key>,-p -e,xtra history DATABASE_URL,Show all versions
+rollback,Version Control,,Revert to previous version,<key> [version],-p -e,xtra rollback API_KEY v2,Full history preserved
+status,Utilities,,Check sync status,None,-p -e -b,xtra status -e production,Compare local vs remote
+diff,Utilities,,Show secret differences,None,-p -e -b --show,xtra diff prod staging,Highlight changes
+local,Environment,status,Show local/cloud mode,None,None,xtra local status,Read-only
+local,Environment,on,Enable offline mode,None,None,xtra local on,Use .env.local
+local,Environment,off,Disable offline mode,None,None,xtra local off,Back to cloud
+local,Environment,sync,Sync cloud to .env.local,None,-p -e -b -o --overwrite,xtra local sync,Pull secrets locally
+env,Environment,clone,Clone env to another,None,--from --to -p -b --overwrite,xtra env clone --from prod --to staging,Merge or overwrite
+logs,Audit & Logging,,View local audit logs,None,-n --sync --event --project --since --json,xtra logs -n 50 --since 7d,Filterable logs
+audit,Audit & Logging,verify,Verify audit chain integrity,None,None,xtra audit verify,Tamper-detection
+audit,Audit & Logging,export,Export logs for compliance,None,-f --start --end -o,xtra audit export -f csv,SOC2/ISO ready
+scan,Security,,Scan for leaked secrets,None,--staged --install-hook,xtra scan --install-hook,Pre-commit hook
+access,Access Control,request,Request temporary access,<secret>,-d -r,-p -s,xtra access request -d 30 -r "reason",JIT access
+access,Access Control,list,List access requests,None,--pending,xtra access list,Admin pending requests
+access,Access Control,approve,Approve/reject request,<requestId>,-decision,None,xtra access approve req_001 --decision approved,admin-only
+admin,Administration,users,List all users,None,-t,xtra admin users,Table format
+admin,Administration,set-role,Change user role,<email> <role>,None,-t,xtra admin set-role user@ex.com admin,Role assignment
+admin,Administration,role,List available roles,None,None,xtra admin role list,All roles
+watch,Execution,,Live reload on secret changes,<command>,-p -e -b --interval --shell,xtra watch node app.js,Not production-safe
+simulate,Execution,,Dry-run (no execution),None,-p -e -b --show-values --diff,xtra simulate npm start,Preview injection
+template,Configuration,render,Render template with secrets,<templateFile>,-p -e -b -o --strict,xtra template render config.tpl -o config.yaml,Placeholder injection
+template,Configuration,check,Check for unresolved placeholders,<templateFile>,-p -e -b,xtra template check config.tpl,Validation
+template,Configuration,list,List placeholders in template,<templateFile>,None,xtra template list config.tpl,Inventory
+integration,Integrations,sync,Sync to GitHub,None,-p -e --repo --prefix,xtra integration sync --repo owner/repo,GitHub Actions
+integration,Integrations,kubernetes,Export K8s Secret YAML,None,-p -e -n -o --name,xtra integration kubernetes export -n apps,GitOps ready
+ci,CI/CD,secrets,Fetch secrets as JSON,None,-p -e -b --keys,XTRA_MACHINE_TOKEN=x xtra ci secrets -p proj,Pipe to jq
+ci,CI/CD,set,Set secrets in CI mode,None,-p -e -b,XTRA_MACHINE_TOKEN=x xtra ci set API_KEY=val,Headless
+ci,CI/CD,export,Export to file in CI mode,None,-p -e -b -f -o,XTRA_MACHINE_TOKEN=x xtra ci export -o .env,Multiple formats
+ci,CI/CD,run,Run command with secrets,<command>,-p -e,XTRA_MACHINE_TOKEN=x xtra ci run npm build,No interaction
+doctor,Utilities,,Diagnose setup issues,None,--json,xtra doctor,Check 7 items
+profile,Configuration,list,List all profiles,None,None,xtra profile list,Show active
+profile,Configuration,create,Create new profile,<name>,--url --project --token,xtra profile create work,Interactive setup
+profile,Configuration,use,Switch to profile,<name>,None,xtra profile use staging,Persistent
+profile,Configuration,set,Update profile values,<name>,--url --project --token --env,xtra profile set work --project proj_new,Selective update
+profile,Configuration,delete,Delete profile,<name>,None,xtra profile delete old,Cleanup
+ui,Utilities,,Interactive terminal dashboard,None,None,xtra ui,React-based TUI
+completion,Utilities,bash,Bash completion script,None,None,xtra completion bash >> ~/.bashrc,Shell integration
+completion,Utilities,zsh,Zsh completion script,None,None,xtra completion zsh >> ~/.zshrc,Shell integration
+completion,Utilities,powershell,PowerShell completion,None,None,xtra completion powershell | Out-File $PROFILE,Shell integration
+completion,Utilities,install,Auto-install for current shell,None,None,xtra completion install,Smart detection
