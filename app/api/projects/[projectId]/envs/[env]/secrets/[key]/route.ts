@@ -63,28 +63,34 @@ export async function GET(
      }, { status: 403 });
   }
 
-  // 5. Audit Logging (Async, non-blocking)
-  const auditWorkspaces = new Set<string>();
-  if (project.workspaceId) auditWorkspaces.add(project.workspaceId);
-  
-  prisma.user.findUnique({
-    where: { id: userId },
-    include: { workspaces: { take: 1, select: { id: true } } } 
-  }).then(async (userRecord) => {
-     if (userRecord?.workspaces?.[0]?.id) auditWorkspaces.add(userRecord.workspaces[0].id);
+  // 5. Audit Logging
+  try {
+    const auditWorkspaces = new Set<string>();
+    if (project.workspaceId) auditWorkspaces.add(project.workspaceId);
+    
+    const userRecord = await prisma.user.findUnique({
+      where: { id: userId },
+      include: { workspaces: { take: 1, select: { id: true } } } 
+    });
+
+    if (userRecord?.workspaces?.[0]?.id) {
+      auditWorkspaces.add(userRecord.workspaces[0].id);
+    }
      
-     const logTasks = Array.from(auditWorkspaces).map(wsId => 
-        createTamperEvidentLog({
-            userId,
-            action: "secret.read",
-            entity: "secret",
-            entityId: secret.id,
-            workspaceId: wsId,
-            changes: { key: params.key, env: params.env }
-        })
-     );
-     await Promise.all(logTasks);
-  }).catch(err => console.error("Failed to log secret access:", err));
+    const logTasks = Array.from(auditWorkspaces).map(wsId => 
+      createTamperEvidentLog({
+          userId,
+          action: "secret.read",
+          entity: "secret",
+          entityId: secret.id,
+          workspaceId: wsId,
+          changes: { key: params.key, env: params.env }
+      })
+    );
+    await Promise.all(logTasks);
+  } catch(err) {
+    console.error("Failed to log secret access:", err);
+  }
 
   return NextResponse.json(secret);
 }
