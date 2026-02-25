@@ -79,12 +79,17 @@ export async function POST(
     });
 
     // Audit Log
+    const destinationProject = await prisma.project.findUnique({ 
+      where: { id: params.projectId }, 
+      select: { workspaceId: true } 
+    });
+
     createTamperEvidentLog({
       userId: auth.userId,
       action: "secret.link",
       entity: "secret",
       entityId: newSecret.id,
-      workspaceId: (await prisma.project.findUnique({ where: { id: params.projectId }, select: { workspaceId: true } }))?.workspaceId || undefined,
+      workspaceId: destinationProject?.workspaceId || undefined,
       changes: { 
         key, 
         source: `${sourceProject.name}:${sourceEnv}:${sourceKey}`,
