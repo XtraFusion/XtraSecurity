@@ -11,14 +11,14 @@ interface EmailOptions {
 const createTransporter = () => {
     // If credentials aren't set, use Ethereal (a fake SMTP service for testing) as fallback
     // In production, these should be set in Vercel/environment
-    const host = process.env.SMTP_HOST || 'smtp.ethereal.email';
+    const host = process.env.SMTP_HOST || 'smtp.gmail.com';
     const port = parseInt(process.env.SMTP_PORT || '587');
     const secure = process.env.SMTP_SECURE === 'true' || port === 465;
     const user = process.env.SMTP_USER;
     const pass = process.env.SMTP_PASS;
 
     if (!user || !pass) {
-        console.warn("⚠️ SMTP_USER or SMTP_PASS not set in environment. Emails may fail if not using local mock.");
+        console.warn("⚠️ SMTP_USER or SMTP_PASS not set in environment.");
     }
 
     return nodemailer.createTransport({

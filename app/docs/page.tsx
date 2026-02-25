@@ -40,43 +40,6 @@ const CLI_COMMANDS: CommandEntry[] = [
     ]
   },
   {
-    "section": "Administration & Utilities",
-    "command": "xtra admin",
-    "desc": "Admin commands for user and role management"
-  },
-  {
-    "section": "Administration & Utilities",
-    "command": "xtra admin list",
-    "desc": "List all available roles"
-  },
-  {
-    "section": "Administration & Utilities",
-    "command": "xtra admin roles",
-    "desc": "Alias for 'role list'"
-  },
-  {
-    "section": "Administration & Utilities",
-    "command": "xtra admin users",
-    "desc": "List all users with their roles",
-    "options": [
-      {
-        "flag": "-t, --team <teamId>",
-        "desc": "Filter by team ID"
-      }
-    ]
-  },
-  {
-    "section": "Administration & Utilities",
-    "command": "xtra admin set-role",
-    "desc": "Change a user's role (owner, admin, developer, viewer, guest)",
-    "options": [
-      {
-        "flag": "-t, --team <teamId>",
-        "desc": "Team ID (for team-specific role)"
-      }
-    ]
-  },
-  {
     "section": "Security & Compliance",
     "command": "xtra audit",
     "desc": "Manage and verify audit logs",

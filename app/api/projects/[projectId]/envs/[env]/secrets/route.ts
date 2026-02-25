@@ -5,6 +5,7 @@ import { PolicyEngine } from "@/lib/authz/policy-engine";
 import { Decision } from "@/lib/authz/types";
 import { encrypt, decrypt } from "@/lib/encription";
 import { triggerWebhooks } from "@/lib/webhook";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 export const dynamic = 'force-dynamic';
 
@@ -165,6 +166,32 @@ export const GET = withSecurity(async (
     headers["X-Mask-Reason"] = "viewer-role";
   }
 
+  // 5. Audit Logging (Async, non-blocking)
+  const auditWorkspaces = new Set<string>();
+  if (project.workspaceId) auditWorkspaces.add(project.workspaceId);
+  
+  // Also log for the actor's workspace if different (for shared visibility)
+  prisma.user.findUnique({
+    where: { id: userId },
+    include: { workspaces: { take: 1, select: { id: true } } } 
+  }).then(async (userRecord) => {
+     if (userRecord?.workspaces?.[0]?.id) {
+       auditWorkspaces.add(userRecord.workspaces[0].id);
+     }
+     
+     const logTasks = Array.from(auditWorkspaces).map(wsId => 
+        createTamperEvidentLog({
+            userId,
+            action: "secret.bulk_read",
+            entity: "project",
+            entityId: projectId,
+            workspaceId: wsId,
+            changes: { environment: env, branch: branchName, count: envSecrets.length }
+        })
+     );
+     await Promise.all(logTasks);
+  }).catch(err => console.error("Bulk read audit failed:", err));
+
   return NextResponse.json(secretsMap, { headers });
 });
 
@@ -324,6 +351,16 @@ export const POST = withSecurity(async (
           updatedBy: userId
         });
 
+        // Audit Log
+        createTamperEvidentLog({
+          userId: userId,
+          action: "secret.update",
+          entity: "secret",
+          entityId: updated.id,
+          workspaceId: project.workspaceId,
+          changes: { key: existing.key, environment: environmentType, branch: branchName }
+        }).catch(err => console.error("Audit log failed:", err));
+
         results.push(updated);
       } catch (err: any) {
         console.error("Update failed:", err);
@@ -363,6 +400,16 @@ export const POST = withSecurity(async (
         version: "1",
         updatedBy: userId
       });
+
+      // Audit Log
+      createTamperEvidentLog({
+        userId: userId,
+        action: "secret.create",
+        entity: "secret",
+        entityId: created.id,
+        workspaceId: project.workspaceId,
+        changes: { key: key, environment: environmentType, branch: branchName }
+      }).catch(err => console.error("Audit log failed:", err));
 
       results.push(created);
     }

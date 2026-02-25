@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
@@ -87,6 +88,21 @@ export async function POST(
       include: {
           team: true
       }
+  });
+
+  // Audit Log
+  const project = await prisma.project.findUnique({
+    where: { id: params.id },
+    select: { workspaceId: true }
+  });
+
+  await createTamperEvidentLog({
+    userId: auth.userId,
+    action: "project.team_assigned",
+    entity: "project",
+    entityId: params.id,
+    workspaceId: project?.workspaceId || undefined,
+    changes: { teamId, teamName: teamProject.team.name }
   });
 
   return NextResponse.json(teamProject);

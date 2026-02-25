@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { withSecurity } from "@/lib/api-middleware";
 import { createNotification } from "@/lib/notifications";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
@@ -106,6 +107,16 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     } catch (notifError) {
         console.error("Failed to create notification:", notifError);
     }
+
+    // Audit Log
+    await createTamperEvidentLog({
+      userId: userId,
+      action: "team.create",
+      entity: "team",
+      entityId: team.id,
+      workspaceId: workspaceId,
+      changes: { name: team.name }
+    });
 
     return NextResponse.json(team, { status: 201 });
   } catch (error: any) {

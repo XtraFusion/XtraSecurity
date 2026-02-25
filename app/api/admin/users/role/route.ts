@@ -12,27 +12,14 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if current user is admin or owner (User.role OR RBAC UserRole table)
-    const currentUser = await prisma.user.findUnique({
-      where: { id: auth.userId },
-      include: {
-        userRoles: {
-          include: { role: { select: { name: true } } }
-        }
-      }
-    });
+    // Check if user is admin — verifyAuth already resolves the effective role
+    const isAdmin = auth.role === "admin" || auth.role === "owner";
 
-    const hasAdminRole = currentUser?.userRoles?.some(
-      ur => ur.role.name === "admin" || ur.role.name === "owner"
-    );
-    const isAdmin =
-      currentUser?.role === "admin" ||
-      currentUser?.role === "owner" ||
-      hasAdminRole;
-
-    if (!currentUser || !isAdmin) {
+    if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
     }
+
+    const currentUserEmail = auth.email;
 
     const { email, role, teamId } = await req.json();
 
@@ -113,7 +100,7 @@ export async function PUT(req: NextRequest) {
           userEmail: targetUser.email || "",
           taskTitle: "Role Updated",
           description: `Your role has been changed to ${role}`,
-          message: `Your role was updated by ${currentUser.email}`,
+          message: `Your role was updated by ${currentUserEmail}`,
           status: "unread",
           read: false
         }
@@ -125,7 +112,7 @@ export async function PUT(req: NextRequest) {
         fields: [
           { label: "User", value: targetUser.email || "" },
           { label: "New Role", value: role },
-          { label: "Changed by", value: currentUser.email || "" },
+          { label: "Changed by", value: currentUserEmail || "" },
         ],
       });
     } catch (e) {

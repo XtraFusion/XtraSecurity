@@ -4,6 +4,7 @@ import { verifyAuth } from "@/lib/server-auth";
 import { triggerWebhooks } from "@/lib/webhook";
 import { PolicyEngine } from "@/lib/authz/policy-engine";
 import { Decision } from "@/lib/authz/types";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
@@ -62,18 +63,27 @@ export async function GET(
      }, { status: 403 });
   }
 
-  // 5. Audit Logging (Async)
-  const workspaceId = project.workspaceId; // captured above
-  // We don't await this to avoid slowing down the response
-  prisma.auditLog.create({
-    data: {
-      userId,
-      action: "secret.read",
-      entity: "secret",
-      entityId: secret.id,
-      workspaceId,
-      changes: { key: params.key, env: params.env }
-    }
+  // 5. Audit Logging (Async, non-blocking)
+  const auditWorkspaces = new Set<string>();
+  if (project.workspaceId) auditWorkspaces.add(project.workspaceId);
+  
+  prisma.user.findUnique({
+    where: { id: userId },
+    include: { workspaces: { take: 1, select: { id: true } } } 
+  }).then(async (userRecord) => {
+     if (userRecord?.workspaces?.[0]?.id) auditWorkspaces.add(userRecord.workspaces[0].id);
+     
+     const logTasks = Array.from(auditWorkspaces).map(wsId => 
+        createTamperEvidentLog({
+            userId,
+            action: "secret.read",
+            entity: "secret",
+            entityId: secret.id,
+            workspaceId: wsId,
+            changes: { key: params.key, env: params.env }
+        })
+     );
+     await Promise.all(logTasks);
   }).catch(err => console.error("Failed to log secret access:", err));
 
   return NextResponse.json(secret);
@@ -129,16 +139,30 @@ export async function DELETE(
     });
 
     // Audit Log
-    await prisma.auditLog.create({
-        data: {
-            userId,
-            action: "secret.delete",
-            entity: "secret",
-            entityId: secret.id,
-            workspaceId: project.workspaceId,
-            changes: { key, env }
-        }
-    });
+    const auditWorkspaces = new Set<string>();
+    if (project.workspaceId) auditWorkspaces.add(project.workspaceId);
+    
+    try {
+        const userRecord = await prisma.user.findUnique({
+            where: { id: userId },
+            include: { workspaces: { take: 1, select: { id: true } } }
+        });
+        if (userRecord?.workspaces?.[0]?.id) auditWorkspaces.add(userRecord.workspaces[0].id);
+
+        const logTasks = Array.from(auditWorkspaces).map(wsId => 
+            createTamperEvidentLog({
+                userId,
+                action: "secret.delete",
+                entity: "secret",
+                entityId: secret.id,
+                workspaceId: wsId,
+                changes: { key, env }
+            })
+        );
+        await Promise.all(logTasks);
+    } catch (err) {
+        console.error("Delete audit failed:", err);
+    }
 
     return NextResponse.json({ success: true });
 

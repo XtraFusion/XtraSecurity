@@ -7,6 +7,7 @@ import { authOptions } from "../auth/[...nextauth]/route";
 import { createNotification } from "@/lib/notifications";
 import { verifyAuth } from "@/lib/server-auth";
 import { withSecurity } from "@/lib/api-middleware";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 // GET /api/project - Get all projects or a specific project by ID
 export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
@@ -317,6 +318,16 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
       `You successfully created project "${project.name}" in workspace ${newProject.workspaceId}.`,
       "success"
     );
+    
+    // Audit Log
+    await createTamperEvidentLog({
+      userId: authUser.id,
+      action: "project.create",
+      entity: "project",
+      entityId: project.id,
+      workspaceId: newProject.workspaceId,
+      changes: { name: project.name }
+    });
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {

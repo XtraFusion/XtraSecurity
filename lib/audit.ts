@@ -9,6 +9,7 @@ interface AuditLogData {
   entity: string;
   entityId: string;
   changes: any;
+  workspaceId?: string;
   timestamp?: Date;
 }
 
@@ -48,6 +49,7 @@ export async function createTamperEvidentLog(data: AuditLogData) {
       entity: data.entity,
       entityId: data.entityId,
       changes: data.changes,
+      workspaceId: data.workspaceId,
       timestamp: timestamp,
       previousHash: previousHash,
       currentHash: currentHash

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import jwt from "jsonwebtoken";
+import { createTamperEvidentLog } from "@/lib/audit";
 
 const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback_secret";
 
@@ -38,6 +39,16 @@ export async function POST(req: NextRequest) {
 
   // Construct Redirect URL with Token AND Workspace
   const redirectTarget = `${callbackUrl}?token=${token}&email=${session.user.email}&workspaceId=${workspaceId}&workspaceName=${encodeURIComponent(reqBody.workspaceName || "Unknown Workspace")}`;
+
+  // Audit Log
+  createTamperEvidentLog({
+    userId: session.user.id,
+    action: "user.login_cli_sso",
+    entity: "user",
+    entityId: session.user.id,
+    workspaceId: workspaceId,
+    changes: { method: "sso" }
+  }).catch(err => console.error("SSO audit failed:", err));
 
   return NextResponse.json({ redirectUrl: redirectTarget });
 }
