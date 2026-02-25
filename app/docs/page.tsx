@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useState, useMemo } from "react";
 import { BookOpen, Code, Terminal, Shield, Key, FileText, Copy, Check, Search, X } from "lucide-react";
+// import { DocumentationChatbot } from "@/components/documentation-chatbot"; // TODO: Implement on separate docs page
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 type CommandOption = { flag: string; desc: string };
@@ -956,78 +957,81 @@ export default function DocsPage() {
   }, [filtered]);
 
   const CodeBlock = ({ command, desc, options }: { command: string; desc?: string; options?: CommandOption[] }) => (
-    <div className="mb-6 last:mb-0 group/block relative">
-      {desc && <p className="text-[15px] text-muted-foreground mb-3 font-medium">{desc}</p>}
-      <div className="relative flex flex-col bg-[#0a0f1e]/80 border border-white/[0.08] hover:border-white/[0.2] rounded-xl shadow-2xl overflow-hidden transition-all duration-300 backdrop-blur-md">
-        <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-cyan-500/5 pointer-events-none opacity-50 group-hover/block:opacity-100 transition-opacity duration-500" />
-        <div className="relative flex items-center justify-between p-4">
-          <code className="relative z-10 text-[15px] font-mono text-cyan-50 flex items-center">
-            <span className="text-emerald-500/80 mr-3 select-none text-base font-bold">❯</span>
-            <span className="tracking-wide">{command}</span>
-          </code>
-          <button
-            onClick={() => handleCopy(command)}
-            className="absolute z-20 right-3 top-1/2 -translate-y-1/2 p-2.5 rounded-lg bg-white/[0.05] text-slate-300 opacity-0 group-hover/block:opacity-100 transition-all hover:bg-white/[0.15] hover:text-white cursor-pointer hover:scale-105 active:scale-95 border border-white/[0.05] hover:border-white/[0.2] shadow-sm flex items-center justify-center gap-2"
-            title="Copy command"
-          >
-            {copied === command ? <Check className="h-4 w-4 text-emerald-400" /> : <Copy className="h-4 w-4" />}
-            {copied === command ? <span className="text-xs font-semibold text-emerald-400 pr-1">Copied</span> : <span className="text-xs font-semibold pr-1">Copy</span>}
-          </button>
-        </div>
-        {options && options.length > 0 && (
-          <div className="border-t border-white/[0.04] bg-white/[0.01] px-4 py-3 relative z-10">
-            <div className="text-[11px] font-bold text-slate-500 mb-2 uppercase tracking-widest">Options</div>
-            <ul className="space-y-2">
-              {options.map((opt, i) => (
-                <li key={i} className="flex items-start text-[13px] leading-relaxed">
-                  <code className="text-emerald-400/90 font-mono w-48 shrink-0">{opt.flag}</code>
-                  <span className="text-slate-400">{opt.desc}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+    <div className="mb-4 last:mb-0 border rounded-lg p-4 bg-card hover:bg-accent/50 transition-colors">
+      {desc && <p className="text-sm text-muted-foreground mb-2 font-medium">{desc}</p>}
+      <div className="flex items-center justify-between gap-2">
+        <code className="text-sm font-mono text-foreground flex-1 break-all">
+          {command}
+        </code>
+        <button
+          onClick={() => handleCopy(command)}
+          className="p-2 rounded-md hover:bg-accent transition-colors flex items-center gap-1.5 shrink-0"
+          title="Copy command"
+        >
+          {copied === command ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+        </button>
       </div>
+      {options && options.length > 0 && (
+        <div className="mt-3 pt-3 border-t space-y-2">
+          <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Options</div>
+          <ul className="space-y-1.5">
+            {options.map((opt, i) => (
+              <li key={i} className="flex flex-col text-xs leading-relaxed">
+                <code className="font-mono text-foreground mb-0.5">{opt.flag}</code>
+                <span className="text-muted-foreground">{opt.desc}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
     </div>
   );
 
   return (
     <DashboardLayout>
       <div className="space-y-6 max-w-6xl mx-auto pb-10">
-        <div>
-          <h3 className="text-2xl font-bold tracking-tight">Documentation</h3>
-          <p className="text-muted-foreground">
-            Learn how to integrate and use XtraSecurity features.
-          </p>
+        <div className="space-y-2 mb-6">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 rounded-lg bg-primary/10">
+              <BookOpen className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h1 className="text-3xl font-bold">Documentation</h1>
+              <p className="text-muted-foreground text-sm">XtraSecurity CLI commands, guides, and references</p>
+            </div>
+          </div>
         </div>
 
         <Tabs defaultValue="guides" className="space-y-4">
-          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 h-auto">
-            <TabsTrigger value="guides" className="gap-2 py-2"><BookOpen className="h-4 w-4" /> Guides</TabsTrigger>
-            <TabsTrigger value="cli" className="gap-2 py-2">
-              <Terminal className="h-4 w-4" /> CLI Tool
-              <Badge className="ml-1 h-5 px-1.5 text-[10px] bg-primary/20 text-primary border-0">
+          <TabsList className="grid w-full grid-cols-2 md:grid-cols-4">
+            <TabsTrigger value="guides"><BookOpen className="h-4 w-4 mr-2" />Guides</TabsTrigger>
+            <TabsTrigger value="cli">
+              <Terminal className="h-4 w-4 mr-2" />CLI
+              <Badge variant="outline" className="ml-2">
                 {CLI_COMMANDS.length}
               </Badge>
             </TabsTrigger>
-            <TabsTrigger value="sdk" className="gap-2 py-2"><FileText className="h-4 w-4" /> Node SDK</TabsTrigger>
-            <TabsTrigger value="vscode" className="gap-2 py-2"><Code className="h-4 w-4" /> VS Code</TabsTrigger>
+            <TabsTrigger value="sdk"><FileText className="h-4 w-4 mr-2" />SDK</TabsTrigger>
+            <TabsTrigger value="vscode"><Code className="h-4 w-4 mr-2" />VS Code</TabsTrigger>
           </TabsList>
 
           {/* GUIDES TAB */}
           <TabsContent value="guides" className="space-y-4">
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               {[
-                { icon: <Shield className="h-8 w-8 text-primary mb-2" />, title: "Getting Started", desc: "Basic concepts, initial setup, and workspace configuration." },
-                { icon: <Key className="h-8 w-8 text-primary mb-2" />, title: "Secret Management", desc: "How to store, retrieve, and rotate secrets securely." },
-                { icon: <FileText className="h-8 w-8 text-primary mb-2" />, title: "Audit Logs", desc: "Tracking platform activity and setting up custom alerts." },
-                { icon: <Shield className="h-8 w-8 text-primary mb-2" />, title: "Access Reviews", desc: "Learn how to conduct periodic access certification cycles." },
-                { icon: <Key className="h-8 w-8 text-primary mb-2" />, title: "Service Accounts", desc: "Create headless machine identities for API access." },
+                { icon: <Shield className="h-5 w-5" />, title: "Getting Started", desc: "Basic concepts, initial setup, and workspace configuration." },
+                { icon: <Key className="h-5 w-5" />, title: "Secret Management", desc: "How to store, retrieve, and rotate secrets securely." },
+                { icon: <FileText className="h-5 w-5" />, title: "Audit Logs", desc: "Tracking platform activity and setting up custom alerts." },
+                { icon: <Shield className="h-5 w-5" />, title: "Access Reviews", desc: "Learn how to conduct periodic access certification cycles." },
+                { icon: <Key className="h-5 w-5" />, title: "Service Accounts", desc: "Create headless machine identities for API access." },
+                { icon: <Terminal className="h-5 w-5" />, title: "CLI Integration", desc: "Use XtraSecurity in your CI/CD pipelines and workflows." },
               ].map((g) => (
-                <Card key={g.title} className="hover:bg-muted/50 transition-colors cursor-pointer">
+                <Card key={g.title} className="hover:shadow-md transition-shadow cursor-pointer">
                   <CardHeader>
-                    {g.icon}
-                    <CardTitle>{g.title}</CardTitle>
+                    <div className="mb-2">
+                      {g.icon}
+                    </div>
+                    <CardTitle className="text-lg">{g.title}</CardTitle>
                     <CardDescription>{g.desc}</CardDescription>
                   </CardHeader>
                 </Card>
@@ -1036,20 +1040,20 @@ export default function DocsPage() {
           </TabsContent>
 
           {/* CLI TAB */}
-          <TabsContent value="cli" className="space-y-6">
+          <TabsContent value="cli" className="space-y-4">
             <Card>
               <CardHeader>
                 <div className="flex flex-col sm:flex-row sm:items-center gap-4">
                   <div className="flex items-center gap-2 flex-1">
-                    <Terminal className="h-6 w-6 text-primary shrink-0" />
+                    <Terminal className="h-5 w-5 text-primary shrink-0" />
                     <div>
-                      <CardTitle className="text-2xl">XtraSecurity CLI</CardTitle>
-                      <CardDescription>The ultimate developer tool for managing and injecting secrets.</CardDescription>
+                      <CardTitle>XtraSecurity CLI</CardTitle>
+                      <CardDescription>Complete command reference for the CLI tool</CardDescription>
                     </div>
                   </div>
 
                   {/* Search bar */}
-                  <div className="relative w-full sm:w-72">
+                  <div className="relative w-full sm:w-80">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                     <Input
                       placeholder="Search commands…"
@@ -1070,12 +1074,12 @@ export default function DocsPage() {
 
                 {/* Section jump links (only when not searching) */}
                 {!search && (
-                  <div className="flex flex-wrap gap-2 pt-2">
+                  <div className="flex flex-wrap gap-1.5 pt-3">
                     {ALL_SECTIONS.map(section => (
                       <a
                         key={section}
                         href={`#cli-${section.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`}
-                        className="text-xs px-2.5 py-1 rounded-full border border-border hover:bg-muted hover:border-primary/40 transition-colors text-muted-foreground hover:text-foreground"
+                        className="text-xs px-2.5 py-1 rounded-md border border-border bg-muted hover:bg-accent transition-colors"
                       >
                         {section}
                       </a>
@@ -1085,34 +1089,33 @@ export default function DocsPage() {
 
                 {/* Search result count */}
                 {search && (
-                  <p className="text-xs text-muted-foreground pt-1">
+                  <p className="text-xs text-muted-foreground pt-2">
                     {filtered.length === 0
-                      ? "No commands match your search."
-                      : `${filtered.length} command${filtered.length > 1 ? "s" : ""} found for "${search}"`}
+                      ? "No commands found."
+                      : `${filtered.length} command${filtered.length > 1 ? "s" : ""} found`}
                   </p>
                 )}
               </CardHeader>
 
-              <CardContent className="space-y-8">
+              <CardContent className="space-y-6">
                 {filtered.length === 0 ? (
-                  <div className="text-center py-16 text-muted-foreground">
-                    <Terminal className="h-10 w-10 mx-auto mb-3 opacity-30" />
+                  <div className="text-center py-12 text-muted-foreground">
+                    <Terminal className="h-8 w-8 mx-auto mb-2 opacity-40" />
                     <p className="font-medium">No commands found</p>
-                    <p className="text-sm mt-1">Try a different keyword like <code className="bg-muted px-1 rounded">run</code>, <code className="bg-muted px-1 rounded">secrets</code>, or <code className="bg-muted px-1 rounded">rotate</code>.</p>
                   </div>
                 ) : (
-                  <div className="space-y-12">
+                  <div className="space-y-8">
                     {Object.entries(groupedFiltered).map(([section, cmds]) => (
                       <section
                         key={section}
                         id={`cli-${section.replace(/[^a-z0-9]/gi, "-").toLowerCase()}`}
                       >
-                        <h4 className="flex items-center gap-2 text-xl font-bold mb-4 border-b border-border/50 pb-2">
-                          {SECTION_ICONS[section] ?? <Terminal className="h-5 w-5 text-primary" />}
+                        <h4 className="flex items-center gap-2 text-lg font-semibold mb-3 border-b pb-2">
+                          {SECTION_ICONS[section] ?? <Terminal className="h-4 w-4 text-primary" />}
                           {section}
                           {search && (
-                            <Badge variant="secondary" className="ml-auto text-xs font-normal">
-                              {cmds.length} match{cmds.length > 1 ? "es" : ""}
+                            <Badge variant="secondary" className="ml-auto text-xs">
+                              {cmds.length}
                             </Badge>
                           )}
                         </h4>
@@ -1128,15 +1131,15 @@ export default function DocsPage() {
           </TabsContent>
 
           {/* NODE SDK TAB */}
-          <TabsContent value="sdk" className="space-y-6">
+          <TabsContent value="sdk" className="space-y-4">
             <Card>
-              <CardHeader className="text-center py-16">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <FileText className="h-8 w-8 text-primary" />
+              <CardHeader className="text-center py-12">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <FileText className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">Node.js SDK</CardTitle>
-                <CardDescription className="text-base mt-2">Comprehensive documentation for <code className="bg-muted px-1.5 py-0.5 rounded">xtra-sdk-node</code> is currently under construction.</CardDescription>
-                <div className="mt-6">
+                <CardTitle>Node.js SDK</CardTitle>
+                <CardDescription>Documentation for xtra-sdk-node is under construction</CardDescription>
+                <div className="mt-4">
                   <Badge variant="secondary">Coming Soon</Badge>
                 </div>
               </CardHeader>
@@ -1144,15 +1147,15 @@ export default function DocsPage() {
           </TabsContent>
 
           {/* VS CODE TAB */}
-          <TabsContent value="vscode" className="space-y-6">
+          <TabsContent value="vscode" className="space-y-4">
             <Card>
-              <CardHeader className="text-center py-16">
-                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <Code className="h-8 w-8 text-primary" />
+              <CardHeader className="text-center py-12">
+                <div className="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mx-auto mb-3">
+                  <Code className="h-6 w-6 text-primary" />
                 </div>
-                <CardTitle className="text-2xl">VS Code Extension</CardTitle>
-                <CardDescription className="text-base mt-2">Documentation and guides for our official VS Code extension are currently under construction.</CardDescription>
-                <div className="mt-6">
+                <CardTitle>VS Code Extension</CardTitle>
+                <CardDescription>Documentation for our VS Code extension is under construction</CardDescription>
+                <div className="mt-4">
                   <Badge variant="secondary">Coming Soon</Badge>
                 </div>
               </CardHeader>

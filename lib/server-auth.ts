@@ -17,6 +17,30 @@ export interface AuthSession {
   permissions?: string[];
 }
 
+/**
+ * Resolves the effective role for a user by checking both the legacy
+ * User.role field and the RBAC UserRole table. If the user has an
+ * admin or owner role in the RBAC table, they are treated as admin.
+ */
+async function resolveUserRole(userId: string, legacyRole?: string | null): Promise<string> {
+  // If already admin/owner via legacy field, use it directly
+  if (legacyRole === "admin" || legacyRole === "owner") {
+    return legacyRole;
+  }
+  // Check RBAC UserRole table
+  try {
+    const adminUserRole = await prisma.userRole.findFirst({
+      where: {
+        userId,
+        role: { name: { in: ["admin", "owner"] } }
+      },
+      include: { role: { select: { name: true } } }
+    });
+    if (adminUserRole) return adminUserRole.role.name;
+  } catch (_) { /* Ignore DB errors, fall back to legacy */ }
+  return legacyRole || "user";
+}
+
 export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> {
   // 1. Check API Key (Header: X-API-Key or Authorization: Bearer)
   let apiKey = req.headers.get("x-api-key");
@@ -59,10 +83,11 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
       }
 
       if (keyRecord.user) {
+        const resolvedRole = await resolveUserRole(keyRecord.user.id, keyRecord.user.role);
         return {
             userId: keyRecord.user.id,
             email: keyRecord.user.email,
-            role: keyRecord.user.role,
+            role: resolvedRole,
             tier: keyRecord.user.tier || 'free'
         };
       }
@@ -102,10 +127,11 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
             });
 
             if (user) {
+                const resolvedRole = await resolveUserRole(user.id, user.role);
                 return {
                     userId: user.id,
                     email: user.email,
-                    role: user.role || 'user',
+                    role: resolvedRole,
                     tier: user.tier || 'free'
                 };
             }

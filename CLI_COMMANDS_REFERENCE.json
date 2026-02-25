@@ -1,0 +1,1149 @@
+{
+  "commandReference": {
+    "metadata": {
+      "cliName": "xtra-cli",
+      "version": "0.2.7",
+      "description": "XtraSync CLI - Secure Runtime Secret Injection",
+      "timestamp": "2026-02-25",
+      "totalCommands": 31,
+      "totalSubcommands": 40
+    },
+    "commands": [
+      {
+        "id": 1,
+        "name": "login",
+        "category": "Authentication",
+        "description": "Authenticate with XtraSecurity Cloud platform",
+        "usage": "xtra login [OPTIONS]",
+        "options": [
+          {
+            "flag": "-k, --key <key>",
+            "description": "Login using Access Key (non-interactive)"
+          },
+          {
+            "flag": "-e, --email <email>",
+            "description": "Login using Email (will prompt for password)"
+          },
+          {
+            "flag": "--sso",
+            "description": "Login via Web/Browser SSO"
+          }
+        ],
+        "examples": [
+          "xtra login",
+          "xtra login --sso",
+          "xtra login --key xs_abcd1234efgh5678"
+        ],
+        "authMethods": [
+          "Browser Login (SSO)",
+          "Access Key",
+          "Email & Password"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 2,
+        "name": "init",
+        "category": "Project & Setup",
+        "description": "Bootstrap a new project with .xtrarc configuration",
+        "usage": "xtra init [OPTIONS]",
+        "options": [
+          {
+            "flag": "--project <id>",
+            "description": "Project ID (skip interactive prompt)"
+          },
+          {
+            "flag": "--env <env>",
+            "description": "Default environment",
+            "default": "development"
+          },
+          {
+            "flag": "--branch <branch>",
+            "description": "Default branch",
+            "default": "main"
+          },
+          {
+            "flag": "-y, --yes",
+            "description": "Accept all defaults automatically"
+          }
+        ],
+        "examples": [
+          "xtra init",
+          "xtra init -y",
+          "xtra init --project proj_123 --env staging -y"
+        ],
+        "createsFiles": [".xtrarc"],
+        "aliases": []
+      },
+      {
+        "id": 3,
+        "name": "run",
+        "category": "Execution",
+        "description": "Run a command with injected secrets",
+        "usage": "xtra run [OPTIONS] <command> [args...]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment",
+            "default": "development"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch Name"
+          },
+          {
+            "flag": "--shell",
+            "description": "Enable shell mode (for npm run, pipes, etc.)"
+          }
+        ],
+        "examples": [
+          "xtra run node app.js",
+          "xtra run npm start -e production",
+          "xtra run -p proj_123 --shell npm run build"
+        ],
+        "notes": "Secrets injected in-memory, never written to disk",
+        "aliases": []
+      },
+      {
+        "id": 4,
+        "name": "secrets",
+        "category": "Secrets Management",
+        "description": "Manage secrets (List, Set, Delete)",
+        "usage": "xtra secrets <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "list",
+            "description": "List all secrets",
+            "usage": "xtra secrets list",
+            "options": [
+              {
+                "flag": "--show",
+                "description": "Reveal actual values (caution!)"
+              }
+            ],
+            "examples": [
+              "xtra secrets list",
+              "xtra secrets list -e production --show"
+            ]
+          },
+          {
+            "name": "set",
+            "description": "Set one or more secrets (KEY=VALUE)",
+            "usage": "xtra secrets set <secrets...>",
+            "options": [
+              {
+                "flag": "-f, --force",
+                "description": "Skip production confirmation"
+              }
+            ],
+            "examples": [
+              "xtra secrets set API_KEY=xyz",
+              "xtra secrets set DB_USER=admin DB_PASS=secret -e staging"
+            ]
+          },
+          {
+            "name": "delete",
+            "description": "Delete a secret",
+            "usage": "xtra secrets delete <key>"
+          }
+        ],
+        "parentOptions": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          }
+        ],
+        "aliases": []
+      },
+      {
+        "id": 5,
+        "name": "branch",
+        "category": "Project Management",
+        "description": "Manage branches in a project",
+        "usage": "xtra branch <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "list",
+            "description": "List all branches",
+            "examples": ["xtra branch list", "xtra branch list -p proj_123"]
+          },
+          {
+            "name": "create",
+            "description": "Create a new branch",
+            "usage": "xtra branch create <name>",
+            "options": [
+              {
+                "flag": "-d, --description <text>",
+                "description": "Branch description"
+              }
+            ]
+          },
+          {
+            "name": "delete",
+            "description": "Delete a branch",
+            "usage": "xtra branch delete <name>",
+            "options": [
+              {
+                "flag": "-y, --yes",
+                "description": "Skip confirmation"
+              }
+            ],
+            "notes": "Cannot delete 'main' branch"
+          },
+          {
+            "name": "update",
+            "description": "Update branch details",
+            "usage": "xtra branch update <name>"
+          }
+        ],
+        "aliases": []
+      },
+      {
+        "id": 6,
+        "name": "checkout",
+        "category": "Project Management",
+        "description": "Switch to a different branch",
+        "usage": "xtra checkout [branchName]",
+        "examples": [
+          "xtra checkout staging",
+          "xtra checkout",
+          "xtra checkout feature-auth -p proj_123"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 7,
+        "name": "project",
+        "category": "Project Management",
+        "description": "Set and manage default project context",
+        "usage": "xtra project <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "set",
+            "description": "Set default project",
+            "usage": "xtra project set [projectId]",
+            "examples": [
+              "xtra project set proj_123",
+              "xtra project set"
+            ]
+          },
+          {
+            "name": "current",
+            "description": "Show current project",
+            "usage": "xtra project current"
+          }
+        ],
+        "aliases": ["projects"]
+      },
+      {
+        "id": 8,
+        "name": "generate",
+        "category": "Configuration",
+        "description": "Generate local configuration files (.env, JSON, YAML)",
+        "usage": "xtra generate [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment",
+            "default": "dev"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          },
+          {
+            "flag": "-o, --output <path>",
+            "description": "Output file (full overwrite if specified)"
+          },
+          {
+            "flag": "-f, --format <format>",
+            "description": "Format: env, json, yaml",
+            "default": "env"
+          },
+          {
+            "flag": "--force",
+            "description": "Skip prompts"
+          }
+        ],
+        "examples": [
+          "xtra generate",
+          "xtra generate -e production",
+          "xtra generate -f json -o config.json"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 9,
+        "name": "import",
+        "category": "Configuration",
+        "description": "Import secrets from file (JSON, CSV, .env)",
+        "usage": "xtra import <file> [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          },
+          {
+            "flag": "-f, --format <format>",
+            "description": "Format: json, dotenv, csv (auto-detected)"
+          },
+          {
+            "flag": "--prefix <prefix>",
+            "description": "Add prefix to all keys"
+          }
+        ],
+        "examples": [
+          "xtra import secrets.json -e staging",
+          "xtra import .env.production -e production"
+        ],
+        "supportedFormats": ["json", "dotenv", "csv"],
+        "aliases": []
+      },
+      {
+        "id": 10,
+        "name": "export",
+        "category": "Configuration",
+        "description": "Export secrets to file (JSON, CSV, .env)",
+        "usage": "xtra export [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          },
+          {
+            "flag": "-f, --format <format>",
+            "description": "Format: json, dotenv, csv",
+            "default": "json"
+          },
+          {
+            "flag": "-o, --output <file>",
+            "description": "Output file (default: stdout)"
+          }
+        ],
+        "examples": [
+          "xtra export -o secrets.json",
+          "xtra export -f dotenv -o .env.production",
+          "xtra export -e production | jq '.API_KEY'"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 11,
+        "name": "rotate",
+        "category": "Secrets Management",
+        "description": "Rotate a secret with Zero-Downtime Shadow Mode",
+        "usage": "xtra rotate <key> [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment",
+            "default": "development"
+          },
+          {
+            "flag": "--strategy <strategy>",
+            "description": "Rotation strategy",
+            "default": "shadow"
+          },
+          {
+            "flag": "--promote",
+            "description": "Promote shadow to active"
+          },
+          {
+            "flag": "--value <value>",
+            "description": "New secret value"
+          }
+        ],
+        "examples": [
+          "xtra rotate DATABASE_PASSWORD",
+          "xtra rotate API_KEY --value new_key_xyz",
+          "xtra rotate DATABASE_PASSWORD --promote"
+        ],
+        "workflow": [
+          "Start rotation (creates shadow)",
+          "Test in app",
+          "Promote with --promote flag"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 12,
+        "name": "history",
+        "category": "Version Control",
+        "description": "View version history of a secret",
+        "usage": "xtra history <key> [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <id>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          }
+        ],
+        "examples": [
+          "xtra history DATABASE_URL",
+          "xtra history API_KEY -e production"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 13,
+        "name": "rollback",
+        "category": "Version Control",
+        "description": "Rollback secret to previous version",
+        "usage": "xtra rollback <key> [version] [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          }
+        ],
+        "examples": [
+          "xtra rollback DATABASE_URL",
+          "xtra rollback API_KEY v2 -e production"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 14,
+        "name": "status",
+        "category": "Utilities",
+        "description": "Check synchronization status with cloud",
+        "usage": "xtra status [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment",
+            "default": "dev"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          }
+        ],
+        "examples": [
+          "xtra status",
+          "xtra status -e production",
+          "xtra status -p proj_123 -e staging"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 15,
+        "name": "diff",
+        "category": "Utilities",
+        "description": "Show differences between environments or local vs remote",
+        "usage": "xtra diff [env1] [env2] [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <projectId>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branchName>",
+            "description": "Branch name"
+          },
+          {
+            "flag": "--show",
+            "description": "Show actual values"
+          }
+        ],
+        "examples": [
+          "xtra diff",
+          "xtra diff production staging",
+          "xtra diff staging development --show"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 16,
+        "name": "local",
+        "category": "Environment",
+        "description": "Toggle offline mode for local development",
+        "usage": "xtra local <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "status",
+            "description": "Show current mode (cloud or local)"
+          },
+          {
+            "name": "on",
+            "description": "Enable local offline mode"
+          },
+          {
+            "name": "off",
+            "description": "Disable local mode"
+          },
+          {
+            "name": "sync",
+            "description": "Pull cloud secrets to .env.local"
+          }
+        ],
+        "examples": [
+          "xtra local status",
+          "xtra local on",
+          "xtra local sync -e production"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 17,
+        "name": "env",
+        "category": "Environment",
+        "description": "Environment management (clone, sync)",
+        "usage": "xtra env <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "clone",
+            "description": "Clone secrets from one environment to another",
+            "options": [
+              {
+                "flag": "--from <env>",
+                "description": "Source environment (required)"
+              },
+              {
+                "flag": "--to <env>",
+                "description": "Destination environment (required)"
+              },
+              {
+                "flag": "--overwrite",
+                "description": "Overwrite destination"
+              }
+            ],
+            "examples": [
+              "xtra env clone --from production --to staging",
+              "xtra env clone --from prod --to staging --overwrite"
+            ]
+          }
+        ],
+        "aliases": []
+      },
+      {
+        "id": 18,
+        "name": "logs",
+        "category": "Audit & Logging",
+        "description": "View local audit logs",
+        "usage": "xtra logs [OPTIONS]",
+        "options": [
+          {
+            "flag": "-n, --limit <number>",
+            "description": "Number of logs to show",
+            "default": "20"
+          },
+          {
+            "flag": "--sync",
+            "description": "Sync unsynced logs to cloud"
+          },
+          {
+            "flag": "--event <type>",
+            "description": "Filter by event type"
+          },
+          {
+            "flag": "--project <projectId>",
+            "description": "Filter by project"
+          },
+          {
+            "flag": "--since <duration>",
+            "description": "Show logs since (1h, 24h, 7d, 30d)"
+          },
+          {
+            "flag": "--json",
+            "description": "JSON output"
+          }
+        ],
+        "examples": [
+          "xtra logs",
+          "xtra logs -n 50",
+          "xtra logs --event SECRET_UPDATE --since 7d"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 19,
+        "name": "audit",
+        "category": "Audit & Logging",
+        "description": "Manage server-side audit logs",
+        "usage": "xtra audit <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "verify",
+            "description": "Verify integrity of audit chain"
+          },
+          {
+            "name": "export",
+            "description": "Export logs for compliance",
+            "options": [
+              {
+                "flag": "-f, --format <format>",
+                "description": "Format: json or csv"
+              },
+              {
+                "flag": "--start <date>",
+                "description": "Start date (YYYY-MM-DD)"
+              },
+              {
+                "flag": "--end <date>",
+                "description": "End date (YYYY-MM-DD)"
+              },
+              {
+                "flag": "-o, --output <file>",
+                "description": "Output file"
+              }
+            ]
+          }
+        ],
+        "examples": [
+          "xtra audit verify",
+          "xtra audit export -o audit.json"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 20,
+        "name": "scan",
+        "category": "Security",
+        "description": "Scan project for leaked secrets",
+        "usage": "xtra scan [OPTIONS]",
+        "options": [
+          {
+            "flag": "--staged",
+            "description": "Scan only staged files"
+          },
+          {
+            "flag": "--install-hook",
+            "description": "Install git pre-commit hook"
+          }
+        ],
+        "examples": [
+          "xtra scan",
+          "xtra scan --staged",
+          "xtra scan --install-hook"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 21,
+        "name": "access",
+        "category": "Access Control",
+        "description": "Manage JIT access requests",
+        "usage": "xtra access <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "request",
+            "description": "Request temporary access",
+            "requiredOptions": [
+              {
+                "flag": "-d, --duration <minutes>",
+                "description": "Duration in minutes"
+              },
+              {
+                "flag": "-r, --reason <text>",
+                "description": "Reason for access"
+              }
+            ],
+            "optionalOptions": [
+              {
+                "flag": "-p, --project <projectId>",
+                "description": "Project ID"
+              },
+              {
+                "flag": "-s, --secret <secretId>",
+                "description": "Specific secret"
+              }
+            ]
+          },
+          {
+            "name": "list",
+            "description": "List access requests"
+          },
+          {
+            "name": "approve",
+            "description": "Approve/reject request"
+          }
+        ],
+        "examples": [
+          "xtra access request -p proj_123 -d 30 -r 'Issue investigation'",
+          "xtra access list",
+          "xtra access approve req_001 --decision approved"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 22,
+        "name": "admin",
+        "category": "Administration",
+        "description": "User and role management (admin only)",
+        "usage": "xtra admin <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "users",
+            "description": "List all users",
+            "examples": ["xtra admin users", "xtra admin users -t team_123"]
+          },
+          {
+            "name": "set-role",
+            "description": "Set user role",
+            "examples": ["xtra admin set-role user@example.com admin"]
+          },
+          {
+            "name": "role list",
+            "description": "List available roles"
+          }
+        ],
+        "availableRoles": ["owner", "admin", "developer", "viewer", "guest"],
+        "aliases": []
+      },
+      {
+        "id": 23,
+        "name": "watch",
+        "category": "Execution",
+        "description": "Live reload - auto-restart on secret changes",
+        "usage": "xtra watch [OPTIONS] <command> [args...]",
+        "options": [
+          {
+            "flag": "-p, --project <id>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branch>",
+            "description": "Branch"
+          },
+          {
+            "flag": "--interval <seconds>",
+            "description": "Poll interval",
+            "default": "5"
+          },
+          {
+            "flag": "--shell",
+            "description": "Use shell mode"
+          }
+        ],
+        "examples": [
+          "xtra watch -p proj_123 node app.js",
+          "xtra watch -p proj_123 --interval 3 npm run dev"
+        ],
+        "notes": "Not allowed in production",
+        "aliases": []
+      },
+      {
+        "id": 24,
+        "name": "simulate",
+        "category": "Execution",
+        "description": "Dry-run: show what would be injected",
+        "usage": "xtra simulate [command] [OPTIONS]",
+        "options": [
+          {
+            "flag": "-p, --project <id>",
+            "description": "Project ID"
+          },
+          {
+            "flag": "-e, --env <environment>",
+            "description": "Environment"
+          },
+          {
+            "flag": "-b, --branch <branch>",
+            "description": "Branch"
+          },
+          {
+            "flag": "--show-values",
+            "description": "Reveal values"
+          },
+          {
+            "flag": "--diff",
+            "description": "Compare with local env"
+          }
+        ],
+        "examples": [
+          "xtra simulate node app.js",
+          "xtra simulate -e production --show-values"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 25,
+        "name": "template",
+        "category": "Configuration",
+        "description": "Templating engine with placeholder substitution",
+        "usage": "xtra template <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "render",
+            "description": "Render template with injected secrets"
+          },
+          {
+            "name": "check",
+            "description": "Check for unresolved placeholders"
+          },
+          {
+            "name": "list",
+            "description": "List placeholders in template"
+          }
+        ],
+        "placeholderSyntax": [
+          "{{ secrets.KEY }}",
+          "{{ secrets.KEY | default }}",
+          "{{ env.KEY }}",
+          "{{ env.KEY | default }}"
+        ],
+        "examples": [
+          "xtra template render config.yaml.tpl -e production -o config.yaml"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 26,
+        "name": "integration",
+        "category": "Integrations",
+        "description": "Manage external integrations",
+        "usage": "xtra integration <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "sync",
+            "description": "Sync to GitHub",
+            "options": [
+              {
+                "flag": "-p, --project <id>",
+                "description": "Project ID"
+              },
+              {
+                "flag": "-e, --env <environment>",
+                "description": "Environment"
+              },
+              {
+                "flag": "--repo <owner/repo>",
+                "description": "GitHub repository"
+              }
+            ]
+          },
+          {
+            "name": "kubernetes export",
+            "description": "Export as K8s manifest"
+          }
+        ],
+        "aliases": []
+      },
+      {
+        "id": 27,
+        "name": "ci",
+        "category": "CI/CD",
+        "description": "CI/CD headless mode (JSON output, no prompts)",
+        "usage": "xtra ci <subcommand> [OPTIONS]",
+        "environmentVariables": [
+          {
+            "name": "XTRA_MACHINE_TOKEN",
+            "description": "Service account token (required)",
+            "required": true
+          },
+          {
+            "name": "XTRA_API_URL",
+            "description": "Override API URL",
+            "required": false
+          }
+        ],
+        "subcommands": [
+          {
+            "name": "secrets",
+            "description": "Fetch secrets as JSON"
+          },
+          {
+            "name": "set",
+            "description": "Set secrets in CI mode"
+          },
+          {
+            "name": "export",
+            "description": "Export to file"
+          },
+          {
+            "name": "run",
+            "description": "Run command with secrets"
+          }
+        ],
+        "examples": [
+          "XTRA_MACHINE_TOKEN=tok_xxx xtra ci secrets -p proj_123 -e production",
+          "XTRA_MACHINE_TOKEN=tok_xxx xtra ci export -p proj_123 -e production -o .env"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 28,
+        "name": "doctor",
+        "category": "Utilities",
+        "description": "Diagnose CLI setup and connectivity",
+        "usage": "xtra doctor [OPTIONS]",
+        "options": [
+          {
+            "flag": "--json",
+            "description": "JSON output"
+          }
+        ],
+        "checks": [
+          "Node.js version",
+          "Auth token status",
+          "API URL configuration",
+          "API connectivity",
+          "Active project",
+          "Active branch",
+          "Project config files"
+        ],
+        "examples": [
+          "xtra doctor",
+          "xtra doctor --json"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 29,
+        "name": "profile",
+        "category": "Configuration",
+        "description": "Manage named configuration profiles",
+        "usage": "xtra profile <subcommand> [OPTIONS]",
+        "subcommands": [
+          {
+            "name": "list",
+            "description": "List all profiles"
+          },
+          {
+            "name": "create",
+            "description": "Create new profile"
+          },
+          {
+            "name": "use",
+            "description": "Switch to profile"
+          },
+          {
+            "name": "set",
+            "description": "Update profile values"
+          },
+          {
+            "name": "delete",
+            "description": "Remove a profile"
+          }
+        ],
+        "examples": [
+          "xtra profile list",
+          "xtra profile create work --url https://api.example.com",
+          "xtra profile use staging"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 30,
+        "name": "ui",
+        "category": "Utilities",
+        "description": "Interactive terminal dashboard",
+        "usage": "xtra ui",
+        "features": [
+          "Interactive project selection",
+          "Environment selector",
+          "Secret viewer",
+          "Real-time sync"
+        ],
+        "keyBindings": {
+          "arrows": "Navigate",
+          "enter": "Select/Load",
+          "tab": "Switch panels",
+          "v": "Toggle values",
+          "q": "Quit"
+        },
+        "examples": [
+          "xtra ui"
+        ],
+        "aliases": []
+      },
+      {
+        "id": 31,
+        "name": "completion",
+        "category": "Utilities",
+        "description": "Shell completion scripts",
+        "usage": "xtra completion <shell>",
+        "subcommands": [
+          {
+            "name": "bash",
+            "description": "Bash completion"
+          },
+          {
+            "name": "zsh",
+            "description": "Zsh completion"
+          },
+          {
+            "name": "powershell",
+            "description": "PowerShell completion"
+          },
+          {
+            "name": "install",
+            "description": "Auto-install for current shell"
+          }
+        ],
+        "examples": [
+          "xtra completion bash >> ~/.bashrc",
+          "xtra completion zsh >> ~/.zshrc"
+        ],
+        "aliases": []
+      }
+    ],
+    "categories": [
+      {
+        "id": "Authentication",
+        "description": "Login and authentication",
+        "commands": ["login"]
+      },
+      {
+        "id": "Project & Setup",
+        "description": "Initialize and manage projects",
+        "commands": ["init", "project", "branch", "checkout"]
+      },
+      {
+        "id": "Secrets Management",
+        "description": "Create, update, rotate secrets",
+        "commands": ["secrets", "rotate"]
+      },
+      {
+        "id": "Version Control",
+        "description": "View and manage secret versions",
+        "commands": ["history", "rollback"]
+      },
+      {
+        "id": "Execution",
+        "description": "Run commands with injected secrets",
+        "commands": ["run", "watch", "simulate"]
+      },
+      {
+        "id": "Configuration",
+        "description": "Generate and manage config files",
+        "commands": ["generate", "import", "export", "template", "profile"]
+      },
+      {
+        "id": "Environment",
+        "description": "Environment and mode management",
+        "commands": ["local", "env"]
+      },
+      {
+        "id": "Audit & Logging",
+        "description": "Audit trails and compliance",
+        "commands": ["logs", "audit"]
+      },
+      {
+        "id": "Security",
+        "description": "Security scanning and leak detection",
+        "commands": ["scan"]
+      },
+      {
+        "id": "Access Control",
+        "description": "JIT access and permissions",
+        "commands": ["access"]
+      },
+      {
+        "id": "Administration",
+        "description": "Admin user and role management",
+        "commands": ["admin"]
+      },
+      {
+        "id": "Integrations",
+        "description": "External service integrations",
+        "commands": ["integration"]
+      },
+      {
+        "id": "CI/CD",
+        "description": "Pipeline automation",
+        "commands": ["ci"]
+      },
+      {
+        "id": "Utilities",
+        "description": "Utility and diagnostic commands",
+        "commands": ["status", "diff", "doctor", "ui", "completion", "logs"]
+      }
+    ],
+    "commonPatterns": {
+      "projectSelection": {
+        "description": "Ways to specify project",
+        "methods": [
+          "-p, --project <id> flag",
+          "xtra init (creates .xtrarc)",
+          "xtra project set (global config)",
+          ".xtrarc in current directory"
+        ]
+      },
+      "environmentShorthands": {
+        "dev": "development",
+        "stg": "staging",
+        "prod": "production"
+      },
+      "environmentVariables": [
+        "XTRA_MACHINE_TOKEN - CI/CD authentication",
+        "XTRA_API_URL - Override API endpoint",
+        "XTRA_PROFILE - Use specific profile",
+        "XTRA_LOCAL_MODE - Enable offline mode"
+      ]
+    },
+    "bestPractices": [
+      "Never use --show in shared sessions",
+      "Use JIT access for temporary privileges",
+      "Enable scan hook to prevent leaks",
+      "Rotate secrets regularly with shadow mode",
+      "Verify audit chain for compliance",
+      "Use profiles for multiple workspaces",
+      "Cache secrets locally with xtra local sync",
+      "Check status before deployments"
+    ],
+    "errorReferences": {
+      "Unauthorized": "Invalid or expired token - run 'xtra login'",
+      "Project not found": "Wrong project ID or no access",
+      "No secrets found": "Environment empty or wrong branch",
+      ".env tracked in git": "Remove with 'git rm --cached .env'",
+      "Connection refused": "Check network and API status with 'xtra doctor'"
+    }
+  }
+}
