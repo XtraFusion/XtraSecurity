@@ -3,7 +3,7 @@
 [![npm version](https://badge.fury.io/js/xtra-node-sdk.svg)](https://www.npmjs.com/package/xtra-node-sdk)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-The official Node.js client for [XtraSecurity](https://xtrasecurity.dev) — securely access your environment secrets in any Node.js application.
+The official Node.js client for [XtraSecurity](https://www.xtrasecurity.in) — securely access your environment secrets in any Node.js application.
 
 ---
 
@@ -38,7 +38,7 @@ console.log(process.env.DATABASE_URL);
 
 ## Authentication
 
-Generate an API token from your [XtraSecurity dashboard](https://xtrasecurity.dev/settings/api-keys) and pass it to the client.
+Generate an API token from your [XtraSecurity dashboard](https://www.xtrasecurity.in/settings/api-keys) and pass it to the client.
 
 **Option 1: In-code (not recommended for production)**
 ```typescript
@@ -63,7 +63,7 @@ After running `xtra login` with the CLI, the SDK automatically reads from `~/.xt
 |---|---|---|---|
 | `token` | `string` | `XTRA_TOKEN` env var | Your API token |
 | `projectId` | `string` | `XTRA_PROJECT_ID` env var | Default project ID |
-| `apiUrl` | `string` | `https://xtrasecurity.dev/api` | Custom API endpoint |
+| `apiUrl` | `string` | `https://www.xtrasecurity.in/api` | Custom API endpoint |
 | `cache` | `boolean` | `true` | Enable in-memory caching |
 | `cacheTtl` | `number` | `30000` | Cache TTL in milliseconds |
 

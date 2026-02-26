@@ -25,7 +25,7 @@
         "type": "git",
         "url": "https://github.com/xtrasecurity/xtra-node-sdk.git"
     },
-    "homepage": "https://xtrasecurity.dev/docs/sdk/node",
+    "homepage": "https://www.xtrasecurity.in/docs/sdk/node",
     "bugs": {
         "url": "https://github.com/xtrasecurity/xtra-node-sdk/issues"
     },

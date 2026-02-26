@@ -6,7 +6,7 @@
         "description": "The XtraSecurity API allows you to programmatically manage secrets, projects, teams, and notifications. Authenticate using Bearer tokens (API Keys) generated from the dashboard.",
         "contact": {
             "name": "XtraSecurity Support",
-            "url": "https://xtrasecurity.dev/support"
+            "url": "https://www.xtrasecurity.in/support"
         },
         "license": {
             "name": "MIT"

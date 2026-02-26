@@ -57,7 +57,7 @@ export class XtraClient {
 
   constructor(options: XtraClientOptions = {}) {
     const token = options.token ?? process.env.XTRA_TOKEN ?? this.loadLocalToken();
-    const apiUrl = options.apiUrl ?? process.env.XTRA_API_URL ?? 'https://xtrasecurity.dev/api';
+    const apiUrl = options.apiUrl ?? process.env.XTRA_API_URL ?? 'https://www.xtrasecurity.in/api';
     this.projectId = options.projectId ?? process.env.XTRA_PROJECT_ID ?? '';
     this.useCache = options.cache !== false;
     this.cacheTtl = options.cacheTtl ?? 30_000; // 30s default
