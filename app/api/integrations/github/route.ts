@@ -4,7 +4,6 @@ import { verifyAuth } from "@/lib/server-auth";
 import { encrypt, decrypt } from "@/lib/encription";
 
 const GITHUB_CLIENT_ID = process.env.GITHUB_CLIENT_ID;
-const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 const GITHUB_REDIRECT_URI = process.env.NEXTAUTH_URL + "/api/integrations/github/callback";
 
 // GET /api/integrations/github - Get GitHub integration status

@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
@@ -74,7 +75,12 @@ const NAV_GROUPS = [
 export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
     const pathname = usePathname();
     const { user, selectedWorkspace } = useUser();
-    const { theme, setTheme } = useTheme();
+    const { resolvedTheme, setTheme } = useTheme();
+    const [mounted, setMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setMounted(true);
+    }, []);
 
     const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
     const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
@@ -148,8 +154,8 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                     <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={10}>
                         <DropdownMenuLabel>My Account</DropdownMenuLabel>
                         <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-                            {theme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                        <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+                            {mounted && resolvedTheme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
                             <span>Toggle Theme</span>
                         </DropdownMenuItem>
                         {hasAdminAccess && (
