@@ -1,0 +1,44 @@
+# XtraSecurity Robots.txt
+# Website: https://xtrasecurity.in
+
+# Allow all bots
+User-agent: *
+Allow: /
+Disallow: /admin/
+Disallow: /api/
+Disallow: /private/
+Disallow: /.next/
+Disallow: /node_modules/
+Disallow: *?version=
+Disallow: *?utm_source=
+Disallow: *?utm_medium=
+Disallow: *?utm_campaign=
+Disallow: *?utm_content=
+Disallow: *?utm_term=
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Sitemap
+Sitemap: https://xtrasecurity.in/sitemap.xml
+Sitemap: https://xtrasecurity.in/sitemap-pages.xml
+
+# Google specific
+User-agent: Googlebot
+Allow: /
+Crawl-delay: 0
+
+# Bing specific
+User-agent: Bingbot
+Allow: /
+Crawl-delay: 1
+
+# Block bad bots
+User-agent: MJ12bot
+Disallow: /
+
+User-agent: AhrefsBot
+Disallow: /
+
+User-agent: SemrushBot
+Disallow: /
