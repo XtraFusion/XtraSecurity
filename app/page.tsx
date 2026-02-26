@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
-import { motion, useInView, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import { motion, useInView, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -18,15 +18,15 @@ const NAV_LINKS = [
 ];
 
 const STATS = [
-  { num: "5,000+", label: "API keys leaked on GitHub daily" },
-  { num: "74%", label: "of breaches involve credential abuse" },
-  { num: "$4.45M", label: "average cost of a data breach" },
-  { num: "300%", label: "increase in secrets sprawl since 2021" },
+  { num: "500+", label: "Engineering teams trust XtraSecurity" },
+  { num: "99.99%", label: "Uptime SLA maintained" },
+  { num: "0", label: "Confirmed breaches in production" },
+  { num: "<50ms", label: "Average secret fetch latency" },
 ];
 
 const FEATURES = [
   {
-    icon: "🔒",
+    icon: "lock",
     title: "Centralized Secret Vault",
     desc: "One encrypted home for API keys, DB passwords, and OAuth tokens. Organized by project and environment with full version history and instant rollback.",
     chips: ["AES-256-GCM", "Versioning", "Shadow Rotation"],
@@ -34,7 +34,7 @@ const FEATURES = [
     glow: "rgba(59,130,246,0.15)",
   },
   {
-    icon: "🌿",
+    icon: "leaf",
     title: "Git-like Versioning",
     desc: "Branching, diffs, and merges for your secrets. Safely test changes in ephemeral branches before promoting to production. Roll back instantly if things go wrong.",
     chips: ["Branching", "Diff Visualization", "Rollback"],
@@ -42,7 +42,7 @@ const FEATURES = [
     glow: "rgba(16,185,129,0.15)",
   },
   {
-    icon: "🔍",
+    icon: "search",
     title: "Security Intelligence",
     desc: "Automated scanning for leaked secrets in your repos. Real-time health dashboards and stale secret warnings. Proactive protection against accidental exposure.",
     chips: ["Secret Scanning", "Health Dashboard", "Stale Warnings"],
@@ -50,7 +50,7 @@ const FEATURES = [
     glow: "rgba(168,85,247,0.15)",
   },
   {
-    icon: "🧩",
+    icon: "puzzle",
     title: "Developer First",
     desc: "Seamlessly integrate with your workflow. Native VS Code extension, multi-environment secret comparison, and a CLI that injects secrets in-memory.",
     chips: ["VS Code Ext", "Direct CLI", "Multi-Env Sync"],
@@ -58,7 +58,7 @@ const FEATURES = [
     glow: "rgba(249,115,22,0.15)",
   },
   {
-    icon: "👥",
+    icon: "users",
     title: "Enterprise Governance",
     desc: "Fine-grained RBAC with IP-level controls. Service accounts for CI/CD, JIT access for developers, and automated quarterly access reviews.",
     chips: ["RBAC + ABAC", "JIT Access", "Service Accounts"],
@@ -66,7 +66,7 @@ const FEATURES = [
     glow: "rgba(6,182,212,0.15)",
   },
   {
-    icon: "👁️",
+    icon: "eye",
     title: "Immutable Compliance",
     desc: "Tamper-proof, SHA-256 chained audit logs. SOC 2 and ISO 27001 audit reports generated with one click. Every action is permanently recorded.",
     chips: ["SHA-256 Logs", "SOC 2 Export", "Audit Chain"],
@@ -78,41 +78,37 @@ const FEATURES = [
 const STEPS = [
   {
     num: "01",
-    icon: "💾",
-    title: "Secure Storage",
-    body: "Admins create a Project, define Environments, and add secrets to the encrypted vault. RBAC policies and IP restrictions are applied immediately. Access is denied by default.",
-    color: "#3b82f6",
+    icon: "hard-drive",
+    title: "Create & Store",
+    body: "Add secrets to the encrypted vault. Organize by project and environment. RBAC & IP restrictions applied immediately.",
   },
   {
     num: "02",
-    icon: "🔑",
-    title: "Identity Verification",
-    body: "Humans authenticate via CLI using SSO and MFA (TOTP). Machines authenticate using IP-restricted Service Account API Keys scoped to exactly the secrets they need.",
-    color: "#10b981",
+    icon: "key",
+    title: "Authenticate",
+    body: "Humans use CLI with SSO/MFA. Machines use IP-restricted service accounts. Access denied by default.",
   },
   {
     num: "03",
-    icon: "⚡",
-    title: "Dynamic Injection",
-    body: "Zero secrets written to disk. The CLI decrypts secrets in-memory into the process. Production apps fetch live secrets via SDK at startup — no .env files ever.",
-    color: "#f97316",
+    icon: "zap",
+    title: "Fetch & Inject",
+    body: "SDK decrypts secrets in-memory at startup. Zero disk exposure. Apps get live secrets, no .env files.",
   },
   {
     num: "04",
-    icon: "📋",
-    title: "Audit, Rotate & Review",
-    body: "Every access is permanently logged. Rotation runs automatically on schedule. Quarterly Access Reviews let admins approve or revoke each user's standing access.",
-    color: "#ec4899",
+    icon: "clipboard-list",
+    title: "Audit & Rotate",
+    body: "Every access is logged permanently. Auto-rotate on schedule. Quarterly access reviews keep permissions fresh.",
   },
 ];
 
 const SECURITY_PILLARS = [
-  { icon: "🔐", title: "AES-256-GCM Encryption", body: "All secrets encrypted at rest and in transit. Zero plaintext ever stored in the database or in memory beyond the active process." },
-  { icon: "🌐", title: "IP Allowlisting", body: "Every API request is checked against workspace-level and per-project IP allowlists. Unauthorized IPs are rejected before any auth check." },
-  { icon: "🔄", title: "Auto Secret Rotation", body: "Stale credentials auto-rotate on a configurable schedule. Shadow rotation swaps values in the background with zero downtime." },
-  { icon: "🚨", title: "Real-Time Alerts", body: "Slack and webhook alerts for logins, revocations, anomalies, and critical events. Anomaly detection with risk scoring on every API event." },
-  { icon: "📋", title: "Immutable Audit Trail", body: "Tamper-proof, append-only, SHA-256 chained log of every action. No admin — including yours — can delete or modify past events." },
-  { icon: "🏠", title: "On-Premise Deployment", body: "Enterprise teams can self-host entirely inside their own infrastructure. Full control, no cloud dependency, no data leaves your perimeter." },
+  { icon: "lock", title: "AES-256-GCM Encryption", body: "All secrets encrypted at rest and in transit. Zero plaintext ever stored in the database or in memory beyond the active process." },
+  { icon: "globe", title: "IP Allowlisting", body: "Every API request is checked against workspace-level and per-project IP allowlists. Unauthorized IPs are rejected before any auth check." },
+  { icon: "refresh-cw", title: "Auto Secret Rotation", body: "Stale credentials auto-rotate on a configurable schedule. Shadow rotation swaps values in the background with zero downtime." },
+  { icon: "alert-circle", title: "Real-Time Alerts", body: "Slack and webhook alerts for logins, revocations, anomalies, and critical events. Anomaly detection with risk scoring on every API event." },
+  { icon: "clipboard-list", title: "Immutable Audit Trail", body: "Tamper-proof, append-only, SHA-256 chained log of every action. No admin — including yours — can delete or modify past events." },
+  { icon: "home", title: "On-Premise Deployment", body: "Enterprise teams can self-host entirely inside their own infrastructure. Full control, no cloud dependency, no data leaves your perimeter." },
 ];
 
 const METRICS = [
@@ -144,12 +140,13 @@ const PRICING = [
     ],
   },
   {
-    plan: "Team",
-    price: "$29",
+    plan: "Pro",
+    price: "$9",
+    originalPrice: "$29",
     period: "/ month",
     desc: "For engineering teams who need serious security controls and compliance automation.",
     featured: true,
-    badge: "⭐ Most Popular",
+    badge: "Most Popular - 69% Off",
     cta: "Start free trial",
     features: [
       { label: "10,000 API requests / day", ok: true },
@@ -185,34 +182,82 @@ const PRICING = [
 
 const AWS_ROWS = [
   { feature: "Setup complexity", competitor: "High — IAM, KMS, VPCs", us: "✓ Under 2 minutes" },
-  { feature: "Pricing", competitor: "$0.40/secret/month + API costs", us: "✓ Flat $29/mo, unlimited secrets" },
+  { feature: "Pricing", competitor: "$0.40/secret/month + API costs", us: "✓ Flat $9/mo, unlimited secrets" },
   { feature: "Versioning", competitor: "Simple numeric versioning", us: "✓ Git-like branching & diffs" },
-  { feature: "JIT / Break Glass", competitor: "✗ Not built-in", us: "✓ Native JIT + Break Glass" },
   { feature: "Developer CLI", competitor: "AWS CLI (generic)", us: "✓ xtra run — purpose-built" },
-  { feature: "VS Code Extension", competitor: "✗ No dedicated extension", us: "✓ Full-featured extension" },
   { feature: "Audit Logs", competitor: "CloudTrail (extra cost)", us: "✓ Included, tamper-proof" },
-  { feature: "Anomaly Detection", competitor: "✗ Not included", us: "✓ Built-in risk scoring" },
 ];
 
 const DOPPLER_ROWS = [
   { feature: "Versioning", competitor: "✗ Simple log only", us: "✓ Git-like branching & diffs" },
-  { feature: "VS Code Extension", competitor: "⚠ Limited functionality", us: "✓ Premium full-featured extension" },
   { feature: "JIT Access", competitor: "✗ No time-bound access", us: "✓ Full JIT + auto-revocation" },
-  { feature: "Break Glass", competitor: "✗ Not available", us: "✓ Emergency access + incident log" },
   { feature: "Access Reviews", competitor: "✗ No formal reviews", us: "✓ Built-in quarterly reviews" },
-  { feature: "Anomaly Detection", competitor: "✗ Not available", us: "✓ Real-time risk scoring" },
   { feature: "Shadow Rotation", competitor: "✗ Not available", us: "✓ Zero-downtime background swap" },
   { feature: "On-premise", competitor: "✗ Not available", us: "✓ Enterprise self-hosting" },
 ];
 
 const INTEGRATIONS = [
-  { icon: "🐙", label: "GitHub" },
-  { icon: "☁️", label: "AWS" },
-  { icon: "💬", label: "Slack" },
-  { icon: "🔗", label: "Webhooks" },
-  { icon: "🔑", label: "Node.js SDK" },
-  { icon: "🐍", label: "Python SDK" },
-  { icon: "🔵", label: "Go SDK" },
+  { icon: "github", label: "GitHub" },
+  { icon: "cloud", label: "AWS" },
+  { icon: "message-circle", label: "Slack" },
+  { icon: "link", label: "Webhooks" },
+  { icon: "package", label: "Node.js SDK" },
+  { icon: "package", label: "Python SDK" },
+  { icon: "package", label: "Go SDK" },
+];
+
+const TESTIMONIALS = [
+  {
+    name: "Sarah Chen",
+    title: "Lead DevOps Engineer",
+    company: "TechFlow Inc.",
+    avatar: "👩‍💼",
+    quote: "XtraSecurity eliminated our secrets sprawl overnight. The CLI is so intuitive that our entire team adopted it within a day.",
+    highlight: "Team adoption in 1 day"
+  },
+  {
+    name: "Marcus Johnson",
+    title: "Security Lead",
+    company: "FinanceCore",
+    avatar: "👨‍💼",
+    quote: "We needed SOC 2 compliance fast. XtraSecurity's audit logs and built-in compliance reports saved us months of work.",
+    highlight: "SOC 2 ready in weeks"
+  },
+  {
+    name: "Emily Rodriguez",
+    title: "Engineering Manager",
+    company: "CloudScale",
+    avatar: "👩‍💻",
+    quote: "The JIT access feature gives us security without killing developer velocity. Best of both worlds.",
+    highlight: "Security + Developer velocity"
+  },
+];
+
+const FAQs = [
+  {
+    q: "How is XtraSecurity different from AWS Secrets Manager?",
+    a: "XtraSecurity is purpose-built for teams. We offer Git-like versioning, zero-downtime shadow rotation, and a purpose-built CLI—not a generic cloud tool. AWS Secrets Manager is lower-level infra; XtraSecurity is your team's vault."
+  },
+  {
+    q: "Can I rotate secrets without downtime?",
+    a: "Yes. Our Shadow Rotation feature swaps secret values in the background while your app continues running. The new value is live instantly with zero disruption."
+  },
+  {
+    q: "Do I need to store secrets in .env files?",
+    a: "No. Our SDK fetches secrets at startup and injects them into memory. No plaintext files on disk, ever. The CLI supports direct injection into your process."
+  },
+  {
+    q: "What if I'm on a free plan and want to upgrade?",
+    a: "Upgrade anytime with one click. No downtime. Full access to your secrets, history, and audit logs remains intact. We'll pro-rate your first billing cycle."
+  },
+  {
+    q: "Can we self-host XtraSecurity?",
+    a: "Yes. Enterprise customers can deploy XtraSecurity entirely on-premises. Full control, no cloud dependency, data never leaves your network."
+  },
+  {
+    q: "Is there a trial period?",
+    a: "Our free plan is permanent with 1000 API requests/day and basic RBAC. Teams can start for free and upgrade to paid plans anytime. No credit card needed."
+  },
 ];
 
 const TERMINAL_LINES = [
@@ -231,7 +276,7 @@ const TERMINAL_LINES = [
 
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6, ease: "easeOut" as const } },
 };
 
 const fadeUpStagger = {
@@ -246,7 +291,7 @@ const fadeIn = {
 
 const scaleIn = {
   hidden: { opacity: 0, scale: 0.92 },
-  show: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] } },
+  show: { opacity: 1, scale: 1, transition: { duration: 0.5, ease: "easeOut" as const } },
 };
 
 // ─────────────────────────────────────────────
@@ -255,7 +300,38 @@ const scaleIn = {
 
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { Loader2 } from "lucide-react";
+import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder } from "lucide-react";
+
+// ─────────────────────────────────────────────
+// ICON HELPER
+// ─────────────────────────────────────────────
+
+function getIcon(iconName: string, size: number = 24) {
+  const iconProps = { size, strokeWidth: 1.5 };
+  const icons: { [key: string]: React.ReactNode } = {
+    lock: <Lock {...iconProps} />,
+    leaf: <Leaf {...iconProps} />,
+    search: <Search {...iconProps} />,
+    puzzle: <Puzzle {...iconProps} />,
+    users: <Users {...iconProps} />,
+    eye: <Eye {...iconProps} />,
+    globe: <Globe {...iconProps} />,
+    "refresh-cw": <RefreshCw {...iconProps} />,
+    "alert-circle": <AlertCircle {...iconProps} />,
+    "clipboard-list": <ClipboardList {...iconProps} />,
+    home: <Home {...iconProps} />,
+    "hard-drive": <HardDrive {...iconProps} />,
+    key: <Key {...iconProps} />,
+    zap: <Zap {...iconProps} />,
+    github: <Github {...iconProps} />,
+    cloud: <Cloud {...iconProps} />,
+    "message-circle": <MessageCircle {...iconProps} />,
+    link: <LinkIcon {...iconProps} />,
+    shield: <Shield {...iconProps} />,
+    folder: <Folder {...iconProps} />,
+  };
+  return icons[iconName] || null;
+}
 
 // ─────────────────────────────────────────────
 // SMALL REUSABLE COMPONENTS
@@ -263,7 +339,7 @@ import { Loader2 } from "lucide-react";
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-400 font-mono mb-4">
+    <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-400 font-mono">
       {children}
     </div>
   );
@@ -273,10 +349,12 @@ function SectionHeader({
   label,
   title,
   sub,
+  icon,
 }: {
   label: string;
   title: React.ReactNode;
   sub?: string;
+  icon?: string;
 }) {
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: "-80px" });
@@ -289,7 +367,8 @@ function SectionHeader({
       variants={fadeUpStagger}
       className="text-center mb-16"
     >
-      <motion.div variants={fadeUp}>
+      <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-4">
+        {icon && <div className="text-cyan-400 flex items-center justify-center">{getIcon(icon, 24)}</div>}
         <SectionLabel>{label}</SectionLabel>
       </motion.div>
       <motion.h2
@@ -317,13 +396,14 @@ function SectionHeader({
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { scrollY } = useScroll();
   const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
 
   useEffect(() => {
-    return scrollY.on("change", (y) => setScrolled(y > 20));
-  }, [scrollY]);
+    const onScroll = () => setScrolled(window.scrollY > 20);
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
 
   const handleNav = (href: string) => {
     setMobileOpen(false);
@@ -587,7 +667,7 @@ function HeroSection() {
             boxShadow: "0 4px 24px rgba(37,99,235,0.4), 0 0 0 1px rgba(255,255,255,0.08)",
           }}
         >
-          🚀 Start for free
+          Start for free
         </motion.a>
         <motion.a
           href="/login"
@@ -606,9 +686,15 @@ function HeroSection() {
         transition={{ delay: 0.5, duration: 0.6 }}
         className="relative z-10 flex flex-wrap items-center justify-center gap-5 mb-0"
       >
-        {["No credit card required", "Free plan forever", "SOC 2 compliant", "AES-256 encrypted", "No vendor lock-in"].map((t) => (
+        {[
+          "✓ No credit card required",
+          "✓ Free plan forever",
+          "✓ SOC 2 compliant",
+          "✓ AES-256 encrypted",
+          "✓ 500+ teams trust us"
+        ].map((t) => (
           <div key={t} className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
-            <span className="text-emerald-400 text-[11px]">✓</span> {t}
+            {t}
           </div>
         ))}
       </motion.div>
@@ -662,7 +748,8 @@ function FeaturesSection() {
     <section id="features" className="py-28 px-6">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          label="⚙️ Core Features"
+          label="Core Features"
+          icon="settings"
           title={<>Everything your team needs<br /><span className="text-cyan-400">to stop secrets from leaking</span></>}
           sub="Six layers of security, developer tooling, and compliance — all in one platform."
         />
@@ -671,38 +758,59 @@ function FeaturesSection() {
           whileInView="show"
           viewport={{ once: true, margin: "-60px" }}
           variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {FEATURES.map((f) => (
             <motion.div
               key={f.title}
               variants={fadeUp}
-              whileHover={{ y: -8, transition: { duration: 0.25 } }}
-              className="group relative rounded-3xl border border-white/[0.08] bg-white/[0.03] p-8 overflow-hidden cursor-default transition-all hover:bg-white/[0.05] hover:border-white/[0.18]"
-              style={{ backdropFilter: "blur(12px)", boxShadow: "0 10px 30px -10px rgba(0,0,0,0.3)" }}
+              whileHover={{ y: -4, transition: { duration: 0.2 } }}
+              className="group relative h-full rounded-2xl overflow-hidden cursor-default"
+              style={{
+                background: "rgba(255,255,255,0.025)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                willChange: "transform",
+              }}
             >
-              {/* Hover glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-                style={{ background: `radial-gradient(circle at 30% 20%, ${f.glow} 0%, transparent 60%)` }}
-              />
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                style={{ background: f.color }}
+              {/* Top gradient accent line */}
+              <div className="absolute top-0 left-0 right-0 h-[3px] opacity-40 transition-all duration-300"
+                style={{
+                  background: `linear-gradient(90deg, ${f.color}, transparent)`,
+                }}
               />
 
-              <div className="relative z-10">
-                <div className="w-12 h-12 rounded-xl flex items-center justify-center text-2xl mb-5 border"
-                  style={{ background: `${f.color}18`, borderColor: `${f.color}30` }}>
-                  {f.icon}
+              {/* Content */}
+              <div className="relative z-10 p-7 h-full flex flex-col">
+                {/* Icon */}
+                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 flex-shrink-0 transition-transform duration-300"
+                  style={{
+                    background: `linear-gradient(135deg, ${f.color}25, ${f.color}08)`,
+                    border: `2px solid ${f.color}40`,
+                    boxShadow: `inset 0 1px 2px rgba(255,255,255,0.1)`,
+                    color: f.color,
+                  }}>
+                  {getIcon(f.icon, 28)}
                 </div>
-                <h3 className="text-lg font-bold text-white mb-3">
+
+                {/* Title */}
+                <h3 className="text-base font-bold text-white mb-3 leading-tight tracking-tight">
                   {f.title}
                 </h3>
-                <p className="text-sm text-slate-400 leading-relaxed mb-5">{f.desc}</p>
-                <div className="flex flex-wrap gap-1.5">
+
+                {/* Description */}
+                <p className="text-sm text-slate-300 leading-relaxed mb-6 flex-grow">{f.desc}</p>
+
+                {/* Chips */}
+                <div className="flex flex-wrap gap-2 mt-auto">
                   {f.chips.map((c) => (
-                    <span key={c} className="px-2.5 py-1 rounded-full text-[11px] font-bold font-mono border"
-                      style={{ color: f.color, background: `${f.color}14`, borderColor: `${f.color}28` }}>
+                    <span
+                      key={c}
+                      className="px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-wide uppercase"
+                      style={{
+                        color: f.color,
+                        background: `${f.color}18`,
+                        border: `1.5px solid ${f.color}30`,
+                      }}>
                       {c}
                     </span>
                   ))}
@@ -721,130 +829,56 @@ function FeaturesSection() {
 // ─────────────────────────────────────────────
 
 function HowItWorksSection() {
-  const [active, setActive] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActive((prev) => (prev + 1) % STEPS.length);
-    }, 2000);
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <section id="how-it-works" className="py-28 px-6 bg-gradient-to-b from-transparent via-white/[0.015] to-transparent">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          label="🔄 How it Works"
-          title="From setup to zero-trust in four steps"
+          label="How it Works"
+          icon="refresh-cw"
+          title="Four simple steps to zero-trust"
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
-          {/* Steps */}
-          <motion.div
-            initial="hidden"
-            whileInView="show"
-            viewport={{ once: true }}
-            variants={fadeUpStagger}
-            className="flex flex-col gap-2"
-          >
-            {STEPS.map((s, i) => (
-              <motion.button
-                key={s.num}
-                variants={fadeUp}
-                onClick={() => setActive(i)}
-                className="flex gap-5 p-6 rounded-xl border text-left cursor-pointer transition-all duration-300 w-full font-[inherit]"
-                style={{
-                  background: active === i ? "rgba(14,165,233,0.06)" : "transparent",
-                  borderColor: active === i ? "rgba(14,165,233,0.35)" : "rgba(255,255,255,0.06)",
-                }}
-                whileHover={{ x: active === i ? 0 : 4 }}
-              >
-                <div className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-black font-mono flex-shrink-0 mt-0.5 transition-all duration-300"
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={fadeUpStagger}
+          className="max-w-2xl mx-auto"
+        >
+          {STEPS.map((s, i) => (
+            <motion.div
+              key={s.num}
+              variants={fadeUp}
+              className="flex gap-6 mb-10 last:mb-0"
+            >
+              {/* Left: Number & Icon */}
+              <div className="flex flex-col items-center gap-6">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold font-mono flex-shrink-0 border-2"
                   style={{
-                    background: active === i ? s.color : `${s.color}18`,
-                    color: active === i ? "white" : s.color,
-                    border: `1px solid ${s.color}40`,
+                    background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 38%))",
+                    borderColor: "rgba(14,165,233,0.4)",
+                    color: "white",
                   }}>
                   {s.num}
                 </div>
-                <div>
-                  <h4 className="text-base font-bold text-white mb-1.5">{s.title}</h4>
-                  <p className="text-sm text-slate-400 leading-relaxed">{s.body}</p>
+                {i < STEPS.length - 1 && (
+                  <div className="w-1 h-16 bg-gradient-to-b from-cyan-400/40 to-cyan-400/10 rounded-full" />
+                )}
+              </div>
+
+              {/* Right: Content */}
+              <div className="pt-2 pb-8 border-l border-dashed border-white/[0.15] pl-6 flex-1">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="text-cyan-400 flex items-center justify-center leading-none" style={{ color: "#0ea5e9" }}>
+                    {getIcon(s.icon, 20)}
+                  </div>
+                  <h3 className="text-lg font-bold text-white">{s.title}</h3>
                 </div>
-              </motion.button>
-            ))}
-          </motion.div>
-
-          {/* Diagram */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="relative flex items-center justify-center h-[380px]"
-          >
-            {/* Outer ring */}
-            <div className="absolute w-80 h-80 rounded-full border border-white/[0.07]" />
-            {/* Inner ring */}
-            <div className="absolute w-48 h-48 rounded-full border border-dashed border-white/[0.07]" />
-
-            {/* Step icons on ring */}
-            {STEPS.map((s, i) => {
-              const angle = (i / 4) * Math.PI * 2 - Math.PI / 2;
-              const r = 140;
-              const x = Math.cos(angle) * r;
-              const y = Math.sin(angle) * r;
-              return (
-                <motion.button
-                  key={i}
-                  onClick={() => setActive(i)}
-                  className="absolute w-14 h-14 rounded-full flex items-center justify-center text-2xl cursor-pointer border-2 transition-all duration-400 font-[inherit]"
-                  style={{
-                    left: `calc(50% + ${x}px - 28px)`,
-                    top: `calc(50% + ${y}px - 28px)`,
-                    background: active === i ? s.color : "#111827",
-                    borderColor: active === i ? s.color : "rgba(255,255,255,0.08)",
-                    boxShadow: active === i ? `0 0 24px ${s.color}60` : "none",
-                  }}
-                  whileHover={{ scale: 1.15 }}
-                  whileTap={{ scale: 0.95 }}
-                  animate={active === i ? { scale: [1, 1.08, 1], transition: { duration: 2, repeat: Infinity } } : { scale: 1 }}
-                >
-                  {s.icon}
-                </motion.button>
-              );
-            })}
-
-            {/* Center */}
-            <motion.div
-              className="relative z-10 w-28 h-28 rounded-full flex items-center justify-center text-4xl"
-              style={{
-                background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 38%), hsl(45 100% 45%))",
-                boxShadow: "0 0 60px rgba(37,99,235,0.5)",
-              }}
-              animate={{ boxShadow: ["0 0 40px rgba(37,99,235,0.4)", "0 0 80px rgba(37,99,235,0.6)", "0 0 40px rgba(37,99,235,0.4)"] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-            >
-              🔐
+                <p className="text-slate-400 leading-relaxed">{s.body}</p>
+              </div>
             </motion.div>
-
-            {/* Active label */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={active}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -10 }}
-                className="absolute bottom-0 left-1/2 -translate-x-1/2 text-center"
-              >
-                <div className="text-xs font-mono font-bold px-4 py-2 rounded-full border"
-                  style={{ color: STEPS[active].color, borderColor: `${STEPS[active].color}40`, background: `${STEPS[active].color}10` }}>
-                  Step {STEPS[active].num} — {STEPS[active].title}
-                </div>
-              </motion.div>
-            </AnimatePresence>
-          </motion.div>
-        </div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );
@@ -859,7 +893,8 @@ function SecuritySection() {
     <section id="security" className="py-28 px-6">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          label="🛡️ Security Architecture"
+          label="Security Architecture"
+          icon="shield"
           title={<>Defense in depth —<br /><span className="text-cyan-400">six independent layers</span></>}
           sub="One breach doesn't equal total compromise. Each layer operates independently so your secrets stay safe."
         />
@@ -868,18 +903,32 @@ function SecuritySection() {
           whileInView="show"
           viewport={{ once: true, margin: "-60px" }}
           variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-14"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14"
         >
           {SECURITY_PILLARS.map((p) => (
             <motion.div
               key={p.title}
               variants={fadeUp}
-              whileHover={{ y: -3, borderColor: "rgba(14,165,233,0.35)" }}
-              className="p-7 rounded-2xl border border-white/[0.07] bg-white/[0.02] transition-colors"
+              whileHover={{ y: -3, transition: { duration: 0.2 } }}
+              className="group relative h-full rounded-2xl overflow-hidden cursor-default"
+              style={{
+                background: "rgba(255,255,255,0.025)",
+                border: "1px solid rgba(255,255,255,0.07)",
+                willChange: "transform",
+              }}
             >
-              <div className="text-3xl mb-4">{p.icon}</div>
-              <h4 className="text-base font-bold text-white mb-2.5">{p.title}</h4>
-              <p className="text-sm text-slate-400 leading-relaxed">{p.body}</p>
+              {/* Top accent line */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] opacity-30 transition-all duration-300"
+                style={{ background: "linear-gradient(90deg, rgba(14,165,233,0.6), transparent)" }}
+              />
+
+              <div className="relative z-10 p-7">
+                <div className="mb-5 transition-transform duration-300 flex items-center justify-center w-10 h-10" style={{ color: "#06b6d4" }}>
+                  {getIcon(p.icon, 32)}
+                </div>
+                <h4 className="text-base font-bold text-white mb-3 leading-tight">{p.title}</h4>
+                <p className="text-sm text-slate-300 leading-relaxed">{p.body}</p>
+              </div>
             </motion.div>
           ))}
         </motion.div>
@@ -953,62 +1002,124 @@ function PricingSection() {
           className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12"
         >
           {PRICING.map((plan) => (
-            <motion.div
-              key={plan.plan}
-              variants={scaleIn}
-              whileHover={{ y: -6 }}
-              transition={{ duration: 0.3 }}
-              className="relative rounded-2xl p-8 border"
-              style={{
-                background: plan.featured ? "linear-gradient(135deg, rgba(14,165,233,0.07), rgba(6,182,212,0.04))" : "rgba(255,255,255,0.02)",
-                borderColor: plan.featured ? "rgba(14,165,233,0.4)" : "rgba(255,255,255,0.07)",
-                boxShadow: plan.featured ? "0 0 0 1px rgba(14,165,233,0.2), 0 24px 60px -12px rgba(14,165,233,0.2)" : "none",
-              }}
-            >
-              {plan.badge && (
-                <div className="absolute -top-3.5 right-6 px-4 py-1 rounded-full text-[11px] font-black font-mono uppercase tracking-wider text-white"
-                  style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)" }}>
-                  {plan.badge}
-                </div>
+            <div key={plan.plan} className="relative flex flex-col" style={{ paddingTop: plan.featured ? "28px" : "0" }}>
+
+              {/* Most Popular badge — floats above the card */}
+              {plan.featured && (
+                <motion.div
+                  initial={{ y: -8, opacity: 0 }}
+                  whileInView={{ y: 0, opacity: 1 }}
+                  transition={{ delay: 0.1, duration: 0.4 }}
+                  className="absolute top-0 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2 px-5 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest whitespace-nowrap"
+                  style={{
+                    background: "linear-gradient(90deg, #b8860b, #f5c842, #b8860b)",
+                    color: "#1a1000",
+                    boxShadow: "0 2px 16px rgba(196,160,32,0.4)",
+                  }}
+                >
+                  ★ Most Popular
+                </motion.div>
               )}
 
-              <div className="text-xs font-black font-mono uppercase tracking-widest text-slate-500 mb-2">{plan.plan}</div>
-              <div className="text-5xl font-black text-white mb-1 tracking-tight" style={{ color: plan.featured ? "#38bdf8" : "white" }}>
-                {plan.price}
-              </div>
-              <div className="text-sm text-slate-500 mb-4">{plan.period}</div>
-              <p className="text-sm text-slate-400 leading-relaxed mb-7">{plan.desc}</p>
-              <hr className="border-white/[0.07] mb-6" />
-
-              <ul className="flex flex-col gap-3 mb-8 list-none p-0">
-                {plan.features.map((f) => (
-                  <li key={f.label} className="flex items-start gap-2.5 text-sm">
-                    <span className={f.ok ? "text-emerald-400 mt-0.5 flex-shrink-0" : "text-slate-600 mt-0.5 flex-shrink-0"}>
-                      {f.ok ? "✓" : "✗"}
-                    </span>
-                    <span className={f.ok ? "text-slate-300" : "text-slate-600"}>{f.label}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <motion.a
-                href={plan.plan === "Enterprise" ? "/contact" : "/login"}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                className="flex items-center justify-center w-full py-3 rounded-xl text-sm font-bold no-underline transition-all"
+              <motion.div
+                variants={scaleIn}
+                whileHover={{ y: -5 }}
+                transition={{ duration: 0.25 }}
+                className="relative rounded-2xl border overflow-hidden h-full flex flex-col"
                 style={plan.featured ? {
-                  background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-                  color: "white",
-                  boxShadow: "0 4px 20px rgba(14,165,233,0.3)",
+                  background: "#0d1017",
+                  borderColor: "rgba(196,160,32,0.55)",
+                  boxShadow: "0 0 0 1px rgba(196,160,32,0.15), 0 24px 48px -12px rgba(0,0,0,0.6)",
                 } : {
-                  background: "transparent",
-                  color: "#94a3b8",
-                  border: "1px solid rgba(255,255,255,0.1)",
+                  background: "rgba(255,255,255,0.025)",
+                  borderColor: "rgba(255,255,255,0.07)",
+                  boxShadow: "0 8px 24px -8px rgba(0,0,0,0.3)",
                 }}
               >
-                {plan.cta}
-              </motion.a>
-            </motion.div>
+                {/* Gold top line for featured */}
+                {plan.featured && (
+                  <div className="absolute top-0 left-0 right-0 h-[1.5px]"
+                    style={{ background: "linear-gradient(90deg, transparent, #f5c842, #d4a017, #f5c842, transparent)" }} />
+                )}
+
+                <div className="relative z-10 p-8 flex flex-col h-full">
+                  {/* Plan label + discount chip */}
+                  <div className="flex items-center gap-2.5 mb-5">
+                    <span className="text-[11px] font-bold uppercase tracking-[0.14em]"
+                      style={{ color: plan.featured ? "#d4a017" : "#64748b" }}>
+                      {plan.plan}
+                    </span>
+                    {plan.featured && (
+                      <span className="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded"
+                        style={{ background: "rgba(212,160,23,0.15)", color: "#f5c842", border: "1px solid rgba(212,160,23,0.3)" }}>
+                        69% off
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Pricing */}
+                  <div className="flex items-end gap-2.5 mb-1">
+                    {plan.originalPrice && (
+                      <span className="text-lg line-through mb-1.5 font-medium" style={{ color: "#475569" }}>
+                        {plan.originalPrice}
+                      </span>
+                    )}
+                    <span className="font-black tracking-tight leading-none text-white"
+                      style={{ fontSize: plan.featured ? "60px" : "48px" }}>
+                      {plan.price}
+                    </span>
+                  </div>
+                  <div className="text-sm text-slate-500 mb-5 font-medium">{plan.period}</div>
+
+                  <p className="text-sm text-slate-400 leading-relaxed mb-6">{plan.desc}</p>
+
+                  {/* Divider */}
+                  <div className="h-px mb-6"
+                    style={{ background: plan.featured ? "linear-gradient(90deg, rgba(212,160,23,0.25), rgba(212,160,23,0.06), transparent)" : "rgba(255,255,255,0.07)" }} />
+
+                  {/* Features */}
+                  <ul className="flex flex-col gap-3 mb-8 list-none p-0 flex-grow">
+                    {plan.features.map((f) => (
+                      <li key={f.label} className="flex items-start gap-2.5 text-sm">
+                        <span className="mt-0.5 flex-shrink-0 text-[11px]"
+                          style={{ color: f.ok ? (plan.featured ? "#d4a017" : "#34d399") : "#334155" }}>
+                          {f.ok ? "✓" : "−"}
+                        </span>
+                        <span style={{ color: f.ok ? (plan.featured ? "#e2c97e" : "#cbd5e1") : "#334155" }}>
+                          {f.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+
+                  {/* CTA */}
+                  <motion.a
+                    href={plan.plan === "Enterprise" ? "/contact" : "/login"}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className="flex items-center justify-center w-full py-3.5 rounded-xl text-sm font-bold no-underline transition-all"
+                    style={plan.featured ? {
+                      background: "linear-gradient(90deg, #b8860b, #f5c842, #d4a017)",
+                      color: "#0d0b00",
+                      boxShadow: "0 4px 20px rgba(196,160,32,0.3)",
+                      letterSpacing: "0.02em",
+                    } : {
+                      background: "rgba(255,255,255,0.05)",
+                      color: "#94a3b8",
+                      border: "1px solid rgba(255,255,255,0.08)",
+                    }}
+                  >
+                    {plan.cta}
+                  </motion.a>
+
+                  {plan.featured && (
+                    <p className="text-center mt-3 text-[10px]" style={{ color: "#4a3e18" }}>
+                      No credit card required · Cancel anytime
+                    </p>
+                  )}
+                </div>
+              </motion.div>
+            </div>
           ))}
         </motion.div>
 
@@ -1129,22 +1240,152 @@ function CompCell({ value, isUs }: { value: string; isUs?: boolean }) {
 }
 
 // ─────────────────────────────────────────────
+// TESTIMONIALS
+// ─────────────────────────────────────────────
+
+function TestimonialsSection() {
+  return (
+    <section className="py-28 px-6">
+      <div className="max-w-6xl mx-auto">
+        <SectionHeader
+          label="What Teams Say"
+          title={<>Loved by engineering leaders<br /><span className="text-cyan-400">at scale-ups and enterprises</span></>}
+          sub="See why teams are ditching spreadsheets and homegrown solutions for XtraSecurity."
+        />
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={fadeUpStagger}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          {TESTIMONIALS.map((t) => (
+            <motion.div
+              key={t.name}
+              variants={fadeUp}
+              whileHover={{ y: -4, transition: { duration: 0.25 } }}
+              className="group relative h-full rounded-2xl overflow-hidden cursor-default transition-all flex flex-col"
+              style={{
+                background: "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
+                border: "1px solid rgba(255,255,255,0.08)",
+              }}
+            >
+              {/* Top accent line - cyan */}
+              <div className="absolute top-0 left-0 right-0 h-[2px] opacity-30 transition-all duration-300"
+                style={{ background: "linear-gradient(90deg, rgba(6,182,212,0.6), transparent)" }}
+              />
+
+              <div className="relative z-10 p-7 flex flex-col h-full">
+                {/* Avatar & Info */}
+                <div className="flex items-start gap-4 mb-5">
+                  <span className="text-4xl flex-shrink-0 transition-transform duration-300">{t.avatar}</span>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-bold text-white text-sm leading-tight">{t.name}</div>
+                    <div className="text-xs text-slate-400 font-medium">{t.title}</div>
+                    <div className="text-xs text-slate-500">{t.company}</div>
+                  </div>
+                </div>
+
+                {/* Quote */}
+                <p className="text-sm text-slate-300 leading-relaxed mb-5 flex-grow italic">&ldquo;{t.quote}&rdquo;</p>
+
+                {/* Highlight Badge */}
+                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[10px] font-bold tracking-wide uppercase w-fit"
+                  style={{
+                    color: "#06b6d4",
+                    background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.08))",
+                    border: "1.5px solid rgba(6,182,212,0.3)",
+                    backdropFilter: "blur(8px)",
+                  }}
+                >
+                  ✓ {t.highlight}
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
+// FAQ
+// ─────────────────────────────────────────────
+
+function FAQSection() {
+  const [open, setOpen] = useState<number | null>(null);
+
+  return (
+    <section className="py-28 px-6 bg-gradient-to-b from-transparent via-white/[0.015] to-transparent">
+      <div className="max-w-3xl mx-auto">
+        <SectionHeader
+          label="❓ FAQs"
+          title={<>Common questions answered</>}
+          sub="Everything you need to know about XtraSecurity, security, and getting started."
+        />
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={fadeUpStagger}
+          className="space-y-4"
+        >
+          {FAQs.map((faq, i) => (
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              className="border border-white/[0.07] rounded-2xl overflow-hidden bg-white/[0.02] hover:bg-white/[0.04] transition-colors"
+            >
+              <button
+                onClick={() => setOpen(open === i ? null : i)}
+                className="w-full flex items-center justify-between p-6 text-left cursor-pointer bg-transparent border-none font-[inherit]"
+              >
+                <h3 className="font-bold text-white text-base pr-4">{faq.q}</h3>
+                <motion.div
+                  animate={{ rotate: open === i ? 180 : 0 }}
+                  transition={{ duration: 0.3 }}
+                  className="flex-shrink-0 text-cyan-400 text-xl"
+                >
+                  ▼
+                </motion.div>
+              </button>
+              <AnimatePresence>
+                {open === i && (
+                  <motion.div
+                    initial={{ height: 0, opacity: 0 }}
+                    animate={{ height: "auto", opacity: 1 }}
+                    exit={{ height: 0, opacity: 0 }}
+                    transition={{ duration: 0.3 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="px-6 pb-6 text-sm text-slate-400 leading-relaxed border-t border-white/[0.05]">
+                      {faq.a}
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
 // INTEGRATIONS
 // ─────────────────────────────────────────────
 
 function IntegrationsSection() {
   return (
     <section className="py-20 px-6">
-      <div className="max-w-6xl mx-auto text-center">
-        <motion.div
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="mb-10"
-        >
-          <SectionLabel>🗂️ Integrations</SectionLabel>
-          <h2 className="text-3xl font-black text-white">Works with your existing stack</h2>
-        </motion.div>
+      <div className="max-w-6xl mx-auto">
+        <SectionHeader
+          label="Integrations"
+          icon="folder"
+          title="Works with your existing stack"
+        />
         <motion.div
           initial="hidden"
           whileInView="show"
@@ -1157,9 +1398,9 @@ function IntegrationsSection() {
               key={item.label}
               variants={fadeUp}
               whileHover={{ y: -3, borderColor: "rgba(14,165,233,0.4)" }}
-              className="flex items-center gap-2.5 px-5 py-3 rounded-full border border-white/[0.08] bg-white/[0.025] cursor-default transition-colors"
+              className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/[0.08] bg-white/[0.025] cursor-default transition-colors"
             >
-              <span className="text-xl">{item.icon}</span>
+              <div className="text-cyan-400 flex items-center justify-center leading-none">{getIcon(item.icon, 18)}</div>
               <span className="text-sm font-semibold text-slate-300">{item.label}</span>
             </motion.div>
           ))}
@@ -1174,20 +1415,11 @@ function IntegrationsSection() {
 // ─────────────────────────────────────────────
 
 function CtaSection() {
-  const ref = useRef(null);
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start end", "end start"] });
-  const y = useTransform(scrollYProgress, [0, 1], [30, -30]);
-
   return (
-    <section ref={ref} className="relative py-32 px-6 text-center overflow-hidden">
-      <motion.div
-        style={{ y }}
-        className="absolute inset-0 pointer-events-none"
-      >
-        <div className="absolute inset-0" style={{
-          background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(14,165,233,0.1), transparent)",
-        }} />
-      </motion.div>
+    <section className="relative py-32 px-6 text-center overflow-hidden">
+      {/* Static centred glow — no JS scroll recalculation */}
+      <div className="absolute inset-0 pointer-events-none"
+        style={{ background: "radial-gradient(ellipse 70% 60% at 50% 50%, rgba(14,165,233,0.1), transparent)" }} />
 
       <div className="relative z-10 max-w-3xl mx-auto">
         <motion.div
@@ -1227,7 +1459,7 @@ function CtaSection() {
                 boxShadow: "0 4px 32px rgba(37,99,235,0.4), 0 0 0 1px rgba(255,255,255,0.08)",
               }}
             >
-              🚀 Start for free — no card needed
+              Start for free — no card needed
             </motion.a>
             <motion.a
               href="/book-demo"
@@ -1310,6 +1542,10 @@ export default function Page() {
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: #080e1e; }
         ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.3); border-radius: 3px; }
+        @keyframes shimmer {
+          0% { background-position: 0% 50%; }
+          100% { background-position: 300% 50%; }
+        }
       `}</style>
 
       <Navbar theme={theme} toggleTheme={toggle} />
@@ -1320,7 +1556,9 @@ export default function Page() {
       <SecuritySection />
       <MetricsBar />
       <PricingSection />
+      <TestimonialsSection />
       <CompareSection />
+      <FAQSection />
       <IntegrationsSection />
       <CtaSection />
       <Footer />

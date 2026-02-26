@@ -226,8 +226,8 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
             {/* Near-limit warning banner */}
             {percentage >= 80 && (
                 <div className={`flex items-start gap-3 p-4 rounded-xl border ${percentage >= 90
-                        ? "bg-red-500/10 border-red-500/30"
-                        : "bg-amber-500/10 border-amber-500/30"
+                    ? "bg-red-500/10 border-red-500/30"
+                    : "bg-amber-500/10 border-amber-500/30"
                     }`}>
                     <ShieldAlert className={`h-5 w-5 shrink-0 mt-0.5 ${percentage >= 90 ? "text-red-500" : "text-amber-500"
                         }`} />
@@ -336,6 +336,7 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                                 key={tierKey}
                                 title={tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}
                                 price={config.price}
+                                originalPrice={config.originalPrice}
                                 period={tierKey === 'free' ? "" : "/month"}
                                 features={config.features}
                                 current={isCurrent}
@@ -397,18 +398,24 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
 }
 
 function PricingCard({
-    title, price, period = "", features, current, popular, actionLabel, onAction, disabled
+    title, price, originalPrice, period = "", features, current, popular, actionLabel, onAction, disabled
 }: any) {
     return (
         <Card className={`flex flex-col relative transition-all duration-300 hover:shadow-xl ${popular ? 'border-primary shadow-lg md:scale-105 z-10' : ''}`}>
             {popular && (
-                <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2">
+                <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2 flex gap-1">
+                    <Badge className="px-3 py-1 shadow-md bg-emerald-500 hover:bg-emerald-600 border-none text-white font-bold">69% OFF</Badge>
                     <Badge className="px-3 py-1 shadow-md">Most Popular</Badge>
                 </div>
             )}
             <CardHeader>
                 <CardTitle className="text-xl">{title}</CardTitle>
-                <div className="flex items-baseline gap-1 mt-2">
+                <div className="flex items-baseline gap-2 mt-2">
+                    {originalPrice && (
+                        <span className="text-xl text-muted-foreground line-through decoration-red-500/50 font-medium">
+                            {originalPrice}
+                        </span>
+                    )}
                     <span className="text-4xl font-bold tracking-tight">{price}</span>
                     <span className="text-muted-foreground text-sm font-medium">{period}</span>
                 </div>
