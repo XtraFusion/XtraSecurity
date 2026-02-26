@@ -39,21 +39,16 @@ export default async function SubscriptionPage() {
         where: { createdBy: user.id }
     });
 
-    // To find the highest number of projects in any of the user's workspaces
-    const projectsGroups = await prisma.project.groupBy({
-        by: ['workspaceId'],
-        _count: { id: true },
+    // Total projects across ALL of the user's workspaces
+    const totalProjects = await prisma.project.count({
         where: { workspace: { createdBy: user.id } }
     });
-    const maxProjects = projectsGroups.length > 0
-        ? Math.max(...projectsGroups.map(g => g._count.id))
-        : 0;
 
     const limits = DAILY_LIMITS[tier];
     const resourceUsage = {
         workspaces: { used: workspacesCount, limit: limits.maxWorkspaces },
         teams: { used: teamsCount, limit: limits.maxTeams },
-        projects: { used: maxProjects, limit: limits.maxProjectsPerWorkspace },
+        projects: { used: totalProjects, limit: limits.maxProjectsPerWorkspace },
     };
 
     return (
