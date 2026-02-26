@@ -4,6 +4,7 @@ export interface RateLimitConfig {
   points: number; 
   duration: number; // seconds
   price: string;
+  originalPrice?: string;
   features: string[];
   maxTeams: number;
   maxWorkspaces: number;
@@ -44,6 +45,7 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
     points: 10000, 
     duration: 86400, 
     price: "$9", 
+    originalPrice: "$29",
     features: [
       "10,000 API requests / day",
       "3 Workspaces (5 projects each)",

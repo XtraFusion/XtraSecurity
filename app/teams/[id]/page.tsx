@@ -487,16 +487,19 @@ const TeamDetail = () => {
     );
     // console.log(member,memberId)
 
-    if (!canRemoveMember(currentUser.role, member?.role)) {
+
+
+    if (!member) {
+      console.log("Member not found");
+      return;
+    }
+
+    if (!canRemoveMember(currentUser.role, member.role)) {
       toast({
         title: "Access Denied",
         description: "You don't have permission to remove this member",
         variant: "destructive",
       });
-      return;
-    }
-    if (!member) {
-      console.log("Member not found");
       return;
     }
 
