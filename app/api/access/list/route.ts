@@ -18,21 +18,26 @@ export async function GET(req: NextRequest) {
 
     const where: any = {};
 
-    if (workspaceId) {
-        where.OR = [
-            { workspaceId: workspaceId },
-            { project: { workspaceId: workspaceId } }
-        ];
-    }
-
     if (mode === "pending") {
-        // Show pending requests for admin
+        // Show pending requests for admin — scoped to workspace
         where.status = "pending";
+        if (workspaceId) {
+            where.OR = [
+                { workspaceId: workspaceId },
+                { project: { workspaceId: workspaceId } }
+            ];
+        }
     } else if (mode === "approved") {
-        // Show approved requests
+        // Show approved requests — scoped to workspace
         where.status = "approved";
+        if (workspaceId) {
+            where.OR = [
+                { workspaceId: workspaceId },
+                { project: { workspaceId: workspaceId } }
+            ];
+        }
     } else {
-        // Show my requests
+        // Show MY requests — no workspace filter needed (JIT users may not be in workspace)
         where.userId = auth.userId;
     }
 

@@ -87,6 +87,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { SecretHistoryModal } from "@/components/SecretHistoryModal";
 import { AccessRequestModal } from "@/components/AccessRequestModal";
 import { AccessRequestAdmin } from "@/components/AccessRequestAdmin";
+import { JitGenerateModal } from "@/components/JitGenerateModal";
 
 // --- Types ---
 
@@ -206,6 +207,7 @@ const SecretCard = ({
   onViewHistory,
   onRequestAccess,
   onShare,
+  onGenerateJit,
 }: {
   secret: Secret;
   isVisible: boolean;
@@ -217,6 +219,7 @@ const SecretCard = ({
   onViewHistory: () => void;
   onRequestAccess: () => void;
   onShare: () => void;
+  onGenerateJit: () => void;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const SecretIcon = SECRET_TYPES.find((t) => t.value === secret.type)?.icon || Key;
@@ -286,8 +289,9 @@ const SecretCard = ({
               <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-primary">
                 <Share2 className="h-4 w-4" /> Share Secret
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onRequestAccess} className="gap-2 text-amber-500 focus:text-amber-500">
-                <ShieldAlert className="h-4 w-4" /> Request Access
+              <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-amber-500">
+                <Shield className="h-4 w-4" /> JIT Access
+                <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
@@ -467,6 +471,9 @@ const VaultManager: React.FC = () => {
   const [isCreatingShare, setIsCreatingShare] = React.useState(false);
   const [shareResult, setShareResult] = React.useState<{ url: string; expiresAt: string } | null>(null);
   const [shareCopied, setShareCopied] = React.useState(false);
+
+  // JIT Generate Modal State
+  const [isJitModalOpen, setIsJitModalOpen] = React.useState(false);
 
   // Copy & Compare Modals State
   const [isCopyModalOpen, setIsCopyModalOpen] = React.useState(false);
@@ -1048,16 +1055,10 @@ const VaultManager: React.FC = () => {
             </Button>
             {/* Permission Check for Settings/Requests */}
             {(project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin') && (
-              <>
-                <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
-                  <Settings className="h-4 w-4 mr-2" />
-                  Settings
-                </Button>
-                <Button variant="outline" onClick={() => setIsAdminRequestsOpen(true)}>
-                  <ShieldCheck className="h-4 w-4 mr-2" />
-                  Requests
-                </Button>
-              </>
+              <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
+                <Settings className="h-4 w-4 mr-2" />
+                Settings
+              </Button>
             )}
             <Button onClick={() => setIsAddSecretOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
@@ -1223,6 +1224,10 @@ const VaultManager: React.FC = () => {
                   <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={toggleBulkSelect}>
                     <CheckSquare className="h-4 w-4 mr-2 text-muted-foreground" /> Select
                   </Button>
+                  <Button variant="outline" size="sm" className="h-9 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 font-medium" onClick={() => setIsJitModalOpen(true)}>
+                    <Shield className="h-4 w-4 mr-2" /> JIT Link
+                    <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
+                  </Button>
 
                   <div className="ml-auto">
                     <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsAddBranchOpen(true)}>
@@ -1273,6 +1278,7 @@ const VaultManager: React.FC = () => {
                           setIsAccessRequestOpen(true);
                         }}
                         onShare={() => handleShare(secret)}
+                        onGenerateJit={() => setIsJitModalOpen(true)}
                       />
                     </div>
                   ))}
@@ -1336,6 +1342,9 @@ const VaultManager: React.FC = () => {
                                   </DropdownMenuItem>
                                   <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }}>
                                     <History className="h-4 w-4 mr-2" /> History
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600">
+                                    <Shield className="h-4 w-4 mr-2" /> Generate JIT Link
                                   </DropdownMenuItem>
                                   <DropdownMenuSeparator />
                                   <DropdownMenuItem
@@ -2263,6 +2272,17 @@ const VaultManager: React.FC = () => {
           )}
         </div>
       </Dialog>
+
+      {/* JIT Generate Modal */}
+      <JitGenerateModal
+        open={isJitModalOpen}
+        onOpenChange={setIsJitModalOpen}
+        projectId={projectId}
+        branches={branches}
+        secrets={secrets}
+        currentBranchId={selectedBranch?.id}
+        currentEnv={filterEnv !== "all" ? filterEnv : undefined}
+      />
     </DashboardLayout>
   );
 };

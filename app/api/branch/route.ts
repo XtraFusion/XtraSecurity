@@ -167,6 +167,23 @@ export async function POST(request: NextRequest) {
          return NextResponse.json({ error: "Forbidden: Viewers cannot create branches" }, { status: 403 });
     }
 
+    // Branch limit per project based on project owner's tier
+    const projectRecord = await prisma.project.findUnique({
+      where: { id: projectId },
+      select: { userId: true, user: { select: { tier: true } } },
+    });
+    if (projectRecord) {
+      const ownerTier = (projectRecord.user?.tier || "free");
+      const branchLimit = ownerTier === "free" ? 10 : 30;
+      const branchCount = await prisma.branch.count({ where: { projectId } });
+      if (branchCount >= branchLimit) {
+        return NextResponse.json(
+          { error: `Branch limit reached. Your ${ownerTier} plan allows up to ${branchLimit} branches per project. Please upgrade for more.` },
+          { status: 403 }
+        );
+      }
+    }
+
     // Check if branch with same name exists in project
     const existingBranch = await prisma.branch.findFirst({
       where: {
