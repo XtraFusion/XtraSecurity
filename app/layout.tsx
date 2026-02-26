@@ -1,19 +1,28 @@
-
 import type React from "react"
-import type { Metadata } from "next"
+import type { Metadata, Viewport } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
 import { ThemeProvider } from "@/components/theme-provider"
 import { UserProvider } from "@/hooks/useUser"
+import { defaultMetadata } from "@/lib/seo"
 import "./globals.css"
 import Provider from "@/lib/provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Toaster as CustomToaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: "XtraSecurity",
-  description: "Professional environment and secrets management platform",
-  generator: "v0.app",
+  ...defaultMetadata,
+}
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#000000' },
+  ],
 }
 
 export default function RootLayout({
@@ -31,14 +40,46 @@ html {
   --font-mono: ${GeistMono.variable};
 }
         `}</style>
+        {/* JSON-LD Schema for Organization */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'Organization',
+              name: 'XtraSecurity',
+              url: 'https://xtrasecurity.in',
+              logo: 'https://xtrasecurity.in/placeholder-logo.svg',
+              description: 'Professional secrets management platform with enterprise-grade security, compliance, and developer-first features.',
+              sameAs: [
+                'https://twitter.com/XtraSecurity',
+                'https://linkedin.com/company/xtrasecurity',
+                'https://github.com/xtrasecurity',
+              ],
+              contactPoint: {
+                '@type': 'ContactPoint',
+                contactType: 'Customer Support',
+                email: 'support@xtrasecurity.in',
+              },
+              foundingDate: '2024',
+              areaServed: 'Worldwide',
+              knowsAbout: [
+                'Secrets Management',
+                'API Key Management',
+                'Compliance',
+                'Security',
+                'DevOps',
+              ],
+            }),
+          }}
+        />
       </head>
 
       <body style={{
         pointerEvents: "fill"
       }}>
         <Provider>
-          <UserProvider  >
-
+          <UserProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
               {children}
               <Toaster />
@@ -50,3 +91,4 @@ html {
     </html>
   )
 }
+
