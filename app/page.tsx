@@ -1510,6 +1510,14 @@ function Footer() {
           <p className="text-xs text-slate-600">
             © 2026 XtraSecurity. All rights reserved. The Secrets Manager Built for Modern Teams.
           </p>
+          <div className="flex gap-4 text-xs">
+            <Link href="/terms-and-conditions" className="text-slate-500 hover:text-slate-200 transition-colors underline underline-offset-2">
+              Terms of Service
+            </Link>
+            <Link href="/privacy-policy" className="text-slate-500 hover:text-slate-200 transition-colors underline underline-offset-2">
+              Privacy Policy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>
