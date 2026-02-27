@@ -1048,7 +1048,7 @@ const VaultManager: React.FC = () => {
             <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
             <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-wrap items-center gap-3">
             <Button variant="outline" onClick={() => setIsDocsOpen(true)}>
               <Terminal className="h-4 w-4 mr-2" />
               CLI Setup
