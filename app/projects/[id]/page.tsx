@@ -1721,9 +1721,9 @@ const VaultManager: React.FC = () => {
               </div>
               <div className="relative group mt-auto">
                 <pre className="p-3 rounded-md bg-muted/80 font-mono text-sm overflow-x-auto text-foreground border border-border/50">
-                  xtra profile --env {filterEnv === 'all' ? 'development' : filterEnv}
+                  xtra checkout {selectedBranch ? selectedBranch.name : 'main'} --env {filterEnv === 'all' ? 'development' : filterEnv}
                 </pre>
-                <Button size="icon" variant="ghost" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm" onClick={() => copyToClipboard(`xtra profile --env ${filterEnv === "all" ? "development" : filterEnv}`, "cmd-4")}>
+                <Button size="icon" variant="ghost" className="absolute top-2 right-2 h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity bg-background/50 backdrop-blur-sm" onClick={() => copyToClipboard(`xtra checkout ${selectedBranch ? selectedBranch.name : "main"} --env ${filterEnv === "all" ? "development" : filterEnv}`, "cmd-4")}>
                   {copiedSecret === "cmd-4" ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4 text-muted-foreground" />}
                 </Button>
               </div>

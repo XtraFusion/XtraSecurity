@@ -118,11 +118,15 @@ const CLI_COMMANDS: CommandEntry[] = [
   {
     "section": "Versioning & Rollback",
     "command": "xtra checkout",
-    "desc": "Switch the active branch context",
+    "desc": "Switch the active branch and environment context",
     "options": [
       {
         "flag": "-p, --project <projectId>",
         "desc": "Project ID"
+      },
+      {
+        "flag": "-e, --env <environment>",
+        "desc": "Set the active environment (e.g. development, staging, production)"
       }
     ]
   },
