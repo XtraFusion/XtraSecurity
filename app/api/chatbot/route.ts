@@ -27,8 +27,8 @@ Manage active project context
 XTRA BRANCH: xtra branch list|create|delete|update [name]
 Manage secret storage branches
 
-XTRA CHECKOUT: xtra checkout [branch]
-Switch active branch
+XTRA CHECKOUT: xtra checkout [branch] [-e, --env <environment>]
+Switch active branch and environment context
 
 XTRA SECRETS: xtra secrets list [options] | xtra secrets set KEY=VALUE | xtra secrets delete KEY
 Manage secrets in vault

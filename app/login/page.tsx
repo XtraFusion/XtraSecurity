@@ -81,7 +81,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
+    <div className="container relative min-h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0 px-0">
 
       {/* ── Left Panel: Animated Security Visualization ── */}
       <div className="relative hidden h-full flex-col bg-[#0a0f1e] p-10 text-white lg:flex dark:border-r overflow-hidden">
@@ -245,12 +245,18 @@ export default function LoginPage() {
       </div>
 
       {/* ── Right Panel: Login Form ── */}
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
+      <div className="flex items-center justify-center min-h-screen p-6 sm:p-8 lg:p-8">
+        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[380px]">
 
-          <div className="flex justify-end absolute top-4 right-4 md:top-8 md:right-8">
-            <Button variant="ghost" size="icon" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
-              {mounted && (theme === "dark" ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />)}
+          {/* Mobile-only brand header */}
+          <div className="flex items-center justify-center gap-2 lg:hidden mb-2">
+            <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={36} height={36} className="rounded-lg shadow-lg" />
+            <span className="text-xl font-bold tracking-tight">Xtra<span className="text-sky-400">Security</span></span>
+          </div>
+
+          <div className="flex justify-end absolute top-3 right-3 sm:top-4 sm:right-4 md:top-8 md:right-8 z-50">
+            <Button variant="ghost" size="icon" className="h-9 w-9 sm:h-10 sm:w-10" onClick={() => setTheme(theme === "dark" ? "light" : "dark")}>
+              {mounted && (theme === "dark" ? <Sun className="h-4 w-4 sm:h-5 sm:w-5" /> : <Moon className="h-4 w-4 sm:h-5 sm:w-5" />)}
             </Button>
           </div>
 
@@ -317,7 +323,7 @@ export default function LoginPage() {
                   </div>
                 )}
 
-                <Button disabled={isLoading} className="mt-2 text-white bg-primary hover:bg-primary/90">
+                <Button disabled={isLoading} className="mt-2 text-white bg-primary hover:bg-primary/90 h-10 sm:h-11 text-sm sm:text-base">
                   {isLoading && (
                     <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
                   )}
@@ -333,11 +339,11 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <Button variant="outline" onClick={() => signIn("github")} disabled={isLoading}>
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
+              <Button variant="outline" className="h-10 sm:h-11 text-sm sm:text-base" onClick={() => signIn("github")} disabled={isLoading}>
                 <Github className="mr-2 h-4 w-4" /> GitHub
               </Button>
-              <Button variant="outline" onClick={() => signIn("google")} disabled={isLoading}>
+              <Button variant="outline" className="h-10 sm:h-11 text-sm sm:text-base" onClick={() => signIn("google")} disabled={isLoading}>
                 <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
                   <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
