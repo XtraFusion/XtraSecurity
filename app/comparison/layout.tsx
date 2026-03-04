@@ -35,6 +35,7 @@ export const metadata: Metadata = {
     'Compare top secrets managers: AWS Secrets Manager, Google Secret Manager, HashiCorp Vault, and XtraSecurity. See features, pricing, and use cases.',
     '/comparison'
   ),
+  keywords: 'secrets manager comparison, aws vs google secret manager, hashicorp vault vs xtrasecurity, best secrets manager, secrets manager pricing, secrets manager features',
   openGraph: {
     ...generatePageMetadata(
       'Best Secrets Manager Comparison 2025 | AWS vs Google vs XtraSecurity',
@@ -52,6 +53,25 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  'itemListElement': [
+    {
+      '@type': 'ListItem',
+      'position': 1,
+      'name': 'Home',
+      'item': 'https://xtrasecurity.in'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 2,
+      'name': 'Comparison',
+      'item': 'https://xtrasecurity.in/comparison'
+    }
+  ]
+};
+
 export default function Layout({
   children,
 }: {
@@ -63,6 +83,12 @@ export default function Layout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateFAQSchema(generalComparisonFAQs)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       {children}

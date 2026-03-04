@@ -1,13 +1,19 @@
 import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  ...generatePageMetadata(
-    'Terms and Conditions - XtraSecurity',
-    'XtraSecurity terms and conditions. Please review our legal terms before using our services.',
-    '/terms-and-conditions'
-  ),
-  keywords: 'xtrasecurity terms, terms of service, legal terms, service agreement',
+  title: 'Secret Rotation - XtraSecurity',
+  description: 'Manage and automate secret rotation policies with XtraSecurity.',
+  keywords: 'xtrasecurity rotation, secret rotation, automatic rotation, rotation policies, credential rotation',
+  robots: {
+    index: false, // Don't index rotation (user-specific content)
+    follow: false,
+  },
+  openGraph: {
+    title: 'XtraSecurity Secret Rotation',
+    description: 'Manage and automate secret rotation policies',
+    url: 'https://xtrasecurity.in/rotation',
+    type: 'website',
+  },
 };
 
 const breadcrumbSchema = {
@@ -23,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Terms and Conditions',
-      'item': 'https://xtrasecurity.in/terms-and-conditions'
+      'name': 'Rotation',
+      'item': 'https://xtrasecurity.in/rotation'
     }
   ]
 };

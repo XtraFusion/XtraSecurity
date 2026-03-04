@@ -1,13 +1,19 @@
 import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  ...generatePageMetadata(
-    'Terms and Conditions - XtraSecurity',
-    'XtraSecurity terms and conditions. Please review our legal terms before using our services.',
-    '/terms-and-conditions'
-  ),
-  keywords: 'xtrasecurity terms, terms of service, legal terms, service agreement',
+  title: 'Audit Logs - XtraSecurity',
+  description: 'Review comprehensive audit logs of all secret access and modifications with XtraSecurity.',
+  keywords: 'xtrasecurity audit logs, secret access logs, compliance audit, activity logs, secret history',
+  robots: {
+    index: false, // Don't index audit logs (user-specific content)
+    follow: false,
+  },
+  openGraph: {
+    title: 'XtraSecurity Audit Logs',
+    description: 'Review comprehensive audit logs of all secret access and modifications',
+    url: 'https://xtrasecurity.in/audit',
+    type: 'website',
+  },
 };
 
 const breadcrumbSchema = {
@@ -23,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Terms and Conditions',
-      'item': 'https://xtrasecurity.in/terms-and-conditions'
+      'name': 'Audit Logs',
+      'item': 'https://xtrasecurity.in/audit'
     }
   ]
 };

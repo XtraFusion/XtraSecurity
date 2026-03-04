@@ -1,13 +1,19 @@
 import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  ...generatePageMetadata(
-    'Terms and Conditions - XtraSecurity',
-    'XtraSecurity terms and conditions. Please review our legal terms before using our services.',
-    '/terms-and-conditions'
-  ),
-  keywords: 'xtrasecurity terms, terms of service, legal terms, service agreement',
+  title: 'Team Management - XtraSecurity',
+  description: 'Manage team members, set permissions, and collaborate securely with XtraSecurity.',
+  keywords: 'xtrasecurity team, team management, user permissions, rbac, role-based access control, team collaboration',
+  robots: {
+    index: false, // Don't index team management (user-specific content)
+    follow: false,
+  },
+  openGraph: {
+    title: 'XtraSecurity Team Management',
+    description: 'Manage team members and permissions',
+    url: 'https://xtrasecurity.in/team',
+    type: 'website',
+  },
 };
 
 const breadcrumbSchema = {
@@ -23,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Terms and Conditions',
-      'item': 'https://xtrasecurity.in/terms-and-conditions'
+      'name': 'Team',
+      'item': 'https://xtrasecurity.in/team'
     }
   ]
 };
