@@ -1,13 +1,19 @@
 import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  ...generatePageMetadata(
-    'Terms and Conditions - XtraSecurity',
-    'XtraSecurity terms and conditions. Please review our legal terms before using our services.',
-    '/terms-and-conditions'
-  ),
-  keywords: 'xtrasecurity terms, terms of service, legal terms, service agreement',
+  title: 'Forgot Password - XtraSecurity',
+  description: 'Reset your XtraSecurity password using our secure password recovery process.',
+  keywords: 'xtrasecurity forgot password, password reset, account recovery, reset password',
+  robots: {
+    index: false, // Don't index forgot password page
+    follow: false,
+  },
+  openGraph: {
+    title: 'Forgot Password - XtraSecurity',
+    description: 'Reset your password securely',
+    url: 'https://xtrasecurity.in/forgot-password',
+    type: 'website',
+  },
 };
 
 const breadcrumbSchema = {
@@ -23,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Terms and Conditions',
-      'item': 'https://xtrasecurity.in/terms-and-conditions'
+      'name': 'Forgot Password',
+      'item': 'https://xtrasecurity.in/forgot-password'
     }
   ]
 };

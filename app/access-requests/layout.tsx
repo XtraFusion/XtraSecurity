@@ -1,17 +1,17 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Sign Up for XtraSecurity | Free Secrets Manager',
-  description: 'Create your XtraSecurity account and start managing secrets securely. Free tier includes unlimited secrets for up to 5 team members.',
-  keywords: 'xtrasecurity signup, create xtrasecurity account, xtrasecurity register, free secrets manager, secrets management platform',
+  title: 'Access Requests - XtraSecurity',
+  description: 'Manage and review access requests for secret access with just-in-time (JIT) approval workflows.',
+  keywords: 'xtrasecurity access requests, jit access, just-in-time access, access approval, secret access requests',
   robots: {
-    index: false, // Don't index registration page
+    index: false, // Don't index access requests (user-specific content)
     follow: false,
   },
   openGraph: {
-    title: 'Sign Up for XtraSecurity',
-    description: 'Start securing your secrets in minutes with our free tier',
-    url: 'https://xtrasecurity.in/register',
+    title: 'XtraSecurity Access Requests',
+    description: 'Manage and review access requests for secret access',
+    url: 'https://xtrasecurity.in/access-requests',
     type: 'website',
   },
 };
@@ -29,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Sign Up',
-      'item': 'https://xtrasecurity.in/register'
+      'name': 'Access Requests',
+      'item': 'https://xtrasecurity.in/access-requests'
     }
   ]
 };

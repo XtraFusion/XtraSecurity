@@ -1,13 +1,19 @@
 import { Metadata } from 'next';
-import { generatePageMetadata } from '@/lib/seo';
 
 export const metadata: Metadata = {
-  ...generatePageMetadata(
-    'Terms and Conditions - XtraSecurity',
-    'XtraSecurity terms and conditions. Please review our legal terms before using our services.',
-    '/terms-and-conditions'
-  ),
-  keywords: 'xtrasecurity terms, terms of service, legal terms, service agreement',
+  title: 'Book a Demo - XtraSecurity',
+  description: 'Schedule a personalized demo with XtraSecurity team to learn how we secure your secrets.',
+  keywords: 'xtrasecurity demo, book demo, schedule demo, free demo, secrets manager demo',
+  robots: {
+    index: true,
+    follow: true,
+  },
+  openGraph: {
+    title: 'Book a Demo - XtraSecurity',
+    description: 'Schedule a personalized demo with XtraSecurity team',
+    url: 'https://xtrasecurity.in/book-demo',
+    type: 'website',
+  },
 };
 
 const breadcrumbSchema = {
@@ -23,8 +29,8 @@ const breadcrumbSchema = {
     {
       '@type': 'ListItem',
       'position': 2,
-      'name': 'Terms and Conditions',
-      'item': 'https://xtrasecurity.in/terms-and-conditions'
+      'name': 'Book a Demo',
+      'item': 'https://xtrasecurity.in/book-demo'
     }
   ]
 };

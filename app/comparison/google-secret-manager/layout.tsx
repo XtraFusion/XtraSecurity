@@ -27,6 +27,7 @@ export const metadata: Metadata = {
     'Compare Google Cloud Secret Manager with XtraSecurity. Multi-cloud support, better team features, compliance built-in. Get started free.',
     '/comparison/google-secret-manager'
   ),
+  keywords: 'google secret manager alternative, xtrasecurity vs google secret manager, google cloud secrets comparison, multi-cloud secrets manager',
   openGraph: {
     ...generatePageMetadata(
       'Google Secret Manager Alternative | XtraSecurity vs Google Cloud',
@@ -44,6 +45,31 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  'itemListElement': [
+    {
+      '@type': 'ListItem',
+      'position': 1,
+      'name': 'Home',
+      'item': 'https://xtrasecurity.in'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 2,
+      'name': 'Comparison',
+      'item': 'https://xtrasecurity.in/comparison'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 3,
+      'name': 'Google Secret Manager',
+      'item': 'https://xtrasecurity.in/comparison/google-secret-manager'
+    }
+  ]
+};
+
 export default function Layout({
   children,
 }: {
@@ -55,6 +81,12 @@ export default function Layout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateFAQSchema(googleComparisonFAQs)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       {children}

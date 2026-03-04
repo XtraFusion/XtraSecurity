@@ -31,6 +31,7 @@ export const metadata: Metadata = {
     'Compare HashiCorp Vault with XtraSecurity. Simpler setup, team collaboration, managed service, compliance built-in. No ops overhead.',
     '/comparison/hashicorp-vault'
   ),
+  keywords: 'hashicorp vault alternative, xtrasecurity vs hashicorp vault, vault vs xtrasecurity, managed secrets manager, vault alternative',
   openGraph: {
     ...generatePageMetadata(
       'HashiCorp Vault Alternative | XtraSecurity vs Vault',
@@ -48,6 +49,31 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  'itemListElement': [
+    {
+      '@type': 'ListItem',
+      'position': 1,
+      'name': 'Home',
+      'item': 'https://xtrasecurity.in'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 2,
+      'name': 'Comparison',
+      'item': 'https://xtrasecurity.in/comparison'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 3,
+      'name': 'HashiCorp Vault',
+      'item': 'https://xtrasecurity.in/comparison/hashicorp-vault'
+    }
+  ]
+};
+
 export default function Layout({
   children,
 }: {
@@ -59,6 +85,12 @@ export default function Layout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateFAQSchema(vaultComparisonFAQs)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       {children}

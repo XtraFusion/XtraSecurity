@@ -27,6 +27,7 @@ export const metadata: Metadata = {
     'Compare AWS Secrets Manager with XtraSecurity. Lower costs, better team features, multi-cloud support, and easier compliance. See why teams are switching.',
     '/comparison/aws-secrets-manager'
   ),
+  keywords: 'aws secrets manager alternative, xtrasecurity vs aws, aws secrets manager pricing, secrets manager comparison, why switch from aws secrets manager',
   openGraph: {
     ...generatePageMetadata(
       'AWS Secrets Manager Alternative | XtraSecurity vs AWS',
@@ -44,6 +45,31 @@ export const metadata: Metadata = {
   },
 };
 
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  'itemListElement': [
+    {
+      '@type': 'ListItem',
+      'position': 1,
+      'name': 'Home',
+      'item': 'https://xtrasecurity.in'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 2,
+      'name': 'Comparison',
+      'item': 'https://xtrasecurity.in/comparison'
+    },
+    {
+      '@type': 'ListItem',
+      'position': 3,
+      'name': 'AWS Secrets Manager',
+      'item': 'https://xtrasecurity.in/comparison/aws-secrets-manager'
+    }
+  ]
+};
+
 export default function Layout({
   children,
 }: {
@@ -55,6 +81,12 @@ export default function Layout({
         type="application/ld+json"
         dangerouslySetInnerHTML={{
           __html: JSON.stringify(generateFAQSchema(comparisonFAQs)),
+        }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbSchema),
         }}
       />
       {children}
