@@ -25,22 +25,32 @@ export function withSecurity(handler: SecureHandler) {
         let targetUserId = requesterId;
         let targetTier = requesterTier;
         
-        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id");
-        let workspaceIdToCheck: string | null = req.nextUrl.searchParams.get("workspaceId");
+        // Extract Params from Context (Next.js 15 makes params a Promise)
+        let contextParams: any = {};
+        if (context && context.params) {
+            try {
+                contextParams = await Promise.resolve(context.params);
+            } catch (e) {}
+        }
+        
+        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id") || contextParams.projectId || contextParams.id || null;
+        let workspaceIdToCheck: string | null = req.nextUrl.searchParams.get("workspaceId") || contextParams.workspaceId || null;
         
         if (!projectIdToCheck && !workspaceIdToCheck && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
             try {
                 // Clone the request so the actual handler can still read the JSON body
                 const clonedReq = req.clone();
                 const body = await clonedReq.json();
-                projectIdToCheck = body?.projectId || body?.id || null;
-                workspaceIdToCheck = body?.workspaceId || null;
+                projectIdToCheck = projectIdToCheck || body?.projectId || body?.id || null;
+                workspaceIdToCheck = workspaceIdToCheck || body?.workspaceId || null;
             } catch (e) {
                 // Ignore parse errors, body might not be JSON
             }
         }
 
         let isBlocked = false;
+        let ipRestrictions: any[] | null = null;
+        let twoFactorRequired = false;
 
         if (projectIdToCheck || workspaceIdToCheck) {
             try {
@@ -49,11 +59,13 @@ export function withSecurity(handler: SecureHandler) {
                 if (projectIdToCheck) {
                     const project = await db.project.findUnique({
                         where: { id: projectIdToCheck as string },
-                        select: { isBlocked: true, user: { select: { id: true, tier: true } } }
+                        select: { isBlocked: true, ipRestrictions: true, twoFactorRequired: true, user: { select: { id: true, tier: true } } }
                     });
                     
                     if (project) {
                         isBlocked = project.isBlocked;
+                        ipRestrictions = project.ipRestrictions as any[];
+                        twoFactorRequired = project.twoFactorRequired;
                         if (project.user) {
                             targetUserId = project.user.id;
                             targetTier = (project.user.tier as Tier) || 'free';
@@ -109,6 +121,55 @@ export function withSecurity(handler: SecureHandler) {
             return new NextResponse(JSON.stringify({ 
                 error: "This project has been blocked by the owner and is currently inaccessible." 
             }), { status: 403, headers: { "Content-Type": "application/json" } });
+        }
+
+        // 4.5. Enforce IP Restrictions globally for project endpoints
+        if (ipRestrictions && ipRestrictions.length > 0) {
+            const { isIpInList, createIpBlockedResponse } = await import("@/lib/middleware/ip-check");
+            // Extract IP addresses from restriction objects
+            const allowedIps = ipRestrictions.map((r: any) => r.ip).filter(Boolean);
+            
+            if (allowedIps.length > 0 && !isIpInList(ip, allowedIps)) {
+                try {
+                    await logSecurityEvent({
+                        ...(baseLogData as any),
+                        statusCode: 403,
+                        duration: Date.now() - start,
+                        errorMessage: "IP Access Denied",
+                        isAnomaly: true
+                    });
+                } catch (e) {
+                    // Ignore logger errors if DB is missing
+                }
+                return createIpBlockedResponse(ip);
+            }
+        }
+
+        // 4.6. Enforce 2FA Requirements globally for project endpoints
+        if (twoFactorRequired && session?.userId && !session.isServiceAccount && !session.userId.startsWith("sa_")) {
+            const db = await import("@/lib/db").then(mod => mod.default);
+            const user = await db.user.findUnique({
+                where: { id: session.userId },
+                select: { mfaEnabled: true }
+            });
+            
+            if (!user?.mfaEnabled) {
+                try {
+                    await logSecurityEvent({
+                        ...(baseLogData as any),
+                        statusCode: 403,
+                        duration: Date.now() - start,
+                        errorMessage: "2FA Required",
+                        isAnomaly: false
+                    });
+                } catch (e) {}
+
+                return new NextResponse(JSON.stringify({ 
+                    error: "Two-Factor Authentication Required",
+                    message: "This project requires Two-Factor Authentication. Please enable MFA in your account settings to access it.",
+                    code: "2FA_REQUIRED"
+                }), { status: 403, headers: { "Content-Type": "application/json" } });
+            }
         }
 
         // 5. Enforce Limit

@@ -178,6 +178,11 @@ export type ServiceAccount = $Result.DefaultSelection<Prisma.$ServiceAccountPayl
  * 
  */
 export type AccessReview = $Result.DefaultSelection<Prisma.$AccessReviewPayload>
+/**
+ * Model JitLink
+ * 
+ */
+export type JitLink = $Result.DefaultSelection<Prisma.$JitLinkPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -593,6 +598,16 @@ export class PrismaClient<
     * ```
     */
   get accessReview(): Prisma.AccessReviewDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.jitLink`: Exposes CRUD operations for the **JitLink** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more JitLinks
+    * const jitLinks = await prisma.jitLink.findMany()
+    * ```
+    */
+  get jitLink(): Prisma.JitLinkDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1065,7 +1080,8 @@ export namespace Prisma {
     BreakGlassSession: 'BreakGlassSession',
     Webhook: 'Webhook',
     ServiceAccount: 'ServiceAccount',
-    AccessReview: 'AccessReview'
+    AccessReview: 'AccessReview',
+    JitLink: 'JitLink'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1084,7 +1100,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink"
       txIsolationLevel: never
     }
     model: {
@@ -3530,6 +3546,80 @@ export namespace Prisma {
           }
         }
       }
+      JitLink: {
+        payload: Prisma.$JitLinkPayload<ExtArgs>
+        fields: Prisma.JitLinkFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.JitLinkFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.JitLinkFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          findFirst: {
+            args: Prisma.JitLinkFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.JitLinkFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          findMany: {
+            args: Prisma.JitLinkFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>[]
+          }
+          create: {
+            args: Prisma.JitLinkCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          createMany: {
+            args: Prisma.JitLinkCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.JitLinkDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          update: {
+            args: Prisma.JitLinkUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          deleteMany: {
+            args: Prisma.JitLinkDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.JitLinkUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.JitLinkUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$JitLinkPayload>
+          }
+          aggregate: {
+            args: Prisma.JitLinkAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateJitLink>
+          }
+          groupBy: {
+            args: Prisma.JitLinkGroupByArgs<ExtArgs>
+            result: $Utils.Optional<JitLinkGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.JitLinkFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.JitLinkAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.JitLinkCountArgs<ExtArgs>
+            result: $Utils.Optional<JitLinkCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3642,6 +3732,7 @@ export namespace Prisma {
     webhook?: WebhookOmit
     serviceAccount?: ServiceAccountOmit
     accessReview?: AccessReviewOmit
+    jitLink?: JitLinkOmit
   }
 
   /* Types for Logging */
@@ -3731,6 +3822,7 @@ export namespace Prisma {
     auditLogs: number
     apiKeys: number
     accessRequests: number
+    jitLinks: number
     userRoles: number
     breakGlassSessions: number
     integrations: number
@@ -3748,6 +3840,7 @@ export namespace Prisma {
     auditLogs?: boolean | UserCountOutputTypeCountAuditLogsArgs
     apiKeys?: boolean | UserCountOutputTypeCountApiKeysArgs
     accessRequests?: boolean | UserCountOutputTypeCountAccessRequestsArgs
+    jitLinks?: boolean | UserCountOutputTypeCountJitLinksArgs
     userRoles?: boolean | UserCountOutputTypeCountUserRolesArgs
     breakGlassSessions?: boolean | UserCountOutputTypeCountBreakGlassSessionsArgs
     integrations?: boolean | UserCountOutputTypeCountIntegrationsArgs
@@ -3827,6 +3920,13 @@ export namespace Prisma {
    */
   export type UserCountOutputTypeCountAccessRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AccessRequestWhereInput
+  }
+
+  /**
+   * UserCountOutputType without action
+   */
+  export type UserCountOutputTypeCountJitLinksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JitLinkWhereInput
   }
 
   /**
@@ -4271,6 +4371,8 @@ export namespace Prisma {
     emailOtpExpiry: Date | null
     mfaEnabled: boolean | null
     mfaSecret: string | null
+    passwordResetToken: string | null
+    passwordResetExpiry: Date | null
     tier: string | null
   }
 
@@ -4288,6 +4390,8 @@ export namespace Prisma {
     emailOtpExpiry: Date | null
     mfaEnabled: boolean | null
     mfaSecret: string | null
+    passwordResetToken: string | null
+    passwordResetExpiry: Date | null
     tier: string | null
   }
 
@@ -4306,6 +4410,8 @@ export namespace Prisma {
     mfaEnabled: number
     mfaSecret: number
     mfaBackupCodes: number
+    passwordResetToken: number
+    passwordResetExpiry: number
     ipAllowlist: number
     tier: number
     _all: number
@@ -4326,6 +4432,8 @@ export namespace Prisma {
     emailOtpExpiry?: true
     mfaEnabled?: true
     mfaSecret?: true
+    passwordResetToken?: true
+    passwordResetExpiry?: true
     tier?: true
   }
 
@@ -4343,6 +4451,8 @@ export namespace Prisma {
     emailOtpExpiry?: true
     mfaEnabled?: true
     mfaSecret?: true
+    passwordResetToken?: true
+    passwordResetExpiry?: true
     tier?: true
   }
 
@@ -4361,6 +4471,8 @@ export namespace Prisma {
     mfaEnabled?: true
     mfaSecret?: true
     mfaBackupCodes?: true
+    passwordResetToken?: true
+    passwordResetExpiry?: true
     ipAllowlist?: true
     tier?: true
     _all?: true
@@ -4453,6 +4565,8 @@ export namespace Prisma {
     mfaEnabled: boolean
     mfaSecret: string | null
     mfaBackupCodes: string[]
+    passwordResetToken: string | null
+    passwordResetExpiry: Date | null
     ipAllowlist: string[]
     tier: string
     _count: UserCountAggregateOutputType | null
@@ -4489,6 +4603,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: boolean
     mfaBackupCodes?: boolean
+    passwordResetToken?: boolean
+    passwordResetExpiry?: boolean
     ipAllowlist?: boolean
     tier?: boolean
     accounts?: boolean | User$accountsArgs<ExtArgs>
@@ -4501,6 +4617,7 @@ export namespace Prisma {
     auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     apiKeys?: boolean | User$apiKeysArgs<ExtArgs>
     accessRequests?: boolean | User$accessRequestsArgs<ExtArgs>
+    jitLinks?: boolean | User$jitLinksArgs<ExtArgs>
     userRoles?: boolean | User$userRolesArgs<ExtArgs>
     breakGlassSessions?: boolean | User$breakGlassSessionsArgs<ExtArgs>
     integrations?: boolean | User$integrationsArgs<ExtArgs>
@@ -4526,11 +4643,13 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: boolean
     mfaBackupCodes?: boolean
+    passwordResetToken?: boolean
+    passwordResetExpiry?: boolean
     ipAllowlist?: boolean
     tier?: boolean
   }
 
-  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "password" | "emailOtp" | "emailOtpExpiry" | "mfaEnabled" | "mfaSecret" | "mfaBackupCodes" | "ipAllowlist" | "tier", ExtArgs["result"]["user"]>
+  export type UserOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "email" | "emailVerified" | "image" | "createdAt" | "updatedAt" | "role" | "password" | "emailOtp" | "emailOtpExpiry" | "mfaEnabled" | "mfaSecret" | "mfaBackupCodes" | "passwordResetToken" | "passwordResetExpiry" | "ipAllowlist" | "tier", ExtArgs["result"]["user"]>
   export type UserInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     accounts?: boolean | User$accountsArgs<ExtArgs>
     sessions?: boolean | User$sessionsArgs<ExtArgs>
@@ -4542,6 +4661,7 @@ export namespace Prisma {
     auditLogs?: boolean | User$auditLogsArgs<ExtArgs>
     apiKeys?: boolean | User$apiKeysArgs<ExtArgs>
     accessRequests?: boolean | User$accessRequestsArgs<ExtArgs>
+    jitLinks?: boolean | User$jitLinksArgs<ExtArgs>
     userRoles?: boolean | User$userRolesArgs<ExtArgs>
     breakGlassSessions?: boolean | User$breakGlassSessionsArgs<ExtArgs>
     integrations?: boolean | User$integrationsArgs<ExtArgs>
@@ -4563,6 +4683,7 @@ export namespace Prisma {
       auditLogs: Prisma.$AuditLogPayload<ExtArgs>[]
       apiKeys: Prisma.$ApiKeyPayload<ExtArgs>[]
       accessRequests: Prisma.$AccessRequestPayload<ExtArgs>[]
+      jitLinks: Prisma.$JitLinkPayload<ExtArgs>[]
       userRoles: Prisma.$UserRolePayload<ExtArgs>[]
       breakGlassSessions: Prisma.$BreakGlassSessionPayload<ExtArgs>[]
       integrations: Prisma.$IntegrationPayload<ExtArgs>[]
@@ -4584,6 +4705,8 @@ export namespace Prisma {
       mfaEnabled: boolean
       mfaSecret: string | null
       mfaBackupCodes: string[]
+      passwordResetToken: string | null
+      passwordResetExpiry: Date | null
       ipAllowlist: string[]
       tier: string
     }, ExtArgs["result"]["user"]>
@@ -4959,6 +5082,7 @@ export namespace Prisma {
     auditLogs<T extends User$auditLogsArgs<ExtArgs> = {}>(args?: Subset<T, User$auditLogsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AuditLogPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     apiKeys<T extends User$apiKeysArgs<ExtArgs> = {}>(args?: Subset<T, User$apiKeysArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$ApiKeyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     accessRequests<T extends User$accessRequestsArgs<ExtArgs> = {}>(args?: Subset<T, User$accessRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccessRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    jitLinks<T extends User$jitLinksArgs<ExtArgs> = {}>(args?: Subset<T, User$jitLinksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     userRoles<T extends User$userRolesArgs<ExtArgs> = {}>(args?: Subset<T, User$userRolesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$UserRolePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     breakGlassSessions<T extends User$breakGlassSessionsArgs<ExtArgs> = {}>(args?: Subset<T, User$breakGlassSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BreakGlassSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     integrations<T extends User$integrationsArgs<ExtArgs> = {}>(args?: Subset<T, User$integrationsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$IntegrationPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
@@ -5007,6 +5131,8 @@ export namespace Prisma {
     readonly mfaEnabled: FieldRef<"User", 'Boolean'>
     readonly mfaSecret: FieldRef<"User", 'String'>
     readonly mfaBackupCodes: FieldRef<"User", 'String[]'>
+    readonly passwordResetToken: FieldRef<"User", 'String'>
+    readonly passwordResetExpiry: FieldRef<"User", 'DateTime'>
     readonly ipAllowlist: FieldRef<"User", 'String[]'>
     readonly tier: FieldRef<"User", 'String'>
   }
@@ -5611,6 +5737,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AccessRequestScalarFieldEnum | AccessRequestScalarFieldEnum[]
+  }
+
+  /**
+   * User.jitLinks
+   */
+  export type User$jitLinksArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    where?: JitLinkWhereInput
+    orderBy?: JitLinkOrderByWithRelationInput | JitLinkOrderByWithRelationInput[]
+    cursor?: JitLinkWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: JitLinkScalarFieldEnum | JitLinkScalarFieldEnum[]
   }
 
   /**
@@ -25064,6 +25214,8 @@ export namespace Prisma {
     workspaceId: string | null
     previousHash: string | null
     currentHash: string | null
+    ipAddress: string | null
+    userAgent: string | null
   }
 
   export type AuditLogMaxAggregateOutputType = {
@@ -25076,6 +25228,8 @@ export namespace Prisma {
     workspaceId: string | null
     previousHash: string | null
     currentHash: string | null
+    ipAddress: string | null
+    userAgent: string | null
   }
 
   export type AuditLogCountAggregateOutputType = {
@@ -25089,6 +25243,8 @@ export namespace Prisma {
     workspaceId: number
     previousHash: number
     currentHash: number
+    ipAddress: number
+    userAgent: number
     _all: number
   }
 
@@ -25103,6 +25259,8 @@ export namespace Prisma {
     workspaceId?: true
     previousHash?: true
     currentHash?: true
+    ipAddress?: true
+    userAgent?: true
   }
 
   export type AuditLogMaxAggregateInputType = {
@@ -25115,6 +25273,8 @@ export namespace Prisma {
     workspaceId?: true
     previousHash?: true
     currentHash?: true
+    ipAddress?: true
+    userAgent?: true
   }
 
   export type AuditLogCountAggregateInputType = {
@@ -25128,6 +25288,8 @@ export namespace Prisma {
     workspaceId?: true
     previousHash?: true
     currentHash?: true
+    ipAddress?: true
+    userAgent?: true
     _all?: true
   }
 
@@ -25214,6 +25376,8 @@ export namespace Prisma {
     workspaceId: string | null
     previousHash: string | null
     currentHash: string | null
+    ipAddress: string | null
+    userAgent: string | null
     _count: AuditLogCountAggregateOutputType | null
     _min: AuditLogMinAggregateOutputType | null
     _max: AuditLogMaxAggregateOutputType | null
@@ -25244,6 +25408,8 @@ export namespace Prisma {
     workspaceId?: boolean
     previousHash?: boolean
     currentHash?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["auditLog"]>
 
@@ -25260,9 +25426,11 @@ export namespace Prisma {
     workspaceId?: boolean
     previousHash?: boolean
     currentHash?: boolean
+    ipAddress?: boolean
+    userAgent?: boolean
   }
 
-  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "entity" | "entityId" | "changes" | "timestamp" | "workspaceId" | "previousHash" | "currentHash", ExtArgs["result"]["auditLog"]>
+  export type AuditLogOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "action" | "entity" | "entityId" | "changes" | "timestamp" | "workspaceId" | "previousHash" | "currentHash" | "ipAddress" | "userAgent", ExtArgs["result"]["auditLog"]>
   export type AuditLogInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
   }
@@ -25283,6 +25451,8 @@ export namespace Prisma {
       workspaceId: string | null
       previousHash: string | null
       currentHash: string | null
+      ipAddress: string | null
+      userAgent: string | null
     }, ExtArgs["result"]["auditLog"]>
     composites: {}
   }
@@ -25686,6 +25856,8 @@ export namespace Prisma {
     readonly workspaceId: FieldRef<"AuditLog", 'String'>
     readonly previousHash: FieldRef<"AuditLog", 'String'>
     readonly currentHash: FieldRef<"AuditLog", 'String'>
+    readonly ipAddress: FieldRef<"AuditLog", 'String'>
+    readonly userAgent: FieldRef<"AuditLog", 'String'>
   }
     
 
@@ -39371,6 +39543,1144 @@ export namespace Prisma {
 
 
   /**
+   * Model JitLink
+   */
+
+  export type AggregateJitLink = {
+    _count: JitLinkCountAggregateOutputType | null
+    _avg: JitLinkAvgAggregateOutputType | null
+    _sum: JitLinkSumAggregateOutputType | null
+    _min: JitLinkMinAggregateOutputType | null
+    _max: JitLinkMaxAggregateOutputType | null
+  }
+
+  export type JitLinkAvgAggregateOutputType = {
+    duration: number | null
+    maxUses: number | null
+    usedCount: number | null
+  }
+
+  export type JitLinkSumAggregateOutputType = {
+    duration: number | null
+    maxUses: number | null
+    usedCount: number | null
+  }
+
+  export type JitLinkMinAggregateOutputType = {
+    id: string | null
+    token: string | null
+    projectId: string | null
+    branchId: string | null
+    environment: string | null
+    createdBy: string | null
+    duration: number | null
+    label: string | null
+    expiresAt: Date | null
+    maxUses: number | null
+    usedCount: number | null
+    isRevoked: boolean | null
+    accessLevel: string | null
+    workspaceId: string | null
+    createdAt: Date | null
+  }
+
+  export type JitLinkMaxAggregateOutputType = {
+    id: string | null
+    token: string | null
+    projectId: string | null
+    branchId: string | null
+    environment: string | null
+    createdBy: string | null
+    duration: number | null
+    label: string | null
+    expiresAt: Date | null
+    maxUses: number | null
+    usedCount: number | null
+    isRevoked: boolean | null
+    accessLevel: string | null
+    workspaceId: string | null
+    createdAt: Date | null
+  }
+
+  export type JitLinkCountAggregateOutputType = {
+    id: number
+    token: number
+    projectId: number
+    branchId: number
+    environment: number
+    secretIds: number
+    createdBy: number
+    duration: number
+    label: number
+    expiresAt: number
+    maxUses: number
+    usedCount: number
+    isRevoked: number
+    accessLevel: number
+    workspaceId: number
+    createdAt: number
+    _all: number
+  }
+
+
+  export type JitLinkAvgAggregateInputType = {
+    duration?: true
+    maxUses?: true
+    usedCount?: true
+  }
+
+  export type JitLinkSumAggregateInputType = {
+    duration?: true
+    maxUses?: true
+    usedCount?: true
+  }
+
+  export type JitLinkMinAggregateInputType = {
+    id?: true
+    token?: true
+    projectId?: true
+    branchId?: true
+    environment?: true
+    createdBy?: true
+    duration?: true
+    label?: true
+    expiresAt?: true
+    maxUses?: true
+    usedCount?: true
+    isRevoked?: true
+    accessLevel?: true
+    workspaceId?: true
+    createdAt?: true
+  }
+
+  export type JitLinkMaxAggregateInputType = {
+    id?: true
+    token?: true
+    projectId?: true
+    branchId?: true
+    environment?: true
+    createdBy?: true
+    duration?: true
+    label?: true
+    expiresAt?: true
+    maxUses?: true
+    usedCount?: true
+    isRevoked?: true
+    accessLevel?: true
+    workspaceId?: true
+    createdAt?: true
+  }
+
+  export type JitLinkCountAggregateInputType = {
+    id?: true
+    token?: true
+    projectId?: true
+    branchId?: true
+    environment?: true
+    secretIds?: true
+    createdBy?: true
+    duration?: true
+    label?: true
+    expiresAt?: true
+    maxUses?: true
+    usedCount?: true
+    isRevoked?: true
+    accessLevel?: true
+    workspaceId?: true
+    createdAt?: true
+    _all?: true
+  }
+
+  export type JitLinkAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which JitLink to aggregate.
+     */
+    where?: JitLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JitLinks to fetch.
+     */
+    orderBy?: JitLinkOrderByWithRelationInput | JitLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: JitLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JitLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JitLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned JitLinks
+    **/
+    _count?: true | JitLinkCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: JitLinkAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: JitLinkSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: JitLinkMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: JitLinkMaxAggregateInputType
+  }
+
+  export type GetJitLinkAggregateType<T extends JitLinkAggregateArgs> = {
+        [P in keyof T & keyof AggregateJitLink]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateJitLink[P]>
+      : GetScalarType<T[P], AggregateJitLink[P]>
+  }
+
+
+
+
+  export type JitLinkGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: JitLinkWhereInput
+    orderBy?: JitLinkOrderByWithAggregationInput | JitLinkOrderByWithAggregationInput[]
+    by: JitLinkScalarFieldEnum[] | JitLinkScalarFieldEnum
+    having?: JitLinkScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: JitLinkCountAggregateInputType | true
+    _avg?: JitLinkAvgAggregateInputType
+    _sum?: JitLinkSumAggregateInputType
+    _min?: JitLinkMinAggregateInputType
+    _max?: JitLinkMaxAggregateInputType
+  }
+
+  export type JitLinkGroupByOutputType = {
+    id: string
+    token: string
+    projectId: string
+    branchId: string | null
+    environment: string | null
+    secretIds: string[]
+    createdBy: string
+    duration: number
+    label: string | null
+    expiresAt: Date
+    maxUses: number
+    usedCount: number
+    isRevoked: boolean
+    accessLevel: string
+    workspaceId: string | null
+    createdAt: Date
+    _count: JitLinkCountAggregateOutputType | null
+    _avg: JitLinkAvgAggregateOutputType | null
+    _sum: JitLinkSumAggregateOutputType | null
+    _min: JitLinkMinAggregateOutputType | null
+    _max: JitLinkMaxAggregateOutputType | null
+  }
+
+  type GetJitLinkGroupByPayload<T extends JitLinkGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<JitLinkGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof JitLinkGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], JitLinkGroupByOutputType[P]>
+            : GetScalarType<T[P], JitLinkGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type JitLinkSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    token?: boolean
+    projectId?: boolean
+    branchId?: boolean
+    environment?: boolean
+    secretIds?: boolean
+    createdBy?: boolean
+    duration?: boolean
+    label?: boolean
+    expiresAt?: boolean
+    maxUses?: boolean
+    usedCount?: boolean
+    isRevoked?: boolean
+    accessLevel?: boolean
+    workspaceId?: boolean
+    createdAt?: boolean
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["jitLink"]>
+
+
+
+  export type JitLinkSelectScalar = {
+    id?: boolean
+    token?: boolean
+    projectId?: boolean
+    branchId?: boolean
+    environment?: boolean
+    secretIds?: boolean
+    createdBy?: boolean
+    duration?: boolean
+    label?: boolean
+    expiresAt?: boolean
+    maxUses?: boolean
+    usedCount?: boolean
+    isRevoked?: boolean
+    accessLevel?: boolean
+    workspaceId?: boolean
+    createdAt?: boolean
+  }
+
+  export type JitLinkOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "token" | "projectId" | "branchId" | "environment" | "secretIds" | "createdBy" | "duration" | "label" | "expiresAt" | "maxUses" | "usedCount" | "isRevoked" | "accessLevel" | "workspaceId" | "createdAt", ExtArgs["result"]["jitLink"]>
+  export type JitLinkInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    creator?: boolean | UserDefaultArgs<ExtArgs>
+  }
+
+  export type $JitLinkPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "JitLink"
+    objects: {
+      creator: Prisma.$UserPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      token: string
+      projectId: string
+      branchId: string | null
+      environment: string | null
+      secretIds: string[]
+      createdBy: string
+      duration: number
+      label: string | null
+      expiresAt: Date
+      maxUses: number
+      usedCount: number
+      isRevoked: boolean
+      accessLevel: string
+      workspaceId: string | null
+      createdAt: Date
+    }, ExtArgs["result"]["jitLink"]>
+    composites: {}
+  }
+
+  type JitLinkGetPayload<S extends boolean | null | undefined | JitLinkDefaultArgs> = $Result.GetResult<Prisma.$JitLinkPayload, S>
+
+  type JitLinkCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<JitLinkFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: JitLinkCountAggregateInputType | true
+    }
+
+  export interface JitLinkDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['JitLink'], meta: { name: 'JitLink' } }
+    /**
+     * Find zero or one JitLink that matches the filter.
+     * @param {JitLinkFindUniqueArgs} args - Arguments to find a JitLink
+     * @example
+     * // Get one JitLink
+     * const jitLink = await prisma.jitLink.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends JitLinkFindUniqueArgs>(args: SelectSubset<T, JitLinkFindUniqueArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one JitLink that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {JitLinkFindUniqueOrThrowArgs} args - Arguments to find a JitLink
+     * @example
+     * // Get one JitLink
+     * const jitLink = await prisma.jitLink.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends JitLinkFindUniqueOrThrowArgs>(args: SelectSubset<T, JitLinkFindUniqueOrThrowArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first JitLink that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkFindFirstArgs} args - Arguments to find a JitLink
+     * @example
+     * // Get one JitLink
+     * const jitLink = await prisma.jitLink.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends JitLinkFindFirstArgs>(args?: SelectSubset<T, JitLinkFindFirstArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first JitLink that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkFindFirstOrThrowArgs} args - Arguments to find a JitLink
+     * @example
+     * // Get one JitLink
+     * const jitLink = await prisma.jitLink.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends JitLinkFindFirstOrThrowArgs>(args?: SelectSubset<T, JitLinkFindFirstOrThrowArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more JitLinks that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all JitLinks
+     * const jitLinks = await prisma.jitLink.findMany()
+     * 
+     * // Get first 10 JitLinks
+     * const jitLinks = await prisma.jitLink.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const jitLinkWithIdOnly = await prisma.jitLink.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends JitLinkFindManyArgs>(args?: SelectSubset<T, JitLinkFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a JitLink.
+     * @param {JitLinkCreateArgs} args - Arguments to create a JitLink.
+     * @example
+     * // Create one JitLink
+     * const JitLink = await prisma.jitLink.create({
+     *   data: {
+     *     // ... data to create a JitLink
+     *   }
+     * })
+     * 
+     */
+    create<T extends JitLinkCreateArgs>(args: SelectSubset<T, JitLinkCreateArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many JitLinks.
+     * @param {JitLinkCreateManyArgs} args - Arguments to create many JitLinks.
+     * @example
+     * // Create many JitLinks
+     * const jitLink = await prisma.jitLink.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends JitLinkCreateManyArgs>(args?: SelectSubset<T, JitLinkCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a JitLink.
+     * @param {JitLinkDeleteArgs} args - Arguments to delete one JitLink.
+     * @example
+     * // Delete one JitLink
+     * const JitLink = await prisma.jitLink.delete({
+     *   where: {
+     *     // ... filter to delete one JitLink
+     *   }
+     * })
+     * 
+     */
+    delete<T extends JitLinkDeleteArgs>(args: SelectSubset<T, JitLinkDeleteArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one JitLink.
+     * @param {JitLinkUpdateArgs} args - Arguments to update one JitLink.
+     * @example
+     * // Update one JitLink
+     * const jitLink = await prisma.jitLink.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends JitLinkUpdateArgs>(args: SelectSubset<T, JitLinkUpdateArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more JitLinks.
+     * @param {JitLinkDeleteManyArgs} args - Arguments to filter JitLinks to delete.
+     * @example
+     * // Delete a few JitLinks
+     * const { count } = await prisma.jitLink.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends JitLinkDeleteManyArgs>(args?: SelectSubset<T, JitLinkDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more JitLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many JitLinks
+     * const jitLink = await prisma.jitLink.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends JitLinkUpdateManyArgs>(args: SelectSubset<T, JitLinkUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one JitLink.
+     * @param {JitLinkUpsertArgs} args - Arguments to update or create a JitLink.
+     * @example
+     * // Update or create a JitLink
+     * const jitLink = await prisma.jitLink.upsert({
+     *   create: {
+     *     // ... data to create a JitLink
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the JitLink we want to update
+     *   }
+     * })
+     */
+    upsert<T extends JitLinkUpsertArgs>(args: SelectSubset<T, JitLinkUpsertArgs<ExtArgs>>): Prisma__JitLinkClient<$Result.GetResult<Prisma.$JitLinkPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more JitLinks that matches the filter.
+     * @param {JitLinkFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const jitLink = await prisma.jitLink.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: JitLinkFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a JitLink.
+     * @param {JitLinkAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const jitLink = await prisma.jitLink.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: JitLinkAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of JitLinks.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkCountArgs} args - Arguments to filter JitLinks to count.
+     * @example
+     * // Count the number of JitLinks
+     * const count = await prisma.jitLink.count({
+     *   where: {
+     *     // ... the filter for the JitLinks we want to count
+     *   }
+     * })
+    **/
+    count<T extends JitLinkCountArgs>(
+      args?: Subset<T, JitLinkCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], JitLinkCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a JitLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends JitLinkAggregateArgs>(args: Subset<T, JitLinkAggregateArgs>): Prisma.PrismaPromise<GetJitLinkAggregateType<T>>
+
+    /**
+     * Group by JitLink.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {JitLinkGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends JitLinkGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: JitLinkGroupByArgs['orderBy'] }
+        : { orderBy?: JitLinkGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, JitLinkGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetJitLinkGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the JitLink model
+   */
+  readonly fields: JitLinkFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for JitLink.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__JitLinkClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    creator<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the JitLink model
+   */
+  interface JitLinkFieldRefs {
+    readonly id: FieldRef<"JitLink", 'String'>
+    readonly token: FieldRef<"JitLink", 'String'>
+    readonly projectId: FieldRef<"JitLink", 'String'>
+    readonly branchId: FieldRef<"JitLink", 'String'>
+    readonly environment: FieldRef<"JitLink", 'String'>
+    readonly secretIds: FieldRef<"JitLink", 'String[]'>
+    readonly createdBy: FieldRef<"JitLink", 'String'>
+    readonly duration: FieldRef<"JitLink", 'Int'>
+    readonly label: FieldRef<"JitLink", 'String'>
+    readonly expiresAt: FieldRef<"JitLink", 'DateTime'>
+    readonly maxUses: FieldRef<"JitLink", 'Int'>
+    readonly usedCount: FieldRef<"JitLink", 'Int'>
+    readonly isRevoked: FieldRef<"JitLink", 'Boolean'>
+    readonly accessLevel: FieldRef<"JitLink", 'String'>
+    readonly workspaceId: FieldRef<"JitLink", 'String'>
+    readonly createdAt: FieldRef<"JitLink", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * JitLink findUnique
+   */
+  export type JitLinkFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which JitLink to fetch.
+     */
+    where: JitLinkWhereUniqueInput
+  }
+
+  /**
+   * JitLink findUniqueOrThrow
+   */
+  export type JitLinkFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which JitLink to fetch.
+     */
+    where: JitLinkWhereUniqueInput
+  }
+
+  /**
+   * JitLink findFirst
+   */
+  export type JitLinkFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which JitLink to fetch.
+     */
+    where?: JitLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JitLinks to fetch.
+     */
+    orderBy?: JitLinkOrderByWithRelationInput | JitLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for JitLinks.
+     */
+    cursor?: JitLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JitLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JitLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of JitLinks.
+     */
+    distinct?: JitLinkScalarFieldEnum | JitLinkScalarFieldEnum[]
+  }
+
+  /**
+   * JitLink findFirstOrThrow
+   */
+  export type JitLinkFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which JitLink to fetch.
+     */
+    where?: JitLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JitLinks to fetch.
+     */
+    orderBy?: JitLinkOrderByWithRelationInput | JitLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for JitLinks.
+     */
+    cursor?: JitLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JitLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JitLinks.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of JitLinks.
+     */
+    distinct?: JitLinkScalarFieldEnum | JitLinkScalarFieldEnum[]
+  }
+
+  /**
+   * JitLink findMany
+   */
+  export type JitLinkFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter, which JitLinks to fetch.
+     */
+    where?: JitLinkWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of JitLinks to fetch.
+     */
+    orderBy?: JitLinkOrderByWithRelationInput | JitLinkOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing JitLinks.
+     */
+    cursor?: JitLinkWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` JitLinks from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` JitLinks.
+     */
+    skip?: number
+    distinct?: JitLinkScalarFieldEnum | JitLinkScalarFieldEnum[]
+  }
+
+  /**
+   * JitLink create
+   */
+  export type JitLinkCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * The data needed to create a JitLink.
+     */
+    data: XOR<JitLinkCreateInput, JitLinkUncheckedCreateInput>
+  }
+
+  /**
+   * JitLink createMany
+   */
+  export type JitLinkCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many JitLinks.
+     */
+    data: JitLinkCreateManyInput | JitLinkCreateManyInput[]
+  }
+
+  /**
+   * JitLink update
+   */
+  export type JitLinkUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * The data needed to update a JitLink.
+     */
+    data: XOR<JitLinkUpdateInput, JitLinkUncheckedUpdateInput>
+    /**
+     * Choose, which JitLink to update.
+     */
+    where: JitLinkWhereUniqueInput
+  }
+
+  /**
+   * JitLink updateMany
+   */
+  export type JitLinkUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update JitLinks.
+     */
+    data: XOR<JitLinkUpdateManyMutationInput, JitLinkUncheckedUpdateManyInput>
+    /**
+     * Filter which JitLinks to update
+     */
+    where?: JitLinkWhereInput
+    /**
+     * Limit how many JitLinks to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * JitLink upsert
+   */
+  export type JitLinkUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * The filter to search for the JitLink to update in case it exists.
+     */
+    where: JitLinkWhereUniqueInput
+    /**
+     * In case the JitLink found by the `where` argument doesn't exist, create a new JitLink with this data.
+     */
+    create: XOR<JitLinkCreateInput, JitLinkUncheckedCreateInput>
+    /**
+     * In case the JitLink was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<JitLinkUpdateInput, JitLinkUncheckedUpdateInput>
+  }
+
+  /**
+   * JitLink delete
+   */
+  export type JitLinkDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+    /**
+     * Filter which JitLink to delete.
+     */
+    where: JitLinkWhereUniqueInput
+  }
+
+  /**
+   * JitLink deleteMany
+   */
+  export type JitLinkDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which JitLinks to delete
+     */
+    where?: JitLinkWhereInput
+    /**
+     * Limit how many JitLinks to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * JitLink findRaw
+   */
+  export type JitLinkFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * JitLink aggregateRaw
+   */
+  export type JitLinkAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * JitLink without action
+   */
+  export type JitLinkDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the JitLink
+     */
+    select?: JitLinkSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the JitLink
+     */
+    omit?: JitLinkOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: JitLinkInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -39389,6 +40699,8 @@ export namespace Prisma {
     mfaEnabled: 'mfaEnabled',
     mfaSecret: 'mfaSecret',
     mfaBackupCodes: 'mfaBackupCodes',
+    passwordResetToken: 'passwordResetToken',
+    passwordResetExpiry: 'passwordResetExpiry',
     ipAllowlist: 'ipAllowlist',
     tier: 'tier'
   };
@@ -39705,7 +41017,9 @@ export namespace Prisma {
     timestamp: 'timestamp',
     workspaceId: 'workspaceId',
     previousHash: 'previousHash',
-    currentHash: 'currentHash'
+    currentHash: 'currentHash',
+    ipAddress: 'ipAddress',
+    userAgent: 'userAgent'
   };
 
   export type AuditLogScalarFieldEnum = (typeof AuditLogScalarFieldEnum)[keyof typeof AuditLogScalarFieldEnum]
@@ -39886,6 +41200,28 @@ export namespace Prisma {
   export type AccessReviewScalarFieldEnum = (typeof AccessReviewScalarFieldEnum)[keyof typeof AccessReviewScalarFieldEnum]
 
 
+  export const JitLinkScalarFieldEnum: {
+    id: 'id',
+    token: 'token',
+    projectId: 'projectId',
+    branchId: 'branchId',
+    environment: 'environment',
+    secretIds: 'secretIds',
+    createdBy: 'createdBy',
+    duration: 'duration',
+    label: 'label',
+    expiresAt: 'expiresAt',
+    maxUses: 'maxUses',
+    usedCount: 'usedCount',
+    isRevoked: 'isRevoked',
+    accessLevel: 'accessLevel',
+    workspaceId: 'workspaceId',
+    createdAt: 'createdAt'
+  };
+
+  export type JitLinkScalarFieldEnum = (typeof JitLinkScalarFieldEnum)[keyof typeof JitLinkScalarFieldEnum]
+
+
   export const SortOrder: {
     asc: 'asc',
     desc: 'desc'
@@ -40005,6 +41341,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFilter<"User"> | boolean
     mfaSecret?: StringNullableFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
+    passwordResetToken?: StringNullableFilter<"User"> | string | null
+    passwordResetExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     ipAllowlist?: StringNullableListFilter<"User">
     tier?: StringFilter<"User"> | string
     accounts?: AccountListRelationFilter
@@ -40017,6 +41355,7 @@ export namespace Prisma {
     auditLogs?: AuditLogListRelationFilter
     apiKeys?: ApiKeyListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
+    jitLinks?: JitLinkListRelationFilter
     userRoles?: UserRoleListRelationFilter
     breakGlassSessions?: BreakGlassSessionListRelationFilter
     integrations?: IntegrationListRelationFilter
@@ -40039,6 +41378,8 @@ export namespace Prisma {
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
+    passwordResetToken?: SortOrder
+    passwordResetExpiry?: SortOrder
     ipAllowlist?: SortOrder
     tier?: SortOrder
     accounts?: AccountOrderByRelationAggregateInput
@@ -40051,6 +41392,7 @@ export namespace Prisma {
     auditLogs?: AuditLogOrderByRelationAggregateInput
     apiKeys?: ApiKeyOrderByRelationAggregateInput
     accessRequests?: AccessRequestOrderByRelationAggregateInput
+    jitLinks?: JitLinkOrderByRelationAggregateInput
     userRoles?: UserRoleOrderByRelationAggregateInput
     breakGlassSessions?: BreakGlassSessionOrderByRelationAggregateInput
     integrations?: IntegrationOrderByRelationAggregateInput
@@ -40061,6 +41403,7 @@ export namespace Prisma {
   export type UserWhereUniqueInput = Prisma.AtLeast<{
     id?: string
     email?: string
+    passwordResetToken?: string
     AND?: UserWhereInput | UserWhereInput[]
     OR?: UserWhereInput[]
     NOT?: UserWhereInput | UserWhereInput[]
@@ -40076,6 +41419,7 @@ export namespace Prisma {
     mfaEnabled?: BoolFilter<"User"> | boolean
     mfaSecret?: StringNullableFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
+    passwordResetExpiry?: DateTimeNullableFilter<"User"> | Date | string | null
     ipAllowlist?: StringNullableListFilter<"User">
     tier?: StringFilter<"User"> | string
     accounts?: AccountListRelationFilter
@@ -40088,12 +41432,13 @@ export namespace Prisma {
     auditLogs?: AuditLogListRelationFilter
     apiKeys?: ApiKeyListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
+    jitLinks?: JitLinkListRelationFilter
     userRoles?: UserRoleListRelationFilter
     breakGlassSessions?: BreakGlassSessionListRelationFilter
     integrations?: IntegrationListRelationFilter
     reviewsReceived?: AccessReviewListRelationFilter
     reviewsGiven?: AccessReviewListRelationFilter
-  }, "id" | "email">
+  }, "id" | "email" | "passwordResetToken">
 
   export type UserOrderByWithAggregationInput = {
     id?: SortOrder
@@ -40110,6 +41455,8 @@ export namespace Prisma {
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
+    passwordResetToken?: SortOrder
+    passwordResetExpiry?: SortOrder
     ipAllowlist?: SortOrder
     tier?: SortOrder
     _count?: UserCountOrderByAggregateInput
@@ -40135,6 +41482,8 @@ export namespace Prisma {
     mfaEnabled?: BoolWithAggregatesFilter<"User"> | boolean
     mfaSecret?: StringNullableWithAggregatesFilter<"User"> | string | null
     mfaBackupCodes?: StringNullableListFilter<"User">
+    passwordResetToken?: StringNullableWithAggregatesFilter<"User"> | string | null
+    passwordResetExpiry?: DateTimeNullableWithAggregatesFilter<"User"> | Date | string | null
     ipAllowlist?: StringNullableListFilter<"User">
     tier?: StringWithAggregatesFilter<"User"> | string
   }
@@ -41717,6 +43066,8 @@ export namespace Prisma {
     workspaceId?: StringNullableFilter<"AuditLog"> | string | null
     previousHash?: StringNullableFilter<"AuditLog"> | string | null
     currentHash?: StringNullableFilter<"AuditLog"> | string | null
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }
 
@@ -41731,6 +43082,8 @@ export namespace Prisma {
     workspaceId?: SortOrder
     previousHash?: SortOrder
     currentHash?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
     user?: UserOrderByWithRelationInput
   }
 
@@ -41748,6 +43101,8 @@ export namespace Prisma {
     workspaceId?: StringNullableFilter<"AuditLog"> | string | null
     previousHash?: StringNullableFilter<"AuditLog"> | string | null
     currentHash?: StringNullableFilter<"AuditLog"> | string | null
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
   }, "id">
 
@@ -41762,6 +43117,8 @@ export namespace Prisma {
     workspaceId?: SortOrder
     previousHash?: SortOrder
     currentHash?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
     _count?: AuditLogCountOrderByAggregateInput
     _max?: AuditLogMaxOrderByAggregateInput
     _min?: AuditLogMinOrderByAggregateInput
@@ -41781,6 +43138,8 @@ export namespace Prisma {
     workspaceId?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     previousHash?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
     currentHash?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    ipAddress?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableWithAggregatesFilter<"AuditLog"> | string | null
   }
 
   export type TeamSSOWhereInput = {
@@ -42690,6 +44049,118 @@ export namespace Prisma {
     reviewedAt?: DateTimeWithAggregatesFilter<"AccessReview"> | Date | string
   }
 
+  export type JitLinkWhereInput = {
+    AND?: JitLinkWhereInput | JitLinkWhereInput[]
+    OR?: JitLinkWhereInput[]
+    NOT?: JitLinkWhereInput | JitLinkWhereInput[]
+    id?: StringFilter<"JitLink"> | string
+    token?: StringFilter<"JitLink"> | string
+    projectId?: StringFilter<"JitLink"> | string
+    branchId?: StringNullableFilter<"JitLink"> | string | null
+    environment?: StringNullableFilter<"JitLink"> | string | null
+    secretIds?: StringNullableListFilter<"JitLink">
+    createdBy?: StringFilter<"JitLink"> | string
+    duration?: IntFilter<"JitLink"> | number
+    label?: StringNullableFilter<"JitLink"> | string | null
+    expiresAt?: DateTimeFilter<"JitLink"> | Date | string
+    maxUses?: IntFilter<"JitLink"> | number
+    usedCount?: IntFilter<"JitLink"> | number
+    isRevoked?: BoolFilter<"JitLink"> | boolean
+    accessLevel?: StringFilter<"JitLink"> | string
+    workspaceId?: StringNullableFilter<"JitLink"> | string | null
+    createdAt?: DateTimeFilter<"JitLink"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }
+
+  export type JitLinkOrderByWithRelationInput = {
+    id?: SortOrder
+    token?: SortOrder
+    projectId?: SortOrder
+    branchId?: SortOrder
+    environment?: SortOrder
+    secretIds?: SortOrder
+    createdBy?: SortOrder
+    duration?: SortOrder
+    label?: SortOrder
+    expiresAt?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+    isRevoked?: SortOrder
+    accessLevel?: SortOrder
+    workspaceId?: SortOrder
+    createdAt?: SortOrder
+    creator?: UserOrderByWithRelationInput
+  }
+
+  export type JitLinkWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    token?: string
+    AND?: JitLinkWhereInput | JitLinkWhereInput[]
+    OR?: JitLinkWhereInput[]
+    NOT?: JitLinkWhereInput | JitLinkWhereInput[]
+    projectId?: StringFilter<"JitLink"> | string
+    branchId?: StringNullableFilter<"JitLink"> | string | null
+    environment?: StringNullableFilter<"JitLink"> | string | null
+    secretIds?: StringNullableListFilter<"JitLink">
+    createdBy?: StringFilter<"JitLink"> | string
+    duration?: IntFilter<"JitLink"> | number
+    label?: StringNullableFilter<"JitLink"> | string | null
+    expiresAt?: DateTimeFilter<"JitLink"> | Date | string
+    maxUses?: IntFilter<"JitLink"> | number
+    usedCount?: IntFilter<"JitLink"> | number
+    isRevoked?: BoolFilter<"JitLink"> | boolean
+    accessLevel?: StringFilter<"JitLink"> | string
+    workspaceId?: StringNullableFilter<"JitLink"> | string | null
+    createdAt?: DateTimeFilter<"JitLink"> | Date | string
+    creator?: XOR<UserScalarRelationFilter, UserWhereInput>
+  }, "id" | "token">
+
+  export type JitLinkOrderByWithAggregationInput = {
+    id?: SortOrder
+    token?: SortOrder
+    projectId?: SortOrder
+    branchId?: SortOrder
+    environment?: SortOrder
+    secretIds?: SortOrder
+    createdBy?: SortOrder
+    duration?: SortOrder
+    label?: SortOrder
+    expiresAt?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+    isRevoked?: SortOrder
+    accessLevel?: SortOrder
+    workspaceId?: SortOrder
+    createdAt?: SortOrder
+    _count?: JitLinkCountOrderByAggregateInput
+    _avg?: JitLinkAvgOrderByAggregateInput
+    _max?: JitLinkMaxOrderByAggregateInput
+    _min?: JitLinkMinOrderByAggregateInput
+    _sum?: JitLinkSumOrderByAggregateInput
+  }
+
+  export type JitLinkScalarWhereWithAggregatesInput = {
+    AND?: JitLinkScalarWhereWithAggregatesInput | JitLinkScalarWhereWithAggregatesInput[]
+    OR?: JitLinkScalarWhereWithAggregatesInput[]
+    NOT?: JitLinkScalarWhereWithAggregatesInput | JitLinkScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"JitLink"> | string
+    token?: StringWithAggregatesFilter<"JitLink"> | string
+    projectId?: StringWithAggregatesFilter<"JitLink"> | string
+    branchId?: StringNullableWithAggregatesFilter<"JitLink"> | string | null
+    environment?: StringNullableWithAggregatesFilter<"JitLink"> | string | null
+    secretIds?: StringNullableListFilter<"JitLink">
+    createdBy?: StringWithAggregatesFilter<"JitLink"> | string
+    duration?: IntWithAggregatesFilter<"JitLink"> | number
+    label?: StringNullableWithAggregatesFilter<"JitLink"> | string | null
+    expiresAt?: DateTimeWithAggregatesFilter<"JitLink"> | Date | string
+    maxUses?: IntWithAggregatesFilter<"JitLink"> | number
+    usedCount?: IntWithAggregatesFilter<"JitLink"> | number
+    isRevoked?: BoolWithAggregatesFilter<"JitLink"> | boolean
+    accessLevel?: StringWithAggregatesFilter<"JitLink"> | string
+    workspaceId?: StringNullableWithAggregatesFilter<"JitLink"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"JitLink"> | Date | string
+  }
+
   export type UserCreateInput = {
     id?: string
     name?: string | null
@@ -42705,6 +44176,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -42717,6 +44190,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -42739,6 +44213,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -42751,6 +44227,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -42772,6 +44249,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -42784,6 +44263,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -42805,6 +44285,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -42817,6 +44299,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -42839,6 +44322,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
   }
@@ -42857,6 +44342,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
   }
@@ -42875,6 +44362,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
   }
@@ -44583,6 +46072,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
     user: UserCreateNestedOneWithoutAuditLogsInput
   }
 
@@ -44597,6 +46088,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
   }
 
   export type AuditLogUpdateInput = {
@@ -44608,6 +46101,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutAuditLogsNestedInput
   }
 
@@ -44621,6 +46116,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AuditLogCreateManyInput = {
@@ -44634,6 +46131,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
   }
 
   export type AuditLogUpdateManyMutationInput = {
@@ -44645,6 +46144,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AuditLogUncheckedUpdateManyInput = {
@@ -44657,6 +46158,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type TeamSSOCreateInput = {
@@ -45558,6 +47061,134 @@ export namespace Prisma {
     reviewedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type JitLinkCreateInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
+    creator: UserCreateNestedOneWithoutJitLinksInput
+  }
+
+  export type JitLinkUncheckedCreateInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    createdBy: string
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JitLinkUpdateInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    creator?: UserUpdateOneRequiredWithoutJitLinksNestedInput
+  }
+
+  export type JitLinkUncheckedUpdateInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    createdBy?: StringFieldUpdateOperationsInput | string
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JitLinkCreateManyInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    createdBy: string
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JitLinkUpdateManyMutationInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JitLinkUncheckedUpdateManyInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    createdBy?: StringFieldUpdateOperationsInput | string
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -45684,6 +47315,12 @@ export namespace Prisma {
     none?: AccessRequestWhereInput
   }
 
+  export type JitLinkListRelationFilter = {
+    every?: JitLinkWhereInput
+    some?: JitLinkWhereInput
+    none?: JitLinkWhereInput
+  }
+
   export type UserRoleListRelationFilter = {
     every?: UserRoleWhereInput
     some?: UserRoleWhereInput
@@ -45744,6 +47381,10 @@ export namespace Prisma {
     _count?: SortOrder
   }
 
+  export type JitLinkOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
   export type UserRoleOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -45775,6 +47416,8 @@ export namespace Prisma {
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
     mfaBackupCodes?: SortOrder
+    passwordResetToken?: SortOrder
+    passwordResetExpiry?: SortOrder
     ipAllowlist?: SortOrder
     tier?: SortOrder
   }
@@ -45793,6 +47436,8 @@ export namespace Prisma {
     emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
+    passwordResetToken?: SortOrder
+    passwordResetExpiry?: SortOrder
     tier?: SortOrder
   }
 
@@ -45810,6 +47455,8 @@ export namespace Prisma {
     emailOtpExpiry?: SortOrder
     mfaEnabled?: SortOrder
     mfaSecret?: SortOrder
+    passwordResetToken?: SortOrder
+    passwordResetExpiry?: SortOrder
     tier?: SortOrder
   }
 
@@ -46932,6 +48579,8 @@ export namespace Prisma {
     workspaceId?: SortOrder
     previousHash?: SortOrder
     currentHash?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
   }
 
   export type AuditLogMaxOrderByAggregateInput = {
@@ -46944,6 +48593,8 @@ export namespace Prisma {
     workspaceId?: SortOrder
     previousHash?: SortOrder
     currentHash?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
   }
 
   export type AuditLogMinOrderByAggregateInput = {
@@ -46956,6 +48607,8 @@ export namespace Prisma {
     workspaceId?: SortOrder
     previousHash?: SortOrder
     currentHash?: SortOrder
+    ipAddress?: SortOrder
+    userAgent?: SortOrder
   }
 
   export type TeamSSOCountOrderByAggregateInput = {
@@ -47423,6 +49076,73 @@ export namespace Prisma {
     reviewedAt?: SortOrder
   }
 
+  export type JitLinkCountOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    projectId?: SortOrder
+    branchId?: SortOrder
+    environment?: SortOrder
+    secretIds?: SortOrder
+    createdBy?: SortOrder
+    duration?: SortOrder
+    label?: SortOrder
+    expiresAt?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+    isRevoked?: SortOrder
+    accessLevel?: SortOrder
+    workspaceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type JitLinkAvgOrderByAggregateInput = {
+    duration?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+  }
+
+  export type JitLinkMaxOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    projectId?: SortOrder
+    branchId?: SortOrder
+    environment?: SortOrder
+    createdBy?: SortOrder
+    duration?: SortOrder
+    label?: SortOrder
+    expiresAt?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+    isRevoked?: SortOrder
+    accessLevel?: SortOrder
+    workspaceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type JitLinkMinOrderByAggregateInput = {
+    id?: SortOrder
+    token?: SortOrder
+    projectId?: SortOrder
+    branchId?: SortOrder
+    environment?: SortOrder
+    createdBy?: SortOrder
+    duration?: SortOrder
+    label?: SortOrder
+    expiresAt?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+    isRevoked?: SortOrder
+    accessLevel?: SortOrder
+    workspaceId?: SortOrder
+    createdAt?: SortOrder
+  }
+
+  export type JitLinkSumOrderByAggregateInput = {
+    duration?: SortOrder
+    maxUses?: SortOrder
+    usedCount?: SortOrder
+  }
+
   export type UserCreatemfaBackupCodesInput = {
     set: string[]
   }
@@ -47498,6 +49218,13 @@ export namespace Prisma {
     connectOrCreate?: AccessRequestCreateOrConnectWithoutUserInput | AccessRequestCreateOrConnectWithoutUserInput[]
     createMany?: AccessRequestCreateManyUserInputEnvelope
     connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
+  }
+
+  export type JitLinkCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput> | JitLinkCreateWithoutCreatorInput[] | JitLinkUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: JitLinkCreateOrConnectWithoutCreatorInput | JitLinkCreateOrConnectWithoutCreatorInput[]
+    createMany?: JitLinkCreateManyCreatorInputEnvelope
+    connect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
   }
 
   export type UserRoleCreateNestedManyWithoutUserInput = {
@@ -47602,6 +49329,13 @@ export namespace Prisma {
     connectOrCreate?: AccessRequestCreateOrConnectWithoutUserInput | AccessRequestCreateOrConnectWithoutUserInput[]
     createMany?: AccessRequestCreateManyUserInputEnvelope
     connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
+  }
+
+  export type JitLinkUncheckedCreateNestedManyWithoutCreatorInput = {
+    create?: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput> | JitLinkCreateWithoutCreatorInput[] | JitLinkUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: JitLinkCreateOrConnectWithoutCreatorInput | JitLinkCreateOrConnectWithoutCreatorInput[]
+    createMany?: JitLinkCreateManyCreatorInputEnvelope
+    connect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
   }
 
   export type UserRoleUncheckedCreateNestedManyWithoutUserInput = {
@@ -47805,6 +49539,20 @@ export namespace Prisma {
     update?: AccessRequestUpdateWithWhereUniqueWithoutUserInput | AccessRequestUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AccessRequestUpdateManyWithWhereWithoutUserInput | AccessRequestUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
+  }
+
+  export type JitLinkUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput> | JitLinkCreateWithoutCreatorInput[] | JitLinkUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: JitLinkCreateOrConnectWithoutCreatorInput | JitLinkCreateOrConnectWithoutCreatorInput[]
+    upsert?: JitLinkUpsertWithWhereUniqueWithoutCreatorInput | JitLinkUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: JitLinkCreateManyCreatorInputEnvelope
+    set?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    disconnect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    delete?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    connect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    update?: JitLinkUpdateWithWhereUniqueWithoutCreatorInput | JitLinkUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: JitLinkUpdateManyWithWhereWithoutCreatorInput | JitLinkUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: JitLinkScalarWhereInput | JitLinkScalarWhereInput[]
   }
 
   export type UserRoleUpdateManyWithoutUserNestedInput = {
@@ -48011,6 +49759,20 @@ export namespace Prisma {
     update?: AccessRequestUpdateWithWhereUniqueWithoutUserInput | AccessRequestUpdateWithWhereUniqueWithoutUserInput[]
     updateMany?: AccessRequestUpdateManyWithWhereWithoutUserInput | AccessRequestUpdateManyWithWhereWithoutUserInput[]
     deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
+  }
+
+  export type JitLinkUncheckedUpdateManyWithoutCreatorNestedInput = {
+    create?: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput> | JitLinkCreateWithoutCreatorInput[] | JitLinkUncheckedCreateWithoutCreatorInput[]
+    connectOrCreate?: JitLinkCreateOrConnectWithoutCreatorInput | JitLinkCreateOrConnectWithoutCreatorInput[]
+    upsert?: JitLinkUpsertWithWhereUniqueWithoutCreatorInput | JitLinkUpsertWithWhereUniqueWithoutCreatorInput[]
+    createMany?: JitLinkCreateManyCreatorInputEnvelope
+    set?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    disconnect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    delete?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    connect?: JitLinkWhereUniqueInput | JitLinkWhereUniqueInput[]
+    update?: JitLinkUpdateWithWhereUniqueWithoutCreatorInput | JitLinkUpdateWithWhereUniqueWithoutCreatorInput[]
+    updateMany?: JitLinkUpdateManyWithWhereWithoutCreatorInput | JitLinkUpdateManyWithWhereWithoutCreatorInput[]
+    deleteMany?: JitLinkScalarWhereInput | JitLinkScalarWhereInput[]
   }
 
   export type UserRoleUncheckedUpdateManyWithoutUserNestedInput = {
@@ -49593,6 +51355,29 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutReviewsGivenInput, UserUpdateWithoutReviewsGivenInput>, UserUncheckedUpdateWithoutReviewsGivenInput>
   }
 
+  export type JitLinkCreatesecretIdsInput = {
+    set: string[]
+  }
+
+  export type UserCreateNestedOneWithoutJitLinksInput = {
+    create?: XOR<UserCreateWithoutJitLinksInput, UserUncheckedCreateWithoutJitLinksInput>
+    connectOrCreate?: UserCreateOrConnectWithoutJitLinksInput
+    connect?: UserWhereUniqueInput
+  }
+
+  export type JitLinkUpdatesecretIdsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
+  export type UserUpdateOneRequiredWithoutJitLinksNestedInput = {
+    create?: XOR<UserCreateWithoutJitLinksInput, UserUncheckedCreateWithoutJitLinksInput>
+    connectOrCreate?: UserCreateOrConnectWithoutJitLinksInput
+    upsert?: UserUpsertWithoutJitLinksInput
+    connect?: UserWhereUniqueInput
+    update?: XOR<XOR<UserUpdateToOneWithWhereWithoutJitLinksInput, UserUpdateWithoutJitLinksInput>, UserUncheckedUpdateWithoutJitLinksInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -50083,6 +51868,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
   }
 
   export type AuditLogUncheckedCreateWithoutUserInput = {
@@ -50095,6 +51882,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
   }
 
   export type AuditLogCreateOrConnectWithoutUserInput = {
@@ -50174,6 +51963,51 @@ export namespace Prisma {
 
   export type AccessRequestCreateManyUserInputEnvelope = {
     data: AccessRequestCreateManyUserInput | AccessRequestCreateManyUserInput[]
+  }
+
+  export type JitLinkCreateWithoutCreatorInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JitLinkUncheckedCreateWithoutCreatorInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
+  }
+
+  export type JitLinkCreateOrConnectWithoutCreatorInput = {
+    where: JitLinkWhereUniqueInput
+    create: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type JitLinkCreateManyCreatorInputEnvelope = {
+    data: JitLinkCreateManyCreatorInput | JitLinkCreateManyCreatorInput[]
   }
 
   export type UserRoleCreateWithoutUserInput = {
@@ -50575,6 +52409,8 @@ export namespace Prisma {
     workspaceId?: StringNullableFilter<"AuditLog"> | string | null
     previousHash?: StringNullableFilter<"AuditLog"> | string | null
     currentHash?: StringNullableFilter<"AuditLog"> | string | null
+    ipAddress?: StringNullableFilter<"AuditLog"> | string | null
+    userAgent?: StringNullableFilter<"AuditLog"> | string | null
   }
 
   export type ApiKeyUpsertWithWhereUniqueWithoutUserInput = {
@@ -50641,6 +52477,44 @@ export namespace Prisma {
     expiresAt?: DateTimeNullableFilter<"AccessRequest"> | Date | string | null
     requestedAt?: DateTimeFilter<"AccessRequest"> | Date | string
     workspaceId?: StringNullableFilter<"AccessRequest"> | string | null
+  }
+
+  export type JitLinkUpsertWithWhereUniqueWithoutCreatorInput = {
+    where: JitLinkWhereUniqueInput
+    update: XOR<JitLinkUpdateWithoutCreatorInput, JitLinkUncheckedUpdateWithoutCreatorInput>
+    create: XOR<JitLinkCreateWithoutCreatorInput, JitLinkUncheckedCreateWithoutCreatorInput>
+  }
+
+  export type JitLinkUpdateWithWhereUniqueWithoutCreatorInput = {
+    where: JitLinkWhereUniqueInput
+    data: XOR<JitLinkUpdateWithoutCreatorInput, JitLinkUncheckedUpdateWithoutCreatorInput>
+  }
+
+  export type JitLinkUpdateManyWithWhereWithoutCreatorInput = {
+    where: JitLinkScalarWhereInput
+    data: XOR<JitLinkUpdateManyMutationInput, JitLinkUncheckedUpdateManyWithoutCreatorInput>
+  }
+
+  export type JitLinkScalarWhereInput = {
+    AND?: JitLinkScalarWhereInput | JitLinkScalarWhereInput[]
+    OR?: JitLinkScalarWhereInput[]
+    NOT?: JitLinkScalarWhereInput | JitLinkScalarWhereInput[]
+    id?: StringFilter<"JitLink"> | string
+    token?: StringFilter<"JitLink"> | string
+    projectId?: StringFilter<"JitLink"> | string
+    branchId?: StringNullableFilter<"JitLink"> | string | null
+    environment?: StringNullableFilter<"JitLink"> | string | null
+    secretIds?: StringNullableListFilter<"JitLink">
+    createdBy?: StringFilter<"JitLink"> | string
+    duration?: IntFilter<"JitLink"> | number
+    label?: StringNullableFilter<"JitLink"> | string | null
+    expiresAt?: DateTimeFilter<"JitLink"> | Date | string
+    maxUses?: IntFilter<"JitLink"> | number
+    usedCount?: IntFilter<"JitLink"> | number
+    isRevoked?: BoolFilter<"JitLink"> | boolean
+    accessLevel?: StringFilter<"JitLink"> | string
+    workspaceId?: StringNullableFilter<"JitLink"> | string | null
+    createdAt?: DateTimeFilter<"JitLink"> | Date | string
   }
 
   export type UserRoleUpsertWithWhereUniqueWithoutUserInput = {
@@ -50795,6 +52669,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -50806,6 +52682,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -50828,6 +52705,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -50839,6 +52718,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -50876,6 +52756,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -50887,6 +52769,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -50908,6 +52791,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -50919,6 +52804,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -50941,6 +52827,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -50952,6 +52840,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -50974,6 +52863,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -50985,6 +52876,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -51089,6 +52981,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -51100,6 +52994,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -51121,6 +53016,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -51132,6 +53029,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -51170,6 +53068,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -51181,6 +53081,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -51203,6 +53104,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -51214,6 +53117,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -51546,6 +53450,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -51557,6 +53463,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -51578,6 +53485,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -51589,6 +53498,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -53112,6 +55022,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -53123,6 +55035,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -53145,6 +55058,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -53156,6 +55071,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -53226,6 +55142,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -53237,6 +55155,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -53258,6 +55177,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -53269,6 +55190,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -53483,6 +55405,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     sessions?: SessionCreateNestedManyWithoutUserInput
@@ -53494,6 +55418,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -53516,6 +55441,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
@@ -53527,6 +55454,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -53564,6 +55492,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     sessions?: SessionUpdateManyWithoutUserNestedInput
@@ -53575,6 +55505,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -53596,6 +55527,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
@@ -53607,6 +55540,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -53629,6 +55563,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -53640,6 +55576,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -53662,6 +55599,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -53673,6 +55612,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -53710,6 +55650,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -53721,6 +55663,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -53742,6 +55685,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -53753,6 +55698,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -53775,6 +55721,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -53786,6 +55734,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -53808,6 +55757,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -53819,6 +55770,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -53856,6 +55808,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -53867,6 +55821,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -53888,6 +55843,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -53899,6 +55856,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -53921,6 +55879,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -53932,6 +55892,7 @@ export namespace Prisma {
     notification?: NotificationCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -53954,6 +55915,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -53965,6 +55928,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -54002,6 +55966,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -54013,6 +55979,7 @@ export namespace Prisma {
     notification?: NotificationUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -54034,6 +56001,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -54045,6 +56014,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -54067,6 +56037,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -54079,6 +56051,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewCreateNestedManyWithoutUserInput
@@ -54100,6 +56073,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -54112,6 +56087,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewUncheckedCreateNestedManyWithoutUserInput
@@ -54148,6 +56124,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -54160,6 +56138,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUpdateManyWithoutUserNestedInput
@@ -54180,6 +56159,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -54192,6 +56173,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
@@ -54213,6 +56195,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -54224,6 +56208,7 @@ export namespace Prisma {
     notification?: NotificationCreateNestedManyWithoutUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -54246,6 +56231,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -54257,6 +56244,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedCreateNestedManyWithoutUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -54321,6 +56309,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -54332,6 +56322,7 @@ export namespace Prisma {
     notification?: NotificationUpdateManyWithoutUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -54353,6 +56344,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -54364,6 +56357,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -54417,6 +56411,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -54428,6 +56424,7 @@ export namespace Prisma {
     notification?: NotificationCreateNestedManyWithoutUserInput
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -54450,6 +56447,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -54461,6 +56460,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedCreateNestedManyWithoutUserInput
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -54618,6 +56618,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -54629,6 +56631,7 @@ export namespace Prisma {
     notification?: NotificationUpdateManyWithoutUserNestedInput
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -54650,6 +56653,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -54661,6 +56666,7 @@ export namespace Prisma {
     notification?: NotificationUncheckedUpdateManyWithoutUserNestedInput
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -55033,6 +57039,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -55045,6 +57053,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewCreateNestedManyWithoutUserInput
@@ -55066,6 +57075,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -55078,6 +57089,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewUncheckedCreateNestedManyWithoutUserInput
@@ -55200,6 +57212,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -55212,6 +57226,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUpdateManyWithoutUserNestedInput
@@ -55232,6 +57247,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -55244,6 +57261,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
@@ -55359,6 +57377,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -55371,6 +57391,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewCreateNestedManyWithoutUserInput
@@ -55392,6 +57413,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -55404,6 +57427,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
     reviewsReceived?: AccessReviewUncheckedCreateNestedManyWithoutUserInput
@@ -55503,6 +57527,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -55515,6 +57541,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUpdateManyWithoutUserNestedInput
@@ -55535,6 +57562,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -55547,6 +57576,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
@@ -55944,6 +57974,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -55956,6 +57988,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -55977,6 +58010,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -55989,6 +58024,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -56015,6 +58051,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountCreateNestedManyWithoutUserInput
@@ -56027,6 +58065,7 @@ export namespace Prisma {
     auditLogs?: AuditLogCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
     integrations?: IntegrationCreateNestedManyWithoutUserInput
@@ -56048,6 +58087,8 @@ export namespace Prisma {
     mfaEnabled?: boolean
     mfaSecret?: string | null
     mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
     ipAllowlist?: UserCreateipAllowlistInput | string[]
     tier?: string
     accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
@@ -56060,6 +58101,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
     apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    jitLinks?: JitLinkUncheckedCreateNestedManyWithoutCreatorInput
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
     integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
@@ -56096,6 +58138,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -56108,6 +58152,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -56128,6 +58173,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -56140,6 +58187,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
@@ -56171,6 +58219,8 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUpdateManyWithoutUserNestedInput
@@ -56183,6 +58233,7 @@ export namespace Prisma {
     auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
     apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUpdateManyWithoutCreatorNestedInput
     userRoles?: UserRoleUpdateManyWithoutUserNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUpdateManyWithoutUserNestedInput
@@ -56203,6 +58254,166 @@ export namespace Prisma {
     mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
     mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
     mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAllowlist?: UserUpdateipAllowlistInput | string[]
+    tier?: StringFieldUpdateOperationsInput | string
+    accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
+    sessions?: SessionUncheckedUpdateManyWithoutUserNestedInput
+    projects?: ProjectUncheckedUpdateManyWithoutUserNestedInput
+    userSubscription?: UserSubscriptionUncheckedUpdateOneWithoutUserNestedInput
+    workspaces?: WorkspaceUncheckedUpdateManyWithoutUserNestedInput
+    teamUsers?: TeamUserUncheckedUpdateManyWithoutUserNestedInput
+    notification?: NotificationUncheckedUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUncheckedUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUncheckedUpdateManyWithoutUserNestedInput
+    accessRequests?: AccessRequestUncheckedUpdateManyWithoutUserNestedInput
+    jitLinks?: JitLinkUncheckedUpdateManyWithoutCreatorNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutUserNestedInput
+    breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
+    integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
+    reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
+  }
+
+  export type UserCreateWithoutJitLinksInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
+    mfaEnabled?: boolean
+    mfaSecret?: string | null
+    mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
+    ipAllowlist?: UserCreateipAllowlistInput | string[]
+    tier?: string
+    accounts?: AccountCreateNestedManyWithoutUserInput
+    sessions?: SessionCreateNestedManyWithoutUserInput
+    projects?: ProjectCreateNestedManyWithoutUserInput
+    userSubscription?: UserSubscriptionCreateNestedOneWithoutUserInput
+    workspaces?: WorkspaceCreateNestedManyWithoutUserInput
+    teamUsers?: TeamUserCreateNestedManyWithoutUserInput
+    notification?: NotificationCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyCreateNestedManyWithoutUserInput
+    accessRequests?: AccessRequestCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleCreateNestedManyWithoutUserInput
+    breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutUserInput
+    integrations?: IntegrationCreateNestedManyWithoutUserInput
+    reviewsReceived?: AccessReviewCreateNestedManyWithoutUserInput
+    reviewsGiven?: AccessReviewCreateNestedManyWithoutReviewerInput
+  }
+
+  export type UserUncheckedCreateWithoutJitLinksInput = {
+    id?: string
+    name?: string | null
+    email?: string | null
+    emailVerified?: Date | string | null
+    image?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    role?: string
+    password?: string | null
+    emailOtp?: string | null
+    emailOtpExpiry?: Date | string | null
+    mfaEnabled?: boolean
+    mfaSecret?: string | null
+    mfaBackupCodes?: UserCreatemfaBackupCodesInput | string[]
+    passwordResetToken?: string | null
+    passwordResetExpiry?: Date | string | null
+    ipAllowlist?: UserCreateipAllowlistInput | string[]
+    tier?: string
+    accounts?: AccountUncheckedCreateNestedManyWithoutUserInput
+    sessions?: SessionUncheckedCreateNestedManyWithoutUserInput
+    projects?: ProjectUncheckedCreateNestedManyWithoutUserInput
+    userSubscription?: UserSubscriptionUncheckedCreateNestedOneWithoutUserInput
+    workspaces?: WorkspaceUncheckedCreateNestedManyWithoutUserInput
+    teamUsers?: TeamUserUncheckedCreateNestedManyWithoutUserInput
+    notification?: NotificationUncheckedCreateNestedManyWithoutUserInput
+    auditLogs?: AuditLogUncheckedCreateNestedManyWithoutUserInput
+    apiKeys?: ApiKeyUncheckedCreateNestedManyWithoutUserInput
+    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutUserInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutUserInput
+    breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutUserInput
+    integrations?: IntegrationUncheckedCreateNestedManyWithoutUserInput
+    reviewsReceived?: AccessReviewUncheckedCreateNestedManyWithoutUserInput
+    reviewsGiven?: AccessReviewUncheckedCreateNestedManyWithoutReviewerInput
+  }
+
+  export type UserCreateOrConnectWithoutJitLinksInput = {
+    where: UserWhereUniqueInput
+    create: XOR<UserCreateWithoutJitLinksInput, UserUncheckedCreateWithoutJitLinksInput>
+  }
+
+  export type UserUpsertWithoutJitLinksInput = {
+    update: XOR<UserUpdateWithoutJitLinksInput, UserUncheckedUpdateWithoutJitLinksInput>
+    create: XOR<UserCreateWithoutJitLinksInput, UserUncheckedCreateWithoutJitLinksInput>
+    where?: UserWhereInput
+  }
+
+  export type UserUpdateToOneWithWhereWithoutJitLinksInput = {
+    where?: UserWhereInput
+    data: XOR<UserUpdateWithoutJitLinksInput, UserUncheckedUpdateWithoutJitLinksInput>
+  }
+
+  export type UserUpdateWithoutJitLinksInput = {
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
+    mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
+    mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    ipAllowlist?: UserUpdateipAllowlistInput | string[]
+    tier?: StringFieldUpdateOperationsInput | string
+    accounts?: AccountUpdateManyWithoutUserNestedInput
+    sessions?: SessionUpdateManyWithoutUserNestedInput
+    projects?: ProjectUpdateManyWithoutUserNestedInput
+    userSubscription?: UserSubscriptionUpdateOneWithoutUserNestedInput
+    workspaces?: WorkspaceUpdateManyWithoutUserNestedInput
+    teamUsers?: TeamUserUpdateManyWithoutUserNestedInput
+    notification?: NotificationUpdateManyWithoutUserNestedInput
+    auditLogs?: AuditLogUpdateManyWithoutUserNestedInput
+    apiKeys?: ApiKeyUpdateManyWithoutUserNestedInput
+    accessRequests?: AccessRequestUpdateManyWithoutUserNestedInput
+    userRoles?: UserRoleUpdateManyWithoutUserNestedInput
+    breakGlassSessions?: BreakGlassSessionUpdateManyWithoutUserNestedInput
+    integrations?: IntegrationUpdateManyWithoutUserNestedInput
+    reviewsReceived?: AccessReviewUpdateManyWithoutUserNestedInput
+    reviewsGiven?: AccessReviewUpdateManyWithoutReviewerNestedInput
+  }
+
+  export type UserUncheckedUpdateWithoutJitLinksInput = {
+    name?: NullableStringFieldUpdateOperationsInput | string | null
+    email?: NullableStringFieldUpdateOperationsInput | string | null
+    emailVerified?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    image?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    role?: StringFieldUpdateOperationsInput | string
+    password?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtp?: NullableStringFieldUpdateOperationsInput | string | null
+    emailOtpExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    mfaEnabled?: BoolFieldUpdateOperationsInput | boolean
+    mfaSecret?: NullableStringFieldUpdateOperationsInput | string | null
+    mfaBackupCodes?: UserUpdatemfaBackupCodesInput | string[]
+    passwordResetToken?: NullableStringFieldUpdateOperationsInput | string | null
+    passwordResetExpiry?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     ipAllowlist?: UserUpdateipAllowlistInput | string[]
     tier?: StringFieldUpdateOperationsInput | string
     accounts?: AccountUncheckedUpdateManyWithoutUserNestedInput
@@ -56219,6 +58430,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutUserNestedInput
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
+    reviewsGiven?: AccessReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
   export type AccountCreateManyUserInput = {
@@ -56306,6 +58518,8 @@ export namespace Prisma {
     workspaceId?: string | null
     previousHash?: string | null
     currentHash?: string | null
+    ipAddress?: string | null
+    userAgent?: string | null
   }
 
   export type ApiKeyCreateManyUserInput = {
@@ -56332,6 +58546,24 @@ export namespace Prisma {
     expiresAt?: Date | string | null
     requestedAt?: Date | string
     workspaceId?: string | null
+  }
+
+  export type JitLinkCreateManyCreatorInput = {
+    id?: string
+    token: string
+    projectId: string
+    branchId?: string | null
+    environment?: string | null
+    secretIds?: JitLinkCreatesecretIdsInput | string[]
+    duration: number
+    label?: string | null
+    expiresAt: Date | string
+    maxUses?: number
+    usedCount?: number
+    isRevoked?: boolean
+    accessLevel?: string
+    workspaceId?: string | null
+    createdAt?: Date | string
   }
 
   export type UserRoleCreateManyUserInput = {
@@ -56617,6 +58849,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AuditLogUncheckedUpdateWithoutUserInput = {
@@ -56628,6 +58862,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type AuditLogUncheckedUpdateManyWithoutUserInput = {
@@ -56639,6 +58875,8 @@ export namespace Prisma {
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     previousHash?: NullableStringFieldUpdateOperationsInput | string | null
     currentHash?: NullableStringFieldUpdateOperationsInput | string | null
+    ipAddress?: NullableStringFieldUpdateOperationsInput | string | null
+    userAgent?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type ApiKeyUpdateWithoutUserInput = {
@@ -56711,6 +58949,57 @@ export namespace Prisma {
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type JitLinkUpdateWithoutCreatorInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JitLinkUncheckedUpdateWithoutCreatorInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type JitLinkUncheckedUpdateManyWithoutCreatorInput = {
+    token?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    environment?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: JitLinkUpdatesecretIdsInput | string[]
+    duration?: IntFieldUpdateOperationsInput | number
+    label?: NullableStringFieldUpdateOperationsInput | string | null
+    expiresAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    maxUses?: IntFieldUpdateOperationsInput | number
+    usedCount?: IntFieldUpdateOperationsInput | number
+    isRevoked?: BoolFieldUpdateOperationsInput | boolean
+    accessLevel?: StringFieldUpdateOperationsInput | string
+    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type UserRoleUpdateWithoutUserInput = {

@@ -24,6 +24,14 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
     const workspaceId = searchParams.get("workspaceId");
 
     if (!id) {
+      // Service Accounts are not allowed to list all projects (prevents project switching)
+      if (userId.startsWith("sa_")) {
+          return NextResponse.json({ 
+              error: "Forbidden", 
+              message: "Service accounts are locked to a single project and cannot list or switch projects." 
+          }, { status: 403 });
+      }
+
       // Get all projects accessible to the user
       const projects = await prisma.project.findMany({
         where: {
@@ -98,6 +106,12 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
         id,
         OR: [
           { userId: userId },
+          // Service Account Access
+          userId.startsWith("sa_") ? {
+            serviceAccounts: {
+              some: { id: userId.replace("sa_", "") }
+            }
+          } : {},
           {
             teamProjects: {
               some: {
@@ -112,7 +126,7 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
               },
             },
           },
-        ],
+        ].filter(v => Object.keys(v).length > 0) as any,
       },
       include: {
         branches: true,

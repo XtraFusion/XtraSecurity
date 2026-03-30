@@ -1,12 +1,12 @@
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: 'Integrations - XtraSecurity',
-  description: 'Connect XtraSecurity with your favorite tools and services for seamless secrets management.',
-  keywords: 'xtrasecurity integrations, github integration, gitlab integration, secrets integration, api integrations',
+  title: 'Integrations - XtraSecurity: GitHub, Docker, Kubernetes, Jenkins, AWS Lambda',
+  description: 'XtraSecurity integrations with GitHub Actions, Docker, Kubernetes, Jenkins, AWS Lambda, and more. Complete setup guides for DevOps tools.',
+  keywords: 'xtrasecurity integrations, github actions secrets, docker secrets, kubernetes integration, jenkins pipeline, aws lambda secrets, ci cd integration',
   robots: {
-    index: false, // Don't index integrations (user-specific content)
-    follow: false,
+    index: true,
+    follow: true,
   },
   openGraph: {
     title: 'XtraSecurity Integrations',

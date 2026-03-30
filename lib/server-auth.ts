@@ -3,7 +3,6 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import jwt from "jsonwebtoken";
-
 import { hashApiKey } from "@/lib/auth/service-account";
 
 export interface AuthSession {
@@ -50,12 +49,21 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
 
   if (apiKey) {
     // Try to find as Service Account or User API Key
+    // Service Account / new User keys are stored HASHED, legacy User keys are stored RAW
     const hash = hashApiKey(apiKey);
     
-    const keyRecord = await prisma.apiKey.findUnique({
+    let keyRecord = await prisma.apiKey.findUnique({
       where: { key: hash },
       include: { user: true, serviceAccount: true },
     });
+
+    // Fallback: Check if it's stored raw
+    if (!keyRecord) {
+      keyRecord = await prisma.apiKey.findUnique({
+        where: { key: apiKey },
+        include: { user: true, serviceAccount: true },
+      });
+    }
 
     if (keyRecord) {
       // Check expiration
@@ -69,7 +77,17 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
         data: { lastUsed: new Date() } 
       });
       
-      if (keyRecord.serviceAccount) {
+      if (keyRecord.userId && keyRecord.user) {
+        const resolvedRole = await resolveUserRole(keyRecord.user.id, keyRecord.user.role);
+        return {
+            userId: keyRecord.user.id,
+            email: keyRecord.user.email,
+            role: resolvedRole,
+            tier: keyRecord.user.tier || 'free'
+        };
+      }
+
+      if (keyRecord.serviceAccountId && keyRecord.serviceAccount) {
           return {
               userId: `sa_${keyRecord.serviceAccount.id}`,
               email: `sa_${keyRecord.serviceAccount.name}@bot`,
@@ -82,15 +100,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
           };
       }
 
-      if (keyRecord.user) {
-        const resolvedRole = await resolveUserRole(keyRecord.user.id, keyRecord.user.role);
-        return {
-            userId: keyRecord.user.id,
-            email: keyRecord.user.email,
-            role: resolvedRole,
-            tier: keyRecord.user.tier || 'free'
-        };
-      }
+      return null;
     }
 
     // B. Try as CLI JWT (Stateless Verification)
@@ -102,10 +112,14 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
             const decoded = jwt.verify(apiKey, secret) as any;
             if (decoded && decoded.type === "cli-token") {
                 return {
-                    userId: decoded.id,
+                    userId: decoded.userId || decoded.id,
                     email: decoded.email,
                     role: decoded.role,
-                    tier: decoded.tier || 'free'
+                    tier: decoded.tier || 'free',
+                    isServiceAccount: decoded.isServiceAccount,
+                    serviceAccountId: decoded.serviceAccountId,
+                    projectId: decoded.projectId,
+                    permissions: decoded.permissions
                 };
             }
         } catch (localVerifyErr) {
@@ -115,25 +129,43 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
         // 2. Fallback: decode WITHOUT verification for cross-environment cli-tokens
         //    Then look up the user in DB to confirm they exist (safe because we still check the DB)
         const decoded = jwt.decode(apiKey) as any;
-        if (decoded && decoded.type === "cli-token" && (decoded.id || decoded.email)) {
-            const user = await prisma.user.findFirst({
-                where: {
-                    OR: [
-                        decoded.id ? { id: decoded.id } : undefined,
-                        decoded.email ? { email: decoded.email } : undefined,
-                    ].filter(Boolean) as any,
-                },
-                select: { id: true, email: true, role: true, tier: true }
-            });
+        if (decoded && decoded.type === "cli-token") {
+            if (decoded.isServiceAccount && decoded.serviceAccountId) {
+                const sa = await prisma.serviceAccount.findUnique({
+                    where: { id: decoded.serviceAccountId }
+                });
+                if (sa) {
+                    return {
+                        userId: decoded.userId || `sa_${sa.id}`,
+                        email: decoded.email || `sa_${sa.name}@bot`,
+                        role: "service_account",
+                        tier: "enterprise",
+                        isServiceAccount: true,
+                        serviceAccountId: sa.id,
+                        projectId: sa.projectId,
+                        permissions: sa.permissions
+                    };
+                }
+            } else if (decoded.id || decoded.email) {
+                const user = await prisma.user.findFirst({
+                    where: {
+                        OR: [
+                            decoded.id ? { id: decoded.id } : undefined,
+                            decoded.email ? { email: decoded.email } : undefined,
+                        ].filter(Boolean) as any,
+                    },
+                    select: { id: true, email: true, role: true, tier: true }
+                });
 
-            if (user) {
-                const resolvedRole = await resolveUserRole(user.id, user.role);
-                return {
-                    userId: user.id,
-                    email: user.email,
-                    role: resolvedRole,
-                    tier: user.tier || 'free'
-                };
+                if (user) {
+                    const resolvedRole = await resolveUserRole(user.id, user.role);
+                    return {
+                        userId: user.id,
+                        email: user.email,
+                        role: resolvedRole,
+                        tier: user.tier || 'free'
+                    };
+                }
             }
         }
     } catch (e) {

@@ -10,7 +10,30 @@ export class PolicyEngine {
     // 1. ABAC Policy Check (Simplified Check First)
     // Fetch active policies that apply
     // For MVP, we skip complex ABAC query and assume DENY only if explicit Deny Policy exists.
-    // TODO: Implement full ABAC rule evaluation (IP, Time)
+
+    // Handle Service Accounts
+    if (userId.startsWith("sa_")) {
+        const saId = userId.replace("sa_", "");
+        const sa = await prisma.serviceAccount.findUnique({ where: { id: saId }});
+        
+        if (sa && (!projectId || sa.projectId === projectId)) {
+            const perms = sa.permissions || [];
+            
+            // Map the specific feature permissions to the PolicyEngine Action verbs
+            if (action === "value.read" && perms.includes("read:secrets")) return Decision.ALLOW;
+            if (action === "read" && resource === "branch" && perms.includes("read:secrets")) return Decision.ALLOW;
+            if (action === "read" && resource === "project" && perms.includes("read:secrets")) return Decision.ALLOW;
+            
+            if (action === "value.write" && perms.includes("write:secrets")) return Decision.ALLOW;
+            if (action === "rotate" && perms.includes("rotate:secrets")) return Decision.ALLOW;
+            
+            // If we add full project admin access for certain SAs via wildcard
+            if (perms.includes("admin") || perms.includes("*")) return Decision.ALLOW;
+        }
+        
+        // If a Service Account tries to access something outside its scope, instantly DENY
+        return Decision.DENY;
+    }
 
     // Legacy Fallback for implicit project owners/team members
     if (projectId) {

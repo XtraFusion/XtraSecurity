@@ -28,6 +28,7 @@ model User {
   auditLogs          AuditLog[]
   apiKeys            ApiKey[]
   accessRequests     AccessRequest[]
+  jitLinks           JitLink[]
   userRoles          UserRole[]
   breakGlassSessions BreakGlassSession[]
   integrations       Integration[]
@@ -201,7 +202,7 @@ model Secret {
   environmentType String
   version         String
   projectId       String    @db.ObjectId
-  branchId        String?   @db.ObjectId
+  branchId        String?
   project         Project   @relation(fields: [projectId], references: [id])
   branch          Branch?   @relation("BranchToSecret", fields: [branchId], references: [id])
   type            String
@@ -602,4 +603,27 @@ model AccessReview {
 
   @@index([userId])
   @@index([reviewedAt])
+}
+
+// JIT LINK MODEL — shareable time-limited access invitation links
+model JitLink {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  token       String   @unique
+  projectId   String   @db.ObjectId
+  branchId    String?  @db.ObjectId // null = all branches
+  environment String? // null = all environments
+  secretIds   String[] @db.ObjectId // empty = all secrets in scope
+  createdBy   String   @db.ObjectId
+  creator     User     @relation(fields: [createdBy], references: [id])
+  duration    Int // minutes of access once approved
+  label       String?
+  expiresAt   DateTime // link expiry
+  maxUses     Int      @default(1)
+  usedCount   Int      @default(0)
+  isRevoked   Boolean  @default(false)
+  accessLevel String   @default("read")
+  workspaceId String?  @db.ObjectId
+  createdAt   DateTime @default(now())
+
+  @@map("jit_links")
 }

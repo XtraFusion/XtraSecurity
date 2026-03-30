@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
+import { hashApiKey } from "@/lib/auth/service-account";
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions);
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     label: key.label,
     createdAt: key.createdAt,
     lastUsed: key.lastUsed,
-    key: `...${key.key.slice(-4)}`, // Only show last 4 chars
+    key: key.keyMask || `...${key.key.slice(-4)}`, // Only show mask or fallback to last 4 chars
   }));
 
   return NextResponse.json(maskedKeys);
@@ -62,14 +63,13 @@ export async function POST(req: NextRequest) {
   // Generate a secure random key
   const randomPart = crypto.randomBytes(24).toString("hex");
   const fullKey = `xs_${randomPart}`;
+  const hash = hashApiKey(fullKey);
+  const mask = `xs_...${fullKey.slice(-4)}`;
 
-  // Store it (in a real app, you might hash this, but we'll store specific keys for this MVP or hash)
-  // For this implementation we will store it plainly to match the CLI login expectation which matches directly.
-  // In production: store hash(fullKey), return fullKey only now.
-  
   const newKey = await prisma.apiKey.create({
     data: {
-      key: fullKey,
+      key: hash,
+      keyMask: mask,
       label: label || "Generated Key",
       userId: user.id,
       workspaceId: workspaceId || null,

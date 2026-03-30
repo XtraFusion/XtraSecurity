@@ -77,7 +77,7 @@ export async function isIpAllowedForProject(
 /**
  * Check if IP matches any in the list (supports CIDR notation)
  */
-function isIpInList(clientIp: string, allowedIps: string[]): boolean {
+export function isIpInList(clientIp: string, allowedIps: string[]): boolean {
   for (const allowed of allowedIps) {
     if (allowed === clientIp) {
       return true;

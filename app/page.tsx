@@ -12,9 +12,10 @@ import Image from "next/image";
 const NAV_LINKS = [
   { label: "Features", href: "#features" },
   { label: "How it Works", href: "#how-it-works" },
-  { label: "Security", href: "#security" },
-  { label: "Pricing", href: "#pricing" },
-  { label: "Compare", href: "#compare" },
+  { label: "Docs", href: "/docs" },
+  { label: "Tutorials", href: "/tutorials" },
+  { label: "Compare", href: "/comparison" },
+  { label: "About", href: "/about" },
 ];
 
 const STATS = [

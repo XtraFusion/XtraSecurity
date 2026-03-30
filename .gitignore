@@ -9,6 +9,7 @@
 /xtra-cli
 /xtra-sdk-node
 /xtra-sdk-deno
+/xtra-vscode
 /xtra-action
 /integrations
 # production

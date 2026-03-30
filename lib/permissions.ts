@@ -15,6 +15,18 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   
   if (!project) return null;
 
+  // Handle Service Accounts
+  if (userId.startsWith("sa_")) {
+    const saId = userId.replace("sa_", "");
+    const sa = await prisma.serviceAccount.findUnique({
+        where: { id: saId },
+        select: { projectId: true }
+    });
+    // Service Account is strictly locked to its own project
+    if (sa && sa.projectId === projectId) return "developer";
+    return null;
+  }
+
   if (String(project.userId) === String(userId)) return "owner";
 
   // Check workspace ownership

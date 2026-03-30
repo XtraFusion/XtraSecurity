@@ -983,27 +983,313 @@ export default function DocsPage() {
           </TabsList>
 
           {/* GUIDES TAB */}
-          <TabsContent value="guides" className="space-y-4">
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {[
-                { icon: <Shield className="h-5 w-5" />, title: "Getting Started", desc: "Basic concepts, initial setup, and workspace configuration." },
-                { icon: <Key className="h-5 w-5" />, title: "Secret Management", desc: "How to store, retrieve, and rotate secrets securely." },
-                { icon: <FileText className="h-5 w-5" />, title: "Audit Logs", desc: "Tracking platform activity and setting up custom alerts." },
-                { icon: <Shield className="h-5 w-5" />, title: "Access Reviews", desc: "Learn how to conduct periodic access certification cycles." },
-                { icon: <Key className="h-5 w-5" />, title: "Service Accounts", desc: "Create headless machine identities for API access." },
-                { icon: <Terminal className="h-5 w-5" />, title: "CLI Integration", desc: "Use XtraSecurity in your CI/CD pipelines and workflows." },
-              ].map((g) => (
-                <Card key={g.title} className="hover:shadow-md transition-shadow cursor-pointer">
-                  <CardHeader>
-                    <div className="mb-2">
-                      {g.icon}
-                    </div>
-                    <CardTitle className="text-lg">{g.title}</CardTitle>
-                    <CardDescription>{g.desc}</CardDescription>
-                  </CardHeader>
-                </Card>
-              ))}
+          <TabsContent value="guides" className="space-y-6">
+            {/* GETTING STARTED SECTION */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3 mb-6">
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold">Getting Started</h2>
+                  <p className="text-sm text-muted-foreground">Follow these steps to set up XtraSecurity in your environment</p>
+                </div>
+              </div>
+
+              {/* STEP-BY-STEP GUIDE */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {[
+                  {
+                    step: 1,
+                    title: "Install XtraSecurity",
+                    items: [
+                      "Install the CLI globally",
+                      "npm install -g xtra-cli",
+                      "Verify installation",
+                    ]
+                  },
+                  {
+                    step: 2,
+                    title: "Create Your Profile",
+                    items: [
+                      "Authenticate with your account",
+                      "Set up your access credentials",
+                      "Configure default values",
+                    ]
+                  },
+                  {
+                    step: 3,
+                    title: "Initialize a Project",
+                    items: [
+                      "Run xtra init",
+                      "Link your project ID",
+                      "Choose your environment",
+                    ]
+                  },
+                  {
+                    step: 4,
+                    title: "Start Managing Secrets",
+                    items: [
+                      "Create your first secret",
+                      "Set up secret rotation",
+                      "Configure access controls",
+                    ]
+                  },
+                ].map((item) => (
+                  <Card key={item.step} className="hover:shadow-md transition-shadow hover:border-primary/50">
+                    <CardHeader>
+                      <div className="flex items-start justify-between mb-3">
+                        <div className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center text-sm font-bold">
+                          {item.step}
+                        </div>
+                      </div>
+                      <CardTitle className="text-base">{item.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="space-y-2">
+                        {item.items.map((listItem, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-sm text-muted-foreground">
+                            <span className="text-primary font-semibold">•</span>
+                            <span>{listItem}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
             </div>
+
+            {/* COMPREHENSIVE GUIDES */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-blue-500/10">
+                  <FileText className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Comprehensive Guides</h2>
+                  <p className="text-sm text-muted-foreground">Deep dive into specific features and workflows</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  {
+                    icon: <Key className="h-6 w-6" />,
+                    color: "from-green-500/10 to-emerald-500/10",
+                    title: "Secret Management",
+                    desc: "How to store, retrieve, rotate, and manage secrets securely",
+                    steps: [
+                      "Create and configure secrets",
+                      "Set up automatic rotation policies",
+                      "Use shadow mode for zero-downtime rotation",
+                      "Track secret history and versions",
+                      "Export and import secrets in bulk",
+                    ]
+                  },
+                  {
+                    icon: <Shield className="h-6 w-6" />,
+                    color: "from-purple-500/10 to-pink-500/10",
+                    title: "Access Control & JIT",
+                    desc: "Implement Just-in-Time access and sophisticated permission management",
+                    steps: [
+                      "Set up Just-in-Time access requests",
+                      "Configure access approval workflows",
+                      "Review and audit access requests",
+                      "Set up time-based access expiration",
+                      "Integrate with your identity provider",
+                    ]
+                  },
+                  {
+                    icon: <FileText className="h-6 w-6" />,
+                    color: "from-blue-500/10 to-cyan-500/10",
+                    title: "Audit & Compliance",
+                    desc: "Track all activity, maintain compliance, and enable forensic analysis",
+                    steps: [
+                      "Enable comprehensive audit logging",
+                      "Set up compliance reports",
+                      "Configure data retention policies",
+                      "Export audit logs for analysis",
+                      "Set up real-time alerts for compliance violations",
+                    ]
+                  },
+                  {
+                    icon: <Terminal className="h-6 w-6" />,
+                    color: "from-orange-500/10 to-red-500/10",
+                    title: "CI/CD Integration",
+                    desc: "Integrate XtraSecurity into your deployment and automation pipelines",
+                    steps: [
+                      "Set up machine tokens for CI/CD",
+                      "Configure secret injection in pipelines",
+                      "Use headless mode for automation",
+                      "Implement automated secret rotation",
+                      "Set up scanning for secret leaks",
+                    ]
+                  },
+                  {
+                    icon: <BookOpen className="h-6 w-6" />,
+                    color: "from-indigo-500/10 to-blue-500/10",
+                    title: "Service Accounts",
+                    desc: "Create and manage API access for automated processes",
+                    steps: [
+                      "Create service account identities",
+                      "Generate and rotate API keys",
+                      "Configure role-based permissions",
+                      "Set up audit logging for service accounts",
+                      "Implement least privilege access",
+                    ]
+                  },
+                  {
+                    icon: <Terminal className="h-6 w-6" />,
+                    color: "from-teal-500/10 to-green-500/10",
+                    title: "Command Line Workflows",
+                    desc: "Master CLI commands for efficient secret management",
+                    steps: [
+                      "Master basic commands (init, set, get)",
+                      "Use branching for environment management",
+                      "Implement secret rotation workflows",
+                      "Set up pre-commit hooks for scanning",
+                      "Handle error cases and troubleshooting",
+                    ]
+                  },
+                ].map((guide) => (
+                  <Card key={guide.title} className={`hover:shadow-lg transition-all hover:border-primary/50 bg-gradient-to-br ${guide.color} border-l-4 border-l-primary`}>
+                    <CardHeader>
+                      <div className="flex items-start gap-3 mb-2">
+                        <div className="p-2 rounded-lg bg-background">
+                          {guide.icon}
+                        </div>
+                        <div className="flex-1">
+                          <CardTitle>{guide.title}</CardTitle>
+                          <CardDescription className="mt-1">{guide.desc}</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <div className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Key Topics</div>
+                        <ul className="space-y-2">
+                          {guide.steps.map((step, idx) => (
+                            <li key={idx} className="flex items-start gap-2.5 text-sm">
+                              <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/20 text-primary flex-shrink-0 text-xs font-semibold">
+                                {idx + 1}
+                              </span>
+                              <span className="text-muted-foreground pt-0.5">{step}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* QUICK REFERENCE */}
+            <div className="space-y-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-yellow-500/10">
+                  <Terminal className="h-5 w-5 text-yellow-600" />
+                </div>
+                <div>
+                  <h2 className="text-xl font-bold">Quick Reference</h2>
+                  <p className="text-sm text-muted-foreground">Common commands and workflows for daily tasks</p>
+                </div>
+              </div>
+
+              <div className="grid gap-4 md:grid-cols-3">
+                {[
+                  {
+                    title: "Authentication",
+                    commands: [
+                      { cmd: "xtra profile create", desc: "Create a new profile" },
+                      { cmd: "xtra profile current", desc: "Show active profile" },
+                      { cmd: "xtra profile delete", desc: "Delete a profile" },
+                    ]
+                  },
+                  {
+                    title: "Project Setup",
+                    commands: [
+                      { cmd: "xtra init", desc: "Initialize a new project" },
+                      { cmd: "xtra project set <id>", desc: "Set default project" },
+                      { cmd: "xtra project current", desc: "Show current project" },
+                    ]
+                  },
+                  {
+                    title: "Secret Operations",
+                    commands: [
+                      { cmd: "xtra set <key> <value>", desc: "Create a secret" },
+                      { cmd: "xtra get <key>", desc: "Retrieve a secret" },
+                      { cmd: "xtra delete <key>", desc: "Delete a secret" },
+                    ]
+                  },
+                ].map((section) => (
+                  <Card key={section.title}>
+                    <CardHeader>
+                      <CardTitle className="text-base">{section.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {section.commands.map((item, idx) => (
+                        <div key={idx} className="border-b pb-2.5 last:border-b-0 last:pb-0">
+                          <div className="bg-muted px-3 py-2 rounded font-mono text-xs text-foreground mb-1 break-all">
+                            {item.cmd}
+                          </div>
+                          <p className="text-xs text-muted-foreground">{item.desc}</p>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
+
+            {/* BEST PRACTICES */}
+            <Card className="border-amber-500/30 bg-amber-50/5">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Badge className="bg-amber-600 text-xs">Best Practices</Badge>
+                  Security & Performance Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-4 md:grid-cols-2">
+                  {[
+                    {
+                      title: "🔐 Security",
+                      items: [
+                        "Rotate secrets regularly (recommended: every 90 days)",
+                        "Use dedicated service accounts for CI/CD pipelines",
+                        "Enable MFA for all administrative accounts",
+                        "Regularly audit access logs for unauthorized activities",
+                        "Use JIT access for sensitive operations",
+                      ]
+                    },
+                    {
+                      title: "⚡ Performance",
+                      items: [
+                        "Use caching for frequently accessed secrets",
+                        "Batch imports/exports for large secret sets",
+                        "Configure appropriate rotation windows",
+                        "Use branching to organize environments",
+                        "Implement automated secret scanning in CI/CD",
+                      ]
+                    },
+                  ].map((section) => (
+                    <div key={section.title} className="space-y-3">
+                      <h3 className="font-semibold text-sm">{section.title}</h3>
+                      <ul className="space-y-2">
+                        {section.items.map((item, idx) => (
+                          <li key={idx} className="flex gap-2 text-sm text-muted-foreground">
+                            <span className="text-primary flex-shrink-0">✓</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
           </TabsContent>
 
           {/* CLI TAB */}

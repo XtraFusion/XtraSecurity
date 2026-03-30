@@ -50,9 +50,14 @@ export const GET = withSecurity(async (
   const PLAINTEXT_ROLES = ["owner", "admin", "developer"];
 
   const { getUserProjectRole } = await import("@/lib/permissions");
-  const roleName = await getUserProjectRole(userId, projectId) || "viewer";
+  let roleName = "viewer";
+  
+  if (!userId.startsWith("sa_")) {
+      roleName = await getUserProjectRole(userId, projectId) || "viewer";
+  }
 
-  const canReadValues = PLAINTEXT_ROLES.includes(roleName.toLowerCase());
+  // Service accounts that pass PolicyEngine are guaranteed to have read permissions, so they read plaintext.
+  const canReadValues = PLAINTEXT_ROLES.includes(roleName.toLowerCase()) || userId.startsWith("sa_");
 
   // 4. Authorization Success - Fetch Data
   const project = await prisma.project.findUnique({
@@ -217,14 +222,24 @@ export const POST = withSecurity(async (
   // 2. RBAC Write Check — only owner, admin, developer can write secrets
   const WRITE_ROLES = ["owner", "admin", "developer"];
 
-  const { getUserProjectRole } = await import("@/lib/permissions");
-  const writeRoleName = await getUserProjectRole(userId, projectId) || "viewer";
+  if (userId.startsWith("sa_")) {
+    const sa = await prisma.serviceAccount.findUnique({ where: { id: userId.replace("sa_", "") }});
+    if (!sa || sa.projectId !== projectId || !sa.permissions.includes("write:secrets")) {
+      return NextResponse.json(
+        { error: "Forbidden: Service Account lacks write:secrets permission." },
+        { status: 403 }
+      );
+    }
+  } else {
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const writeRoleName = await getUserProjectRole(userId, projectId) || "viewer";
 
-  if (!WRITE_ROLES.includes(writeRoleName.toLowerCase())) {
-    return NextResponse.json(
-      { error: "Forbidden: Your role does not permit writing secrets." },
-      { status: 403 }
-    );
+    if (!WRITE_ROLES.includes(writeRoleName.toLowerCase())) {
+      return NextResponse.json(
+        { error: "Forbidden: Your role does not permit writing secrets." },
+        { status: 403 }
+      );
+    }
   }
 
   // 3. Verify user has access to this project

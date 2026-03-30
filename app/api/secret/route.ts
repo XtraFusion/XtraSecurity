@@ -15,6 +15,8 @@ export const GET = withSecurity(async (request, context, session) => {
     const projectId = searchParams.get("projectId");
     const branchId = searchParams.get("branchId");
 
+    console.log(`[/api/secret GET] Fetching secrets for projectId: ${projectId}, branchId: ${branchId}, user: ${session.email}`);
+
     if (!projectId) {
          return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
     }
@@ -22,10 +24,13 @@ export const GET = withSecurity(async (request, context, session) => {
     // Access Control
     let isViewer = false;
     if (session.isServiceAccount) {
+        console.log(`[/api/secret GET] Service account detected, checking projectId match`);
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("read:secrets")) return NextResponse.json({ error: "Forbidden: Missing read:secrets scope" }, { status: 403 });
     } else {
+        console.log(`[/api/secret GET] Regular user, fetching role from DB`);
         const role = await getUserProjectRole(session.userId, projectId);
+        console.log(`[/api/secret GET] User role: ${role}`);
         if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         if (role === 'viewer') isViewer = true;
     }
@@ -33,12 +38,14 @@ export const GET = withSecurity(async (request, context, session) => {
     const query: any = { projectId };
     if (branchId) query.branchId = branchId;
 
+    console.log(`[/api/secret GET] Running query with:`, query);
     const secrets = await prisma.secret.findMany({
       where: query,
       include: {
         project: true,
       },
     });
+    console.log(`[/api/secret GET] Found ${secrets.length} secrets`);
 
     // Decrypt secret values and history before sending to frontend
     const decryptedSecrets = secrets.map((secret) => {
@@ -99,9 +106,11 @@ export const GET = withSecurity(async (request, context, session) => {
 
     return NextResponse.json(decryptedSecrets);
   } catch (error) {
-    console.error("Error fetching secrets:", error);
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("Error fetching secrets:", errorMessage);
+    console.error("Full error details:", error);
     return NextResponse.json(
-      { error: "Failed to fetch secrets" },
+      { error: "Failed to fetch secrets", details: errorMessage },
       { status: 500 }
     );
   }
