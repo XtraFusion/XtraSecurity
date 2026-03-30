@@ -627,3 +627,13 @@ model JitLink {
 
   @@map("jit_links")
 }
+
+model DailyUsage {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  date      String // "YYYY-MM-DD"
+  count     Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, date])
+}

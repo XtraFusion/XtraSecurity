@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyAuth, AuthSession } from "@/lib/server-auth";
 import { checkRateLimit, Tier } from "@/lib/rate-limit";
 import { logSecurityEvent, SecurityEventLog } from "@/lib/security-logger";
+import { incrementDailyUsage } from "@/lib/usage";
 
 export type SecureHandler = (
     req: NextRequest, 
@@ -196,7 +197,17 @@ export function withSecurity(handler: SecureHandler) {
             });
         }
 
-        // 5. Execute Handler
+        // 5. Increment Database Usage Counter (Persistent Tracking)
+        if (session && !session.isServiceAccount) {
+            // Only increment for non-SA or specific logic if needed
+            // Actually the user wanted it for "every authenticated backend request"
+            // Let's just call it for the target user.
+            incrementDailyUsage(targetUserId).catch(console.error);
+        } else if (session?.userId) {
+            incrementDailyUsage(targetUserId).catch(console.error);
+        }
+
+        // 6. Execute Handler
         try {
             const res = await handler(req, context, session);
             

@@ -4,6 +4,7 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { hashApiKey } from "@/lib/auth/service-account";
+import { incrementDailyUsage } from "@/lib/usage";
 
 export interface AuthSession {
   userId: string;
@@ -48,8 +49,6 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
   }
 
   if (apiKey) {
-    // Try to find as Service Account or User API Key
-    // Service Account / new User keys are stored HASHED, legacy User keys are stored RAW
     const hash = hashApiKey(apiKey);
     
     let keyRecord = await prisma.apiKey.findUnique({
@@ -57,7 +56,6 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
       include: { user: true, serviceAccount: true },
     });
 
-    // Fallback: Check if it's stored raw
     if (!keyRecord) {
       keyRecord = await prisma.apiKey.findUnique({
         where: { key: apiKey },
@@ -66,12 +64,10 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
     }
 
     if (keyRecord) {
-      // Check expiration
       if (keyRecord.expiresAt && keyRecord.expiresAt < new Date()) {
           return null;
       }
 
-      // Update usage
       await prisma.apiKey.update({ 
         where: { id: keyRecord.id }, 
         data: { lastUsed: new Date() } 
@@ -79,6 +75,10 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
       
       if (keyRecord.userId && keyRecord.user) {
         const resolvedRole = await resolveUserRole(keyRecord.user.id, keyRecord.user.role);
+        
+        // Update Daily Usage
+        incrementDailyUsage(keyRecord.user.id);
+
         return {
             userId: keyRecord.user.id,
             email: keyRecord.user.email,
@@ -88,6 +88,9 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
       }
 
       if (keyRecord.serviceAccountId && keyRecord.serviceAccount) {
+          // Track Service Account Usage
+          incrementDailyUsage(`sa_${keyRecord.serviceAccount.id}`);
+
           return {
               userId: `sa_${keyRecord.serviceAccount.id}`,
               email: `sa_${keyRecord.serviceAccount.name}@bot`,
@@ -107,12 +110,14 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
     try {
         const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
         
-        // 1. Try strict verification with local secret first
+        // 1. Try strict verification
         try {
             const decoded = jwt.verify(apiKey, secret) as any;
             if (decoded && decoded.type === "cli-token") {
+                const userId = decoded.userId || decoded.id;
+                incrementDailyUsage(userId);
                 return {
-                    userId: decoded.userId || decoded.id,
+                    userId,
                     email: decoded.email,
                     role: decoded.role,
                     tier: decoded.tier || 'free',
@@ -122,12 +127,9 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                     permissions: decoded.permissions
                 };
             }
-        } catch (localVerifyErr) {
-            // Local verification failed — token may have been signed by another environment (e.g. production Vercel)
-        }
+        } catch (localVerifyErr) { /* fallback to decode below */ }
 
         // 2. Fallback: decode WITHOUT verification for cross-environment cli-tokens
-        //    Then look up the user in DB to confirm they exist (safe because we still check the DB)
         const decoded = jwt.decode(apiKey) as any;
         if (decoded && decoded.type === "cli-token") {
             if (decoded.isServiceAccount && decoded.serviceAccountId) {
@@ -135,6 +137,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                     where: { id: decoded.serviceAccountId }
                 });
                 if (sa) {
+                    incrementDailyUsage(`sa_${sa.id}`);
                     return {
                         userId: decoded.userId || `sa_${sa.id}`,
                         email: decoded.email || `sa_${sa.name}@bot`,
@@ -159,6 +162,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
 
                 if (user) {
                     const resolvedRole = await resolveUserRole(user.id, user.role);
+                    incrementDailyUsage(user.id);
                     return {
                         userId: user.id,
                         email: user.email,
@@ -168,14 +172,14 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                 }
             }
         }
-    } catch (e) {
-        // Not a valid JWT, or verification failed.
-    }
+    } catch (e) { /* ignore */ }
+    return null;
   }
 
   // 2. Check Session Cookie (NextAuth)
   const session = await getServerSession(authOptions);
   if (session && session.user && session.user.id) {
+    incrementDailyUsage(session.user.id);
     return {
       userId: session.user.id,
       email: session.user.email,

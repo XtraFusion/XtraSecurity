@@ -2,6 +2,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import { getRateLimitStats, Tier } from "@/lib/rate-limit";
+import { getDailyUsageCount } from "@/lib/usage";
 import { DAILY_LIMITS } from "@/lib/rate-limit-config";
 import { redirect } from "next/navigation";
 import SubscriptionUI from "./subscription-ui";
@@ -29,6 +30,12 @@ export default async function SubscriptionPage() {
 
     // Get Usage Stats
     const stats = await getRateLimitStats(user.id, tier);
+    
+    // Get Persistent Daily Usage from Prisma
+    const dailyCount = await getDailyUsageCount(user.id);
+    
+    // Update stats with persistent DB count for display accuracy
+    stats.remaining = Math.max(0, stats.limit - dailyCount);
 
     // Get Resource Usage Stats
     const workspacesCount = await prisma.workspace.count({

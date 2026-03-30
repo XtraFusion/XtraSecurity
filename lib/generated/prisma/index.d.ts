@@ -183,6 +183,11 @@ export type AccessReview = $Result.DefaultSelection<Prisma.$AccessReviewPayload>
  * 
  */
 export type JitLink = $Result.DefaultSelection<Prisma.$JitLinkPayload>
+/**
+ * Model DailyUsage
+ * 
+ */
+export type DailyUsage = $Result.DefaultSelection<Prisma.$DailyUsagePayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -608,6 +613,16 @@ export class PrismaClient<
     * ```
     */
   get jitLink(): Prisma.JitLinkDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.dailyUsage`: Exposes CRUD operations for the **DailyUsage** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more DailyUsages
+    * const dailyUsages = await prisma.dailyUsage.findMany()
+    * ```
+    */
+  get dailyUsage(): Prisma.DailyUsageDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1081,7 +1096,8 @@ export namespace Prisma {
     Webhook: 'Webhook',
     ServiceAccount: 'ServiceAccount',
     AccessReview: 'AccessReview',
-    JitLink: 'JitLink'
+    JitLink: 'JitLink',
+    DailyUsage: 'DailyUsage'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1100,7 +1116,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "dailyUsage"
       txIsolationLevel: never
     }
     model: {
@@ -3620,6 +3636,80 @@ export namespace Prisma {
           }
         }
       }
+      DailyUsage: {
+        payload: Prisma.$DailyUsagePayload<ExtArgs>
+        fields: Prisma.DailyUsageFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.DailyUsageFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.DailyUsageFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          findFirst: {
+            args: Prisma.DailyUsageFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.DailyUsageFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          findMany: {
+            args: Prisma.DailyUsageFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>[]
+          }
+          create: {
+            args: Prisma.DailyUsageCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          createMany: {
+            args: Prisma.DailyUsageCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.DailyUsageDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          update: {
+            args: Prisma.DailyUsageUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          deleteMany: {
+            args: Prisma.DailyUsageDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.DailyUsageUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.DailyUsageUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$DailyUsagePayload>
+          }
+          aggregate: {
+            args: Prisma.DailyUsageAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateDailyUsage>
+          }
+          groupBy: {
+            args: Prisma.DailyUsageGroupByArgs<ExtArgs>
+            result: $Utils.Optional<DailyUsageGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.DailyUsageFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.DailyUsageAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.DailyUsageCountArgs<ExtArgs>
+            result: $Utils.Optional<DailyUsageCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3733,6 +3823,7 @@ export namespace Prisma {
     serviceAccount?: ServiceAccountOmit
     accessReview?: AccessReviewOmit
     jitLink?: JitLinkOmit
+    dailyUsage?: DailyUsageOmit
   }
 
   /* Types for Logging */
@@ -40681,6 +40772,972 @@ export namespace Prisma {
 
 
   /**
+   * Model DailyUsage
+   */
+
+  export type AggregateDailyUsage = {
+    _count: DailyUsageCountAggregateOutputType | null
+    _avg: DailyUsageAvgAggregateOutputType | null
+    _sum: DailyUsageSumAggregateOutputType | null
+    _min: DailyUsageMinAggregateOutputType | null
+    _max: DailyUsageMaxAggregateOutputType | null
+  }
+
+  export type DailyUsageAvgAggregateOutputType = {
+    count: number | null
+  }
+
+  export type DailyUsageSumAggregateOutputType = {
+    count: number | null
+  }
+
+  export type DailyUsageMinAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    date: string | null
+    count: number | null
+    updatedAt: Date | null
+  }
+
+  export type DailyUsageMaxAggregateOutputType = {
+    id: string | null
+    userId: string | null
+    date: string | null
+    count: number | null
+    updatedAt: Date | null
+  }
+
+  export type DailyUsageCountAggregateOutputType = {
+    id: number
+    userId: number
+    date: number
+    count: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type DailyUsageAvgAggregateInputType = {
+    count?: true
+  }
+
+  export type DailyUsageSumAggregateInputType = {
+    count?: true
+  }
+
+  export type DailyUsageMinAggregateInputType = {
+    id?: true
+    userId?: true
+    date?: true
+    count?: true
+    updatedAt?: true
+  }
+
+  export type DailyUsageMaxAggregateInputType = {
+    id?: true
+    userId?: true
+    date?: true
+    count?: true
+    updatedAt?: true
+  }
+
+  export type DailyUsageCountAggregateInputType = {
+    id?: true
+    userId?: true
+    date?: true
+    count?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type DailyUsageAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DailyUsage to aggregate.
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DailyUsages to fetch.
+     */
+    orderBy?: DailyUsageOrderByWithRelationInput | DailyUsageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: DailyUsageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DailyUsages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DailyUsages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned DailyUsages
+    **/
+    _count?: true | DailyUsageCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to average
+    **/
+    _avg?: DailyUsageAvgAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to sum
+    **/
+    _sum?: DailyUsageSumAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: DailyUsageMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: DailyUsageMaxAggregateInputType
+  }
+
+  export type GetDailyUsageAggregateType<T extends DailyUsageAggregateArgs> = {
+        [P in keyof T & keyof AggregateDailyUsage]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateDailyUsage[P]>
+      : GetScalarType<T[P], AggregateDailyUsage[P]>
+  }
+
+
+
+
+  export type DailyUsageGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: DailyUsageWhereInput
+    orderBy?: DailyUsageOrderByWithAggregationInput | DailyUsageOrderByWithAggregationInput[]
+    by: DailyUsageScalarFieldEnum[] | DailyUsageScalarFieldEnum
+    having?: DailyUsageScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: DailyUsageCountAggregateInputType | true
+    _avg?: DailyUsageAvgAggregateInputType
+    _sum?: DailyUsageSumAggregateInputType
+    _min?: DailyUsageMinAggregateInputType
+    _max?: DailyUsageMaxAggregateInputType
+  }
+
+  export type DailyUsageGroupByOutputType = {
+    id: string
+    userId: string
+    date: string
+    count: number
+    updatedAt: Date
+    _count: DailyUsageCountAggregateOutputType | null
+    _avg: DailyUsageAvgAggregateOutputType | null
+    _sum: DailyUsageSumAggregateOutputType | null
+    _min: DailyUsageMinAggregateOutputType | null
+    _max: DailyUsageMaxAggregateOutputType | null
+  }
+
+  type GetDailyUsageGroupByPayload<T extends DailyUsageGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<DailyUsageGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof DailyUsageGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], DailyUsageGroupByOutputType[P]>
+            : GetScalarType<T[P], DailyUsageGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type DailyUsageSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    userId?: boolean
+    date?: boolean
+    count?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["dailyUsage"]>
+
+
+
+  export type DailyUsageSelectScalar = {
+    id?: boolean
+    userId?: boolean
+    date?: boolean
+    count?: boolean
+    updatedAt?: boolean
+  }
+
+  export type DailyUsageOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "date" | "count" | "updatedAt", ExtArgs["result"]["dailyUsage"]>
+
+  export type $DailyUsagePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "DailyUsage"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      userId: string
+      date: string
+      count: number
+      updatedAt: Date
+    }, ExtArgs["result"]["dailyUsage"]>
+    composites: {}
+  }
+
+  type DailyUsageGetPayload<S extends boolean | null | undefined | DailyUsageDefaultArgs> = $Result.GetResult<Prisma.$DailyUsagePayload, S>
+
+  type DailyUsageCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<DailyUsageFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: DailyUsageCountAggregateInputType | true
+    }
+
+  export interface DailyUsageDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['DailyUsage'], meta: { name: 'DailyUsage' } }
+    /**
+     * Find zero or one DailyUsage that matches the filter.
+     * @param {DailyUsageFindUniqueArgs} args - Arguments to find a DailyUsage
+     * @example
+     * // Get one DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends DailyUsageFindUniqueArgs>(args: SelectSubset<T, DailyUsageFindUniqueArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one DailyUsage that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {DailyUsageFindUniqueOrThrowArgs} args - Arguments to find a DailyUsage
+     * @example
+     * // Get one DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends DailyUsageFindUniqueOrThrowArgs>(args: SelectSubset<T, DailyUsageFindUniqueOrThrowArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DailyUsage that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageFindFirstArgs} args - Arguments to find a DailyUsage
+     * @example
+     * // Get one DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends DailyUsageFindFirstArgs>(args?: SelectSubset<T, DailyUsageFindFirstArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first DailyUsage that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageFindFirstOrThrowArgs} args - Arguments to find a DailyUsage
+     * @example
+     * // Get one DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends DailyUsageFindFirstOrThrowArgs>(args?: SelectSubset<T, DailyUsageFindFirstOrThrowArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DailyUsages that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all DailyUsages
+     * const dailyUsages = await prisma.dailyUsage.findMany()
+     * 
+     * // Get first 10 DailyUsages
+     * const dailyUsages = await prisma.dailyUsage.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const dailyUsageWithIdOnly = await prisma.dailyUsage.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends DailyUsageFindManyArgs>(args?: SelectSubset<T, DailyUsageFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a DailyUsage.
+     * @param {DailyUsageCreateArgs} args - Arguments to create a DailyUsage.
+     * @example
+     * // Create one DailyUsage
+     * const DailyUsage = await prisma.dailyUsage.create({
+     *   data: {
+     *     // ... data to create a DailyUsage
+     *   }
+     * })
+     * 
+     */
+    create<T extends DailyUsageCreateArgs>(args: SelectSubset<T, DailyUsageCreateArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many DailyUsages.
+     * @param {DailyUsageCreateManyArgs} args - Arguments to create many DailyUsages.
+     * @example
+     * // Create many DailyUsages
+     * const dailyUsage = await prisma.dailyUsage.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends DailyUsageCreateManyArgs>(args?: SelectSubset<T, DailyUsageCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a DailyUsage.
+     * @param {DailyUsageDeleteArgs} args - Arguments to delete one DailyUsage.
+     * @example
+     * // Delete one DailyUsage
+     * const DailyUsage = await prisma.dailyUsage.delete({
+     *   where: {
+     *     // ... filter to delete one DailyUsage
+     *   }
+     * })
+     * 
+     */
+    delete<T extends DailyUsageDeleteArgs>(args: SelectSubset<T, DailyUsageDeleteArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one DailyUsage.
+     * @param {DailyUsageUpdateArgs} args - Arguments to update one DailyUsage.
+     * @example
+     * // Update one DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends DailyUsageUpdateArgs>(args: SelectSubset<T, DailyUsageUpdateArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more DailyUsages.
+     * @param {DailyUsageDeleteManyArgs} args - Arguments to filter DailyUsages to delete.
+     * @example
+     * // Delete a few DailyUsages
+     * const { count } = await prisma.dailyUsage.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends DailyUsageDeleteManyArgs>(args?: SelectSubset<T, DailyUsageDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more DailyUsages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many DailyUsages
+     * const dailyUsage = await prisma.dailyUsage.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends DailyUsageUpdateManyArgs>(args: SelectSubset<T, DailyUsageUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one DailyUsage.
+     * @param {DailyUsageUpsertArgs} args - Arguments to update or create a DailyUsage.
+     * @example
+     * // Update or create a DailyUsage
+     * const dailyUsage = await prisma.dailyUsage.upsert({
+     *   create: {
+     *     // ... data to create a DailyUsage
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the DailyUsage we want to update
+     *   }
+     * })
+     */
+    upsert<T extends DailyUsageUpsertArgs>(args: SelectSubset<T, DailyUsageUpsertArgs<ExtArgs>>): Prisma__DailyUsageClient<$Result.GetResult<Prisma.$DailyUsagePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more DailyUsages that matches the filter.
+     * @param {DailyUsageFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const dailyUsage = await prisma.dailyUsage.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: DailyUsageFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a DailyUsage.
+     * @param {DailyUsageAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const dailyUsage = await prisma.dailyUsage.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: DailyUsageAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of DailyUsages.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageCountArgs} args - Arguments to filter DailyUsages to count.
+     * @example
+     * // Count the number of DailyUsages
+     * const count = await prisma.dailyUsage.count({
+     *   where: {
+     *     // ... the filter for the DailyUsages we want to count
+     *   }
+     * })
+    **/
+    count<T extends DailyUsageCountArgs>(
+      args?: Subset<T, DailyUsageCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], DailyUsageCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a DailyUsage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends DailyUsageAggregateArgs>(args: Subset<T, DailyUsageAggregateArgs>): Prisma.PrismaPromise<GetDailyUsageAggregateType<T>>
+
+    /**
+     * Group by DailyUsage.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {DailyUsageGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends DailyUsageGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: DailyUsageGroupByArgs['orderBy'] }
+        : { orderBy?: DailyUsageGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, DailyUsageGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetDailyUsageGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the DailyUsage model
+   */
+  readonly fields: DailyUsageFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for DailyUsage.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__DailyUsageClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the DailyUsage model
+   */
+  interface DailyUsageFieldRefs {
+    readonly id: FieldRef<"DailyUsage", 'String'>
+    readonly userId: FieldRef<"DailyUsage", 'String'>
+    readonly date: FieldRef<"DailyUsage", 'String'>
+    readonly count: FieldRef<"DailyUsage", 'Int'>
+    readonly updatedAt: FieldRef<"DailyUsage", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * DailyUsage findUnique
+   */
+  export type DailyUsageFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter, which DailyUsage to fetch.
+     */
+    where: DailyUsageWhereUniqueInput
+  }
+
+  /**
+   * DailyUsage findUniqueOrThrow
+   */
+  export type DailyUsageFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter, which DailyUsage to fetch.
+     */
+    where: DailyUsageWhereUniqueInput
+  }
+
+  /**
+   * DailyUsage findFirst
+   */
+  export type DailyUsageFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter, which DailyUsage to fetch.
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DailyUsages to fetch.
+     */
+    orderBy?: DailyUsageOrderByWithRelationInput | DailyUsageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DailyUsages.
+     */
+    cursor?: DailyUsageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DailyUsages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DailyUsages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DailyUsages.
+     */
+    distinct?: DailyUsageScalarFieldEnum | DailyUsageScalarFieldEnum[]
+  }
+
+  /**
+   * DailyUsage findFirstOrThrow
+   */
+  export type DailyUsageFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter, which DailyUsage to fetch.
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DailyUsages to fetch.
+     */
+    orderBy?: DailyUsageOrderByWithRelationInput | DailyUsageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for DailyUsages.
+     */
+    cursor?: DailyUsageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DailyUsages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DailyUsages.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of DailyUsages.
+     */
+    distinct?: DailyUsageScalarFieldEnum | DailyUsageScalarFieldEnum[]
+  }
+
+  /**
+   * DailyUsage findMany
+   */
+  export type DailyUsageFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter, which DailyUsages to fetch.
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of DailyUsages to fetch.
+     */
+    orderBy?: DailyUsageOrderByWithRelationInput | DailyUsageOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing DailyUsages.
+     */
+    cursor?: DailyUsageWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` DailyUsages from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` DailyUsages.
+     */
+    skip?: number
+    distinct?: DailyUsageScalarFieldEnum | DailyUsageScalarFieldEnum[]
+  }
+
+  /**
+   * DailyUsage create
+   */
+  export type DailyUsageCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * The data needed to create a DailyUsage.
+     */
+    data: XOR<DailyUsageCreateInput, DailyUsageUncheckedCreateInput>
+  }
+
+  /**
+   * DailyUsage createMany
+   */
+  export type DailyUsageCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many DailyUsages.
+     */
+    data: DailyUsageCreateManyInput | DailyUsageCreateManyInput[]
+  }
+
+  /**
+   * DailyUsage update
+   */
+  export type DailyUsageUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * The data needed to update a DailyUsage.
+     */
+    data: XOR<DailyUsageUpdateInput, DailyUsageUncheckedUpdateInput>
+    /**
+     * Choose, which DailyUsage to update.
+     */
+    where: DailyUsageWhereUniqueInput
+  }
+
+  /**
+   * DailyUsage updateMany
+   */
+  export type DailyUsageUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update DailyUsages.
+     */
+    data: XOR<DailyUsageUpdateManyMutationInput, DailyUsageUncheckedUpdateManyInput>
+    /**
+     * Filter which DailyUsages to update
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * Limit how many DailyUsages to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * DailyUsage upsert
+   */
+  export type DailyUsageUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * The filter to search for the DailyUsage to update in case it exists.
+     */
+    where: DailyUsageWhereUniqueInput
+    /**
+     * In case the DailyUsage found by the `where` argument doesn't exist, create a new DailyUsage with this data.
+     */
+    create: XOR<DailyUsageCreateInput, DailyUsageUncheckedCreateInput>
+    /**
+     * In case the DailyUsage was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<DailyUsageUpdateInput, DailyUsageUncheckedUpdateInput>
+  }
+
+  /**
+   * DailyUsage delete
+   */
+  export type DailyUsageDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+    /**
+     * Filter which DailyUsage to delete.
+     */
+    where: DailyUsageWhereUniqueInput
+  }
+
+  /**
+   * DailyUsage deleteMany
+   */
+  export type DailyUsageDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which DailyUsages to delete
+     */
+    where?: DailyUsageWhereInput
+    /**
+     * Limit how many DailyUsages to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * DailyUsage findRaw
+   */
+  export type DailyUsageFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * DailyUsage aggregateRaw
+   */
+  export type DailyUsageAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * DailyUsage without action
+   */
+  export type DailyUsageDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the DailyUsage
+     */
+    select?: DailyUsageSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the DailyUsage
+     */
+    omit?: DailyUsageOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -41220,6 +42277,17 @@ export namespace Prisma {
   };
 
   export type JitLinkScalarFieldEnum = (typeof JitLinkScalarFieldEnum)[keyof typeof JitLinkScalarFieldEnum]
+
+
+  export const DailyUsageScalarFieldEnum: {
+    id: 'id',
+    userId: 'userId',
+    date: 'date',
+    count: 'count',
+    updatedAt: 'updatedAt'
+  };
+
+  export type DailyUsageScalarFieldEnum = (typeof DailyUsageScalarFieldEnum)[keyof typeof DailyUsageScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -44159,6 +45227,61 @@ export namespace Prisma {
     accessLevel?: StringWithAggregatesFilter<"JitLink"> | string
     workspaceId?: StringNullableWithAggregatesFilter<"JitLink"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"JitLink"> | Date | string
+  }
+
+  export type DailyUsageWhereInput = {
+    AND?: DailyUsageWhereInput | DailyUsageWhereInput[]
+    OR?: DailyUsageWhereInput[]
+    NOT?: DailyUsageWhereInput | DailyUsageWhereInput[]
+    id?: StringFilter<"DailyUsage"> | string
+    userId?: StringFilter<"DailyUsage"> | string
+    date?: StringFilter<"DailyUsage"> | string
+    count?: IntFilter<"DailyUsage"> | number
+    updatedAt?: DateTimeFilter<"DailyUsage"> | Date | string
+  }
+
+  export type DailyUsageOrderByWithRelationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    date?: SortOrder
+    count?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DailyUsageWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    userId_date?: DailyUsageUserIdDateCompoundUniqueInput
+    AND?: DailyUsageWhereInput | DailyUsageWhereInput[]
+    OR?: DailyUsageWhereInput[]
+    NOT?: DailyUsageWhereInput | DailyUsageWhereInput[]
+    userId?: StringFilter<"DailyUsage"> | string
+    date?: StringFilter<"DailyUsage"> | string
+    count?: IntFilter<"DailyUsage"> | number
+    updatedAt?: DateTimeFilter<"DailyUsage"> | Date | string
+  }, "id" | "userId_date">
+
+  export type DailyUsageOrderByWithAggregationInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    date?: SortOrder
+    count?: SortOrder
+    updatedAt?: SortOrder
+    _count?: DailyUsageCountOrderByAggregateInput
+    _avg?: DailyUsageAvgOrderByAggregateInput
+    _max?: DailyUsageMaxOrderByAggregateInput
+    _min?: DailyUsageMinOrderByAggregateInput
+    _sum?: DailyUsageSumOrderByAggregateInput
+  }
+
+  export type DailyUsageScalarWhereWithAggregatesInput = {
+    AND?: DailyUsageScalarWhereWithAggregatesInput | DailyUsageScalarWhereWithAggregatesInput[]
+    OR?: DailyUsageScalarWhereWithAggregatesInput[]
+    NOT?: DailyUsageScalarWhereWithAggregatesInput | DailyUsageScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"DailyUsage"> | string
+    userId?: StringWithAggregatesFilter<"DailyUsage"> | string
+    date?: StringWithAggregatesFilter<"DailyUsage"> | string
+    count?: IntWithAggregatesFilter<"DailyUsage"> | number
+    updatedAt?: DateTimeWithAggregatesFilter<"DailyUsage"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -47189,6 +48312,58 @@ export namespace Prisma {
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type DailyUsageCreateInput = {
+    id?: string
+    userId: string
+    date: string
+    count?: number
+    updatedAt?: Date | string
+  }
+
+  export type DailyUsageUncheckedCreateInput = {
+    id?: string
+    userId: string
+    date: string
+    count?: number
+    updatedAt?: Date | string
+  }
+
+  export type DailyUsageUpdateInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    date?: StringFieldUpdateOperationsInput | string
+    count?: IntFieldUpdateOperationsInput | number
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DailyUsageUncheckedUpdateInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    date?: StringFieldUpdateOperationsInput | string
+    count?: IntFieldUpdateOperationsInput | number
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DailyUsageCreateManyInput = {
+    id?: string
+    userId: string
+    date: string
+    count?: number
+    updatedAt?: Date | string
+  }
+
+  export type DailyUsageUpdateManyMutationInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    date?: StringFieldUpdateOperationsInput | string
+    count?: IntFieldUpdateOperationsInput | number
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type DailyUsageUncheckedUpdateManyInput = {
+    userId?: StringFieldUpdateOperationsInput | string
+    date?: StringFieldUpdateOperationsInput | string
+    count?: IntFieldUpdateOperationsInput | number
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -49141,6 +50316,43 @@ export namespace Prisma {
     duration?: SortOrder
     maxUses?: SortOrder
     usedCount?: SortOrder
+  }
+
+  export type DailyUsageUserIdDateCompoundUniqueInput = {
+    userId: string
+    date: string
+  }
+
+  export type DailyUsageCountOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    date?: SortOrder
+    count?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DailyUsageAvgOrderByAggregateInput = {
+    count?: SortOrder
+  }
+
+  export type DailyUsageMaxOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    date?: SortOrder
+    count?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DailyUsageMinOrderByAggregateInput = {
+    id?: SortOrder
+    userId?: SortOrder
+    date?: SortOrder
+    count?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type DailyUsageSumOrderByAggregateInput = {
+    count?: SortOrder
   }
 
   export type UserCreatemfaBackupCodesInput = {
