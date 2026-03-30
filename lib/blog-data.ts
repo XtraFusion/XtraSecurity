@@ -388,7 +388,7 @@ pipeline {
     stage('Deploy') {
       steps {
         sh '''
-          export API_KEY=${API_KEY}
+          export API_KEY=\${API_KEY}
           npm run deploy
         '''
       }
