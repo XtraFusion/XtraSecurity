@@ -9,6 +9,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { calculateSecurityScore } from "@/lib/compliance/score-engine";
+import { SecurityScoreCard } from "@/components/compliance/security-score-card";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -199,6 +201,11 @@ export default function CompliancePage() {
                     {/* ── Report Content (shown after generation, also printed) ── */}
                     {report && (
                         <div className="space-y-8">
+                            
+                            {/* Security Score Dashboard Element */}
+                            <div className="no-print">
+                                <SecurityScoreCard score={calculateSecurityScore(report)} />
+                            </div>
 
                             {/* Cover */}
                             <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-8">

@@ -22,6 +22,13 @@ export async function GET(req: Request) {
         }
     }
 
+    // Fetch user for MFA status
+    const userMfa = await prisma.user.findUnique({
+      where: { id: session.user.id },
+      select: { mfaEnabled: true }
+    });
+    const generatedByMfaEnabled = userMfa?.mfaEnabled || false;
+
     const generatedAt = new Date().toISOString();
 
     // ── 1. Workspaces the user owns ──────────────────────────────────────────
@@ -46,6 +53,7 @@ export async function GET(req: Request) {
         auditLogging: true,
         lastSecurityAudit: true,
         createdAt: true,
+        ipRestrictions: true, // Need for score
       },
     });
 
@@ -140,6 +148,7 @@ export async function GET(req: Request) {
     return NextResponse.json({
       generatedAt,
       generatedBy: session.user.email || session.user.id,
+      generatedByMfaEnabled, // New
       workspaces,
       summary: {
         totalProjects: projects.length,

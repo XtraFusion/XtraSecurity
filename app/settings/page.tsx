@@ -10,9 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "@/hooks/use-toast";
-import { User, Lock, Bell, Smartphone, Monitor, Loader2, Shield, Briefcase } from "lucide-react";
+import { User, Lock, Bell, Smartphone, Monitor, Loader2, Shield, Briefcase, CreditCard } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/useUser";
+import { BillingTab } from "./billing-tab";
+import { Tier } from "@/lib/rate-limit-config";
 
 export default function SettingsPage() {
     const { user: globalUser, selectedWorkspace } = useUser();
@@ -193,10 +195,16 @@ export default function SettingsPage() {
                         <TabsTrigger value="general" className="gap-2"><User className="h-4 w-4" /> General</TabsTrigger>
                         <TabsTrigger value="security" className="gap-2"><Lock className="h-4 w-4" /> Security</TabsTrigger>
                         <TabsTrigger value="notifications" className="gap-2"><Bell className="h-4 w-4" /> Notifications</TabsTrigger>
+                        <TabsTrigger value="billing" className="gap-2"><CreditCard className="h-4 w-4" /> Billing</TabsTrigger>
                         {hasAdminAccess && (
                             <TabsTrigger value="workspace" className="gap-2"><Briefcase className="h-4 w-4" /> Workspace</TabsTrigger>
                         )}
                     </TabsList>
+
+                    {/* BILLING TAB */}
+                    <TabsContent value="billing" className="space-y-4">
+                        <BillingTab currentTier={(user?.tier || "free") as Tier} />
+                    </TabsContent>
 
                     {/* GENERAL TAB */}
                     <TabsContent value="general" className="space-y-4">
