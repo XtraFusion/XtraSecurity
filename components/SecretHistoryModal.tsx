@@ -30,6 +30,7 @@ interface SecretHistoryModalProps {
     projectId: string;
     env: string;
     secretKey: string;
+    secretId?: string; // Add this
     onRollbackSuccess?: () => void;
 }
 
@@ -153,6 +154,7 @@ export function SecretHistoryModal({
     projectId,
     env,
     secretKey,
+    secretId,
     onRollbackSuccess,
 }: SecretHistoryModalProps) {
     const { toast } = useToast();
@@ -203,11 +205,15 @@ export function SecretHistoryModal({
         setConfirmVersion(null);
         try {
             const res = await fetch(
-                `/api/projects/${projectId}/envs/${env}/secrets/${encodeURIComponent(secretKey)}/history`,
+                "/api/secret/rollback",
                 {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ version }),
+                    body: JSON.stringify({ 
+                        secretId: secretId, // Recommended way
+                        targetVersion: version,
+                        changeReason: `Rollback to v${version} via History Console`
+                    }),
                 }
             );
             if (!res.ok) throw new Error((await res.json()).error);

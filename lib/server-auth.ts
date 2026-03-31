@@ -15,6 +15,7 @@ export interface AuthSession {
   serviceAccountId?: string;
   projectId?: string;
   permissions?: string[];
+  apiKeyId?: string;
 }
 
 /**
@@ -83,7 +84,8 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
             userId: keyRecord.user.id,
             email: keyRecord.user.email,
             role: resolvedRole,
-            tier: keyRecord.user.tier || 'free'
+            tier: keyRecord.user.tier || 'free',
+            apiKeyId: keyRecord.id
         };
       }
 
@@ -99,7 +101,8 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
               isServiceAccount: true,
               serviceAccountId: keyRecord.serviceAccount.id,
               projectId: keyRecord.serviceAccount.projectId,
-              permissions: keyRecord.serviceAccount.permissions
+              permissions: keyRecord.serviceAccount.permissions,
+              apiKeyId: keyRecord.id
           };
       }
 

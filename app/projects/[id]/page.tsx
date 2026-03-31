@@ -303,29 +303,48 @@ const SecretCard = ({
 
         {/* Secret Value */}
         <div className="relative">
-          <div className="flex items-center gap-2 bg-muted/50 border border-border/50 rounded-lg px-3 py-2.5 group/value">
-            <code className="flex-1 font-mono text-sm truncate text-foreground/80">
-              {isVisible ? secret.value : "•".repeat(Math.min(secret.value.length, 24))}
-            </code>
-            <div className="flex items-center gap-1 opacity-0 group-hover/value:opacity-100 transition-opacity">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onToggleVisibility}
-                className="h-7 w-7 p-0"
+          {secret.value === "[REDACTED]" ? (
+            <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg bg-muted/30 group/req">
+              <Lock className="h-8 w-8 text-muted-foreground mb-2 group-hover/req:text-primary transition-colors" />
+              <p className="text-xs text-muted-foreground mb-3 font-medium">Access Restricted</p>
+              <Button 
+                variant="secondary" 
+                size="sm" 
+                className="h-8 w-full shadow-sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onRequestAccess();
+                }}
               >
-                {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={onCopy}
-                className="h-7 w-7 p-0"
-              >
-                {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                <ShieldAlert className="h-4 w-4 mr-2" />
+                Request JIT Access
               </Button>
             </div>
-          </div>
+          ) : (
+            <div className="flex items-center gap-2 bg-muted/50 border border-border/50 rounded-lg px-3 py-2.5 group/value">
+              <code className="flex-1 font-mono text-sm truncate text-foreground/80">
+                {isVisible ? secret.value : "•".repeat(Math.min(secret.value.length, 24))}
+              </code>
+              <div className="flex items-center gap-1 opacity-0 group-hover/value:opacity-100 transition-opacity">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onToggleVisibility}
+                  className="h-7 w-7 p-0"
+                >
+                  {isVisible ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={onCopy}
+                  className="h-7 w-7 p-0"
+                >
+                  {isCopied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Metadata Row */}
@@ -1645,6 +1664,7 @@ const VaultManager: React.FC = () => {
         projectId={projectId}
         env={historySecret?.environmentType || ""}
         secretKey={historySecret?.key || ""}
+        secretId={historySecret?.id}
         onRollbackSuccess={() => loadProject(true)}
       />
 
@@ -2282,6 +2302,15 @@ const VaultManager: React.FC = () => {
         secrets={secrets}
         currentBranchId={selectedBranch?.id}
         currentEnv={filterEnv !== "all" ? filterEnv : undefined}
+      />
+
+      {/* JIT Access Request Modal */}
+      <AccessRequestModal
+        open={isAccessRequestOpen}
+        onClose={() => setIsAccessRequestOpen(false)}
+        projectId={projectId}
+        secretId={requestAccessSecret?.id}
+        secretKey={requestAccessSecret?.key}
       />
     </DashboardLayout>
   );

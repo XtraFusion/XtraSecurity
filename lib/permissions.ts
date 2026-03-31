@@ -170,3 +170,39 @@ export async function hasPermission(userId: string, permissionAction: string) {
 
   return false;
 }
+
+/**
+ * JIT ACCESS CHECK
+ * Checks if a user has active, approved, and non-expired temporary access
+ */
+export async function getUserSecretAccess(userId: string, projectId: string, secretId?: string) {
+  // 1. Get standard role
+  const role = await getUserProjectRole(userId, projectId);
+  
+  // Owners and Admins always have access
+  if (role === "owner" || role === "admin") return { hasAccess: true, role };
+  
+  // 2. Check for active JIT Access Request
+  const now = new Date();
+  
+  // Find an approved request that hasn't expired yet
+  const activeRequest = await prisma.accessRequest.findFirst({
+    where: {
+      userId,
+      status: "approved",
+      expiresAt: { gt: now },
+      OR: [
+        { secretId: secretId || undefined },
+        { projectId: projectId, secretId: null } // Project-wide JIT
+      ]
+    },
+    orderBy: { expiresAt: "desc" }
+  });
+
+  if (activeRequest) {
+    return { hasAccess: true, role: "developer", isJit: true, expiresAt: activeRequest.expiresAt };
+  }
+
+  // 3. Fallback to standard role access
+  return { hasAccess: false, role };
+}

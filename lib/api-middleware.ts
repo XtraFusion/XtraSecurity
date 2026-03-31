@@ -108,6 +108,7 @@ export function withSecurity(handler: SecureHandler) {
         const baseLogData: Partial<SecurityEventLog> = {
             userId: session?.userId,
             userEmail: session?.email || undefined,
+            apiKeyId: session?.apiKeyId, // Capture API Key ID for SA
             tier: targetTier, // Record the tier that was used for the limit
             ipAddress: ip,
             userAgent: userAgent,
@@ -115,6 +116,8 @@ export function withSecurity(handler: SecureHandler) {
             city: geo?.city,
             method: req.method,
             endpoint: req.nextUrl.pathname,
+            projectId: projectIdToCheck || undefined,
+            workspaceId: workspaceIdToCheck || undefined,
         };
 
         // 4. Enforce Blocked Project status globally

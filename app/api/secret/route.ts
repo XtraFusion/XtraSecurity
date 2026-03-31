@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
-import { getUserProjectRole } from "@/lib/permissions";
+import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -47,10 +47,15 @@ export const GET = withSecurity(async (request, context, session) => {
     });
     console.log(`[/api/secret GET] Found ${secrets.length} secrets`);
 
-    // Decrypt secret values and history before sending to frontend
-    const decryptedSecrets = secrets.map((secret) => {
-      // If Viewer, REDACT content
-      if (isViewer) {
+    // Decrypted secret values and history before sending to frontend
+    const decryptedSecrets = await Promise.all(secrets.map(async (secret) => {
+      // Access Control check per-secret (handles JIT and standard roles)
+      const access = await getUserSecretAccess(session.userId, projectId, secret.id);
+      
+      const shouldRedact = !access.hasAccess || (access.role === "viewer" && !access.isJit);
+
+      // If Redacted (Viewer without JIT), hide content
+      if (shouldRedact) {
           return {
               ...secret,
               value: "[REDACTED]",
@@ -100,9 +105,11 @@ export const GET = withSecurity(async (request, context, session) => {
       return {
         ...secret,
         value: decryptedValue,
-        history: decryptedHistory
+        history: decryptedHistory,
+        isJit: access.isJit, // Inform frontend about JIT status
+        expiresAt: access.expiresAt
       };
-    });
+    }));
 
     return NextResponse.json(decryptedSecrets);
   } catch (error) {
