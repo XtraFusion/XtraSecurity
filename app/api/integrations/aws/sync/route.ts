@@ -206,9 +206,6 @@ export async function POST(req: NextRequest) {
       });
     } catch {}
 
-      },
-    });
-
     // Trigger Unified Notifications (non-blocking)
     notify(
       auth.userId,
