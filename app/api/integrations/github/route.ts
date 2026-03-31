@@ -29,6 +29,11 @@ export async function GET(req: NextRequest) {
     });
 
     if (!integration) {
+      if (!GITHUB_CLIENT_ID) {
+        return NextResponse.json({ 
+          error: "GitHub Client ID is not configured in the environment variables." 
+        }, { status: 500 });
+      }
       // Return OAuth URL if not connected
       const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI!)}&scope=repo`;
       return NextResponse.json({

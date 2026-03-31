@@ -15,13 +15,13 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { useUser } from "@/hooks/useUser";
 
 // ─── Types ────────────────────────────────────────────────────────
-interface IntegrationStatus { connected: boolean; username?: string; avatarUrl?: string; connectedAt?: string; authUrl?: string; region?: string; projectId?: string; vaultName?: string; }
+interface IntegrationStatus { connected: boolean; username?: string; avatarUrl?: string; connectedAt?: string; authUrl?: string; region?: string; projectId?: string; vaultName?: string; error?: string; }
 interface Repo { id: number | string; name: string; fullName: string; owner: string; private: boolean; url: string; framework?: string | null; accountId?: string; arn?: string; dopplerProject?: string; dopplerConfig?: string; projectId?: string; environmentId?: string; }
 interface DiffItem { key: string; status: "new" | "in_sync" | "only_vercel" | "only_netlify" | "only_remote" | "only_doppler"; vercelId?: string; }
 interface CompareData { items: DiffItem[]; latestDeployment: { id: string; url: string | null; state: string; createdAt: number } | null; summary: { new: number; inSync: number; onlyVercel?: number; onlyNetlify?: number; onlyDoppler?: number; }; }
 type SyncProvider = "github" | "gitlab" | "vercel" | "netlify" | "aws" | "doppler" | "bitbucket" | "gcp" | "azure" | "railway" | "fly" | "render" | "digitalocean" | "heroku" | "slack" | "discord";
 
-const AWS_REGIONS = ["us-east-1","us-east-2","us-west-1","us-west-2","eu-west-1","eu-west-2","eu-central-1","ap-south-1","ap-southeast-1","ap-southeast-2","ap-northeast-1","ca-central-1","sa-east-1"];
+const AWS_REGIONS = ["us-east-1", "us-east-2", "us-west-1", "us-west-2", "eu-west-1", "eu-west-2", "eu-central-1", "ap-south-1", "ap-southeast-1", "ap-southeast-2", "ap-northeast-1", "ca-central-1", "sa-east-1"];
 
 // ─── Status Badge ─────────────────────────────────────────────────
 function StatusBadge({ status }: { status: string }) {
@@ -236,7 +236,7 @@ function GcpConnectModal({ open, onClose, onConnected }: { open: boolean; onClos
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-lg">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4"/><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853"/><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05"/><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335"/></svg> GCP Connection</DialogTitle><DialogDescription>Securely connect using a Service Account JSON key.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4" /><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853" /><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05" /><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335" /></svg> GCP Connection</DialogTitle><DialogDescription>Securely connect using a Service Account JSON key.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -275,7 +275,7 @@ function AzureConnectModal({ open, onClose, onConnected }: { open: boolean; onCl
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="#0089D6"/><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="#0089D6" opacity=".1"/><path d="M11.52.53L1.13 11.16s9.9-.17 10.39-11L11.52.53z" fill="#0089D6"/><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="#0072C6"/></svg> Azure Connection</DialogTitle><DialogDescription>Connect using a Service Principal (App Registration).</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="#0089D6" /><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="#0089D6" opacity=".1" /><path d="M11.52.53L1.13 11.16s9.9-.17 10.39-11L11.52.53z" fill="#0089D6" /><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="#0072C6" /></svg> Azure Connection</DialogTitle><DialogDescription>Connect using a Service Principal (App Registration).</DialogDescription></DialogHeader>
         <div className="space-y-3 py-2">
           <div className="bg-muted/50 p-2.5 rounded-lg border text-[10px] space-y-1.5 font-medium">
             <p className="flex items-center gap-1.5 text-primary"><Info className="h-3 w-3" /> Quick Setup:</p>
@@ -519,7 +519,7 @@ function SlackConnectModal({ open, onClose, onConnected }: { open: boolean; onCl
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521 2.527 2.527 0 0 1 2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z"/></svg> Slack Webhook</DialogTitle><DialogDescription>Get real-time sync alerts in your Slack channel.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521 2.527 2.527 0 0 1 2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z" /></svg> Slack Webhook</DialogTitle><DialogDescription>Get real-time sync alerts in your Slack channel.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> How to get a Webhook URL:</p>
@@ -556,7 +556,7 @@ function DiscordConnectModal({ open, onClose, onConnected }: { open: boolean; on
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/></svg> Discord Webhook</DialogTitle><DialogDescription>Get real-time sync alerts in your Discord channel.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z" /></svg> Discord Webhook</DialogTitle><DialogDescription>Get real-time sync alerts in your Discord channel.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> How to get a Webhook URL:</p>
@@ -595,7 +595,7 @@ function ComparePanel({ provider, vercelProjectId, netlifySiteId, netlifyAccount
       const res = await fetch(url);
       const d = await res.json();
       if (res.ok) setData(d);
-    } catch {}
+    } catch { }
     finally { setLoading(false); }
   }, [provider, vercelProjectId, netlifySiteId, projectId, environment, netlifyAccountId]);
 
@@ -879,36 +879,43 @@ export default function IntegrationsPage() {
   const repos = syncProvider === "github" ? githubRepos : syncProvider === "gitlab" ? gitlabRepos : syncProvider === "vercel" ? vercelRepos : syncProvider === "netlify" ? netlifyRepos : syncProvider === "doppler" ? dopplerRepos : syncProvider === "bitbucket" ? bitbucketRepos : syncProvider === "gcp" ? gcpRepos : syncProvider === "azure" ? azureRepos : syncProvider === "railway" ? railwayRepos : syncProvider === "fly" ? flyRepos : syncProvider === "render" ? renderRepos : syncProvider === "digitalocean" ? doRepos : syncProvider === "heroku" ? herokuRepos : awsRepos;
   const selectedRepoObj = repos.find(r => r.id.toString() === selectedRepo);
 
+  const fetchWithHandling = async (url: string, setter: (val: any) => void) => {
+    try {
+      const res = await fetch(url);
+      if (res.ok) {
+        const d = await res.json();
+        setter(d);
+      } else if (res.status === 401) {
+        setter({ connected: false, error: "Unauthorized" });
+      } else {
+        const d = await res.json().catch(() => ({}));
+        setter({ connected: false, error: d.error || "Server error" });
+      }
+    } catch {
+      setter({ connected: false, error: "Network error" });
+    }
+  };
+
   const fetchAllStatuses = async () => {
     setLoading(true);
-    try {
-      const [gh, gl, vc, nt, aws, dp, bb, gcp, az, rw, fl, rd, do_res, hk, sl, ds] = await Promise.all([
-        fetch("/api/integrations/github"), fetch("/api/integrations/gitlab"),
-        fetch("/api/integrations/vercel"), fetch("/api/integrations/netlify"),
-        fetch("/api/integrations/aws"), fetch("/api/integrations/doppler"),
-        fetch("/api/integrations/bitbucket"), fetch("/api/integrations/gcp"),
-        fetch("/api/integrations/azure"), fetch("/api/integrations/railway"),
-        fetch("/api/integrations/fly"), fetch("/api/integrations/render"),
-        fetch("/api/integrations/digitalocean"), fetch("/api/integrations/heroku"),
-        fetch("/api/integrations/slack"), fetch("/api/integrations/discord"),
-      ]);
-      if (gh.ok) setGithubStatus(await gh.json());
-      if (gl.ok) setGitlabStatus(await gl.json());
-      if (vc.ok) setVercelStatus(await vc.json());
-      if (nt.ok) setNetlifyStatus(await nt.json());
-      if (aws.ok) setAwsStatus(await aws.json());
-      if (dp.ok) setDopplerStatus(await dp.json());
-      if (bb.ok) setBitbucketStatus(await bb.json());
-      if (gcp.ok) setGcpStatus(await gcp.json());
-      if (az.ok) setAzureStatus(await az.json());
-      if (rw.ok) setRailwayStatus(await rw.json());
-      if (fl.ok) setFlyStatus(await fl.json());
-      if (rd.ok) setRenderStatus(await rd.json());
-      if (do_res.ok) setDoStatus(await do_res.json());
-      if (hk.ok) setHerokuStatus(await hk.json());
-      if (sl.ok) setSlackStatus(await sl.json());
-      if (ds.ok) setDiscordStatus(await ds.json());
-    } catch {}
+    await Promise.all([
+      fetchWithHandling("/api/integrations/github", setGithubStatus),
+      fetchWithHandling("/api/integrations/gitlab", setGitlabStatus),
+      fetchWithHandling("/api/integrations/vercel", setVercelStatus),
+      fetchWithHandling("/api/integrations/netlify", setNetlifyStatus),
+      fetchWithHandling("/api/integrations/aws", setAwsStatus),
+      fetchWithHandling("/api/integrations/doppler", setDopplerStatus),
+      fetchWithHandling("/api/integrations/bitbucket", setBitbucketStatus),
+      fetchWithHandling("/api/integrations/gcp", setGcpStatus),
+      fetchWithHandling("/api/integrations/azure", setAzureStatus),
+      fetchWithHandling("/api/integrations/railway", setRailwayStatus),
+      fetchWithHandling("/api/integrations/fly", setFlyStatus),
+      fetchWithHandling("/api/integrations/render", setRenderStatus),
+      fetchWithHandling("/api/integrations/digitalocean", setDoStatus),
+      fetchWithHandling("/api/integrations/heroku", setHerokuStatus),
+      fetchWithHandling("/api/integrations/slack", setSlackStatus),
+      fetchWithHandling("/api/integrations/discord", setDiscordStatus),
+    ]);
     setLoading(false);
   };
 
@@ -1013,8 +1020,8 @@ export default function IntegrationsPage() {
     if (p === "netlify") return <span className="text-[#00C7B7] font-bold text-[10px]">◆</span>;
     if (p === "doppler") return <span className="text-[#6366f1] font-bold text-[10px]">D</span>;
     if (p === "bitbucket") return <img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className={cls} />;
-    if (p === "gcp") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4"/><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853"/><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05"/><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335"/></svg>;
-    if (p === "azure") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="#0089D6"/><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="#0089D6" opacity=".1"/><path d="M11.52.53L1.13 11.16s9.9-.17 10.39-11L11.52.53z" fill="#0089D6"/><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="#0072C6"/></svg>;
+    if (p === "gcp") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4" /><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853" /><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05" /><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335" /></svg>;
+    if (p === "azure") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="#0089D6" /><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="#0089D6" opacity=".1" /><path d="M11.52.53L1.13 11.16s9.9-.17 10.39-11L11.52.53z" fill="#0089D6" /><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="#0072C6" /></svg>;
     if (p === "railway") return <img src="/railway-color.svg" alt="Railway" className={cls} />;
     if (p === "fly") return <img src="/Fly.io Symbol SVG" alt="Fly.io" className={cls} />;
     if (p === "render") return <img src="/Render Symbol SVG.svg" alt="Render" className={cls} />;
@@ -1035,15 +1042,15 @@ export default function IntegrationsPage() {
 
         {/* Cards */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <ConnectionCard name="GitHub" icon={<Github className="h-5 w-5 text-white" />} iconBg="bg-[#24292e]" status={githubStatus} onConnect={() => window.location.href = githubStatus?.authUrl || "#"} onDisconnect={() => disconnect("github")} />
-          <ConnectionCard name="GitLab" icon={<Gitlab className="h-5 w-5 text-white" />} iconBg="bg-[#FC6D26]" status={gitlabStatus} onConnect={() => window.location.href = gitlabStatus?.authUrl || "#"} onDisconnect={() => disconnect("gitlab")} />
+          <ConnectionCard name="GitHub" icon={<Github className="h-5 w-5 text-white" />} iconBg="bg-[#24292e]" status={githubStatus} onConnect={() => { if (githubStatus?.authUrl) window.location.href = githubStatus.authUrl; else toast({ title: "GitHub Link Error", description: githubStatus?.error || "Unable to start GitHub authentication. Check your environment configuration.", variant: "destructive" }); }} onDisconnect={() => disconnect("github")} />
+          <ConnectionCard name="GitLab" icon={<Gitlab className="h-5 w-5 text-white" />} iconBg="bg-[#FC6D26]" status={gitlabStatus} onConnect={() => { if (gitlabStatus?.authUrl) window.location.href = gitlabStatus.authUrl; else toast({ title: "GitLab Link Error", description: gitlabStatus?.error || "Unable to start GitLab authentication.", variant: "destructive" }); }} onDisconnect={() => disconnect("gitlab")} />
           <ConnectionCard name="Vercel" icon={<Triangle className="h-4 w-4 text-white fill-white" />} iconBg="bg-black" status={vercelStatus} onConnect={() => setVercelModal(true)} onDisconnect={() => disconnect("vercel")} tokenBased />
           <ConnectionCard name="Netlify" icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="white"><path d="M16.934 8.219a4.467 4.467 0 0 0-3.205-3.197l-.812 2.568.013.04 3.204 3.205.823-2.571-.023-.045zm-4.148-3.56a4.467 4.467 0 0 0-4.728 1.07L9.92 7.59l3.678-2.93h-.812zm-5.444 1.794a4.466 4.466 0 0 0-1.07 4.727l2.57-.812-1.5-3.915zm-.705 5.452a4.467 4.467 0 0 0 3.197 3.205l.812-2.568-.013-.04-3.197-3.197-.822 2.572.023.028zm4.15 3.561a4.467 4.467 0 0 0 4.727-1.07l-1.862-1.862-3.678 2.932h.813zm5.443-1.795a4.466 4.466 0 0 0 1.07-4.727l-2.57.812 1.5 3.915z" /></svg>} iconBg="bg-[#00C7B7]" status={netlifyStatus} onConnect={() => setNetlifyModal(true)} onDisconnect={() => disconnect("netlify")} tokenBased />
           <ConnectionCard name="AWS" icon={<img src="/aws-logo.svg" alt="AWS" className="h-6 w-6" />} iconBg="bg-white" status={awsStatus} onConnect={() => setAwsModal(true)} onDisconnect={() => disconnect("aws")} onEdit={() => setAwsModal(true)} tokenBased />
           <ConnectionCard name="Doppler" icon={<span className="text-white font-bold text-sm">D</span>} iconBg="bg-[#6366f1]" status={dopplerStatus} onConnect={() => setDopplerModal(true)} onDisconnect={() => disconnect("doppler")} tokenBased />
           <ConnectionCard name="Bitbucket" icon={<img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className="h-6 w-6" />} iconBg="bg-white shadow-inner" status={bitbucketStatus} onConnect={() => setBitbucketModal(true)} onDisconnect={() => disconnect("bitbucket")} tokenBased />
-          <ConnectionCard name="Google Cloud" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4"/><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853"/><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05"/><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335"/></svg>} iconBg="bg-white border" status={gcpStatus} onConnect={() => setGcpModal(true)} onDisconnect={() => disconnect("gcp")} tokenBased />
-          <ConnectionCard name="Azure" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="white" opacity=".9"/><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="white" opacity=".2"/><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="white" opacity=".4"/></svg>} iconBg="bg-[#0089D6]" status={azureStatus} onConnect={() => setAzureModal(true)} onDisconnect={() => disconnect("azure")} tokenBased />
+          <ConnectionCard name="Google Cloud" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4" /><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853" /><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05" /><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335" /></svg>} iconBg="bg-white border" status={gcpStatus} onConnect={() => setGcpModal(true)} onDisconnect={() => disconnect("gcp")} tokenBased />
+          <ConnectionCard name="Azure" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="white" opacity=".9" /><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="white" opacity=".2" /><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="white" opacity=".4" /></svg>} iconBg="bg-[#0089D6]" status={azureStatus} onConnect={() => setAzureModal(true)} onDisconnect={() => disconnect("azure")} tokenBased />
           <ConnectionCard name="Railway" icon={<img src="/railway-color.svg" alt="Railway" className="h-6 w-6" />} iconBg="bg-[#0B0D0E]" status={railwayStatus} onConnect={() => setRailwayModal(true)} onDisconnect={() => disconnect("railway")} tokenBased />
           <ConnectionCard name="Fly.io" icon={<img src="/Fly.io Symbol SVG" alt="Fly.io" className="h-6 w-6" />} iconBg="bg-[#4222E9]" status={flyStatus} onConnect={() => setFlyModal(true)} onDisconnect={() => disconnect("fly")} tokenBased />
           <ConnectionCard name="Render" icon={<img src="/Render Symbol SVG.svg" alt="Render" className="h-6 w-6" />} iconBg="bg-white border shadow-sm" status={renderStatus} onConnect={() => setRenderModal(true)} onDisconnect={() => disconnect("render")} tokenBased />
@@ -1054,8 +1061,8 @@ export default function IntegrationsPage() {
         {/* Notifications Section */}
         <h2 className="text-lg font-semibold mt-8 mb-4">Notifications & Alerts</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10">
-          <ConnectionCard name="Slack" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z"/></svg>} iconBg="bg-[#4A154B]" status={slackStatus} onConnect={() => setSlackModal(true)} onDisconnect={() => disconnect("slack")} tokenBased />
-          <ConnectionCard name="Discord" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z"/></svg>} iconBg="bg-[#5865F2]" status={discordStatus} onConnect={() => setDiscordModal(true)} onDisconnect={() => disconnect("discord")} tokenBased />
+          <ConnectionCard name="Slack" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z" /></svg>} iconBg="bg-[#4A154B]" status={slackStatus} onConnect={() => setSlackModal(true)} onDisconnect={() => disconnect("slack")} tokenBased />
+          <ConnectionCard name="Discord" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z" /></svg>} iconBg="bg-[#5865F2]" status={discordStatus} onConnect={() => setDiscordModal(true)} onDisconnect={() => disconnect("discord")} tokenBased />
         </div>
 
         {/* Sync section */}
@@ -1069,9 +1076,8 @@ export default function IntegrationsPage() {
                   const labels: Record<SyncProvider, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket", vercel: "Vercel", netlify: "Netlify", aws: "AWS Secrets", doppler: "Doppler", gcp: "Google Cloud", azure: "Azure Vault", railway: "Railway", fly: "Fly.io", render: "Render", digitalocean: "DigitalOcean", heroku: "Heroku", slack: "Slack", discord: "Discord" };
                   return (
                     <button key={p} onClick={() => setSyncProvider(p)} disabled={!providerConnected[p]}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-medium transition-all whitespace-nowrap ${
-                        syncProvider === p ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                      } ${!providerConnected[p] ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}>
+                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-medium transition-all whitespace-nowrap ${syncProvider === p ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
+                        } ${!providerConnected[p] ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}>
                       {providerIcon(p)} {labels[p]}
                     </button>
                   );
@@ -1166,7 +1172,7 @@ export default function IntegrationsPage() {
                   </div>
                 </div>
               </div>
-            {(syncProvider === "fly" || syncProvider === "render" || syncProvider === "digitalocean" || syncProvider === "heroku") && (
+              {(syncProvider === "fly" || syncProvider === "render" || syncProvider === "digitalocean" || syncProvider === "heroku") && (
                 <div className="mt-4 flex items-center gap-2 text-[11px] text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200 shadow-sm mx-4 mb-4">
                   <Info className="h-4 w-4" />
                   <p>Note: Updating secrets on **{syncProvider === "fly" ? "Fly.io" : syncProvider === "render" ? "Render" : syncProvider === "digitalocean" ? "DigitalOcean" : "Heroku"}** will trigger a new deployment/restart of your {syncProvider === "digitalocean" || syncProvider === "heroku" ? "app" : "service"}.</p>
