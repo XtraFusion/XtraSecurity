@@ -2,9 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
-
-
-// Helper — get decrypted Vercel token for current user
+import { notify } from "@/lib/notifier";
+import axios from "axios";
 async function getVercelToken(userId: string): Promise<string | null> {
   const integration = await prisma.integration.findUnique({
     where: { userId_provider: { userId, provider: "vercel" } },
@@ -244,6 +243,14 @@ export async function POST(req: NextRequest) {
       console.error("Audit log failed:", auditErr);
     }
 
+    // Trigger Unified Notifications (non-blocking)
+    notify(
+      auth.userId,
+      "Vercel Sync Complete",
+      `Successfully synced ${syncResults.length} secrets to Vercel.`,
+      `Project: ${vercelProjectId} | Environment: ${environment}`
+    ).catch(e => console.error("Notify Error:", e));
+
     return NextResponse.json({
       success: true,
       repo: vercelProjectId,
@@ -309,6 +316,14 @@ export async function DELETE(req: NextRequest) {
     );
 
     if (deleteRes.ok || deleteRes.status === 204) {
+      // Trigger Unified Notifications (non-blocking)
+      notify(
+        auth.userId,
+        "Secret Deleted from Vercel",
+        `Removed '${secretName || targetEnvId}' from Vercel.`,
+        `Project: ${vercelProjectId}`
+      ).catch(e => console.error("Notify Error:", e));
+
       return NextResponse.json({ success: true, deleted: secretName || targetEnvId });
     }
 

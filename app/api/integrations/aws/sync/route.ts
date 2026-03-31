@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
+import { notify } from "@/lib/notifier";
 import {
   SecretsManagerClient,
   ListSecretsCommand,
@@ -205,6 +206,17 @@ export async function POST(req: NextRequest) {
       });
     } catch {}
 
+      },
+    });
+
+    // Trigger Unified Notifications (non-blocking)
+    notify(
+      auth.userId,
+      "AWS Sync Complete",
+      `Successfully synced ${syncResults.length} secrets to AWS Secrets Manager.`,
+      `Environment: ${environment}`
+    ).catch(e => console.error("Notify Error:", e));
+
     return NextResponse.json({
       success: true,
       repo: `AWS Secrets Manager (${environment})`,
@@ -239,6 +251,15 @@ export async function DELETE(req: NextRequest) {
       SecretId: secretName,
       ForceDeleteWithoutRecovery: false, // 7-day recovery window
     }));
+
+    if (secretName) {
+      // Trigger Unified Notifications (non-blocking)
+      notify(
+        auth.userId,
+        "Secret Deleted from AWS",
+        `Removed '${secretName}' from AWS Secrets Manager.`
+      ).catch(e => console.error("Notify Error:", e));
+    }
 
     return NextResponse.json({ success: true, deleted: secretName });
   } catch (error: any) {

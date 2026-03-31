@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
+import { notify } from "@/lib/notifier";
 
 // Netlify env context mapping
 // XtraSecurity env  →  Netlify context
@@ -262,6 +263,14 @@ export async function POST(req: NextRequest) {
       console.error("Audit log failed:", auditErr);
     }
 
+    // Trigger Unified Notifications (non-blocking)
+    notify(
+      auth.userId,
+      "Netlify Sync Complete",
+      `Successfully synced ${syncResults.length} secrets to Netlify site.`,
+      `Site: ${netlifySiteId} | Environment: ${environment}`
+    ).catch(e => console.error("Notify Error:", e));
+
     return NextResponse.json({
       success: true,
       repo: netlifySiteId,
@@ -313,6 +322,14 @@ export async function DELETE(req: NextRequest) {
     );
 
     if (deleteRes.ok || deleteRes.status === 204) {
+      // Trigger Unified Notifications (non-blocking)
+      notify(
+        auth.userId,
+        "Secret Deleted from Netlify",
+        `Removed '${secretName}' from Netlify site.`,
+        `Site: ${netlifySiteId}`
+      ).catch(e => console.error("Notify Error:", e));
+
       return NextResponse.json({ success: true, deleted: secretName });
     }
 
