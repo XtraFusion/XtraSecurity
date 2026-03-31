@@ -1,6 +1,7 @@
 import prisma from "@/lib/db";
 import { randomBytes } from "crypto";
 import { encrypt } from "@/lib/encription";
+import { notify } from "@/lib/notifications/engine";
 
 export class RotationService {
   /**
@@ -99,7 +100,35 @@ export class RotationService {
       console.error("Rotation failed:", err);
       status = "failed";
       error = err.message || "Unknown error";
-      throw err; // Re-throw to caller? Or just log?
+      
+      // Notify Rule Engine
+      try {
+        // Fetch project to get workspaceId
+        const project = await prisma.project.findUnique({
+          where: { id: schedule.secret.projectId },
+          select: { workspaceId: true }
+        });
+
+        await notify({
+          type: "rotation_failed",
+          title: "Secret Rotation Failed",
+          message: `Automatic rotation for "${schedule.secret.key}" failed.`,
+          description: `Error: ${error}. Method: ${schedule.method}.`,
+          severity: "error",
+          workspaceId: project?.workspaceId || "",
+          projectId: schedule.secret.projectId,
+          metadata: { secretId: schedule.secretId, scheduleId },
+          fields: [
+            { label: "Secret Key", value: schedule.secret.key },
+            { label: "Error", value: error },
+            { label: "Next Attempt", value: "Pending manual retry" },
+          ]
+        });
+      } catch (notifErr) {
+        console.error("Failed to trigger notification for rotation failure:", notifErr);
+      }
+      
+      throw err; 
     } finally {
       // 6. Create Audit Log
       await prisma.rotationLog.create({

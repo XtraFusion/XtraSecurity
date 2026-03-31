@@ -3,6 +3,7 @@ import { verifyAuth, AuthSession } from "@/lib/server-auth";
 import { checkRateLimit, Tier } from "@/lib/rate-limit";
 import { logSecurityEvent, SecurityEventLog } from "@/lib/security-logger";
 import { incrementDailyUsage } from "@/lib/usage";
+import { notify } from "@/lib/notifications/engine";
 
 export type SecureHandler = (
     req: NextRequest, 
@@ -142,8 +143,27 @@ export function withSecurity(handler: SecureHandler) {
                         errorMessage: "IP Access Denied",
                         isAnomaly: true
                     });
+
+                    // Notify Rule Engine
+                    if (workspaceIdToCheck || projectIdToCheck) {
+                        await notify({
+                            type: "suspicious_activity",
+                            title: "IP Access Denied",
+                            message: `Unauthorized access attempt from blocked IP: ${ip}`,
+                            description: `Request to ${req.method} ${req.nextUrl.pathname} was rejected due to IP restrictions.`,
+                            severity: "warning",
+                            workspaceId: workspaceIdToCheck || "",
+                            projectId: projectIdToCheck || undefined,
+                            metadata: { ip, method: req.method, endpoint: req.nextUrl.pathname },
+                            fields: [
+                                { label: "IP Address", value: ip },
+                                { label: "Endpoint", value: req.nextUrl.pathname },
+                                { label: "Action", value: "Blocked" },
+                            ]
+                        });
+                    }
                 } catch (e) {
-                    // Ignore logger errors if DB is missing
+                    // Ignore logger/notify errors if DB is missing
                 }
                 return createIpBlockedResponse(ip);
             }
@@ -166,6 +186,19 @@ export function withSecurity(handler: SecureHandler) {
                         errorMessage: "2FA Required",
                         isAnomaly: false
                     });
+
+                    // Notify Rule Engine (Optional: Only if multiple failures?)
+                    // For now, just log to Audit
+                    if (workspaceIdToCheck || projectIdToCheck) {
+                        await notify({
+                            type: "access_denied",
+                            title: "MFA Required for Access",
+                            message: `Access to protected resource attempted without MFA by ${session.email}`,
+                            severity: "info",
+                            workspaceId: workspaceIdToCheck || "",
+                            projectId: projectIdToCheck || undefined,
+                        });
+                    }
                 } catch (e) {}
 
                 return new NextResponse(JSON.stringify({ 

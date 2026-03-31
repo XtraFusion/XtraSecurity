@@ -9,6 +9,7 @@ import "./globals.css"
 import Provider from "@/lib/provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Toaster as CustomToaster } from "@/components/ui/toaster"
+import { triggerLazyRotation } from "@/lib/rotation/lazy-cron";
 
 export const metadata: Metadata = {
   ...defaultMetadata,
@@ -25,11 +26,15 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode
 }>) {
+  // Trigger Automated Secret Rotation (Lazy Cron)
+  // This is throttled to 15 mins and runs in the background.
+  triggerLazyRotation().catch(console.error);
+  
   return (
     <html lang="en" suppressHydrationWarning>
       <head>

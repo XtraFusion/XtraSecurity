@@ -188,6 +188,11 @@ export type JitLink = $Result.DefaultSelection<Prisma.$JitLinkPayload>
  * 
  */
 export type DailyUsage = $Result.DefaultSelection<Prisma.$DailyUsagePayload>
+/**
+ * Model GlobalState
+ * 
+ */
+export type GlobalState = $Result.DefaultSelection<Prisma.$GlobalStatePayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -623,6 +628,16 @@ export class PrismaClient<
     * ```
     */
   get dailyUsage(): Prisma.DailyUsageDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.globalState`: Exposes CRUD operations for the **GlobalState** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more GlobalStates
+    * const globalStates = await prisma.globalState.findMany()
+    * ```
+    */
+  get globalState(): Prisma.GlobalStateDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1097,7 +1112,8 @@ export namespace Prisma {
     ServiceAccount: 'ServiceAccount',
     AccessReview: 'AccessReview',
     JitLink: 'JitLink',
-    DailyUsage: 'DailyUsage'
+    DailyUsage: 'DailyUsage',
+    GlobalState: 'GlobalState'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1116,7 +1132,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "dailyUsage"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "dailyUsage" | "globalState"
       txIsolationLevel: never
     }
     model: {
@@ -3710,6 +3726,80 @@ export namespace Prisma {
           }
         }
       }
+      GlobalState: {
+        payload: Prisma.$GlobalStatePayload<ExtArgs>
+        fields: Prisma.GlobalStateFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.GlobalStateFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.GlobalStateFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          findFirst: {
+            args: Prisma.GlobalStateFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.GlobalStateFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          findMany: {
+            args: Prisma.GlobalStateFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>[]
+          }
+          create: {
+            args: Prisma.GlobalStateCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          createMany: {
+            args: Prisma.GlobalStateCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.GlobalStateDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          update: {
+            args: Prisma.GlobalStateUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          deleteMany: {
+            args: Prisma.GlobalStateDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.GlobalStateUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.GlobalStateUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$GlobalStatePayload>
+          }
+          aggregate: {
+            args: Prisma.GlobalStateAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateGlobalState>
+          }
+          groupBy: {
+            args: Prisma.GlobalStateGroupByArgs<ExtArgs>
+            result: $Utils.Optional<GlobalStateGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.GlobalStateFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.GlobalStateAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.GlobalStateCountArgs<ExtArgs>
+            result: $Utils.Optional<GlobalStateCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3824,6 +3914,7 @@ export namespace Prisma {
     accessReview?: AccessReviewOmit
     jitLink?: JitLinkOmit
     dailyUsage?: DailyUsageOmit
+    globalState?: GlobalStateOmit
   }
 
   /* Types for Logging */
@@ -41738,6 +41829,934 @@ export namespace Prisma {
 
 
   /**
+   * Model GlobalState
+   */
+
+  export type AggregateGlobalState = {
+    _count: GlobalStateCountAggregateOutputType | null
+    _min: GlobalStateMinAggregateOutputType | null
+    _max: GlobalStateMaxAggregateOutputType | null
+  }
+
+  export type GlobalStateMinAggregateOutputType = {
+    id: string | null
+    key: string | null
+    lastCheckedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GlobalStateMaxAggregateOutputType = {
+    id: string | null
+    key: string | null
+    lastCheckedAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type GlobalStateCountAggregateOutputType = {
+    id: number
+    key: number
+    value: number
+    lastCheckedAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type GlobalStateMinAggregateInputType = {
+    id?: true
+    key?: true
+    lastCheckedAt?: true
+    updatedAt?: true
+  }
+
+  export type GlobalStateMaxAggregateInputType = {
+    id?: true
+    key?: true
+    lastCheckedAt?: true
+    updatedAt?: true
+  }
+
+  export type GlobalStateCountAggregateInputType = {
+    id?: true
+    key?: true
+    value?: true
+    lastCheckedAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type GlobalStateAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GlobalState to aggregate.
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GlobalStates to fetch.
+     */
+    orderBy?: GlobalStateOrderByWithRelationInput | GlobalStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: GlobalStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GlobalStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GlobalStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned GlobalStates
+    **/
+    _count?: true | GlobalStateCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: GlobalStateMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: GlobalStateMaxAggregateInputType
+  }
+
+  export type GetGlobalStateAggregateType<T extends GlobalStateAggregateArgs> = {
+        [P in keyof T & keyof AggregateGlobalState]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateGlobalState[P]>
+      : GetScalarType<T[P], AggregateGlobalState[P]>
+  }
+
+
+
+
+  export type GlobalStateGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: GlobalStateWhereInput
+    orderBy?: GlobalStateOrderByWithAggregationInput | GlobalStateOrderByWithAggregationInput[]
+    by: GlobalStateScalarFieldEnum[] | GlobalStateScalarFieldEnum
+    having?: GlobalStateScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: GlobalStateCountAggregateInputType | true
+    _min?: GlobalStateMinAggregateInputType
+    _max?: GlobalStateMaxAggregateInputType
+  }
+
+  export type GlobalStateGroupByOutputType = {
+    id: string
+    key: string
+    value: JsonValue | null
+    lastCheckedAt: Date
+    updatedAt: Date
+    _count: GlobalStateCountAggregateOutputType | null
+    _min: GlobalStateMinAggregateOutputType | null
+    _max: GlobalStateMaxAggregateOutputType | null
+  }
+
+  type GetGlobalStateGroupByPayload<T extends GlobalStateGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<GlobalStateGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof GlobalStateGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], GlobalStateGroupByOutputType[P]>
+            : GetScalarType<T[P], GlobalStateGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type GlobalStateSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    lastCheckedAt?: boolean
+    updatedAt?: boolean
+  }, ExtArgs["result"]["globalState"]>
+
+
+
+  export type GlobalStateSelectScalar = {
+    id?: boolean
+    key?: boolean
+    value?: boolean
+    lastCheckedAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type GlobalStateOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "lastCheckedAt" | "updatedAt", ExtArgs["result"]["globalState"]>
+
+  export type $GlobalStatePayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "GlobalState"
+    objects: {}
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      key: string
+      value: Prisma.JsonValue | null
+      lastCheckedAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["globalState"]>
+    composites: {}
+  }
+
+  type GlobalStateGetPayload<S extends boolean | null | undefined | GlobalStateDefaultArgs> = $Result.GetResult<Prisma.$GlobalStatePayload, S>
+
+  type GlobalStateCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<GlobalStateFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: GlobalStateCountAggregateInputType | true
+    }
+
+  export interface GlobalStateDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['GlobalState'], meta: { name: 'GlobalState' } }
+    /**
+     * Find zero or one GlobalState that matches the filter.
+     * @param {GlobalStateFindUniqueArgs} args - Arguments to find a GlobalState
+     * @example
+     * // Get one GlobalState
+     * const globalState = await prisma.globalState.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends GlobalStateFindUniqueArgs>(args: SelectSubset<T, GlobalStateFindUniqueArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one GlobalState that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {GlobalStateFindUniqueOrThrowArgs} args - Arguments to find a GlobalState
+     * @example
+     * // Get one GlobalState
+     * const globalState = await prisma.globalState.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends GlobalStateFindUniqueOrThrowArgs>(args: SelectSubset<T, GlobalStateFindUniqueOrThrowArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first GlobalState that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateFindFirstArgs} args - Arguments to find a GlobalState
+     * @example
+     * // Get one GlobalState
+     * const globalState = await prisma.globalState.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends GlobalStateFindFirstArgs>(args?: SelectSubset<T, GlobalStateFindFirstArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first GlobalState that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateFindFirstOrThrowArgs} args - Arguments to find a GlobalState
+     * @example
+     * // Get one GlobalState
+     * const globalState = await prisma.globalState.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends GlobalStateFindFirstOrThrowArgs>(args?: SelectSubset<T, GlobalStateFindFirstOrThrowArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more GlobalStates that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all GlobalStates
+     * const globalStates = await prisma.globalState.findMany()
+     * 
+     * // Get first 10 GlobalStates
+     * const globalStates = await prisma.globalState.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const globalStateWithIdOnly = await prisma.globalState.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends GlobalStateFindManyArgs>(args?: SelectSubset<T, GlobalStateFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a GlobalState.
+     * @param {GlobalStateCreateArgs} args - Arguments to create a GlobalState.
+     * @example
+     * // Create one GlobalState
+     * const GlobalState = await prisma.globalState.create({
+     *   data: {
+     *     // ... data to create a GlobalState
+     *   }
+     * })
+     * 
+     */
+    create<T extends GlobalStateCreateArgs>(args: SelectSubset<T, GlobalStateCreateArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many GlobalStates.
+     * @param {GlobalStateCreateManyArgs} args - Arguments to create many GlobalStates.
+     * @example
+     * // Create many GlobalStates
+     * const globalState = await prisma.globalState.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends GlobalStateCreateManyArgs>(args?: SelectSubset<T, GlobalStateCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a GlobalState.
+     * @param {GlobalStateDeleteArgs} args - Arguments to delete one GlobalState.
+     * @example
+     * // Delete one GlobalState
+     * const GlobalState = await prisma.globalState.delete({
+     *   where: {
+     *     // ... filter to delete one GlobalState
+     *   }
+     * })
+     * 
+     */
+    delete<T extends GlobalStateDeleteArgs>(args: SelectSubset<T, GlobalStateDeleteArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one GlobalState.
+     * @param {GlobalStateUpdateArgs} args - Arguments to update one GlobalState.
+     * @example
+     * // Update one GlobalState
+     * const globalState = await prisma.globalState.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends GlobalStateUpdateArgs>(args: SelectSubset<T, GlobalStateUpdateArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more GlobalStates.
+     * @param {GlobalStateDeleteManyArgs} args - Arguments to filter GlobalStates to delete.
+     * @example
+     * // Delete a few GlobalStates
+     * const { count } = await prisma.globalState.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends GlobalStateDeleteManyArgs>(args?: SelectSubset<T, GlobalStateDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more GlobalStates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many GlobalStates
+     * const globalState = await prisma.globalState.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends GlobalStateUpdateManyArgs>(args: SelectSubset<T, GlobalStateUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one GlobalState.
+     * @param {GlobalStateUpsertArgs} args - Arguments to update or create a GlobalState.
+     * @example
+     * // Update or create a GlobalState
+     * const globalState = await prisma.globalState.upsert({
+     *   create: {
+     *     // ... data to create a GlobalState
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the GlobalState we want to update
+     *   }
+     * })
+     */
+    upsert<T extends GlobalStateUpsertArgs>(args: SelectSubset<T, GlobalStateUpsertArgs<ExtArgs>>): Prisma__GlobalStateClient<$Result.GetResult<Prisma.$GlobalStatePayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more GlobalStates that matches the filter.
+     * @param {GlobalStateFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const globalState = await prisma.globalState.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: GlobalStateFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a GlobalState.
+     * @param {GlobalStateAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const globalState = await prisma.globalState.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: GlobalStateAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of GlobalStates.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateCountArgs} args - Arguments to filter GlobalStates to count.
+     * @example
+     * // Count the number of GlobalStates
+     * const count = await prisma.globalState.count({
+     *   where: {
+     *     // ... the filter for the GlobalStates we want to count
+     *   }
+     * })
+    **/
+    count<T extends GlobalStateCountArgs>(
+      args?: Subset<T, GlobalStateCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], GlobalStateCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a GlobalState.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends GlobalStateAggregateArgs>(args: Subset<T, GlobalStateAggregateArgs>): Prisma.PrismaPromise<GetGlobalStateAggregateType<T>>
+
+    /**
+     * Group by GlobalState.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {GlobalStateGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends GlobalStateGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: GlobalStateGroupByArgs['orderBy'] }
+        : { orderBy?: GlobalStateGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, GlobalStateGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetGlobalStateGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the GlobalState model
+   */
+  readonly fields: GlobalStateFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for GlobalState.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__GlobalStateClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the GlobalState model
+   */
+  interface GlobalStateFieldRefs {
+    readonly id: FieldRef<"GlobalState", 'String'>
+    readonly key: FieldRef<"GlobalState", 'String'>
+    readonly value: FieldRef<"GlobalState", 'Json'>
+    readonly lastCheckedAt: FieldRef<"GlobalState", 'DateTime'>
+    readonly updatedAt: FieldRef<"GlobalState", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * GlobalState findUnique
+   */
+  export type GlobalStateFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter, which GlobalState to fetch.
+     */
+    where: GlobalStateWhereUniqueInput
+  }
+
+  /**
+   * GlobalState findUniqueOrThrow
+   */
+  export type GlobalStateFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter, which GlobalState to fetch.
+     */
+    where: GlobalStateWhereUniqueInput
+  }
+
+  /**
+   * GlobalState findFirst
+   */
+  export type GlobalStateFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter, which GlobalState to fetch.
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GlobalStates to fetch.
+     */
+    orderBy?: GlobalStateOrderByWithRelationInput | GlobalStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GlobalStates.
+     */
+    cursor?: GlobalStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GlobalStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GlobalStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GlobalStates.
+     */
+    distinct?: GlobalStateScalarFieldEnum | GlobalStateScalarFieldEnum[]
+  }
+
+  /**
+   * GlobalState findFirstOrThrow
+   */
+  export type GlobalStateFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter, which GlobalState to fetch.
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GlobalStates to fetch.
+     */
+    orderBy?: GlobalStateOrderByWithRelationInput | GlobalStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for GlobalStates.
+     */
+    cursor?: GlobalStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GlobalStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GlobalStates.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of GlobalStates.
+     */
+    distinct?: GlobalStateScalarFieldEnum | GlobalStateScalarFieldEnum[]
+  }
+
+  /**
+   * GlobalState findMany
+   */
+  export type GlobalStateFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter, which GlobalStates to fetch.
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of GlobalStates to fetch.
+     */
+    orderBy?: GlobalStateOrderByWithRelationInput | GlobalStateOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing GlobalStates.
+     */
+    cursor?: GlobalStateWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` GlobalStates from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` GlobalStates.
+     */
+    skip?: number
+    distinct?: GlobalStateScalarFieldEnum | GlobalStateScalarFieldEnum[]
+  }
+
+  /**
+   * GlobalState create
+   */
+  export type GlobalStateCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * The data needed to create a GlobalState.
+     */
+    data: XOR<GlobalStateCreateInput, GlobalStateUncheckedCreateInput>
+  }
+
+  /**
+   * GlobalState createMany
+   */
+  export type GlobalStateCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many GlobalStates.
+     */
+    data: GlobalStateCreateManyInput | GlobalStateCreateManyInput[]
+  }
+
+  /**
+   * GlobalState update
+   */
+  export type GlobalStateUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * The data needed to update a GlobalState.
+     */
+    data: XOR<GlobalStateUpdateInput, GlobalStateUncheckedUpdateInput>
+    /**
+     * Choose, which GlobalState to update.
+     */
+    where: GlobalStateWhereUniqueInput
+  }
+
+  /**
+   * GlobalState updateMany
+   */
+  export type GlobalStateUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update GlobalStates.
+     */
+    data: XOR<GlobalStateUpdateManyMutationInput, GlobalStateUncheckedUpdateManyInput>
+    /**
+     * Filter which GlobalStates to update
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * Limit how many GlobalStates to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * GlobalState upsert
+   */
+  export type GlobalStateUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * The filter to search for the GlobalState to update in case it exists.
+     */
+    where: GlobalStateWhereUniqueInput
+    /**
+     * In case the GlobalState found by the `where` argument doesn't exist, create a new GlobalState with this data.
+     */
+    create: XOR<GlobalStateCreateInput, GlobalStateUncheckedCreateInput>
+    /**
+     * In case the GlobalState was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<GlobalStateUpdateInput, GlobalStateUncheckedUpdateInput>
+  }
+
+  /**
+   * GlobalState delete
+   */
+  export type GlobalStateDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+    /**
+     * Filter which GlobalState to delete.
+     */
+    where: GlobalStateWhereUniqueInput
+  }
+
+  /**
+   * GlobalState deleteMany
+   */
+  export type GlobalStateDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which GlobalStates to delete
+     */
+    where?: GlobalStateWhereInput
+    /**
+     * Limit how many GlobalStates to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * GlobalState findRaw
+   */
+  export type GlobalStateFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * GlobalState aggregateRaw
+   */
+  export type GlobalStateAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * GlobalState without action
+   */
+  export type GlobalStateDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the GlobalState
+     */
+    select?: GlobalStateSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the GlobalState
+     */
+    omit?: GlobalStateOmit<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -42288,6 +43307,17 @@ export namespace Prisma {
   };
 
   export type DailyUsageScalarFieldEnum = (typeof DailyUsageScalarFieldEnum)[keyof typeof DailyUsageScalarFieldEnum]
+
+
+  export const GlobalStateScalarFieldEnum: {
+    id: 'id',
+    key: 'key',
+    value: 'value',
+    lastCheckedAt: 'lastCheckedAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type GlobalStateScalarFieldEnum = (typeof GlobalStateScalarFieldEnum)[keyof typeof GlobalStateScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -45282,6 +46312,58 @@ export namespace Prisma {
     date?: StringWithAggregatesFilter<"DailyUsage"> | string
     count?: IntWithAggregatesFilter<"DailyUsage"> | number
     updatedAt?: DateTimeWithAggregatesFilter<"DailyUsage"> | Date | string
+  }
+
+  export type GlobalStateWhereInput = {
+    AND?: GlobalStateWhereInput | GlobalStateWhereInput[]
+    OR?: GlobalStateWhereInput[]
+    NOT?: GlobalStateWhereInput | GlobalStateWhereInput[]
+    id?: StringFilter<"GlobalState"> | string
+    key?: StringFilter<"GlobalState"> | string
+    value?: JsonNullableFilter<"GlobalState">
+    lastCheckedAt?: DateTimeFilter<"GlobalState"> | Date | string
+    updatedAt?: DateTimeFilter<"GlobalState"> | Date | string
+  }
+
+  export type GlobalStateOrderByWithRelationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GlobalStateWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    key?: string
+    AND?: GlobalStateWhereInput | GlobalStateWhereInput[]
+    OR?: GlobalStateWhereInput[]
+    NOT?: GlobalStateWhereInput | GlobalStateWhereInput[]
+    value?: JsonNullableFilter<"GlobalState">
+    lastCheckedAt?: DateTimeFilter<"GlobalState"> | Date | string
+    updatedAt?: DateTimeFilter<"GlobalState"> | Date | string
+  }, "id" | "key">
+
+  export type GlobalStateOrderByWithAggregationInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: GlobalStateCountOrderByAggregateInput
+    _max?: GlobalStateMaxOrderByAggregateInput
+    _min?: GlobalStateMinOrderByAggregateInput
+  }
+
+  export type GlobalStateScalarWhereWithAggregatesInput = {
+    AND?: GlobalStateScalarWhereWithAggregatesInput | GlobalStateScalarWhereWithAggregatesInput[]
+    OR?: GlobalStateScalarWhereWithAggregatesInput[]
+    NOT?: GlobalStateScalarWhereWithAggregatesInput | GlobalStateScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"GlobalState"> | string
+    key?: StringWithAggregatesFilter<"GlobalState"> | string
+    value?: JsonNullableWithAggregatesFilter<"GlobalState">
+    lastCheckedAt?: DateTimeWithAggregatesFilter<"GlobalState"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"GlobalState"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -48364,6 +49446,58 @@ export namespace Prisma {
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
+  export type GlobalStateCreateInput = {
+    id?: string
+    key: string
+    value?: InputJsonValue | null
+    lastCheckedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GlobalStateUncheckedCreateInput = {
+    id?: string
+    key: string
+    value?: InputJsonValue | null
+    lastCheckedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GlobalStateUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: InputJsonValue | InputJsonValue | null
+    lastCheckedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GlobalStateUncheckedUpdateInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: InputJsonValue | InputJsonValue | null
+    lastCheckedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GlobalStateCreateManyInput = {
+    id?: string
+    key: string
+    value?: InputJsonValue | null
+    lastCheckedAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type GlobalStateUpdateManyMutationInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: InputJsonValue | InputJsonValue | null
+    lastCheckedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type GlobalStateUncheckedUpdateManyInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: InputJsonValue | InputJsonValue | null
+    lastCheckedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
   export type StringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -50353,6 +51487,28 @@ export namespace Prisma {
 
   export type DailyUsageSumOrderByAggregateInput = {
     count?: SortOrder
+  }
+
+  export type GlobalStateCountOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    value?: SortOrder
+    lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GlobalStateMaxOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type GlobalStateMinOrderByAggregateInput = {
+    id?: SortOrder
+    key?: SortOrder
+    lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type UserCreatemfaBackupCodesInput = {

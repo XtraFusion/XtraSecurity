@@ -640,3 +640,12 @@ model DailyUsage {
 
   @@unique([userId, date])
 }
+
+// GLOBAL STATE FOR SYSTEM TASKS (CRON/THROTTLING)
+model GlobalState {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  key               String   @unique // e.g. "last_rotation_check"
+  value             Json?    // Optional detailed payload
+  lastCheckedAt     DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}

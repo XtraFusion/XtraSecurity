@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { encrypt, decrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
 import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
+import { notify } from "@/lib/notifications/engine";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -231,6 +232,28 @@ export const POST = withSecurity(async (request, context, session) => {
       },
     });
 
+    // Notify Rule Engine
+    try {
+      await notify({
+        type: "secret_change",
+        title: "Secret Created",
+        message: `Secret "${key}" was created by ${session.email}`,
+        description: `New secret added to environment "${environmentType}"`,
+        severity: "info",
+        workspaceId: projectRecord.workspaceId || "",
+        projectId: projectId,
+        branch: branchId,
+        metadata: { key, environmentType, type: type || "API Key" },
+        fields: [
+          { label: "Key", value: key },
+          { label: "Environment", value: environmentType },
+          { label: "Created By", value: session.email },
+        ]
+      });
+    } catch (notifErr) {
+      console.error("Failed to trigger notification for secret creation:", notifErr);
+    }
+
     // Return the secret with decrypted value for frontend display
     return NextResponse.json(
       {
@@ -282,6 +305,7 @@ export const PUT = withSecurity(async (request, context, session) => {
     // Get existing secret to verify project access
     const existingSecret = await prisma.secret.findUnique({
       where: { id },
+      include: { project: true },
     });
 
     if (!existingSecret) {
@@ -355,6 +379,28 @@ export const PUT = withSecurity(async (request, context, session) => {
       data: updateData,
     });
 
+    // Notify Rule Engine
+    try {
+      await notify({
+        type: "secret_change",
+        title: "Secret Updated",
+        message: `Secret "${existingSecret.key}" was updated by ${session.email}`,
+        description: `Modifications made to secret in "${existingSecret.environmentType}"`,
+        severity: "warning",
+        workspaceId: existingSecret.project?.workspaceId || "",
+        projectId: existingSecret.projectId,
+        branch: existingSecret.branchId || undefined,
+        metadata: { key: existingSecret.key, id },
+        fields: [
+          { label: "Key", value: existingSecret.key },
+          { label: "Updated By", value: session.email },
+          { label: "Environment", value: existingSecret.environmentType },
+        ]
+      });
+    } catch (notifErr) {
+      console.error("Failed to trigger notification for secret update:", notifErr);
+    }
+
     return NextResponse.json(updatedSecret);
   } catch (error: any) {
     console.error("Error updating secret:", error);
@@ -386,6 +432,7 @@ export const DELETE = withSecurity(async (request, context, session) => {
     // Check if secret exists
     const existingSecret = await prisma.secret.findUnique({
       where: { id },
+      include: { project: true },
     });
 
     if (!existingSecret) {
@@ -424,6 +471,28 @@ export const DELETE = withSecurity(async (request, context, session) => {
     await prisma.secret.delete({
       where: { id },
     });
+
+    // Notify Rule Engine
+    try {
+      await notify({
+        type: "secret_change",
+        title: "Secret Deleted",
+        message: `Secret "${existingSecret.key}" was deleted by ${session.email}`,
+        description: `Permanent removal of secret from "${existingSecret.environmentType}"`,
+        severity: "critical",
+        workspaceId: existingSecret.project?.workspaceId || "",
+        projectId: existingSecret.projectId,
+        branch: existingSecret.branchId || undefined,
+        metadata: { key: existingSecret.key },
+        fields: [
+          { label: "Key", value: existingSecret.key },
+          { label: "Deleted By", value: session.email },
+          { label: "Environment", value: existingSecret.environmentType },
+        ]
+      });
+    } catch (notifErr) {
+      console.error("Failed to trigger notification for secret deletion:", notifErr);
+    }
 
     return NextResponse.json(
       { message: "Secret deleted successfully" },
