@@ -145,7 +145,7 @@ function AwsConnectModal({ open, onClose, onConnected, currentRegion }: { open: 
     <Dialog open={open} onOpenChange={v => { if (!v) onClose(); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-[#FF9900] flex items-center justify-center"><CloudLightning className="h-4 w-4 text-white" /></div>Connect AWS Secrets Manager</DialogTitle>
+          <DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-white flex items-center justify-center border shadow-sm p-1"><img src="/aws-logo.svg" alt="AWS" className="h-full w-full object-contain" /></div>Connect AWS Secrets Manager</DialogTitle>
           <DialogDescription>Enter your IAM credentials to sync secrets to AWS Secrets Manager.</DialogDescription>
         </DialogHeader>
         <div className="rounded-lg border bg-muted/30 p-3 text-xs text-muted-foreground space-y-1.5">
@@ -194,7 +194,7 @@ function BitbucketConnectModal({ open, onClose, onConnected }: { open: boolean; 
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><span className="text-[#0052CC] font-bold text-xl">B</span> Bitbucket Connection</DialogTitle><DialogDescription>Connect using an App Password. Recommended permissions: Repositories (Write), Pipelines (Write).</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-white flex items-center justify-center border shadow-sm p-1"><img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className="h-full w-full object-contain" /></div> Bitbucket Connection</DialogTitle><DialogDescription>Connect using an App Password. Recommended permissions: Repositories (Write), Pipelines (Write).</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> How to get an App Password:</p>
@@ -319,7 +319,7 @@ function RailwayConnectModal({ open, onClose, onConnected }: { open: boolean; on
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L4.5 12l7.5-7.5 7.5 7.5-7.5 7.5z"/></svg> Railway Connection</DialogTitle><DialogDescription>Connect using a Personal Access Token.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-[#0B0D0E] flex items-center justify-center p-1"><img src="/railway-color.svg" alt="Railway" className="h-full w-full object-contain" /></div> Railway Connection</DialogTitle><DialogDescription>Connect using a Personal Access Token.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -359,7 +359,7 @@ function FlyConnectModal({ open, onClose, onConnected }: { open: boolean; onClos
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg> Fly.io Connection</DialogTitle><DialogDescription>Connect using a Fly API Token.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-[#4222E9] flex items-center justify-center p-1"><img src="/Fly.io Symbol SVG" alt="Fly.io" className="h-full w-full object-contain" /></div> Fly.io Connection</DialogTitle><DialogDescription>Connect using a Fly API Token.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -399,7 +399,7 @@ function RenderConnectModal({ open, onClose, onConnected }: { open: boolean; onC
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5zm8 14.24l-8 4-8-4V8.76l8-4 8 4v7.48z"/></svg> Render Connection</DialogTitle><DialogDescription>Connect using a Render API Key.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-white border shadow-sm flex items-center justify-center p-1"><img src="/Render Symbol SVG.svg" alt="Render" className="h-full w-full object-contain" /></div> Render Connection</DialogTitle><DialogDescription>Connect using a Render API Key.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -439,7 +439,7 @@ function DOConnectModal({ open, onClose, onConnected }: { open: boolean; onClose
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.12.23-2.18.66-3.14l2.42 1.4c-.05.57-.08 1.15-.08 1.74 0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7c-1.11 0-2.17.26-3.12.72L9.46 3.3C10.26 3.11 11.11 3 12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9z"/><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg> DigitalOcean Connection</DialogTitle><DialogDescription>Connect using a Personal Access Token.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-white border shadow-sm flex items-center justify-center p-1"><img src="/DigitalOcean Holdings Symbol SVG.svg" alt="DigitalOcean" className="h-full w-full object-contain" /></div> DigitalOcean Connection</DialogTitle><DialogDescription>Connect using a Personal Access Token.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -479,7 +479,7 @@ function HerokuConnectModal({ open, onClose, onConnected }: { open: boolean; onC
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="sm:max-w-md">
-        <DialogHeader><DialogTitle className="flex items-center gap-2"><svg viewBox="0 0 24 24" className="h-5 w-5" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M21.447 17.1L12 1L2.553 17.1l1.447 2.4L12 23l8-3.5 1.447-2.4zM5.3 16.5L12 5.1l6.7 11.4-6.7 2.9-6.7-2.9z"/></svg> Heroku Connection</DialogTitle><DialogDescription>Connect using your Heroku API Key.</DialogDescription></DialogHeader>
+        <DialogHeader><DialogTitle className="flex items-center gap-2"><div className="h-7 w-7 rounded-md bg-[#6762A6] flex items-center justify-center p-1"><img src="/Heroku Symbol SVG.svg" alt="Heroku" className="h-full w-full object-contain" /></div> Heroku Connection</DialogTitle><DialogDescription>Connect using your Heroku API Key.</DialogDescription></DialogHeader>
         <div className="space-y-4 py-2">
           <div className="bg-muted/50 p-3 rounded-lg border text-[11px] space-y-2">
             <p className="font-semibold text-muted-foreground flex items-center gap-1.5"><Info className="h-3 w-3" /> Setup Instructions:</p>
@@ -1012,15 +1012,15 @@ export default function IntegrationsPage() {
     if (p === "vercel") return <Triangle className={`${cls} fill-current`} />;
     if (p === "netlify") return <span className="text-[#00C7B7] font-bold text-[10px]">◆</span>;
     if (p === "doppler") return <span className="text-[#6366f1] font-bold text-[10px]">D</span>;
-    if (p === "bitbucket") return <svg viewBox="0 0 24 24" fill="currentColor" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M22.213 2.948c.372 0 .614.323.515.68l-3.033 16.73c-.068.375-.39.642-.77.642H5.074c-.381 0-.704-.267-.772-.642L1.27 3.628c-.1-.357.143-.68.515-.68h20.428zM14.54 15.617l.285-1.904h-4.825l.285 1.904h4.255z"/></svg>;
+    if (p === "bitbucket") return <img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className={cls} />;
     if (p === "gcp") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4"/><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853"/><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05"/><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335"/></svg>;
     if (p === "azure") return <svg viewBox="0 0 24 24" className={cls} xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="#0089D6"/><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="#0089D6" opacity=".1"/><path d="M11.52.53L1.13 11.16s9.9-.17 10.39-11L11.52.53z" fill="#0089D6"/><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="#0072C6"/></svg>;
-    if (p === "railway") return <svg viewBox="0 0 24 24" className={cls} fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L4.5 12l7.5-7.5 7.5 7.5-7.5 7.5z"/></svg>;
-    if (p === "fly") return <svg viewBox="0 0 24 24" className={cls} fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg>;
-    if (p === "render") return <svg viewBox="0 0 24 24" className={cls} fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5zm8 14.24l-8 4-8-4V8.76l8-4 8 4v7.48z"/></svg>;
-    if (p === "digitalocean") return <svg viewBox="0 0 24 24" className={cls} fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.12.23-2.18.66-3.14l2.42 1.4c-.05.57-.08 1.15-.08 1.74 0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7c-1.11 0-2.17.26-3.12.72L9.46 3.3C10.26 3.11 11.11 3 12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9z"/><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>;
-    if (p === "heroku") return <svg viewBox="0 0 24 24" className={cls} fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path d="M21.447 17.1L12 1L2.553 17.1l1.447 2.4L12 23l8-3.5 1.447-2.4zM5.3 16.5L12 5.1l6.7 11.4-6.7 2.9-6.7-2.9z"/></svg>;
-    return <CloudLightning className={`${cls} text-[#FF9900]`} />;
+    if (p === "railway") return <img src="/railway-color.svg" alt="Railway" className={cls} />;
+    if (p === "fly") return <img src="/Fly.io Symbol SVG" alt="Fly.io" className={cls} />;
+    if (p === "render") return <img src="/Render Symbol SVG.svg" alt="Render" className={cls} />;
+    if (p === "digitalocean") return <img src="/DigitalOcean Holdings Symbol SVG.svg" alt="DigitalOcean" className={cls} />;
+    if (p === "heroku") return <img src="/Heroku Symbol SVG.svg" alt="Heroku" className={cls} />;
+    return <img src="/aws-logo.svg" alt="AWS" className={cls} />;
   };
 
   const detailText: Record<SyncProvider, string> = { github: "Pushed to GitHub Actions", gitlab: "Pushed to GitLab CI/CD", vercel: "Pushed to Vercel Environment", netlify: "Pushed to Netlify Site", aws: "Pushed to AWS Secrets Manager", doppler: "Pushed to Doppler Config", bitbucket: "Pushed to Bitbucket Repository Variables", gcp: "Pushed to Google Cloud Secret Manager", azure: "Pushed to Azure Key Vault", railway: "Pushed to Railway Environment Variables", fly: "Pushed to Fly.io App Secrets", render: "Pushed to Render Environment Variables", digitalocean: "Pushed to DigitalOcean App Platform", heroku: "Pushed to Heroku Config Vars", slack: "Sent to Slack", discord: "Sent to Discord" };
@@ -1039,16 +1039,16 @@ export default function IntegrationsPage() {
           <ConnectionCard name="GitLab" icon={<Gitlab className="h-5 w-5 text-white" />} iconBg="bg-[#FC6D26]" status={gitlabStatus} onConnect={() => window.location.href = gitlabStatus?.authUrl || "#"} onDisconnect={() => disconnect("gitlab")} />
           <ConnectionCard name="Vercel" icon={<Triangle className="h-4 w-4 text-white fill-white" />} iconBg="bg-black" status={vercelStatus} onConnect={() => setVercelModal(true)} onDisconnect={() => disconnect("vercel")} tokenBased />
           <ConnectionCard name="Netlify" icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="white"><path d="M16.934 8.219a4.467 4.467 0 0 0-3.205-3.197l-.812 2.568.013.04 3.204 3.205.823-2.571-.023-.045zm-4.148-3.56a4.467 4.467 0 0 0-4.728 1.07L9.92 7.59l3.678-2.93h-.812zm-5.444 1.794a4.466 4.466 0 0 0-1.07 4.727l2.57-.812-1.5-3.915zm-.705 5.452a4.467 4.467 0 0 0 3.197 3.205l.812-2.568-.013-.04-3.197-3.197-.822 2.572.023.028zm4.15 3.561a4.467 4.467 0 0 0 4.727-1.07l-1.862-1.862-3.678 2.932h.813zm5.443-1.795a4.466 4.466 0 0 0 1.07-4.727l-2.57.812 1.5 3.915z" /></svg>} iconBg="bg-[#00C7B7]" status={netlifyStatus} onConnect={() => setNetlifyModal(true)} onDisconnect={() => disconnect("netlify")} tokenBased />
-          <ConnectionCard name="AWS" icon={<CloudLightning className="h-4 w-4 text-white" />} iconBg="bg-[#FF9900]" status={awsStatus} onConnect={() => setAwsModal(true)} onDisconnect={() => disconnect("aws")} onEdit={() => setAwsModal(true)} tokenBased />
+          <ConnectionCard name="AWS" icon={<img src="/aws-logo.svg" alt="AWS" className="h-6 w-6" />} iconBg="bg-white" status={awsStatus} onConnect={() => setAwsModal(true)} onDisconnect={() => disconnect("aws")} onEdit={() => setAwsModal(true)} tokenBased />
           <ConnectionCard name="Doppler" icon={<span className="text-white font-bold text-sm">D</span>} iconBg="bg-[#6366f1]" status={dopplerStatus} onConnect={() => setDopplerModal(true)} onDisconnect={() => disconnect("doppler")} tokenBased />
-          <ConnectionCard name="Bitbucket" icon={<svg viewBox="0 0 24 24" fill="white" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M22.213 2.948c.372 0 .614.323.515.68l-3.033 16.73c-.068.375-.39.642-.77.642H5.074c-.381 0-.704-.267-.772-.642L1.27 3.628c-.1-.357.143-.68.515-.68h20.428zM14.54 15.617l.285-1.904h-4.825l.285 1.904h4.255z"/></svg>} iconBg="bg-[#0052CC]" status={bitbucketStatus} onConnect={() => setBitbucketModal(true)} onDisconnect={() => disconnect("bitbucket")} tokenBased />
+          <ConnectionCard name="Bitbucket" icon={<img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className="h-6 w-6" />} iconBg="bg-white shadow-inner" status={bitbucketStatus} onConnect={() => setBitbucketModal(true)} onDisconnect={() => disconnect("bitbucket")} tokenBased />
           <ConnectionCard name="Google Cloud" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4"/><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853"/><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05"/><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335"/></svg>} iconBg="bg-white border" status={gcpStatus} onConnect={() => setGcpModal(true)} onDisconnect={() => disconnect("gcp")} tokenBased />
           <ConnectionCard name="Azure" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="white" opacity=".9"/><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="white" opacity=".2"/><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="white" opacity=".4"/></svg>} iconBg="bg-[#0089D6]" status={azureStatus} onConnect={() => setAzureModal(true)} onDisconnect={() => disconnect("azure")} tokenBased />
-          <ConnectionCard name="Railway" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 12l10 10 10-10L12 2zm0 17.5L4.5 12l7.5-7.5 7.5 7.5-7.5 7.5z"/></svg>} iconBg="bg-[#0B0D0E]" status={railwayStatus} onConnect={() => setRailwayModal(true)} onDisconnect={() => disconnect("railway")} tokenBased />
-          <ConnectionCard name="Fly.io" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71L12 2z"/></svg>} iconBg="bg-[#4222E9]" status={flyStatus} onConnect={() => setFlyModal(true)} onDisconnect={() => disconnect("fly")} tokenBased />
-          <ConnectionCard name="Render" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L2 7v10l10 5 10-5V7l-10-5zm8 14.24l-8 4-8-4V8.76l8-4 8 4v7.48z"/></svg>} iconBg="bg-[#46E3B7]" status={renderStatus} onConnect={() => setRenderModal(true)} onDisconnect={() => disconnect("render")} tokenBased />
-          <ConnectionCard name="DigitalOcean" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8 0-1.12.23-2.18.66-3.14l2.42 1.4c-.05.57-.08 1.15-.08 1.74 0 3.86 3.14 7 7 7s7-3.14 7-7-3.14-7-7-7c-1.11 0-2.17.26-3.12.72L9.46 3.3C10.26 3.11 11.11 3 12 3c4.97 0 9 4.03 9 9s-4.03 9-9 9z"/><path d="M12 7c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5zm0 8c-1.65 0-3-1.35-3-3s1.35-3 3-3 3 1.35 3 3-1.35 3-3 3z"/></svg>} iconBg="bg-[#008bcf]" status={doStatus} onConnect={() => setDoModal(true)} onDisconnect={() => disconnect("digitalocean")} tokenBased />
-          <ConnectionCard name="Heroku" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M21.447 17.1L12 1L2.553 17.1l1.447 2.4L12 23l8-3.5 1.447-2.4zM5.3 16.5L12 5.1l6.7 11.4-6.7 2.9-6.7-2.9z"/></svg>} iconBg="bg-[#6762A6]" status={herokuStatus} onConnect={() => setHerokuModal(true)} onDisconnect={() => disconnect("heroku")} tokenBased />
+          <ConnectionCard name="Railway" icon={<img src="/railway-color.svg" alt="Railway" className="h-6 w-6" />} iconBg="bg-[#0B0D0E]" status={railwayStatus} onConnect={() => setRailwayModal(true)} onDisconnect={() => disconnect("railway")} tokenBased />
+          <ConnectionCard name="Fly.io" icon={<img src="/Fly.io Symbol SVG" alt="Fly.io" className="h-6 w-6" />} iconBg="bg-[#4222E9]" status={flyStatus} onConnect={() => setFlyModal(true)} onDisconnect={() => disconnect("fly")} tokenBased />
+          <ConnectionCard name="Render" icon={<img src="/Render Symbol SVG.svg" alt="Render" className="h-6 w-6" />} iconBg="bg-white border shadow-sm" status={renderStatus} onConnect={() => setRenderModal(true)} onDisconnect={() => disconnect("render")} tokenBased />
+          <ConnectionCard name="DigitalOcean" icon={<img src="/DigitalOcean Holdings Symbol SVG.svg" alt="DigitalOcean" className="h-6 w-6" />} iconBg="bg-white" status={doStatus} onConnect={() => setDoModal(true)} onDisconnect={() => disconnect("digitalocean")} tokenBased />
+          <ConnectionCard name="Heroku" icon={<img src="/Heroku Symbol SVG.svg" alt="Heroku" className="h-6 w-6" />} iconBg="bg-[#6762A6]" status={herokuStatus} onConnect={() => setHerokuModal(true)} onDisconnect={() => disconnect("heroku")} tokenBased />
         </div>
 
         {/* Notifications Section */}
