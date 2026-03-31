@@ -20,11 +20,10 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // 1. Fetch connected integrations for the workspace
-    // Note: Integrations are currently linked via 'createdBy' email
+    // 1. Fetch connected integrations for the user
     const integrations = await prisma.integration.findMany({
       where: { 
-        createdBy: session.user.email || ""
+        userId: (session.user as any).id
       }
     });
 
@@ -69,11 +68,11 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       integrations: integrations.map(i => ({
         id: i.id,
-        name: i.name,
-        type: i.type,
+        name: i.username || i.provider,
+        type: i.provider,
         status: i.status || "connected",
         enabled: i.enabled,
-        lastSync: syncLogs.find(log => log.action === `${i.type}_sync`)?.timestamp || null
+        lastSync: syncLogs.find(log => log.action === `${i.provider}_sync`)?.timestamp || null
       })),
       history: syncLogs.map(log => ({
         id: log.id,
