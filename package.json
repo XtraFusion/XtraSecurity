@@ -11,6 +11,7 @@
     "test:watch": "jest --watch"
   },
   "dependencies": {
+    "@aws-sdk/client-secrets-manager": "^3.1020.0",
     "@google/generative-ai": "^0.24.1",
     "@hookform/resolvers": "^3.10.0",
     "@next-auth/prisma-adapter": "^1.0.7",
