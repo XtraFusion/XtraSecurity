@@ -54,3 +54,31 @@ export async function PATCH(req: Request) {
     return NextResponse.json({ error: "Failed to update" }, { status: 500 });
   }
 }
+
+export async function DELETE(req: Request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const url = new URL(req.url);
+    const id = url.searchParams.get("id");
+    if (!id) return NextResponse.json({ error: "Notification id required" }, { status: 400 });
+
+    // Verify ownership before deleting
+    const notification = await prisma.notification.findUnique({ where: { id } });
+    if (!notification) return NextResponse.json({ error: "Notification not found" }, { status: 404 });
+
+    if (notification.userId !== session.user.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+    }
+
+    await prisma.notification.delete({ where: { id } });
+
+    return NextResponse.json({ success: true }, { status: 200 });
+  } catch (error) {
+    console.error("Error deleting notification:", error);
+    return NextResponse.json({ error: "Failed to delete" }, { status: 500 });
+  }
+}

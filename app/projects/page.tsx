@@ -298,10 +298,10 @@ export default function ProjectsPage() {
                 <CardHeader className={viewMode === "list" ? "flex-1 pb-6" : "pb-4"}>
                   <div className="flex justify-between items-start">
                     <div className="space-y-1.5 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <CardTitle className="text-lg font-semibold truncate">{project.name}</CardTitle>
-                        {project.status === 'archived' && <Badge variant="secondary" className="text-[10px]">Archived</Badge>}
-                        {project.isBlocked && <Badge variant="destructive" className="text-[10px]">Blocked</Badge>}
+                      <div className="flex items-center gap-2 min-w-0">
+                        <CardTitle className="text-lg font-semibold truncate min-w-0">{project.name}</CardTitle>
+                        {project.status === 'archived' && <Badge variant="secondary" className="text-[10px] shrink-0">Archived</Badge>}
+                        {project.isBlocked && <Badge variant="destructive" className="text-[10px] shrink-0">Blocked</Badge>}
                       </div>
                       <CardDescription className="line-clamp-2 min-h-[40px] text-sm">
                         {project.description || "No description provided for this project."}

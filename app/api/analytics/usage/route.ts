@@ -12,24 +12,27 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
+    const days = parseInt(searchParams.get("days") || "30", 10);
 
     if (!workspaceId) {
        return NextResponse.json({ error: "Workspace ID required" }, { status: 400 });
     }
 
     const now = new Date();
-    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
     // 1. Fetch SecurityEvents for secret fetches in this workspace
-    // We filter by endpoint starting with /api/secret and successful status
     const events = await prisma.securityEvent.findMany({
       where: {
         workspaceId,
         endpoint: { startsWith: "/api/secret" },
         statusCode: 200,
-        timestamp: { gte: thirtyDaysAgo }
+        timestamp: { gte: startDate }
       }
     });
+
+    // We also need to fix the timeline generation logic to use the dynamic 'days' value
+
 
     // 2. Aggregate Top Projects
     const projectCounts: Record<string, number> = {};
@@ -64,9 +67,9 @@ export async function GET(req: NextRequest) {
       .sort((a, b) => b.count - a.count)
       .slice(0, 10);
 
-    // 4. Usage Timeline (30 days)
+    // 4. Usage Timeline (Dynamic duration)
     const timelineMap: Record<string, number> = {};
-    for (let i = 0; i < 30; i++) {
+    for (let i = 0; i < days; i++) {
         const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
         const key = d.toISOString().split('T')[0];
         timelineMap[key] = 0;

@@ -16,10 +16,16 @@ export async function GET(req: NextRequest) {
     const mode = url.searchParams.get("mode") || "my"; // "my" requests or "pending" approvals
     const workspaceId = url.searchParams.get("workspaceId");
 
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId || "");
+
     const where: any = {};
 
     if (mode === "pending") {
-        // Show pending requests for admin — scoped to workspace
+        // Only admins can see pending approvals
+        if (!role || (role !== "owner" && role !== "admin")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
         where.status = "pending";
         if (workspaceId) {
             where.OR = [
@@ -27,9 +33,24 @@ export async function GET(req: NextRequest) {
                 { project: { workspaceId: workspaceId } }
             ];
         }
+    } else if (mode === "history") {
+        // Only admins can see full history
+        if (!role || (role !== "owner" && role !== "admin")) {
+            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+        where.status = { in: ["approved", "rejected", "revoked", "expired"] };
+        if (workspaceId) {
+            where.OR = [
+                { workspaceId: workspaceId },
+                { project: { workspaceId: workspaceId } }
+            ];
+        }
     } else if (mode === "approved") {
-        // Show approved requests — scoped to workspace
+        // Show currently active (approved) requests — scoped to workspace
         where.status = "approved";
+        // Filter out expired ones in the query if possible, or handle in JS
+        where.expiresAt = { gte: new Date() };
+        
         if (workspaceId) {
             where.OR = [
                 { workspaceId: workspaceId },

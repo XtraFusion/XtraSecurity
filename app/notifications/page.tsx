@@ -450,9 +450,17 @@ export default function NotificationsPage() {
     }
   };
 
-  const handleDeleteAlert = (alertId: string) => {
+  const handleDeleteAlert = async (alertId: string) => {
+    // Optimistic removal
     setAlerts(alerts.filter((alert) => alert.id !== alertId));
-    setNotification({ type: "success", message: "Alert deleted successfully" });
+    try {
+      await apiClient.delete(`/api/notifications?id=${alertId}`);
+      setNotification({ type: "success", message: "Alert deleted successfully" });
+    } catch (err: any) {
+      // Rollback not feasible here, just inform the user
+      const errorMessage = err?.response?.data?.error || "Failed to delete alert";
+      setNotification({ type: "error", message: errorMessage });
+    }
   };
 
   const handleMarkAllRead = async () => {
@@ -1099,6 +1107,11 @@ export default function NotificationsPage() {
                                 }}>
                                   <Eye className="mr-2 h-4 w-4" />
                                   View Details
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={() => handleDeleteAlert(alert.id)} className="text-destructive">
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete Alert
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

@@ -1,6 +1,7 @@
 "use client";
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+
+import { useEffect, useState, useMemo } from "react";
+import { useRouter, useParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -46,13 +47,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Search,
   UserPlus,
-  MoreHorizontal,
-  Mail,
+  MoreVertical,
   Shield,
   Eye,
   Code,
@@ -65,16 +71,22 @@ import {
   Clock,
   UserX,
   ArrowLeft,
-  Sparkles,
   Activity,
   Loader2,
+  Lock,
+  ChevronRight,
+  History,
+  Trash2,
+  Mail,
+  Globe
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "@/hooks/use-toast";
-import { useParams } from "next/navigation";
 import Link from "next/link";
 import apiClient from "@/lib/axios";
 import { useSession } from "next-auth/react";
-import axios from "axios";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { cn } from "@/lib/utils";
 
 interface TeamMember {
   id: string;
@@ -84,11 +96,7 @@ interface TeamMember {
   role: "owner" | "admin" | "developer" | "viewer";
   status: "active" | "pending" | "inactive";
   joinedAt: string;
-  lastActive: string;
-  projects: number;
-  invitedBy?: string;
-  department?: string;
-  location?: string;
+  lastActive?: string;
   user?: {
     id: string;
     name: string;
@@ -100,312 +108,95 @@ interface Team {
   id: string;
   name: string;
   description: string;
-  color: string;
+  teamColor: string;
   isPrivate: boolean;
   createdAt: string;
-  projects: number;
+  members: TeamMember[];
 }
 
-const roleConfig = {
-  owner: {
-    label: "Owner",
-    icon: Crown,
-    color: "bg-warning/10 text-warning border-warning/20",
-    description: "Full team access and management privileges",
-  },
-  admin: {
-    label: "Admin",
-    icon: Shield,
-    color: "bg-destructive/10 text-destructive border-destructive/20",
-    description: "Full project access and team member management",
-  },
-  developer: {
-    label: "Developer",
-    icon: Code,
-    color: "bg-info/10 text-info border-info/20",
-    description: "Read/write access to projects and development resources",
-  },
-  viewer: {
-    label: "Viewer",
-    icon: Eye,
-    color: "bg-muted/50 text-muted-foreground border-muted",
-    description: "Read-only access to team projects and resources",
-  },
+const roleLabel = {
+  owner: { label: "Owner", icon: Crown, color: "bg-amber-500/10 text-amber-600 border-amber-600/20" },
+  admin: { label: "Admin", icon: Shield, color: "bg-blue-600/10 text-blue-600 border-blue-600/20" },
+  developer: { label: "Developer", icon: Code, color: "bg-indigo-600/10 text-indigo-600 border-indigo-600/20" },
+  viewer: { label: "Viewer", icon: Eye, color: "bg-zinc-500/10 text-zinc-600 border-zinc-600/20" },
 };
 
-const statusConfig = {
-  active: {
-    label: "Active",
-    color: "bg-success/10 text-success border-success/20",
-    icon: CheckCircle,
-  },
-  pending: {
-    label: "Pending",
-    color: "bg-warning/10 text-warning border-warning/20",
-    icon: Clock,
-  },
-  inactive: {
-    label: "Inactive",
-    color: "bg-muted/50 text-muted-foreground border-muted",
-    icon: UserX,
-  },
-};
-
-const canInviteMembers = (userRole: string) => {
-  return userRole === "owner" || userRole === "admin";
-};
-
-const canEditMember = (userRole: string, targetMemberRole: string) => {
-  if (userRole === "owner") return true;
-  if (userRole === "admin" && targetMemberRole !== "owner") return true;
-  return false;
-};
-
-const canRemoveMember = (userRole: string, targetMemberRole: string) => {
-  if (userRole === "owner" && targetMemberRole !== "owner") return true;
-  if (
-    userRole === "admin" &&
-    targetMemberRole !== "owner" &&
-    targetMemberRole !== "admin"
-  )
-    return true;
-  return false;
-};
-
-const TeamDetail = () => {
+const TeamDetailPage = () => {
   const { id: teamId } = useParams<{ id: string }>();
   const { data: session } = useSession();
   const router = useRouter();
-  const [deleteTeamDialogOpen, setDeleteTeamDialogOpen] = useState(false);
-  const [currentUser, setCurrentUser] = useState<{
-    id: string;
-    name: string;
-    email: string;
-    role: string;
-  }>({ id: "", name: "", email: "", role: "" });
+  
   const [team, setTeam] = useState<Team | null>(null);
-  const [members, setMembers] = useState<TeamMember[]>([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState("members");
+  const [searchTerm, setSearchTerm] = useState("");
+  
+  const [currentUserRole, setCurrentUserRole] = useState<string>("viewer");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isInviting, setIsInviting] = useState(false);
+  
   const [inviteForm, setInviteForm] = useState({
     email: "",
     role: "viewer" as TeamMember["role"],
-    message: "",
-    department: "",
   });
-  const [isInviting, setIsInviting] = useState(false);
+  const [inviteDialogOpen, setInviteDialogOpen] = useState(false);
+  
   const [confirmDialog, setConfirmDialog] = useState<{
     open: boolean;
     type: "remove" | "role-change";
     member?: TeamMember;
     newRole?: TeamMember["role"];
-  }>({
-    open: false,
-    type: "remove",
-  });
+  }>({ open: false, type: "remove" });
 
   const fetchTeamDetails = async () => {
     try {
       setIsLoading(true);
       const resp = await apiClient.get(`/api/team/${teamId}`);
       setTeam(resp.data);
-      // Use session id directly — currentUser.id may be stale at call time
+      
       const sessionUserId = session?.user?.id;
       const myMembership = resp.data.members.find(
-        (m: any) => m.user?.id === sessionUserId
+        (m: any) => (m.user?.id || m.userId) === sessionUserId
       );
-      setCurrentUser({
-        id: sessionUserId || "",
-        name: session?.user?.name || "",
-        email: session?.user?.email || "",
-        role: myMembership?.role || "viewer",
-      });
-      setMembers(resp.data.members);
+      setCurrentUserRole(myMembership?.role || "viewer");
     } catch (error) {
-      console.error("Error fetching team details:", error);
+      console.error("Error fetching team:", error);
+      toast({ title: "Fetch failed", description: "Could not load team details.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleDeleteTeam = async () => {
-    try {
-      await axios.delete(`/api/team`, { data: { teamId } });
-      toast({ title: "Team deleted", description: `${team?.name} has been deleted.` });
-      router.push("/teams");
-    } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to delete team";
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
-    }
-  };
-
   useEffect(() => {
-    fetchTeamDetails();
+    if (teamId && session) fetchTeamDetails();
   }, [teamId, session]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Header Skeleton */}
-        <div className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              <div className="flex items-center gap-4">
-                <div className="h-8 w-8 bg-muted rounded animate-pulse"></div>
-                <div className="h-6 bg-muted rounded w-48 animate-pulse"></div>
-              </div>
-              <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
-            </div>
-          </div>
-        </div>
-
-        {/* Team Header Skeleton */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-between mb-8">
-            <div className="space-y-2">
-              <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
-            </div>
-            <div className="h-10 bg-muted rounded w-40 animate-pulse"></div>
-          </div>
-        </div>
-
-        {/* Content Skeleton */}
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pb-8">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Team Info Skeleton */}
-            <div className="lg:col-span-1">
-              <Card>
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="h-4 bg-muted rounded w-full animate-pulse"></div>
-                  <div className="h-4 bg-muted rounded w-3/4 animate-pulse"></div>
-                  <div className="h-4 bg-muted rounded w-1/2 animate-pulse"></div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Members List Skeleton */}
-            <div className="lg:col-span-2">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div className="h-6 bg-muted rounded w-32 animate-pulse"></div>
-                    <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {Array.from({ length: 5 }).map((_, i) => (
-                      <div key={i} className="flex items-center justify-between p-4 border rounded">
-                        <div className="flex items-center gap-3">
-                          <div className="h-10 w-10 bg-muted rounded-full animate-pulse"></div>
-                          <div className="space-y-2">
-                            <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
-                            <div className="h-3 bg-muted rounded w-24 animate-pulse"></div>
-                          </div>
-                        </div>
-                        <div className="h-6 bg-muted rounded w-16 animate-pulse"></div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!team) {
-    return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Team not found</h1>
-          <Link href="/teams">
-            <Button variant="outline">
-              <ArrowLeft className="mr-2 h-4 w-4" />
-              Back to Teams
-            </Button>
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  const filteredMembers = members.filter((member) => {
-    const matchesSearch =
-      member?.user?.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      member?.user?.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesRole = roleFilter === "all" || member.role === roleFilter;
-    const matchesStatus =
-      statusFilter === "all" || member.status === statusFilter;
-    return matchesSearch && matchesRole && matchesStatus;
-  });
+  const filteredMembers = useMemo(() => {
+    if (!team) return [];
+    return team.members.filter((m) => {
+      const name = m.user?.name || m.name || "";
+      const email = m.user?.email || m.email || "";
+      return (
+        name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    });
+  }, [team, searchTerm]);
 
   const handleInviteMember = async () => {
-    if (!canInviteMembers(currentUser?.role)) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to invite team members",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!inviteForm.email) {
-      toast({
-        title: "Error",
-        description: "Email is required",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (members.some((member) => member.email === inviteForm.email)) {
-      toast({
-        title: "Error",
-        description: "This email is already associated with a team member",
-        variant: "destructive",
-      });
-      return;
-    }
-
     setIsInviting(true);
     try {
-      const newMember: TeamMember = {
-        id: Date.now().toString(),
-        name: inviteForm.email.split("@")[0],
-        email: inviteForm.email,
-        teamId,
-        role: inviteForm.role,
-        status: "pending",
-        joinedAt: new Date().toISOString().split("T")[0],
-        lastActive: "Never",
-        projects: 0,
-        invitedBy: currentUser.name,
-        department: inviteForm.department,
-      };
-      console.log(newMember)
-      const resp = await apiClient.post("/api/team/invite", { member: newMember });
-      setMembers([...members, newMember]);
-      setInviteForm({ email: "", role: "viewer", message: "", department: "" });
-      setInviteDialogOpen(false);
-
-      toast({
-        title: "Invitation sent",
-        description: `Invitation sent to ${inviteForm.email}`,
+      await apiClient.post("/api/team/invite", {
+        member: { teamId, email: inviteForm.email, role: inviteForm.role }
       });
+      setInviteDialogOpen(false);
+      setInviteForm({ email: "", role: "viewer" });
+      fetchTeamDetails();
+      toast({ title: "Success", description: `Invitation sent to ${inviteForm.email}` });
     } catch (e: any) {
       toast({
         title: "Error",
-        description: e.response?.data?.message || e.response?.data?.error || "Failed to invite member",
+        description: e.response?.data?.error || "Failed to invite member",
         variant: "destructive",
       });
     } finally {
@@ -413,654 +204,348 @@ const TeamDetail = () => {
     }
   };
 
-  const handleRoleChangeRequest = async (
-    memberId: string,
-    newRole: TeamMember["role"]
-  ) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member) return;
-
-    if (!canEditMember(currentUser.role, member.role)) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to change this member's role",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Check if removing the last admin
-    if (member.role === "admin" || member.role === "owner") {
-      const adminCount = members.filter(
-        (m) => m.role === "admin" || m.role === "owner"
-      ).length;
-
-      if (adminCount <= 1 && newRole !== "admin" && newRole !== "owner") {
-        toast({
-          title: "Action Denied",
-          description: "Cannot remove the last admin from the team",
-          variant: "destructive",
-        });
-        return;
-      }
-    }
-
-    // Defer API call to handleRoleChange
-
-    setConfirmDialog({
-      open: true,
-      type: "role-change",
-      member,
-      newRole,
-    });
-  };
-
-  const handleRoleChange = async () => {
+  const handleRoleUpdate = async () => {
     if (!confirmDialog.member || !confirmDialog.newRole) return;
-
     try {
-      await axios.put("/api/team/role", { memberId: confirmDialog.member.id, newRole: confirmDialog.newRole });
-
-      setMembers(
-        members.map((member) =>
-          member.id === confirmDialog.member!.id
-            ? { ...member, role: confirmDialog.newRole! }
-            : member
-        )
-      );
-
+      await apiClient.put("/api/team/role", { 
+        memberId: confirmDialog.member.id, 
+        newRole: confirmDialog.newRole 
+      });
+      fetchTeamDetails();
       setConfirmDialog({ open: false, type: "remove" });
-      toast({
-        title: "Role updated",
-        description: `${confirmDialog.member.user?.name || confirmDialog.member.name
-          }'s role has been updated to ${roleConfig[confirmDialog.newRole].label}`,
-      });
+      toast({ title: "Role updated" });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to change member role";
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+      toast({ title: "Update failed", description: "Could not modify role.", variant: "destructive" });
     }
-  };
-
-  const handleRemoveMemberRequest = async (memberId: string) => {
-    let member = members.find((m) =>
-      m?.user?.id === memberId ? m : null
-    );
-    // console.log(member,memberId)
-
-
-
-    if (!member) {
-      console.log("Member not found");
-      return;
-    }
-
-    if (!canRemoveMember(currentUser.role, member.role)) {
-      toast({
-        title: "Access Denied",
-        description: "You don't have permission to remove this member",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setConfirmDialog({
-      open: true,
-      type: "remove",
-      member,
-    });
-
   };
 
   const handleRemoveMember = async () => {
     if (!confirmDialog.member) return;
-
     try {
-      await axios.delete("/api/team/remove", { data: { memberId: confirmDialog.member.id } });
-
-      setMembers(
-        members.filter((member) => member.id !== confirmDialog.member!.id)
-      );
+      await apiClient.delete("/api/team/remove", { data: { memberId: confirmDialog.member.id } });
+      fetchTeamDetails();
       setConfirmDialog({ open: false, type: "remove" });
-
-      toast({
-        title: "Member removed",
-        description: `${confirmDialog.member.user?.name || confirmDialog.member.name} has been removed from the team`,
-      });
+      toast({ title: "Member removed" });
     } catch (error: any) {
-      const errorMessage = error.response?.data?.message || error.response?.data?.error || "Failed to remove member";
-      toast({ title: "Error", description: errorMessage, variant: "destructive" });
+      toast({ title: "Remove failed", variant: "destructive" });
     }
   };
 
-  const handleResendInvitation = (memberId: string) => {
-    const member = members.find((m) => m.id === memberId);
-    if (!member) return;
+  const handleUpdateTeam = async (data: Partial<Team>) => {
+    try {
+        await apiClient.put("/api/team", { teamId, ...data });
+        setTeam(prev => prev ? { ...prev, ...data } : null);
+        toast({ title: "Team updated" });
+    } catch (e) {
+        toast({ title: "Error", variant: "destructive" });
+    }
+  }
 
-    toast({
-      title: "Invitation resent",
-      description: `Invitation resent to ${member.email}`,
-    });
+  const handleDeleteTeam = async () => {
+    setIsDeleting(true);
+    try {
+      await apiClient.delete("/api/team", { data: { teamId } });
+      router.push("/teams");
+      toast({ title: "Team deleted" });
+    } catch (error: any) {
+      setIsDeleting(false);
+      toast({ title: "Decline failed", variant: "destructive" });
+    }
   };
 
+  if (isLoading) return <DashboardLayout><div className="p-8 animate-pulse text-muted-foreground">Loading team engine...</div></DashboardLayout>;
+  if (!team) return <DashboardLayout><div className="p-8">Team not found.</div></DashboardLayout>;
+
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="bg-gradient-card border-b border-primary/20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center gap-4 mb-6">
-            <Link href="/teams">
-              <Button variant="ghost" size="sm">
-                <ArrowLeft className="mr-2 h-4 w-4" />
-                Back to Teams
-              </Button>
-            </Link>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-4">
-              <div className={`w-4 h-4 rounded-full ${team.color}`} />
-              <div>
-                <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                  {team.name}
-                </h1>
-                <p className="text-muted-foreground mt-1">{team.description}</p>
-                <div className="flex items-center gap-4 mt-2 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Calendar className="h-4 w-4" />
-                    Created {new Date(team.createdAt).toLocaleDateString()}
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Code className="h-4 w-4" />
-                    {team.projects || 0} projects
-                  </div>
-                  {team.isPrivate && (
-                    <Badge variant="secondary">Private Team</Badge>
-                  )}
+    <DashboardLayout>
+      <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
+        
+        {/* Navigation Breadcrumbs */}
+        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-2">
+            <Link href="/teams" className="hover:text-foreground transition-colors">Teams</Link>
+            <ChevronRight className="h-4 w-4" />
+            <span className="text-foreground font-medium">{team.name}</span>
+        </div>
+
+        {/* Hero Header */}
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex items-center gap-5">
+                <div className={cn(
+                    "h-16 w-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-sm",
+                    team.teamColor || "bg-blue-600"
+                )}>
+                    {team.name.substring(0, 2).toUpperCase()}
                 </div>
-              </div>
+                <div>
+                    <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
+                    <div className="flex items-center gap-3 mt-1.5 text-sm">
+                        {team.isPrivate ? (
+                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 rounded-full"><Lock className="h-3 w-3" /> Private Team</Badge>
+                        ) : (
+                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 rounded-full"><Globe className="h-3 w-3" /> Public Team</Badge>
+                        )}
+                        <span className="text-muted-foreground flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {team.members.length} members</span>
+                    </div>
+                </div>
             </div>
-            <div className="flex items-center gap-2">
-              {currentUser.role === "owner" && (
-                <>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 border-destructive/40 text-destructive hover:bg-destructive/10"
-                    onClick={() => setDeleteTeamDialogOpen(true)}
-                  >
-                    <AlertTriangle className="h-4 w-4" />
-                    Delete Team
+
+            <div className="flex items-center gap-3">
+              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="h-10 px-4">
+                    <UserPlus className="mr-2 h-4 w-4" />
+                    Invite Member
                   </Button>
-                  <AlertDialog open={deleteTeamDialogOpen} onOpenChange={setDeleteTeamDialogOpen}>
-                    <AlertDialogContent>
-                      <AlertDialogHeader>
-                        <AlertDialogTitle className="flex items-center gap-2">
-                          <AlertTriangle className="h-5 w-5 text-destructive" />
-                          Delete Team
-                        </AlertDialogTitle>
-                        <AlertDialogDescription>
-                          Are you sure you want to permanently delete <strong>{team.name}</strong>? All members will lose access and this action cannot be undone.
-                        </AlertDialogDescription>
-                      </AlertDialogHeader>
-                      <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction
-                          onClick={handleDeleteTeam}
-                          className="bg-destructive hover:bg-destructive/90"
-                        >
-                          Delete Team
-                        </AlertDialogAction>
-                      </AlertDialogFooter>
-                    </AlertDialogContent>
-                  </AlertDialog>
-                </>
-              )}
-              {canInviteMembers(currentUser.role) && (
-                <Dialog
-                  open={inviteDialogOpen}
-                  onOpenChange={setInviteDialogOpen}
-                >
-                  <DialogTrigger asChild>
-                    <Button variant="hero" className="gap-2 text-white">
-                      <UserPlus className="h-4 w-4" />
-                      Invite Member
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="sm:max-w-md">
-                    <DialogHeader>
-                      <DialogTitle>Invite Team Member</DialogTitle>
-                      <DialogDescription>
-                        Send an invitation to join {team.name}
-                      </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="email">Email Address</Label>
-                        <Input
-                          id="email"
-                          type="email"
-                          placeholder="colleague@company.com"
-                          value={inviteForm.email}
-                          onChange={(e) =>
-                            setInviteForm({
-                              ...inviteForm,
-                              email: e.target.value,
-                            })
-                          }
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Invite to Team</DialogTitle>
+                    <DialogDescription>Add a new member and assign their initial role.</DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div className="space-y-2">
+                        <Label>Email Address</Label>
+                        <Input 
+                            placeholder="user@example.com"
+                            value={inviteForm.email}
+                            onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
                         />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="role">Role</Label>
-                        <Select
-                          value={inviteForm.role}
-                          onValueChange={(value: TeamMember["role"]) =>
-                            setInviteForm({ ...inviteForm, role: value })
-                          }
-                        >
-                          <SelectTrigger>
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="viewer">
-                              <div className="flex flex-col items-start">
-                                <span>Viewer</span>
-                                <span className="text-xs text-muted-foreground">
-                                  Read-only access
-                                </span>
-                              </div>
-                            </SelectItem>
-                            <SelectItem value="developer">
-                              <div className="flex flex-col items-start">
-                                <span>Developer</span>
-                                <span className="text-xs text-muted-foreground">
-                                  Read/write access
-                                </span>
-                              </div>
-                            </SelectItem>
-                            {currentUser.role === "owner" && (
-                              <SelectItem value="admin">
-                                <div className="flex flex-col items-start">
-                                  <span>Admin</span>
-                                  <span className="text-xs text-muted-foreground">
-                                    Full project access
-                                  </span>
-                                </div>
-                              </SelectItem>
-                            )}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="department">Department (Optional)</Label>
-                        <Input
-                          id="department"
-                          placeholder="Engineering, Marketing, etc."
-                          value={inviteForm.department}
-                          onChange={(e) =>
-                            setInviteForm({
-                              ...inviteForm,
-                              department: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="message">
-                          Personal Message (Optional)
-                        </Label>
-                        <Textarea
-                          id="message"
-                          placeholder="Welcome to our team!"
-                          value={inviteForm.message}
-                          onChange={(e) =>
-                            setInviteForm({
-                              ...inviteForm,
-                              message: e.target.value,
-                            })
-                          }
-                          rows={3}
-                        />
-                      </div>
                     </div>
-                    <DialogFooter>
-                      <Button
-                        variant="outline"
-                        onClick={() => setInviteDialogOpen(false)}
-                      >
-                        Cancel
-                      </Button>
-                      <Button onClick={handleInviteMember} disabled={isInviting}>
-                        {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                        Send Invitation
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-          <Card className="bg-gradient-card border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Total Members
-              </CardTitle>
-              <Users className="h-4 w-4 text-primary" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {members.length}
-              </div>
-              <p className="text-xs text-muted-foreground">Team size</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Active Members
-              </CardTitle>
-              <Activity className="h-4 w-4 text-success" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-success">
-                {members.filter((m) => m.status === "active").length}
-              </div>
-              <p className="text-xs text-muted-foreground">
-                {Math.round(
-                  (members.filter((m) => m.status === "active").length /
-                    members.length) *
-                  100
-                )}
-                % of team
-              </p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                Pending Invites
-              </CardTitle>
-              <Mail className="h-4 w-4 text-warning" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-warning">
-                {members.filter((m) => m.status === "pending").length}
-              </div>
-              <p className="text-xs text-muted-foreground">Awaiting response</p>
-            </CardContent>
-          </Card>
-          <Card className="bg-gradient-card border-primary/20">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Admins</CardTitle>
-              <Shield className="h-4 w-4 text-info" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold text-info">
-                {
-                  members.filter(
-                    (m) => m.role === "admin" || m.role === "owner"
-                  ).length
-                }
-              </div>
-              <p className="text-xs text-muted-foreground">With admin access</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Team Members */}
-        <Card className="bg-gradient-card border-primary/20">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Team Members
-            </CardTitle>
-            <CardDescription>
-              Manage team members, roles, and permissions
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search members by name, email, or department..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
-              </div>
-              <Select value={roleFilter} onValueChange={setRoleFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by role" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Roles</SelectItem>
-                  <SelectItem value="owner">Owner</SelectItem>
-                  <SelectItem value="admin">Admin</SelectItem>
-                  <SelectItem value="developer">Developer</SelectItem>
-                  <SelectItem value="viewer">Viewer</SelectItem>
-                </SelectContent>
-              </Select>
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-full sm:w-[180px]">
-                  <SelectValue placeholder="Filter by status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Status</SelectItem>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* Members List */}
-            <div className="space-y-4">
-              {filteredMembers.map((member) => {
-                const RoleIcon = roleConfig[member.role].icon;
-                const StatusIcon = statusConfig[member.status].icon;
-                const canEdit = canEditMember(currentUser.role, member.role);
-                const canRemove = canRemoveMember(
-                  currentUser.role,
-                  member.role
-                );
-
-                return (
-                  <div
-                    key={member.id}
-                    className="flex items-center justify-between p-4 border border-primary/20 rounded-lg hover:bg-accent/20 transition-colors"
-                  >
-                    <div className="flex items-center gap-4">
-                      <Avatar className="h-10 w-10 border-2 border-primary/20">
-                        <AvatarFallback className="bg-primary/10 text-primary font-semibold">
-                          {member?.user?.name
-                            .split(" ")
-                            .map((n) => n[0])
-                            .join("")}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="space-y-1">
-                        <div className="flex items-center gap-2">
-                          <p className="font-medium">{member?.user?.name}</p>
-                          <Badge
-                            variant="outline"
-                            className={roleConfig[member.role].color}
-                          >
-                            <RoleIcon className="h-3 w-3 mr-1" />
-                            {roleConfig[member.role].label}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className={statusConfig[member.status].color}
-                          >
-                            <StatusIcon className="h-3 w-3 mr-1" />
-                            {statusConfig[member.status].label}
-                          </Badge>
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          {member.user?.email}
-                          {/* {member?.user?.id} */}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3" />
-                            Joined{" "}
-                            {new Date(member.joinedAt).toLocaleDateString()}
-                          </span>
-                          {/* <span>Last active: {member.lastActive}</span> */}
-                          {/* <span>{member.projects} projects</span> */}
-                          {member.department && (
-                            <span>• {member.department}</span>
-                          )}
-                          {member.invitedBy && (
-                            <span>• Invited by {member.invitedBy}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        {member.status === "pending" &&
-                          canInviteMembers(currentUser.role) && (
-                            <DropdownMenuItem
-                              onClick={() => handleResendInvitation(member.id)}
+                    <div className="space-y-2">
+                            <Label>Team Role</Label>
+                            <Select 
+                                value={inviteForm.role} 
+                                onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
                             >
-                              Resend Invitation
-                            </DropdownMenuItem>
-                          )}
-                        <DropdownMenuSeparator />
-                        {canEdit && (
-                          <>
-                            <DropdownMenuLabel>Change Role</DropdownMenuLabel>
-                            {Object.entries(roleConfig).map(
-                              ([role, config]) => (
-                                <DropdownMenuItem
-                                  key={role}
-                                  onClick={() =>
-                                    handleRoleChangeRequest(
-                                      member.id,
-                                      role as TeamMember["role"]
-                                    )
-                                  }
-                                  disabled={
-                                    member.role === role ||
-                                    (role === "owner" &&
-                                      currentUser.role !== "owner")
-                                  }
-                                >
-                                  <config.icon className="mr-2 h-4 w-4" />
-                                  {config.label}
-                                </DropdownMenuItem>
-                              )
-                            )}
-                            <DropdownMenuSeparator />
-                          </>
-                        )}
-                        {canRemove && (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onClick={() => {
-                              if (member.user?.id) {
-                                handleRemoveMemberRequest(member.user.id);
-                              }
-                            }}
-                          >
-                            Remove Member
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </div>
-                );
-              })}
-            </div>
-
-            {filteredMembers.length === 0 && (
-              <div className="text-center py-8">
-                <Users className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                <h3 className="text-lg font-medium mb-2">No members found</h3>
-                <p className="text-muted-foreground">
-                  Try adjusting your search or filter criteria
-                </p>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Confirmation Dialogs */}
-      <AlertDialog
-        open={confirmDialog.open}
-        onOpenChange={(open) => setConfirmDialog({ ...confirmDialog, open })}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-warning" />
-              {confirmDialog.type === "remove"
-                ? "Remove Team Member"
-                : "Change Member Role"}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {confirmDialog.type === "remove" ? (
-                <>
-                  Are you sure you want to remove{" "}
-                  <strong>{confirmDialog.member?.name}</strong> from{" "}
-                  <strong>{team.name}</strong>? This action cannot be undone and
-                  they will lose access to all team projects immediately.
-                </>
-              ) : (
-                <>
-                  Are you sure you want to change{" "}
-                  <strong>{confirmDialog.member?.name}</strong>'s role to{" "}
-                  <strong>
-                    {confirmDialog.newRole &&
-                      roleConfig[confirmDialog.newRole].label}
-                  </strong>
-                  ?
-                  {confirmDialog.newRole && (
-                    <div className="mt-2 p-3 bg-muted/50 rounded border border-primary/20 text-sm">
-                      {roleConfig[confirmDialog.newRole].description}
+                                <SelectTrigger>
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="viewer">Viewer</SelectItem>
+                                    <SelectItem value="developer">Developer</SelectItem>
+                                    <SelectItem value="admin">Admin</SelectItem>
+                                </SelectContent>
+                            </Select>
                     </div>
-                  )}
-                </>
-              )}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={
-                confirmDialog.type === "remove"
-                  ? handleRemoveMember
-                  : handleRoleChange
-              }
-              className={
-                confirmDialog.type === "remove"
-                  ? "bg-destructive hover:bg-destructive/90"
-                  : ""
-              }
-            >
-              {confirmDialog.type === "remove"
-                ? "Remove Member"
-                : "Change Role"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleInviteMember} disabled={isInviting}>
+                        {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+        </div>
+
+        {/* Dashboard Tabs */}
+        <Tabs defaultValue="members" className="w-full">
+            <TabsList className="bg-muted/50 p-1 mb-6">
+                <TabsTrigger value="members" className="px-6 rounded-md">Members</TabsTrigger>
+                <TabsTrigger value="activity" className="px-6 rounded-md">Activity Log</TabsTrigger>
+                <TabsTrigger value="settings" className="px-6 rounded-md">Settings</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="members" className="space-y-6">
+                <Card className="border">
+                    <CardHeader className="flex flex-row items-center justify-between border-b bg-muted/5">
+                        <div className="space-y-1">
+                            <CardTitle className="text-lg">Members List</CardTitle>
+                            <CardDescription>Directly manage roles and team access for each user.</CardDescription>
+                        </div>
+                        <div className="relative w-64">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                            <Input 
+                                placeholder="Search members..."
+                                value={searchTerm}
+                                onChange={e => setSearchTerm(e.target.value)}
+                                className="pl-9 h-9 bg-background"
+                            />
+                        </div>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                        <div className="overflow-x-auto">
+                            <table className="w-full text-left text-sm whitespace-nowrap">
+                                <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-bold tracking-wider">
+                                    <tr>
+                                        <th className="px-6 py-4">User</th>
+                                        <th className="px-6 py-4">Role</th>
+                                        <th className="px-6 py-4">Status</th>
+                                        <th className="px-6 py-4">Joined</th>
+                                        <th className="px-6 py-4 text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody className="divide-y border-b">
+                                    {filteredMembers.map((member) => (
+                                        <tr key={member.id} className="hover:bg-muted/5 group">
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-3">
+                                                    <Avatar className="h-8 w-8 border">
+                                                        <AvatarFallback className="bg-muted text-[10px] font-bold transition-transform group-hover:scale-105">
+                                                            {(member?.user?.name || member.name || "U").charAt(0).toUpperCase()}
+                                                        </AvatarFallback>
+                                                    </Avatar>
+                                                    <div className="flex flex-col">
+                                                        <span className="font-semibold text-foreground">{member?.user?.name || member.name}</span>
+                                                        <span className="text-xs text-muted-foreground">{member?.user?.email || member.email}</span>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <Badge variant="secondary" className={cn("px-2 py-0 h-6 font-medium border flex w-fit items-center gap-1.5", roleLabel[member.role].color)}>
+                                                    {(() => {
+                                                        const Icon = roleLabel[member.role].icon;
+                                                        return <Icon className="h-3 w-3" />;
+                                                    })()}
+                                                    {roleLabel[member.role].label}
+                                                </Badge>
+                                            </td>
+                                            <td className="px-6 py-4">
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className={cn("h-1.5 w-1.5 rounded-full", member.status === 'active' ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]" : "bg-zinc-400")} />
+                                                    <span className="text-xs capitalize">{member.status}</span>
+                                                </div>
+                                            </td>
+                                            <td className="px-6 py-4 text-muted-foreground">
+                                                {new Date(member.joinedAt).toLocaleDateString()}
+                                            </td>
+                                            <td className="px-6 py-4 text-right">
+                                                {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
+                                                    <DropdownMenu>
+                                                        <DropdownMenuTrigger asChild>
+                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                                                                <MoreVertical className="h-4 w-4" />
+                                                            </Button>
+                                                        </DropdownMenuTrigger>
+                                                        <DropdownMenuContent align="end">
+                                                            <DropdownMenuLabel className="text-xs">Manage Role</DropdownMenuLabel>
+                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'admin' })} disabled={member.role === 'admin'}>Admin</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'developer' })} disabled={member.role === 'developer'}>Developer</DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'viewer' })} disabled={member.role === 'viewer'}>Viewer</DropdownMenuItem>
+                                                            <DropdownMenuSeparator />
+                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'remove', member })} className="text-destructive">Remove from Team</DropdownMenuItem>
+                                                        </DropdownMenuContent>
+                                                    </DropdownMenu>
+                                                )}
+                                            </td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                            {filteredMembers.length === 0 && (
+                                <div className="py-20 text-center opacity-70">
+                                    <p className="text-muted-foreground">No members found matching your search.</p>
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="activity">
+                <Card className="border">
+                    <CardHeader>
+                        <CardTitle className="text-lg">Activity Feed</CardTitle>
+                        <CardDescription>Recent changes and operations performed by team members.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        {[1, 2, 3].map(i => (
+                            <div key={i} className="flex gap-4">
+                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                                    <Activity className="h-4 w-4 text-muted-foreground" />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-medium">Policy Updated</p>
+                                    <p className="text-xs text-muted-foreground mt-0.5">Role permissions were audited and synced with the workspace security engine.</p>
+                                    <p className="text-[10px] text-muted-foreground font-semibold mt-2 uppercase tracking-wide opacity-60 flex items-center gap-1.5">
+                                        <Clock className="h-2.5 w-2.5" /> 2 hours ago
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </CardContent>
+                </Card>
+            </TabsContent>
+
+            <TabsContent value="settings" className="space-y-6">
+                <Card className="border shadow-none">
+                    <CardHeader>
+                        <CardTitle className="text-lg">General Settings</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-6">
+                        <div className="space-y-2">
+                            <Label>Team Name</Label>
+                            <div className="flex gap-3">
+                                <Input defaultValue={team.name} className="max-w-md" />
+                                <Button variant="outline" onClick={() => handleUpdateTeam({ name: team.name })}>Update</Button>
+                            </div>
+                        </div>
+                        <div className="space-y-2">
+                             <Label>Description</Label>
+                             <Textarea defaultValue={team.description} className="max-w-xl" />
+                             <Button variant="outline" className="mt-2" onClick={() => handleUpdateTeam({ description: team.description })}>Update</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+
+                <Card className="border border-destructive/20 bg-destructive/5 shadow-none">
+                    <CardHeader>
+                        <CardTitle className="text-lg text-destructive">Danger Zone</CardTitle>
+                        <CardDescription>Irreversible actions for this team.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <div className="flex items-center justify-between">
+                            <div>
+                                <p className="text-sm font-bold">Delete Team</p>
+                                <p className="text-xs text-muted-foreground mt-1 text-balance">Once you delete a team, there is no going back. All access links will be severed.</p>
+                            </div>
+                            <Button variant="destructive" onClick={() => setConfirmDialog({ open: true, type: 'remove', member: { id: 'team', name: team.name } as any })}>Delete Team</Button>
+                        </div>
+                    </CardContent>
+                </Card>
+            </TabsContent>
+        </Tabs>
+
+        {/* Global Confirmation Flow */}
+        <AlertDialog open={confirmDialog.open} onOpenChange={open => setConfirmDialog({...confirmDialog, open})}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <AlertTriangle className="h-5 w-5 text-amber-600" />
+                {confirmDialog.type === "remove" ? (confirmDialog.member?.id === 'team' ? "Delete Team?" : "Remove Member?") : "Update Role?"}
+              </AlertDialogTitle>
+              <AlertDialogDescription>
+                 {confirmDialog.type === "remove" ? (
+                     confirmDialog.member?.id === 'team' ? 
+                     `Are you sure you want to delete ${confirmDialog.member?.name}? This action is terminal.` :
+                     `Are you sure you want to remove ${confirmDialog.member?.name}? They will lose all access to team resources immediately.`
+                 ) : (
+                     `Update role for ${confirmDialog.member?.name} to ${confirmDialog.newRole}?`
+                 )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancel</AlertDialogCancel>
+              <AlertDialogAction 
+                onClick={() => {
+                    if (confirmDialog.member?.id === 'team') {
+                        handleDeleteTeam();
+                    } else {
+                        confirmDialog.type === 'remove' ? handleRemoveMember() : handleRoleUpdate();
+                    }
+                }}
+                className={cn(confirmDialog.type === 'remove' ? "bg-destructive text-white" : "bg-primary")}
+              >
+                 Confirm Action
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
+      </div>
+    </DashboardLayout>
   );
 };
 
-export default TeamDetail;
+export default TeamDetailPage;

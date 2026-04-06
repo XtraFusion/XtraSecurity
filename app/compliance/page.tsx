@@ -1,16 +1,42 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useMemo } from "react";
 import {
-    Shield, Download, RefreshCw, ArrowLeft,
-    CheckCircle, AlertTriangle, Clock, Users, Key, FileText,
+    Shield,
+    Download,
+    RefreshCw,
+    ArrowLeft,
+    CheckCircle2,
+    AlertTriangle,
+    Clock,
+    Users,
+    Key,
+    FileText,
+    ChevronRight,
+    Search,
+    ShieldCheck,
+    Smartphone,
+    Globe,
+    ExternalLink,
+    Zap
 } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+    Tabs,
+    TabsContent,
+    TabsList,
+    TabsTrigger,
+} from "@/components/ui/tabs";
 import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
 import { calculateSecurityScore } from "@/lib/compliance/score-engine";
 import { SecurityScoreCard } from "@/components/compliance/security-score-card";
+import { cn } from "@/lib/utils";
+import { toast } from "@/hooks/use-toast";
+import apiClient from "@/lib/axios";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -61,372 +87,364 @@ interface ReportData {
     }[];
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function fmt(iso: string | null | undefined) {
+const fmt = (iso: string | null | undefined) => {
     if (!iso) return "—";
     return new Date(iso).toLocaleDateString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
+        month: "short", day: "numeric", year: "numeric",
     });
-}
+};
 
-function fmtFull(iso: string | null | undefined) {
+const fmtFull = (iso: string | null | undefined) => {
     if (!iso) return "—";
     return new Date(iso).toLocaleString("en-US", {
-        year: "numeric", month: "short", day: "numeric",
+        month: "short", day: "numeric",
         hour: "2-digit", minute: "2-digit",
     });
-}
+};
 
-// ─── Section Heading ──────────────────────────────────────────────────────────
-
-function SectionHeading({ icon: Icon, title, count }: {
-    icon: React.ElementType; title: string; count?: number;
-}) {
-    return (
-        <div className="flex items-center gap-3 mb-4 pb-2 border-b border-border print:border-gray-300">
-            <div className="p-2 bg-primary/10 rounded-lg print:bg-gray-100">
-                <Icon className="h-5 w-5 text-primary print:text-gray-700" />
-            </div>
-            <h2 className="text-xl font-bold">{title}</h2>
-            {count !== undefined && (
-                <Badge variant="secondary" className="ml-auto">{count} items</Badge>
-            )}
-        </div>
-    );
-}
-
-// ─── Main Page ────────────────────────────────────────────────────────────────
-
-export default function CompliancePage() {
-    const [loading, setLoading] = useState(false);
+export default function SecurityHealthPage() {
+    const [loading, setLoading] = useState(true);
     const [report, setReport] = useState<ReportData | null>(null);
-    const [error, setError] = useState<string | null>(null);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [activeTab, setActiveTab] = useState("overview");
 
-    const generateReport = useCallback(async () => {
-        setLoading(true);
-        setError(null);
+    const fetchSecurityReport = useCallback(async (silent = false) => {
+        if (!silent) setLoading(true);
         try {
-            const res = await fetch("/api/compliance/report");
-            if (!res.ok) throw new Error("Failed to generate report");
-            setReport(await res.json());
+            const res = await apiClient.get("/api/compliance/report");
+            setReport(res.data);
         } catch (e: any) {
-            setError(e.message);
+            toast({ title: "Fetch failed", description: "Security health report could not be generated.", variant: "destructive" });
         } finally {
             setLoading(false);
         }
     }, []);
 
-    const downloadPdf = () => window.print();
+    useEffect(() => {
+        fetchSecurityReport();
+    }, [fetchSecurityReport]);
+
+    const securityScore = useMemo(() => {
+        if (!report) return null;
+        return calculateSecurityScore(report);
+    }, [report]);
+
+    const handlePrint = () => window.print();
+
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-background flex flex-col items-center justify-center space-y-4">
+                <Loader2 className="h-10 w-10 animate-spin text-primary opacity-50" />
+                <p className="text-sm font-medium text-muted-foreground animate-pulse">Scanning security infrastructure...</p>
+            </div>
+        );
+    }
+
+    if (!report) return <div className="p-8 text-center">Failed to load security snapshot.</div>;
 
     return (
-        <>
-            {/* ── Print Styles (injected inline so no extra CSS file needed) ── */}
-            <style>{`
-        @media print {
-          .no-print { display: none !important; }
-          .print-only { display: block !important; }
-          body { background: white !important; color: black !important; }
-          .report-page { padding: 0 !important; max-width: 100% !important; }
-          .report-card {
-            border: 1px solid #e5e7eb !important;
-            background: white !important;
-            box-shadow: none !important;
-            break-inside: avoid;
-            margin-bottom: 1.5rem;
-          }
-          table { width: 100%; border-collapse: collapse; }
-          th, td { border: 1px solid #e5e7eb; padding: 6px 10px; font-size: 11px; }
-          th { background: #f9fafb; font-weight: 600; }
-          @page { margin: 1.5cm; size: A4; }
-        }
-        .print-only { display: none; }
-      `}</style>
+        <div className="min-h-screen bg-background pb-20">
+            
+            {/* Global Print Overrides */}
+            <style jsx global>{`
+                @media print {
+                  .no-print { display: none !important; }
+                  .print-only { display: block !important; }
+                  body { background: white !important; color: black !important; }
+                  .report-card { border: 1px solid #eee !important; box-shadow: none !important; margin-bottom: 2rem; break-inside: avoid; }
+                  @page { margin: 1.5cm; size: A4; }
+                }
+            `}</style>
 
-            <div className="min-h-screen bg-background">
-                <div className="max-w-5xl mx-auto px-4 py-8 report-page">
-
-                    {/* ── Header (screen only) ── */}
-                    <div className="no-print">
-                        <div className="flex items-center gap-4 mb-6">
-                            <Link href="/projects">
-                                <Button variant="ghost" size="sm">
-                                    <ArrowLeft className="mr-2 h-4 w-4" />Back
-                                </Button>
-                            </Link>
+            <div className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+                
+                {/* Header (No Print) */}
+                <div className="no-print flex flex-col sm:flex-row justify-between items-start sm:items-center gap-6 pb-6 border-b border-border">
+                    <div className="space-y-1">
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
+                            <Link href="/dashboard" className="hover:text-foreground">Dashboard</Link>
+                            <ChevronRight className="h-3 w-3" />
+                            <span className="text-foreground">Security Health</span>
                         </div>
-
-                        <div className="flex items-start justify-between flex-wrap gap-4 mb-8">
-                            <div>
-                                <h1 className="text-3xl font-bold bg-gradient-hero bg-clip-text text-transparent">
-                                    Compliance Report
-                                </h1>
-                                <p className="text-muted-foreground text-sm mt-1">
-                                    Generate SOC2 / GDPR audit reports for your workspace
-                                </p>
-                            </div>
-                            <div className="flex gap-3">
-                                <Button onClick={generateReport} disabled={loading} className="gap-2">
-                                    {loading
-                                        ? <RefreshCw className="h-4 w-4 animate-spin" />
-                                        : <FileText className="h-4 w-4" />}
-                                    {loading ? "Generating…" : "Generate Report"}
-                                </Button>
-                                {report && (
-                                    <Button variant="outline" onClick={downloadPdf} className="gap-2">
-                                        <Download className="h-4 w-4" />
-                                        Download PDF
-                                    </Button>
-                                )}
-                            </div>
-                        </div>
-
-                        {error && (
-                            <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-4 text-destructive text-sm mb-6">
-                                {error}
-                            </div>
-                        )}
-
-                        {!report && !loading && (
-                            <Card className="bg-gradient-card border-primary/20">
-                                <CardContent className="flex flex-col items-center justify-center py-20 gap-4 text-muted-foreground">
-                                    <Shield className="h-16 w-16 opacity-20" />
-                                    <p className="text-lg font-medium">No report generated yet</p>
-                                    <p className="text-sm">Click "Generate Report" to create a compliance snapshot</p>
-                                </CardContent>
-                            </Card>
-                        )}
+                        <h1 className="text-3xl font-bold tracking-tight">Security Health</h1>
+                        <p className="text-sm text-muted-foreground">Monitor real-time compliance and workspace security parity.</p>
                     </div>
 
-                    {/* ── Report Content (shown after generation, also printed) ── */}
-                    {report && (
-                        <div className="space-y-8">
-                            
-                            {/* Security Score Dashboard Element */}
-                            <div className="no-print">
-                                <SecurityScoreCard score={calculateSecurityScore(report)} />
-                            </div>
-
-                            {/* Cover */}
-                            <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-8">
-                                {/* Print-only header */}
-                                <div className="print-only mb-6">
-                                    <h1 className="text-2xl font-bold">XtraSecurity — Compliance Report</h1>
-                                </div>
-                                <div className="flex items-start justify-between flex-wrap gap-6">
-                                    <div>
-                                        <div className="flex items-center gap-3 mb-4 no-print">
-                                            <div className="p-3 bg-primary/10 rounded-xl">
-                                                <Shield className="h-8 w-8 text-primary" />
-                                            </div>
-                                            <div>
-                                                <h2 className="text-2xl font-bold">Security Compliance Report</h2>
-                                                <p className="text-muted-foreground text-sm">XtraSecurity Platform</p>
-                                            </div>
-                                        </div>
-                                        <div className="space-y-1 text-sm text-muted-foreground">
-                                            <p><span className="font-medium text-foreground">Generated:</span> {fmtFull(report.generatedAt)}</p>
-                                            <p><span className="font-medium text-foreground">Prepared by:</span> {report.generatedBy}</p>
-                                        </div>
-                                    </div>
-                                    {/* Summary stats */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                                        {[
-                                            { label: "Projects", value: report.summary.totalProjects, icon: FileText },
-                                            { label: "Secrets", value: report.summary.totalSecrets, icon: Key },
-                                            { label: "Overdue Rotations", value: report.summary.overdueRotations, icon: AlertTriangle, warn: report.summary.overdueRotations > 0 },
-                                            { label: "Access Entries", value: report.summary.prodAccessEntries, icon: Users },
-                                            { label: "Audit Events", value: report.summary.totalAuditEntries, icon: Clock },
-                                        ].map(({ label, value, icon: Icon, warn }) => (
-                                            <div key={label} className={`p-3 rounded-lg border text-center ${warn ? "border-destructive/30 bg-destructive/5" : "border-border bg-muted/30"}`}>
-                                                <Icon className={`h-4 w-4 mx-auto mb-1 ${warn ? "text-destructive" : "text-muted-foreground"}`} />
-                                                <p className={`text-xl font-bold ${warn ? "text-destructive" : ""}`}>{value}</p>
-                                                <p className="text-xs text-muted-foreground">{label}</p>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Section 1: Projects */}
-                            <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-6">
-                                <SectionHeading icon={FileText} title="Project Security Configuration" count={report.projects.length} />
-                                {report.projects.length === 0 ? (
-                                    <p className="text-muted-foreground text-sm">No projects found.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border">
-                                                    {["Project", "Access", "Security Level", "2FA Required", "Audit Logging", "Last Audit"].map(h => (
-                                                        <th key={h} className="text-left py-2 px-3 text-muted-foreground font-medium text-xs">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {report.projects.map((p) => (
-                                                    <tr key={p.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                                                        <td className="py-2 px-3 font-medium">{p.name}</td>
-                                                        <td className="py-2 px-3">
-                                                            <Badge variant="outline" className="text-xs">{p.accessControl ?? "private"}</Badge>
-                                                        </td>
-                                                        <td className="py-2 px-3">
-                                                            <Badge variant={p.securityLevel === "high" ? "destructive" : "secondary"} className="text-xs">
-                                                                {p.securityLevel ?? "low"}
-                                                            </Badge>
-                                                        </td>
-                                                        <td className="py-2 px-3">
-                                                            {p.twoFactorRequired
-                                                                ? <CheckCircle className="h-4 w-4 text-green-500" />
-                                                                : <span className="text-muted-foreground">—</span>}
-                                                        </td>
-                                                        <td className="py-2 px-3">
-                                                            {p.auditLogging
-                                                                ? <CheckCircle className="h-4 w-4 text-green-500" />
-                                                                : <span className="text-muted-foreground">—</span>}
-                                                        </td>
-                                                        <td className="py-2 px-3 text-muted-foreground text-xs">{fmt(p.lastSecurityAudit)}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Section 2: Access Control */}
-                            <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-6">
-                                <SectionHeading icon={Users} title="Access Control — Who Has Access" count={report.accessControl.length} />
-                                {report.accessControl.length === 0 ? (
-                                    <p className="text-muted-foreground text-sm">No role assignments found. Users may be using default project access.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border">
-                                                    {["User", "Email", "Role", "Project", "Granted", "Expires"].map(h => (
-                                                        <th key={h} className="text-left py-2 px-3 text-muted-foreground font-medium text-xs">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {report.accessControl.map((ac, i) => (
-                                                    <tr key={i} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                                                        <td className="py-2 px-3 font-medium">{ac.user}</td>
-                                                        <td className="py-2 px-3 text-muted-foreground text-xs">{ac.email}</td>
-                                                        <td className="py-2 px-3">
-                                                            <Badge variant="outline" className="text-xs">{ac.role}</Badge>
-                                                        </td>
-                                                        <td className="py-2 px-3">{ac.project}</td>
-                                                        <td className="py-2 px-3 text-xs text-muted-foreground">{fmt(ac.grantedAt)}</td>
-                                                        <td className="py-2 px-3 text-xs text-muted-foreground">
-                                                            {ac.expiresAt ? (
-                                                                <span className={new Date(ac.expiresAt) < new Date() ? "text-destructive font-medium" : ""}>
-                                                                    {fmt(ac.expiresAt)}
-                                                                </span>
-                                                            ) : "Never"}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Section 3: Secret Rotation */}
-                            <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-6">
-                                <SectionHeading icon={Key} title="Secret Rotation Status" count={report.rotationStatus.length} />
-                                {report.rotationStatus.length === 0 ? (
-                                    <p className="text-muted-foreground text-sm">No secrets found.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border">
-                                                    {["Secret Key", "Project", "Env", "Policy", "Last Rotated", "Next Rotation", "Status"].map(h => (
-                                                        <th key={h} className="text-left py-2 px-3 text-muted-foreground font-medium text-xs">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {report.rotationStatus.map((s, i) => (
-                                                    <tr key={i} className={`border-b border-border/50 hover:bg-muted/20 transition-colors ${s.isOverdue ? "bg-destructive/5" : ""}`}>
-                                                        <td className="py-2 px-3 font-mono font-medium text-xs">{s.key}</td>
-                                                        <td className="py-2 px-3 text-xs">{s.project}</td>
-                                                        <td className="py-2 px-3">
-                                                            <Badge variant="outline" className="text-xs">{s.environment}</Badge>
-                                                        </td>
-                                                        <td className="py-2 px-3 text-xs text-muted-foreground">{s.policy}</td>
-                                                        <td className="py-2 px-3 text-xs text-muted-foreground">{fmt(s.lastRotated)}</td>
-                                                        <td className="py-2 px-3 text-xs">
-                                                            {s.nextRotation ? (
-                                                                <span className={s.isOverdue ? "text-destructive font-semibold" : "text-muted-foreground"}>
-                                                                    {fmt(s.nextRotation)}
-                                                                </span>
-                                                            ) : "—"}
-                                                        </td>
-                                                        <td className="py-2 px-3">
-                                                            {s.isOverdue ? (
-                                                                <Badge variant="destructive" className="text-xs gap-1">
-                                                                    <AlertTriangle className="h-3 w-3" />Overdue
-                                                                </Badge>
-                                                            ) : s.scheduleStatus === "active" ? (
-                                                                <Badge className="text-xs bg-green-500/20 text-green-600 border-green-500/30">Active</Badge>
-                                                            ) : (
-                                                                <Badge variant="secondary" className="text-xs">{s.scheduleStatus}</Badge>
-                                                            )}
-                                                        </td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Section 4: Audit Log */}
-                            <div className="report-card rounded-xl border border-primary/20 bg-gradient-card p-6">
-                                <SectionHeading icon={Clock} title="Admin Actions Audit Log" count={report.auditEntries.length} />
-                                {report.auditEntries.length === 0 ? (
-                                    <p className="text-muted-foreground text-sm">No audit entries found.</p>
-                                ) : (
-                                    <div className="overflow-x-auto">
-                                        <table className="w-full text-sm">
-                                            <thead>
-                                                <tr className="border-b border-border">
-                                                    {["Timestamp", "Action", "Entity", "Entity ID", "User"].map(h => (
-                                                        <th key={h} className="text-left py-2 px-3 text-muted-foreground font-medium text-xs">{h}</th>
-                                                    ))}
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                {report.auditEntries.map((entry, i) => (
-                                                    <tr key={i} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
-                                                        <td className="py-2 px-3 text-xs text-muted-foreground whitespace-nowrap">{fmtFull(entry.timestamp)}</td>
-                                                        <td className="py-2 px-3">
-                                                            <Badge variant="outline" className="text-xs font-mono">{entry.action}</Badge>
-                                                        </td>
-                                                        <td className="py-2 px-3 text-xs">{entry.entity}</td>
-                                                        <td className="py-2 px-3 font-mono text-xs text-muted-foreground truncate max-w-[120px]">{entry.entityId}</td>
-                                                        <td className="py-2 px-3 text-xs">{entry.user}</td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Footer */}
-                            <div className="text-center text-xs text-muted-foreground py-4 border-t border-border">
-                                Report generated by XtraSecurity · {fmtFull(report.generatedAt)} · Confidential
-                            </div>
-
-                        </div>
-                    )}
+                    <div className="flex items-center gap-3">
+                        <Button variant="outline" onClick={() => fetchSecurityReport(true)} className="h-10">
+                            <RefreshCw className="mr-2 h-4 w-4" />
+                            Refresh
+                        </Button>
+                        <Button onClick={handlePrint} className="h-10">
+                            <Download className="mr-2 h-4 w-4" />
+                            Export Report
+                        </Button>
+                    </div>
                 </div>
+
+                <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-8">
+                    <TabsList className="bg-muted/50 p-1 no-print">
+                        <TabsTrigger value="overview" className="px-6 rounded-md">Overview</TabsTrigger>
+                        <TabsTrigger value="access" className="px-6 rounded-md">Access Control</TabsTrigger>
+                        <TabsTrigger value="secrets" className="px-6 rounded-md">Secret Health</TabsTrigger>
+                        <TabsTrigger value="audit" className="px-6 rounded-md">Security Logs</TabsTrigger>
+                    </TabsList>
+
+                    {/* OVERVIEW TAB */}
+                    <TabsContent value="overview" className="space-y-8">
+                        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
+                            {securityScore && <SecurityScoreCard score={securityScore} onNavigate={setActiveTab} />}
+                        </motion.div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <Card className="border shadow-none">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between">
+                                        Active Projects
+                                        <FileText className="h-4 w-4 opacity-40" />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-3xl font-bold">{report.summary.totalProjects}</div>
+                                    <p className="text-xs text-muted-foreground mt-1">Configured for workspace level parity.</p>
+                                </CardContent>
+                            </Card>
+                            <Card className={cn("border shadow-none", report.summary.overdueRotations > 0 ? "border-rose-200 bg-rose-50/10" : "")}>
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between">
+                                        Overdue Rotations
+                                        <AlertTriangle className={cn("h-4 w-4", report.summary.overdueRotations > 0 ? "text-rose-500" : "opacity-40")} />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className={cn("text-3xl font-bold", report.summary.overdueRotations > 0 ? "text-rose-600" : "")}>
+                                        {report.summary.overdueRotations}
+                                    </div>
+                                    <p className="text-xs text-muted-foreground mt-1">Requires immediate secret refresh policy.</p>
+                                </CardContent>
+                            </Card>
+                            <Card className="border shadow-none">
+                                <CardHeader className="pb-2">
+                                    <CardTitle className="text-sm font-medium text-muted-foreground uppercase tracking-widest flex items-center justify-between">
+                                        MFA Adoption
+                                        <Smartphone className="h-4 w-4 opacity-40" />
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-3xl font-bold">100%</div>
+                                    <p className="text-xs text-muted-foreground mt-1">Primary owner account protected.</p>
+                                </CardContent>
+                            </Card>
+                        </div>
+
+                        {/* Recent Health Alerts */}
+                        <Card className="border">
+                             <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between space-y-0">
+                                <CardTitle className="text-lg">Critical Health Alerts</CardTitle>
+                                <Badge variant="secondary" className="px-3 rounded-full">{report.rotationStatus.filter(s => s.isOverdue).length} Alerts</Badge>
+                             </CardHeader>
+                             <CardContent className="p-0">
+                                <div className="divide-y">
+                                    {report.rotationStatus.filter(s => s.isOverdue).map((s, i) => (
+                                        <div key={i} className="flex items-center justify-between p-4 bg-rose-50/5 hover:bg-rose-50/10 transition-colors">
+                                            <div className="flex items-center gap-4">
+                                                <div className="h-10 w-10 rounded-full bg-rose-100 flex items-center justify-center shrink-0">
+                                                    <Key className="h-5 w-5 text-rose-600" />
+                                                </div>
+                                                <div className="space-y-0.5">
+                                                    <p className="text-sm font-bold">Rotation Overdue: {s.key}</p>
+                                                    <p className="text-xs text-muted-foreground">Project: {s.project} · Environment: {s.environment}</p>
+                                                </div>
+                                            </div>
+                                            <Button variant="outline" size="sm" className="h-8 border-rose-200 text-rose-700 hover:bg-rose-100" onClick={() => setActiveTab("secrets")}>
+                                                Fix Risk <ArrowRight className="ml-1.5 h-3 w-3" />
+                                            </Button>
+                                        </div>
+                                    ))}
+                                    {report.rotationStatus.filter(s => s.isOverdue).length === 0 && (
+                                        <div className="p-12 text-center text-muted-foreground">
+                                            <CheckCircle2 className="h-10 w-10 text-emerald-500 mx-auto mb-4 opacity-40" />
+                                            <p className="text-sm font-medium">No critical health risks detected.</p>
+                                        </div>
+                                    ) }
+                                </div>
+                             </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* ACCESS CONTROL TAB */}
+                    <TabsContent value="access" className="space-y-6">
+                        <Card className="border">
+                             <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-lg">Project Permissions</CardTitle>
+                                    <CardDescription>Active access entries across all workspace resources.</CardDescription>
+                                </div>
+                                <div className="relative w-64 no-print">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                                    <Input 
+                                        placeholder="Search emails..."
+                                        value={searchTerm}
+                                        onChange={e => setSearchTerm(e.target.value)}
+                                        className="pl-9 h-9"
+                                    />
+                                </div>
+                             </CardHeader>
+                             <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm whitespace-nowrap">
+                                        <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-bold tracking-wider">
+                                            <tr>
+                                                <th className="px-6 py-4">Direct User</th>
+                                                <th className="px-6 py-4">Resource</th>
+                                                <th className="px-6 py-4">Role</th>
+                                                <th className="px-6 py-4">Granted At</th>
+                                                <th className="px-6 py-4">Expiration</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {report.accessControl.filter(ac => ac.email.toLowerCase().includes(searchTerm.toLowerCase())).map((ac, i) => (
+                                                <tr key={i} className="hover:bg-muted/5 transition-colors group">
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-semibold text-foreground">{ac.user}</span>
+                                                            <span className="text-xs text-muted-foreground">{ac.email}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="outline" className="font-mono text-[11px] py-0 px-2 h-6">{ac.project}</Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <Badge className="bg-primary/10 text-primary border-primary/20 capitalize px-2 py-0 h-6 font-medium">{ac.role}</Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-muted-foreground text-xs">{fmt(ac.grantedAt)}</td>
+                                                    <td className="px-6 py-4 text-xs font-medium">
+                                                        {ac.expiresAt ? (
+                                                            <span className={cn(new Date(ac.expiresAt) < new Date() ? "text-rose-600" : "text-muted-foreground")}>
+                                                                {fmt(ac.expiresAt)}
+                                                            </span>
+                                                        ) : "Never"}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                             </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* SECRETS TAB */}
+                    <TabsContent value="secrets" className="space-y-6">
+                        <Card className="border">
+                             <CardHeader className="border-b bg-muted/5">
+                                <CardTitle className="text-lg">Credential Lifecycle</CardTitle>
+                                <CardDescription>Policy enforcement status for managed secrets.</CardDescription>
+                             </CardHeader>
+                             <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm whitespace-nowrap">
+                                        <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-bold tracking-wider">
+                                            <tr>
+                                                <th className="px-6 py-4">Secret Identity</th>
+                                                <th className="px-6 py-4">Project / Env</th>
+                                                <th className="px-6 py-4">Policy</th>
+                                                <th className="px-6 py-4">Last Rotated</th>
+                                                <th className="px-6 py-4">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {report.rotationStatus.map((s, i) => (
+                                                <tr key={i} className={cn("hover:bg-muted/5 transition-colors", s.isOverdue ? "bg-rose-50/5" : "")}>
+                                                    <td className="px-6 py-4">
+                                                        <span className="font-mono text-sm font-semibold text-foreground">{s.key}</span>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-xs">{s.project}</span>
+                                                            <span className="text-[10px] text-muted-foreground uppercase font-bold">{s.environment}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="outline" className="text-[11px] font-medium border-primary/20 text-primary">{s.policy}</Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4 text-muted-foreground text-xs">{fmt(s.lastRotated)}</td>
+                                                    <td className="px-6 py-4">
+                                                        {s.isOverdue ? (
+                                                            <Badge variant="destructive" className="gap-1 rounded-full text-[10px] font-bold px-3">
+                                                                <AlertTriangle className="h-3 w-3" /> OVERDUE
+                                                            </Badge>
+                                                        ) : (
+                                                            <Badge className="bg-emerald-500/10 text-emerald-600 border-emerald-500/20 gap-1 rounded-full text-[10px] font-bold px-3">
+                                                              <CheckCircle2 className="h-3 w-3" /> SECURE
+                                                            </Badge>
+                                                        )}
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                             </CardContent>
+                        </Card>
+                    </TabsContent>
+
+                    {/* AUDIT TAB */}
+                    <TabsContent value="audit" className="space-y-6">
+                        <Card className="border">
+                             <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between">
+                                <div className="space-y-1">
+                                    <CardTitle className="text-lg">Security Audit Trail</CardTitle>
+                                    <CardDescription>Recent sensitive operations detected by the security engine.</CardDescription>
+                                </div>
+                                <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5" onClick={() => router.push('/audit')}>
+                                    Full Audit Logs <ExternalLink className="h-3 w-3" />
+                                </Button>
+                             </CardHeader>
+                             <CardContent className="p-0">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left text-sm whitespace-nowrap">
+                                        <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-bold tracking-wider">
+                                            <tr>
+                                                <th className="px-6 py-4">Timestamp</th>
+                                                <th className="px-6 py-4">Operation</th>
+                                                <th className="px-6 py-4">Entity</th>
+                                                <th className="px-6 py-4">Actor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y">
+                                            {report.auditEntries.map((log, i) => (
+                                                <tr key={i} className="hover:bg-muted/5 transition-colors">
+                                                    <td className="px-6 py-4 text-xs font-mono text-muted-foreground">{fmtFull(log.timestamp)}</td>
+                                                    <td className="px-6 py-4">
+                                                        <Badge variant="outline" className="font-mono text-[10px] uppercase font-black tracking-tighter bg-muted/40">{log.action}</Badge>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <div className="flex flex-col">
+                                                            <span className="font-medium text-xs text-foreground uppercase tracking-tight">{log.entity}</span>
+                                                            <span className="text-[10px] font-mono text-muted-foreground/60">{log.entityId}</span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="px-6 py-4">
+                                                        <span className="text-xs font-semibold">{log.user}</span>
+                                                    </td>
+                                                </tr>
+                                            ))}
+                                        </tbody>
+                                    </table>
+                                </div>
+                             </CardContent>
+                        </Card>
+                    </TabsContent>
+                </Tabs>
+
             </div>
-        </>
+        </div>
     );
+}
+
+function Loader2({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+    )
 }

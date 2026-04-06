@@ -130,9 +130,16 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Rotation schedule already exists for this secret" }, { status: 409 });
     }
 
-    // Create Schedule
+    // Create Schedule — calculate nextRotation based on frequency
     const nextRotation = new Date();
-    nextRotation.setDate(nextRotation.getDate() + 30); // Default start
+    const freqDays: Record<string, number> = {
+      daily: 1,
+      weekly: 7,
+      monthly: 30,
+      quarterly: 90,
+    };
+    const daysToAdd = frequency === "custom" && customDays ? customDays : (freqDays[frequency] || 30);
+    nextRotation.setDate(nextRotation.getDate() + daysToAdd);
 
     const schedule = await prisma.rotationSchedule.create({
       data: {
@@ -140,7 +147,7 @@ export async function POST(req: Request) {
         projectId,
         environment: secret.environmentType,
         frequency,
-        customDays,
+        customDays: frequency === "custom" ? customDays : null,
         nextRotation,
         method: rotationMethod,
         webhookUrl,

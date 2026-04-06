@@ -328,19 +328,17 @@ export default function DashboardPage() {
                 >
                   <div className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary transition-all duration-300" />
                   <CardHeader className="pb-3 px-5 pt-5">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="space-y-1.5 min-w-0 flex-1">
-                        <div className="flex items-center gap-2.5">
-                          <CardTitle className="text-lg font-semibold truncate">{project.name}</CardTitle>
-                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-sm">
+                    <div className="space-y-1.5 overflow-hidden">
+                        <div className="flex items-center gap-2">
+                          <Badge variant={project.status === 'active' ? 'default' : 'secondary'} className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-sm shrink-0">
                             {project.status}
                           </Badge>
                         </div>
+                        <h3 className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap" title={project.name}>{project.name}</h3>
                         <CardDescription className="line-clamp-2 text-xs mt-1 leading-relaxed">
                           {project.description || "No description provided."}
                         </CardDescription>
                       </div>
-                    </div>
                   </CardHeader>
                   <CardContent className="px-5 pb-5 pt-2 mt-auto">
                     <div className="flex items-end justify-between text-xs text-muted-foreground pt-4 border-t border-border/50">

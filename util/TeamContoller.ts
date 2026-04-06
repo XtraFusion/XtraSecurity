@@ -25,7 +25,7 @@ export const TeamController = {
     },
     deleteTeam: async (teamId: string) => {
         try {
-            const response = await apiClient.delete(`/api/team/${teamId}`);
+            const response = await apiClient.delete("/api/team", { data: { teamId } });
             return response.data;
         } catch (error) {
             console.error("Error deleting team:", error);

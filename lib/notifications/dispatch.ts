@@ -7,6 +7,7 @@
 import { sendSlackNotification, SlackNotificationPayload } from "./slack";
 import { sendTeamsNotification } from "./teams";
 import { sendWebhookNotification } from "./webhook";
+import { sendEmail } from "@/lib/email";
 
 interface DispatchOptions {
   title: string;
@@ -90,8 +91,42 @@ export async function dispatchNotification(options: DispatchOptions): Promise<vo
             });
           }
           
-          // Note: Email is handled separately in createNotification for now
-          
+          else if (channel.type === "email") {
+            const emailAddress = channel.config?.email;
+            if (!emailAddress) return;
+            const typeColor = options.type === "error" ? "#EF4444" : options.type === "warning" ? "#F59E0B" : "#6366F1";
+            await sendEmail({
+              to: emailAddress,
+              subject: `[XtraSecurity] ${options.title}`,
+              text: `${options.title}\n\n${options.message}${options.description ? `\n\n${options.description}` : ""}`,
+              html: `
+                <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
+                  <div style="background: ${typeColor}; padding: 12px 20px; border-radius: 6px 6px 0 0;">
+                    <h2 style="color: #fff; margin: 0; font-size: 16px;">🔔 ${options.title}</h2>
+                  </div>
+                  <div style="padding: 20px; background: #f9fafb;">
+                    <p style="color: #111827; font-size: 15px; margin-top: 0;">${options.message}</p>
+                    ${options.description ? `<p style="color: #6b7280; font-size: 13px;">${options.description}</p>` : ""}
+                    ${options.fields && options.fields.length > 0
+                      ? `<table style="width: 100%; border-collapse: collapse; margin-top: 16px; font-size: 13px;">
+                          ${options.fields.map(f => `
+                            <tr>
+                              <td style="padding: 6px 10px; background: #e5e7eb; font-weight: 600; width: 40%;">${f.label}</td>
+                              <td style="padding: 6px 10px;">${f.value}</td>
+                            </tr>
+                          `).join("")}
+                        </table>`
+                      : ""}
+                  </div>
+                  <p style="font-size: 11px; color: #9ca3af; padding: 10px 20px 0;">
+                    XtraSecurity • ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}
+                  </p>
+                </div>
+              `,
+            });
+          }
+
+          // eslint-disable-next-line no-console
     console.log(`[Dispatch] Success for channel "${channel.name}" (${channel.type})`);
         } catch (err) {
           console.error(`[Dispatch] Exception for channel "${channel.name}":`, err);

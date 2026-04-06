@@ -9,13 +9,14 @@ import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Check, Loader2, Sparkles, AlertTriangle, TrendingUp, ShieldAlert } from "lucide-react";
+import { Check, Loader2, Sparkles, AlertTriangle, TrendingUp, ShieldAlert, Zap, Crown, Building2, Server, Key, Users } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/hooks/useUser";
 import { RateLimitResult, Tier, DAILY_LIMITS } from "@/lib/rate-limit-config";
 import { formatDistanceToNow } from "date-fns";
 import confetti from "canvas-confetti";
 import { toast } from "@/hooks/use-toast";
+import { motion } from "framer-motion";
 
 // Ensure Razorpay type is somewhat known
 declare global {
@@ -39,6 +40,16 @@ interface SubscriptionUIProps {
     };
 }
 
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+};
+
+const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1, transition: { type: "spring", stiffness: 300, damping: 24 } }
+};
+
 export default function SubscriptionUI({ tier, stats, resourceUsage }: SubscriptionUIProps) {
     const router = useRouter();
     const { fetchUser, user } = useGlobalContext();
@@ -48,24 +59,10 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
 
     const percentage = Math.min(100, Math.round(((stats.limit - stats.remaining) / stats.limit) * 100));
 
-    const getBarColor = (pct: number) => {
-        if (pct >= 90) return "[&>div]:bg-red-500";
-        if (pct >= 70) return "[&>div]:bg-amber-500";
-        return "[&>div]:bg-emerald-500";
-    };
-
-    const getBarLabel = (pct: number) => {
-        if (pct >= 90) return { text: "Critical", cls: "text-red-600 dark:text-red-400 font-semibold" };
-        if (pct >= 70) return { text: "Near limit", cls: "text-amber-600 dark:text-amber-400 font-semibold" };
-        return null;
-    };
-
     const initiateUpgradeProcess = (tierKey: Tier) => {
         if (tierKey === 'free') {
-            // Free tier requires no payment
             processFreeTierUpgrade(tierKey);
         } else if (tierKey === 'pro') {
-            // Open promo code dialog for Pro
             setPromoCode("");
             setPromoDialogOpen(true);
         }
@@ -84,11 +81,11 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                 fetchUser();
                 router.refresh();
             } else {
-                alert("Failed to downgrade to free plan.");
+                toast({ title: "Failed to downgrade", variant: "destructive" });
             }
         } catch (err) {
             console.error("Free Plan Downgrade Error:", err);
-            alert("An error occurred.");
+            toast({ title: "An error occurred", variant: "destructive" });
         } finally {
             setIsProcessing(null);
         }
@@ -100,7 +97,6 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
         setIsProcessing(tierKey);
 
         try {
-            // 1. Create order
             const orderRes = await fetch('/api/payment/create-order', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -108,7 +104,6 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
             });
             const { order, isFree, promoMessage } = await orderRes.json();
 
-            // Show discount toast & confetti if applicable before proceeding
             if (promoMessage && promoMessage.includes("discount")) {
                 confetti({
                     particleCount: 150,
@@ -124,7 +119,6 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                 });
             }
 
-            // If the promo code made it free, skip razorpay
             if (isFree) {
                 const res = await fetch('/api/subscription/upgrade', {
                     method: 'POST',
@@ -136,7 +130,7 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                     fetchUser();
                     router.refresh();
                 } else {
-                    alert("Failed to apply promo and upgrade.");
+                    toast({ title: "Failed to apply promo and upgrade", variant: "destructive" });
                 }
                 setIsProcessing(null);
                 return;
@@ -145,13 +139,12 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
             if (!order) {
                 console.error("No order returned");
                 setIsProcessing(null);
-                alert("Could not initialize payment. Please check your connection.");
+                toast({ title: "Could not initialize payment", description: "Please check your connection.", variant: "destructive" });
                 return;
             }
 
-            // 2. Initialize Razorpay Checkout
             const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Use Razorpay test key in NEXT_PUBLIC_...
+                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, 
                 amount: order.amount,
                 currency: order.currency,
                 name: 'XtraSecurity',
@@ -160,7 +153,6 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                 handler: async function (response: any) {
                     try {
                         setIsProcessing(tierKey);
-                        // 3. Verify Payment
                         const verifyRes = await fetch('/api/payment/verify', {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
@@ -175,15 +167,15 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                         const verifyData = await verifyRes.json();
 
                         if (verifyRes.ok) {
-                            fetchUser(); // Sync global client state
-                            router.refresh(); // Reload server components
+                            fetchUser(); 
+                            router.refresh(); 
                         } else {
                             console.error("Verification failed:", verifyData);
-                            alert("Payment verification failed. Please contact support.");
+                            toast({ title: "Payment verification failed", description: "Please contact support.", variant: "destructive" });
                         }
                     } catch (err) {
                         console.error("Verification error:", err);
-                        alert("Payment verification error.");
+                        toast({ title: "Payment verification error", variant: "destructive" });
                     } finally {
                         setIsProcessing(null);
                     }
@@ -192,9 +184,7 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                     name: user?.name || "User",
                     email: user?.email || "",
                 },
-                theme: {
-                    color: '#6366f1' // Premium Indigo
-                }
+                theme: { color: '#6366f1' }
             };
 
             const rzp = new window.Razorpay(options);
@@ -202,12 +192,10 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
             rzp.on('payment.failed', function (response: any) {
                 console.error("Payment Failed:", response.error);
                 setIsProcessing(null);
-                alert("Payment cancelled or failed");
+                toast({ title: "Payment cancelled or failed", variant: "destructive" });
             });
 
             rzp.open();
-            // Important: we leave isProcessing as the tierKey so it shows loading while modal is open 
-            // The handler/failed callbacks will clear it.
         } catch (error) {
             console.error("Checkout rendering failed", error);
             setIsProcessing(null);
@@ -215,121 +203,112 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
     };
 
     return (
-        <div className="space-y-10">
+        <motion.div 
+            initial="hidden" 
+            animate="visible" 
+            variants={containerVariants} 
+            className="space-y-12 pb-20 relative max-w-7xl mx-auto"
+        >
             <Script src="https://checkout.razorpay.com/v1/checkout.js" />
+            
+            {/* Background glowing effects */}
+            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-64 bg-primary/10 blur-[120px] rounded-full pointer-events-none -z-10" />
 
-            <div className="flex flex-col gap-2">
-                <h1 className="text-3xl font-bold tracking-tight">Subscription &amp; Usage</h1>
-                <p className="text-muted-foreground">Manage your plan and monitor your API usage limits.</p>
-            </div>
-
-            {/* Near-limit warning banner */}
-            {percentage >= 80 && (
-                <div className={`flex items-start gap-3 p-4 rounded-xl border ${percentage >= 90
-                    ? "bg-red-500/10 border-red-500/30"
-                    : "bg-amber-500/10 border-amber-500/30"
-                    }`}>
-                    <ShieldAlert className={`h-5 w-5 shrink-0 mt-0.5 ${percentage >= 90 ? "text-red-500" : "text-amber-500"
-                        }`} />
-                    <div className="flex-1">
-                        <p className={`font-semibold text-sm ${percentage >= 90 ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"
-                            }`}>
-                            {percentage >= 90 ? "🚨 API limit almost exhausted" : "⚠️ Approaching API limit"}
-                        </p>
-                        <p className={`text-xs mt-0.5 ${percentage >= 90 ? "text-red-600 dark:text-red-500" : "text-amber-600 dark:text-amber-500"
-                            }`}>
-                            You've used <strong>{percentage}%</strong> of your daily {stats.limit} requests.
-                            {tier === 'free' && " Upgrade to Pro for 10× more capacity."}
-                        </p>
-                    </div>
-                    {tier === 'free' && (
-                        <Button size="sm" variant="outline" className="shrink-0" onClick={() => initiateUpgradeProcess('pro')}>
-                            <TrendingUp className="h-3.5 w-3.5 mr-1.5" /> Upgrade
-                        </Button>
-                    )}
+            <motion.div variants={itemVariants} className="flex flex-col gap-3 pt-6 text-center sm:text-left">
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase tracking-widest text-primary bg-primary/10 rounded-full w-fit mx-auto sm:mx-0 mb-2 border border-primary/20 shadow-inner">
+                    <Crown className="h-4 w-4" /> Your Subscription
                 </div>
+                <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight">Subscription &amp; Usage</h1>
+                <p className="text-muted-foreground text-lg max-w-2xl mx-auto sm:mx-0">Manage your plan, check your billing cycle, and monitor your resource limits.</p>
+            </motion.div>
+
+            {percentage >= 80 && (
+                <motion.div variants={itemVariants}>
+                    <div className={`flex flex-col sm:flex-row sm:items-center gap-5 p-6 rounded-3xl border backdrop-blur-md ${percentage >= 90
+                        ? "bg-red-500/10 border-red-500/30 shadow-[0_0_30px_-5px_rgba(239,68,68,0.2)]"
+                        : "bg-amber-500/10 border-amber-500/30 shadow-[0_0_30px_-5px_rgba(245,158,11,0.2)]"
+                        }`}>
+                        <div className={`p-4 rounded-2xl shrink-0 ${percentage >= 90 ? "bg-red-500/20 text-red-500" : "bg-amber-500/20 text-amber-500"}`}>
+                            <ShieldAlert className="h-8 w-8" />
+                        </div>
+                        <div className="flex-1">
+                            <p className={`text-xl font-bold ${percentage >= 90 ? "text-red-700 dark:text-red-400" : "text-amber-700 dark:text-amber-400"}`}>
+                                {percentage >= 90 ? "API limit almost exhausted" : "Approaching API limit"}
+                            </p>
+                            <p className={`text-base mt-1.5 ${percentage >= 90 ? "text-red-800/80 dark:text-red-300/80" : "text-amber-800/80 dark:text-amber-300/80"}`}>
+                                You've used {percentage}% of your daily {stats.limit} requests.
+                                {tier === 'free' && " Upgrade to Pro for 10× more capacity."}
+                            </p>
+                        </div>
+                        {tier === 'free' && (
+                            <Button className={`shrink-0 h-12 px-6 rounded-xl text-md font-semibold ${percentage >= 90 ? "bg-red-600 hover:bg-red-700 text-white shadow-lg shadow-red-500/30" : ""}`} size="lg" onClick={() => initiateUpgradeProcess('pro')}>
+                                <TrendingUp className="h-5 w-5 mr-2" /> Upgrade to Pro
+                            </Button>
+                        )}
+                    </div>
+                </motion.div>
             )}
 
-            {/* Current Usage */}
-            <Card>
-                <CardHeader>
-                    <div className="flex justify-between items-center">
-                        <CardTitle>Current Plan Usage</CardTitle>
-                        <Badge variant={tier === 'free' ? 'secondary' : tier === 'pro' ? 'default' : 'destructive'} className="uppercase">
-                            {tier} Plan
-                        </Badge>
-                    </div>
-                    <CardDescription>
-                        Your API request usage for the current 24-hour window.
-                    </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    {/* API Requests */}
-                    <div className="space-y-2">
-                        <div className="flex justify-between text-sm font-medium">
-                            <span className="flex items-center gap-2">Daily API Requests</span>
-                            <div className="flex items-center gap-2">
-                                {getBarLabel(percentage) && (
-                                    <span className={`text-xs ${getBarLabel(percentage)!.cls}`}>{getBarLabel(percentage)!.text}</span>
-                                )}
-                                <span className="font-mono">{stats.limit - stats.remaining} / {stats.limit}</span>
-                                <span className="text-muted-foreground text-xs">({percentage}%)</span>
-                            </div>
-                        </div>
-                        <Progress value={percentage} className={`h-2.5 ${getBarColor(percentage)}`} />
-                        <p className="text-xs text-muted-foreground italic">
-                            {stats.reset > 0
-                                ? `Usage resets in ${formatDistanceToNow(new Date(stats.reset * 1000))}.`
-                                : 'Usage tracking not yet started (resets 24h after first request).'}
-                        </p>
-                    </div>
+            <div className="space-y-6">
+                <motion.div variants={itemVariants} className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold tracking-tight">Current Usage</h2>
+                    <Badge variant={tier === 'free' ? 'secondary' : tier === 'pro' ? 'default' : 'destructive'} className="uppercase px-4 py-1.5 text-sm font-bold shadow-sm">
+                        {tier} Plan
+                    </Badge>
+                </motion.div>
 
-                    {resourceUsage && (
-                        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 pt-4 border-t">
-                            {([
-                                { label: "Workspaces", data: resourceUsage.workspaces },
-                                { label: "Teams", data: resourceUsage.teams },
-                                { label: "Projects (per Workspace)", data: resourceUsage.projects, title: "Max projects used in a single workspace" },
-                            ] as const).map(({ label, data, title }: any) => {
-                                const pct = Math.min(100, Math.round((data.used / data.limit) * 100));
-                                const lbl = getBarLabel(pct);
-                                return (
-                                    <div key={label} className="space-y-2">
-                                        <div className="flex justify-between text-sm font-medium">
-                                            <span title={title}>{label}</span>
-                                            <div className="flex items-center gap-1.5">
-                                                {lbl && <span className={`text-xs ${lbl.cls}`}>{lbl.text}</span>}
-                                                <span className="font-mono">{data.used} / {data.limit}</span>
-                                                <span className="text-muted-foreground text-xs">({pct}%)</span>
-                                            </div>
-                                        </div>
-                                        <Progress value={pct} className={`h-2 ${getBarColor(pct)}`} />
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
+                {resourceUsage && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 lg:gap-6">
+                        <UsageMetricCard 
+                            title="API Requests" 
+                            used={stats.limit - stats.remaining} 
+                            limit={stats.limit} 
+                            icon={Zap} 
+                            percentage={percentage}
+                            subtitle={stats.reset > 0 ? `Resets ${formatDistanceToNow(new Date(stats.reset * 1000))} from now` : undefined}
+                        />
+                        <UsageMetricCard 
+                            title="Workspaces" 
+                            used={resourceUsage.workspaces.used} 
+                            limit={resourceUsage.workspaces.limit} 
+                            icon={Building2} 
+                        />
+                        <UsageMetricCard 
+                            title="Teams" 
+                            used={resourceUsage.teams.used} 
+                            limit={resourceUsage.teams.limit} 
+                            icon={Users} 
+                        />
+                        <UsageMetricCard 
+                            title="Projects" 
+                            used={resourceUsage.projects.used} 
+                            limit={resourceUsage.projects.limit} 
+                            icon={Server} 
+                            tooltip="Maximum projects used in a single workspace"
+                        />
+                    </div>
+                )}
+            </div>
 
-            {/* Pricing Options */}
-            <div>
-                <h2 className="text-2xl font-bold mb-6">Available Plans</h2>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="pt-12">
+                <motion.div variants={itemVariants} className="text-center mb-12">
+                    <h2 className="text-3xl lg:text-4xl font-extrabold tracking-tight mb-4">Simple, Transparent Pricing</h2>
+                    <p className="text-muted-foreground text-lg max-w-2xl mx-auto">Choose the perfect plan for your security needs. No hidden fees, cancel anytime.</p>
+                </motion.div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                     {(Object.keys(DAILY_LIMITS) as Tier[]).map((tierKey) => {
                         const config = DAILY_LIMITS[tierKey];
                         const isEnterprise = tierKey === 'enterprise';
                         const isCurrent = tier === tierKey;
-
-                        // Prevent Pro users from downgrading to Free
                         const isProDowngradingToFree = tier === 'pro' && tierKey === 'free';
                         const isPlanDisabled = isCurrent || isProcessing !== null || isProDowngradingToFree;
 
-                        let currentActionLabel: React.ReactNode = `Upgrade to ${tierKey}`;
-                        if (isCurrent) currentActionLabel = "Active Plan";
-                        else if (isProcessing === tierKey) currentActionLabel = <div className="flex items-center gap-2 justify-center w-full"><Loader2 className="w-4 h-4 animate-spin" /> Processing...</div>;
+                        let currentActionLabel: React.ReactNode = `Upgrade to ${tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}`;
+                        if (isCurrent) currentActionLabel = "Current Plan";
+                        else if (isProcessing === tierKey) currentActionLabel = "Processing...";
                         else if (isEnterprise) currentActionLabel = "Contact Sales";
-                        else if (isProDowngradingToFree) currentActionLabel = "Not Available";
+                        else if (isProDowngradingToFree) currentActionLabel = "Unavailable";
 
                         return (
                             <PricingCard
@@ -353,47 +332,94 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                 </div>
             </div>
 
-            {/* Promo Code Dialog */}
             <Dialog open={promoDialogOpen} onOpenChange={setPromoDialogOpen}>
                 <DialogContent className="sm:max-w-[425px]">
                     <DialogHeader>
-                        <DialogTitle className="flex items-center gap-2">
-                            <Sparkles className="h-5 w-5 text-indigo-500" />
+                        <DialogTitle className="flex items-center gap-2 text-xl">
+                            <Sparkles className="h-6 w-6 text-indigo-500" />
                             Upgrade to Pro
                         </DialogTitle>
-                        <DialogDescription>
+                        <DialogDescription className="text-sm">
                             You are about to upgrade to the Pro tier for $9/month. If you have a promotional code, enter it below.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-4">
                         <div className="grid gap-2">
-                            <Label htmlFor="promo">Promo Code (Optional)</Label>
+                            <Label htmlFor="promo" className="text-muted-foreground font-semibold">Promo Code (Optional)</Label>
                             <Input
                                 id="promo"
                                 placeholder="e.g. EARLYBIRD100"
                                 value={promoCode}
                                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                                className="font-mono uppercase tracking-widest text-center text-xl h-14 bg-muted/50 border-primary/20 focus:border-primary placeholder:text-muted-foreground/30"
                             />
                         </div>
                     </div>
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <DialogFooter className="flex-col sm:flex-row gap-3 sm:space-x-0 mt-2">
                         <Button
                             variant="outline"
                             onClick={() => handleProCheckout()}
-                            className="sm:w-1/2"
+                            className="sm:w-1/2 h-12"
                         >
-                            Continue to Payment
+                            Skip & Pay
                         </Button>
                         <Button
                             onClick={() => handleProCheckout()}
-                            className="sm:w-1/2 bg-indigo-600 hover:bg-indigo-700 text-white"
+                            className="sm:w-1/2 h-12 bg-indigo-600 hover:bg-indigo-700 text-white font-bold"
                         >
                             Apply & Continue
                         </Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
-        </div>
+        </motion.div>
+    );
+}
+
+function UsageMetricCard({ title, used, limit, icon: Icon, percentage: overridePct, subtitle, tooltip }: any) {
+    const pct = overridePct !== undefined ? overridePct : Math.min(100, Math.round((used / limit) * 100));
+    const isCritical = pct >= 90;
+    const isWarning = pct >= 70 && pct < 90;
+    
+    const colorClass = isCritical ? "text-red-500" : isWarning ? "text-amber-500" : "text-primary";
+    const bgGlowClass = isCritical ? "bg-red-500" : isWarning ? "bg-amber-500" : "bg-primary";
+    const lightBgClass = isCritical ? "bg-red-500/10" : isWarning ? "bg-amber-500/10" : "bg-primary/10";
+    const progressClass = isCritical ? "[&>div]:bg-red-500" : isWarning ? "[&>div]:bg-amber-500" : "[&>div]:bg-primary";
+
+    return (
+        <motion.div variants={itemVariants} className="h-full">
+            <Card className="overflow-hidden bg-card/60 backdrop-blur-xl border-none ring-1 ring-border/50 transition-all hover:ring-primary/30 hover:shadow-xl hover:shadow-primary/5 h-full flex flex-col relative group cursor-default">
+                <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-20 -mr-10 -mt-10 transition-all duration-500 group-hover:opacity-40 group-hover:scale-150 rounded-full ${bgGlowClass}`} />
+                <CardContent className="p-6 flex-1 flex flex-col relative z-10">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className={`p-3 rounded-2xl ${lightBgClass} transition-colors group-hover:bg-background`}>
+                            <Icon className={`w-6 h-6 ${colorClass}`} />
+                        </div>
+                        {isCritical && <Badge variant="destructive" className="animate-pulse shadow-sm">Critical</Badge>}
+                        {isWarning && <Badge variant="outline" className="text-amber-500 border-amber-500/30 bg-amber-500/10">Warning</Badge>}
+                    </div>
+                    
+                    <div className="flex-1">
+                        <div className="flex items-center gap-1.5" title={tooltip}>
+                            <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">{title}</p>
+                        </div>
+                        <div className="flex items-baseline gap-2 mt-2">
+                            <span className="text-4xl font-extrabold tracking-tight text-foreground">{used}</span>
+                            <span className="text-base font-semibold text-muted-foreground/70">/ {limit === Infinity ? '∞' : limit}</span>
+                        </div>
+                        {subtitle && <p className="text-xs text-muted-foreground mt-2 font-medium bg-muted/50 w-fit px-2 py-1 rounded-md">{subtitle}</p>}
+                    </div>
+
+                    <div className="space-y-2.5 mt-8">
+                        <div className="flex justify-between text-sm font-semibold">
+                            <span className="text-muted-foreground">Capacity</span>
+                            <span className={colorClass}>{pct}%</span>
+                        </div>
+                        <Progress value={pct} className={`h-2.5 ${progressClass} bg-secondary overflow-hidden`} />
+                    </div>
+                </CardContent>
+            </Card>
+        </motion.div>
     );
 }
 
@@ -401,48 +427,64 @@ function PricingCard({
     title, price, originalPrice, period = "", features, current, popular, actionLabel, onAction, disabled
 }: any) {
     return (
-        <Card className={`flex flex-col relative transition-all duration-300 hover:shadow-xl ${popular ? 'border-primary shadow-lg md:scale-105 z-10' : ''}`}>
-            {popular && (
-                <div className="absolute top-0 right-0 transform translate-x-2 -translate-y-2 flex gap-1">
-                    <Badge className="px-3 py-1 shadow-md bg-emerald-500 hover:bg-emerald-600 border-none text-white font-bold">69% OFF</Badge>
-                    <Badge className="px-3 py-1 shadow-md">Most Popular</Badge>
-                </div>
-            )}
-            <CardHeader>
-                <CardTitle className="text-xl">{title}</CardTitle>
-                <div className="flex items-baseline gap-2 mt-2">
-                    {originalPrice && (
-                        <span className="text-xl text-muted-foreground line-through decoration-red-500/50 font-medium">
-                            {originalPrice}
-                        </span>
-                    )}
-                    <span className="text-4xl font-bold tracking-tight">{price}</span>
-                    <span className="text-muted-foreground text-sm font-medium">{period}</span>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-1">
-                <ul className="space-y-3 text-sm">
-                    {features.map((feature: string, i: number) => (
-                        <li key={i} className="flex items-center gap-3">
-                            <div className="rounded-full bg-green-100 dark:bg-green-900/30 p-1">
-                                <Check className="h-3 w-3 text-green-600 dark:text-green-400" />
-                            </div>
-                            <span className="text-muted-foreground">{feature}</span>
-                        </li>
-                    ))}
-                </ul>
-            </CardContent>
-            <CardFooter>
-                <Button
-                    className="w-full font-semibold"
-                    variant={current ? "outline" : popular ? "default" : "outline"}
-                    onClick={onAction}
-                    disabled={disabled}
-                >
-                    {disabled && <Check className="mr-2 h-4 w-4" />}
-                    {actionLabel}
-                </Button>
-            </CardFooter>
-        </Card>
+        <motion.div variants={itemVariants} className="h-full">
+            <Card className={`flex flex-col relative h-full transition-all duration-500 hover:shadow-2xl overflow-hidden group ${popular ? 'border-primary/50 ring-1 ring-primary/50 shadow-[0_0_40px_-10px_rgba(99,102,241,0.3)] md:-translate-y-2 z-10 bg-gradient-to-b from-primary/10 via-card to-card dark:from-primary/5' : 'bg-card/50 backdrop-blur-xl border-none ring-1 ring-border/50 hover:bg-card hover:-translate-y-1'}`}>
+                {popular && (
+                    <>
+                        {/* Shimmer effect */}
+                        <div className="absolute inset-0 bg-gradient-to-tr from-primary/10 pointer-events-none" />
+                        <div className="absolute top-0 inset-x-0 h-1.5 bg-gradient-to-r from-primary/50 via-primary to-primary/50" />
+                        <div className="absolute top-5 right-5 flex flex-col items-end gap-1.5 z-20">
+                            <Badge className="px-2 py-0.5 text-[10px] shadow-sm bg-emerald-500 hover:bg-emerald-600 border-emerald-400 text-white font-bold animate-pulse">69% OFF</Badge>
+                            <Badge className="px-3 py-1 text-xs shadow-md bg-primary text-primary-foreground border-none font-bold">Most Popular</Badge>
+                        </div>
+                    </>
+                )}
+                
+                {current && !popular && (
+                    <div className="absolute top-5 right-5 z-20">
+                        <Badge variant="secondary" className="px-3 py-1 text-xs font-bold shadow-sm">Active Plan</Badge>
+                    </div>
+                )}
+
+                <CardHeader className="relative z-10 pb-4 pt-10 px-8">
+                    <CardTitle className="text-2xl font-black tracking-tight">{title}</CardTitle>
+                    <div className="flex items-baseline gap-2 mt-4 relative">
+                        {originalPrice && (
+                            <span className="absolute -top-6 left-0 text-lg text-muted-foreground line-through decoration-red-500/70 font-semibold opacity-80">
+                                {originalPrice}
+                            </span>
+                        )}
+                        <span className={`text-6xl font-black tracking-tighter ${popular ? 'bg-clip-text text-transparent bg-gradient-to-br from-foreground to-foreground/60' : 'text-foreground'}`}>{price}</span>
+                        <span className="text-muted-foreground text-sm font-bold tracking-wide">{period}</span>
+                    </div>
+                </CardHeader>
+                <CardContent className="flex-1 relative z-10 px-8">
+                    <ul className="space-y-4 text-sm mt-6">
+                        {features.map((feature: string, i: number) => (
+                            <li key={i} className="flex items-start gap-4">
+                                <div className={`rounded-full p-1.5 shrink-0 mt-0.5 ${popular ? 'bg-primary/20' : 'bg-muted'}`}>
+                                    <Check className={`h-3 w-3 ${popular ? 'text-primary' : 'text-muted-foreground font-bold'}`} />
+                                </div>
+                                <span className={`${popular ? "font-semibold text-foreground/90" : "font-medium text-muted-foreground"} leading-tight`}>{feature}</span>
+                            </li>
+                        ))}
+                    </ul>
+                </CardContent>
+                <CardFooter className="relative z-10 pt-8 pb-10 px-8">
+                    <Button
+                        size="lg"
+                        className={`w-full font-bold text-md h-14 rounded-2xl transition-all duration-300 ${popular ? 'shadow-xl shadow-primary/30 hover:shadow-primary/50 hover:scale-[1.02]' : 'hover:scale-[1.02]'}`}
+                        variant={current ? "secondary" : popular ? "default" : "outline"}
+                        onClick={onAction}
+                        disabled={disabled}
+                    >
+                        {disabled && !current && <Loader2 className="mr-2 h-5 w-5 animate-spin" />}
+                        {current && <Check className="mr-2 h-5 w-5" />}
+                        {actionLabel}
+                    </Button>
+                </CardFooter>
+            </Card>
+        </motion.div>
     )
 }

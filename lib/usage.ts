@@ -5,30 +5,30 @@ import prisma from "@/lib/db";
  * Uses atomic upsert with increment to ensure thread-safety.
  */
 export async function incrementDailyUsage(userId: string) {
-  try {
-    const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const MAX_RETRIES = 3;
 
-    await prisma.dailyUsage.upsert({
-      where: {
-        userId_date: {
-          userId,
-          date: today,
-        },
-      },
-      update: {
-        count: {
-          increment: 1,
-        },
-      },
-      create: {
-        userId,
-        date: today,
-        count: 1,
-      },
-    });
-  } catch (error) {
-    // Fail silently to not block the main request, but log it.
-    console.error(`[UsageTracking] Failed to increment daily usage for user ${userId}:`, error);
+  for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+    try {
+      await prisma.dailyUsage.upsert({
+        where: { userId_date: { userId, date: today } },
+        update: { count: { increment: 1 } },
+        create: { userId, date: today, count: 1 },
+      });
+      return; // success
+    } catch (error: any) {
+      const isDeadlock = error?.code === "P2034";
+      if (isDeadlock && attempt < MAX_RETRIES) {
+        // Exponential back-off: 50 ms, 100 ms, …
+        await new Promise(r => setTimeout(r, 50 * attempt));
+        continue;
+      }
+      // Either not a deadlock, or we've exhausted retries — log and give up.
+      console.error(
+        `[UsageTracking] Failed to increment daily usage for user ${userId} (attempt ${attempt}/${MAX_RETRIES}):`,
+        error
+      );
+    }
   }
 }
 

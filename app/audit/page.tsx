@@ -1,13 +1,19 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useGlobalContext } from "@/hooks/useUser"
-import { DashboardLayout } from "@/components/dashboard-layout"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Badge } from "@/components/ui/badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
+import { useState, useEffect, useCallback, useMemo } from "react";
+import { useGlobalContext } from "@/hooks/useUser";
+import { DashboardLayout } from "@/components/dashboard-layout";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { 
+    Card, 
+    CardContent, 
+    CardDescription, 
+    CardHeader, 
+    CardTitle 
+} from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -15,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,715 +29,598 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Separator } from "@/components/ui/separator"
-import { Switch } from "@/components/ui/switch"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+} from "@/components/ui/dropdown-menu";
+import { 
+    Select, 
+    SelectContent, 
+    SelectItem, 
+    SelectTrigger, 
+    SelectValue 
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
 import {
-  Search,
-  Download,
-  Shield,
-  User,
-  Key,
-  Settings,
-  AlertTriangle,
-  Info,
-  XCircle,
-  CheckCircle,
-  Clock,
-  MapPin,
-  Monitor,
-  Smartphone,
-  Globe,
-  FileText,
-  CalendarIcon,
-  RefreshCw,
-  Filter,
-} from "lucide-react"
-import { toast } from "@/hooks/use-toast"
-import { format } from "date-fns"
+    Search,
+    Download,
+    Shield,
+    User,
+    Key,
+    Settings,
+    AlertTriangle,
+    Info,
+    XCircle,
+    CheckCircle,
+    Clock,
+    MapPin,
+    Monitor,
+    Smartphone,
+    Globe,
+    FileText,
+    CalendarIcon,
+    RefreshCw,
+    Filter,
+    ChevronRight,
+    ExternalLink,
+    Terminal,
+    ArrowRight,
+    History,
+    Activity,
+    ShieldAlert,
+    ShieldCheck
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { motion, AnimatePresence } from "framer-motion";
+import { 
+    ResponsiveContainer, 
+    BarChart, 
+    Bar, 
+    XAxis, 
+    YAxis, 
+    CartesianGrid, 
+    Tooltip as RechartsTooltip,
+    Cell
+} from "recharts";
+import apiClient from "@/lib/axios";
+
+// ── Types ────────────────────────────────────────────────────────────────────
 
 interface AuditLog {
-  id: string
-  timestamp: string
+  id: string;
+  timestamp: string;
   user: {
-    name: string
-    email: string
-    id: string
-  }
-  action: string
-  category: "auth" | "project" | "secret" | "team" | "system"
-  severity: "info" | "warning" | "error" | "critical"
-  description: string
+    name: string;
+    email: string;
+    id: string;
+  };
+  action: string;
+  category: "auth" | "project" | "secret" | "team" | "system";
+  severity: "info" | "warning" | "error" | "critical";
+  description: string;
   details: {
-    ip: string
-    userAgent: string
-    location?: string
-    resource?: string
-    oldValue?: string
-    newValue?: string
-  }
-  status: "success" | "failed" | "pending"
+    ip: string;
+    userAgent: string;
+    location?: string;
+    resource?: string;
+  };
+  changes?: Record<string, { old: any; new: any }>;
+  status: "success" | "failed" | "pending";
 }
-
-const mockAuditLogs: AuditLog[] = [];
 
 const categoryConfig = {
-  auth: {
-    label: "Authentication",
-    icon: Shield,
-    color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300",
-  },
-  project: {
-    label: "Project",
-    icon: Settings,
-    color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  },
-  secret: {
-    label: "Secret",
-    icon: Key,
-    color: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-300",
-  },
-  team: { label: "Team", icon: User, color: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-300" },
-  system: { label: "System", icon: Monitor, color: "bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300" },
-}
+  auth: { label: "Authentication", icon: Shield, color: "text-blue-500", bg: "bg-blue-500/10" },
+  project: { label: "Project", icon: Settings, color: "text-green-500", bg: "bg-green-500/10" },
+  secret: { label: "Secret", icon: Key, color: "text-purple-500", bg: "bg-purple-500/10" },
+  team: { label: "Team", icon: User, color: "text-orange-500", bg: "bg-orange-500/10" },
+  system: { label: "System", icon: Monitor, color: "text-gray-500", bg: "bg-gray-500/10" },
+};
 
 const severityConfig = {
-  info: { label: "Info", icon: Info, color: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-300" },
-  warning: {
-    label: "Warning",
-    icon: AlertTriangle,
-    color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  },
-  error: { label: "Error", icon: XCircle, color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
-  critical: { label: "Critical", icon: XCircle, color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
-}
+  info: { label: "Info", icon: Info, color: "text-blue-500" },
+  warning: { label: "Warning", icon: AlertTriangle, color: "text-amber-500" },
+  error: { label: "Error", icon: XCircle, color: "text-rose-500" },
+  critical: { label: "Critical", icon: ShieldAlert, color: "text-rose-600" },
+};
 
 const statusConfig = {
-  success: {
-    label: "Success",
-    icon: CheckCircle,
-    color: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300",
-  },
-  failed: { label: "Failed", icon: XCircle, color: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300" },
-  pending: {
-    label: "Pending",
-    icon: Clock,
-    color: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300",
-  },
-}
+  success: { label: "Success", icon: CheckCircle, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+  failed: { label: "Failed", icon: XCircle, color: "text-rose-500", bg: "bg-rose-500/10" },
+  pending: { label: "Pending", icon: Clock, color: "text-amber-500", bg: "bg-amber-500/10" },
+};
 
 const getDeviceIcon = (userAgent: string) => {
   if (!userAgent) return Monitor;
   const ua = userAgent.toLowerCase();
   if (ua.includes('mobile') || ua.includes('android') || ua.includes('iphone')) return Smartphone;
   return Monitor;
-}
+};
+
+// ── Components ────────────────────────────────────────────────────────────────
+
+const ChartTooltip = ({ active, payload, label }: any) => {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-popover text-popover-foreground border text-[11px] p-2.5 rounded-lg shadow-xl backdrop-blur-md">
+      <p className="text-muted-foreground font-medium mb-1">{label}</p>
+      <div className="flex items-center gap-2">
+        <div className="h-2 w-2 rounded-full bg-primary" />
+        <p className="font-bold text-foreground text-sm">{payload[0].value} <span className="font-normal text-muted-foreground text-[10px]">events</span></p>
+      </div>
+    </div>
+  );
+};
 
 export default function AuditLogsPage() {
-  const [logs, setLogs] = useState<AuditLog[]>([])
-  const [stats, setStats] = useState({ totalEvents: 0, criticalEvents: 0, failedActions: 0, activeUsers: 0 })
-  const [searchTerm, setSearchTerm] = useState("")
-  const [categoryFilter, setCategoryFilter] = useState<string>("all")
-  const [severityFilter, setSeverityFilter] = useState<string>("all")
-  const [statusFilter, setStatusFilter] = useState<string>("all")
-  const [userFilter, setUserFilter] = useState<string>("all")
-  const [realTimeEnabled, setRealTimeEnabled] = useState(true)
-  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({})
-  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
-  const [page, setPage] = useState<number>(1)
-  const [pageSize, setPageSize] = useState<number>(25)
-  const [total, setTotal] = useState<number>(0)
-  const [isMounted, setIsMounted] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [copiedField, setCopiedField] = useState<string | null>(null)
+  const [logs, setLogs] = useState<AuditLog[]>([]);
+  const [stats, setStats] = useState({ totalEvents: 0, criticalEvents: 0, failedActions: 0, activeUsers: 0 });
+  const [searchTerm, setSearchTerm] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [severityFilter, setSeverityFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [dateRange, setDateRange] = useState<{ from?: Date; to?: Date }>({});
+  const [realTimeEnabled, setRealTimeEnabled] = useState(true);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [page, setPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(25);
+  const [total, setTotal] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
   const { selectedWorkspace } = useGlobalContext();
 
-  // --- Derived: compute daily bar chart data from current loaded logs ---
-  const chartData = (() => {
+  const loadData = useCallback(async (silent = false) => {
+    if (!selectedWorkspace) return;
+    if (!silent) setIsLoading(true);
+    try {
+      // 1. Load Stats
+      const statsRes = await apiClient.get(`/api/audit/dashboard?range=7d&workspaceId=${selectedWorkspace.id}`);
+      if (statsRes.data) {
+        setStats({
+          totalEvents: statsRes.data.stats.totalEvents,
+          criticalEvents: statsRes.data.anomalies.length,
+          failedActions: statsRes.data.stats.failedLogins,
+          activeUsers: statsRes.data.stats.activeUsers || 0
+        });
+      }
+
+      // 2. Load Logs
+      const params = new URLSearchParams();
+      params.set('page', String(page));
+      params.set('pageSize', String(pageSize));
+      params.set('workspaceId', selectedWorkspace.id);
+      if (searchTerm) params.set('search', searchTerm);
+      if (categoryFilter !== 'all') params.set('category', categoryFilter);
+      if (severityFilter !== 'all') params.set('severity', severityFilter);
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (dateRange.from) params.set('startDate', dateRange.from.toISOString());
+      if (dateRange.to) params.set('endDate', dateRange.to.toISOString());
+
+      const logsRes = await apiClient.get(`/api/audit?${params.toString()}`);
+      if (logsRes.data) {
+        setLogs((logsRes.data.data || []).map((l: any) => ({
+          ...l,
+          category: (l.entity as any) || 'system',
+          severity: l.action.toLowerCase().includes('critical') ? 'critical' : l.action.toLowerCase().includes('fail') ? 'warning' : 'info',
+          status: l.action.toLowerCase().includes('fail') ? 'failed' : 'success',
+          user: { id: l.user?.id || 'unknown', name: l.user?.name || 'Unknown', email: l.user?.email || '' },
+          details: { ip: l.ipAddress || '—', userAgent: l.userAgent || '—', resource: l.project?.name || '—' },
+          timestamp: l.timestamp || l.createdAt
+        })));
+        setTotal(logsRes.data.total || 0);
+        setLastUpdated(new Date());
+      }
+    } catch (err) {
+      console.error("Audit load failed:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedWorkspace, page, pageSize, searchTerm, categoryFilter, severityFilter, statusFilter, dateRange]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // Real-time updates
+  useEffect(() => {
+    if (!realTimeEnabled) return;
+    const interval = setInterval(() => loadData(true), 10000); // Poll every 10s
+    return () => clearInterval(interval);
+  }, [realTimeEnabled, loadData]);
+
+  const chartData = useMemo(() => {
     const buckets: Record<string, number> = {};
     const now = new Date();
     for (let i = 6; i >= 0; i--) {
-      const d = new Date(now);
-      d.setDate(d.getDate() - i);
-      buckets[d.toLocaleDateString('en-US', { weekday: 'short' })] = 0;
+        const d = new Date(now);
+        d.setDate(d.getDate() - i);
+        buckets[format(d, "EEE")] = 0;
     }
     logs.forEach(log => {
-      const day = new Date(log.timestamp).toLocaleDateString('en-US', { weekday: 'short' });
-      if (day in buckets) buckets[day]++;
+        const day = format(new Date(log.timestamp), "EEE");
+        if (day in buckets) buckets[day]++;
     });
-    return Object.entries(buckets);
-  })();
+    return Object.entries(buckets).map(([name, count]) => ({ name, count }));
+  }, [logs]);
 
-  const maxChartVal = Math.max(1, ...chartData.map(([, v]) => v));
+  const handleExport = async (format: 'csv' | 'json') => {
+    try {
+      const res = await apiClient.post("/api/audit/export", {
+        format,
+        workspaceId: selectedWorkspace?.id,
+        startDate: dateRange.from,
+        endDate: dateRange.to
+      }, { responseType: 'blob' });
 
-  const quickCopy = (text: string, key: string) => {
-    navigator.clipboard?.writeText(text);
-    setCopiedField(key);
-    setTimeout(() => setCopiedField(null), 2000);
+      const url = window.URL.createObjectURL(new Blob([res.data]));
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `audit-export-${selectedWorkspace?.slug || 'log'}.${format}`;
+      a.click();
+      toast({ title: "Export Successful", description: `Audit trail exported to ${format.toUpperCase()}.` });
+    } catch (e: any) {
+      toast({ title: "Export Failed", description: "Audit trail could not be exported.", variant: "destructive" });
+    }
   };
 
   const activeFilterCount = [categoryFilter !== 'all', severityFilter !== 'all', statusFilter !== 'all', !!dateRange.from].filter(Boolean).length;
 
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  // Combined effect to trigger loadLogs and fetchStats when relevant state changes
-  useEffect(() => {
-    if (selectedWorkspace) {
-      loadLogs();
-      fetchStats();
-    }
-  }, [page, pageSize, searchTerm, categoryFilter, severityFilter, statusFilter, userFilter, selectedWorkspace]);
-
-
-  const fetchStats = async () => {
-    try {
-      if (!selectedWorkspace) return;
-      // Using new dashboard API
-      const res = await fetch(`/api/audit/dashboard?range=7d&workspaceId=${selectedWorkspace.id}`);
-      if (res.ok) {
-        const data = await res.json();
-        // Map new API response to state
-        setStats({
-          totalEvents: data.stats.totalEvents,
-          criticalEvents: data.anomalies.length, // approximation or add to API
-          failedActions: data.stats.failedLogins,
-          activeUsers: data.stats.activeUsers || 0
-        });
-      }
-    } catch (e) {
-      console.error("Failed to fetch stats");
-    }
-  }
-
-  const loadLogs = async () => {
-    try {
-      if (!selectedWorkspace) return;
-      setIsLoading(true);
-      const params = new URLSearchParams()
-      params.set('page', String(page))
-      params.set('pageSize', String(pageSize))
-      params.set('workspaceId', selectedWorkspace.id)
-      if (searchTerm) params.set('search', searchTerm)
-      if (categoryFilter !== 'all') params.set('category', categoryFilter)
-      if (severityFilter !== 'all') params.set('severity', severityFilter)
-      if (statusFilter !== 'all') params.set('status', statusFilter)
-      if (userFilter !== 'all') params.set('userId', userFilter)
-      if (dateRange.from) params.set('startDate', dateRange.from.toISOString())
-      if (dateRange.to) params.set('endDate', dateRange.to.toISOString())
-
-      const res = await fetch(`/api/audit?${params.toString()}`)
-      if (res.ok) {
-        const json = await res.json()
-        setLogs(
-          (json.data || []).map((l: any) => ({
-            id: l.id,
-            timestamp: l.timestamp || l.createdAt || new Date().toISOString(),
-            user: { id: l.user?.id || l.userId || 'unknown', name: l.user?.name || 'Unknown', email: l.user?.email || '' },
-            action: l.action,
-            category: (l.entity as any) || 'system',
-            severity: l.action.toLowerCase().includes('fail') ? 'warning' : 'info',
-            description: l.changes ? JSON.stringify(l.changes) : l.action,
-            details: {
-              ip: l.ipAddress || 'N/A',
-              userAgent: l.userAgent || 'N/A',
-              location: 'Unknown',
-              resource: l.project?.name || ''
-            },
-            status: l.action.toLowerCase().includes('fail') ? 'failed' : 'success',
-          })),
-        )
-        setTotal(json.total || 0)
-        setLastUpdated(new Date())
-      }
-    } catch (err) {
-      console.error(err)
-    } finally {
-      setIsLoading(false);
-    }
-  }
-
-  // Poll for real-time updates
-  useEffect(() => {
-    if (!realTimeEnabled) return;
-    const interval = setInterval(() => {
-      loadLogs();
-      fetchStats();
-    }, 5000);
-    return () => clearInterval(interval);
-  }, [realTimeEnabled, page, searchTerm, categoryFilter, severityFilter, statusFilter, userFilter]);
-
-  const handleExportCSV = async () => {
-    try {
-      const res = await fetch("/api/audit/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          format: "csv",
-          projectId: selectedWorkspace?.id,
-          startDate: dateRange.from,
-          endDate: dateRange.to
-        })
-      });
-
-      if (res.status === 403) {
-        throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
-      }
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.message || errorData?.error || "Export failed");
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `audit-report-${format(new Date(), "yyyy-MM-dd")}.csv`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast({
-        title: "Export Successful",
-        description: "Audit log exported to CSV",
-      });
-    } catch (e: any) {
-      toast({
-        title: "Export Failed",
-        description: e.message || "Could not generate CSV report",
-        variant: "destructive"
-      });
-    }
-  }
-
-  const handleExportJSON = async () => {
-    try {
-      const res = await fetch("/api/audit/export", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          format: "json",
-          projectId: selectedWorkspace?.id,
-          startDate: dateRange.from,
-          endDate: dateRange.to
-        })
-      });
-
-      if (res.status === 403) {
-        throw new Error("You do not have permission to export audit logs. Must be Admin or Owner.");
-      }
-      if (!res.ok) {
-        const errorData = await res.json().catch(() => null);
-        throw new Error(errorData?.message || errorData?.error || "Export failed");
-      }
-
-      const blob = await res.blob();
-      const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = `audit-report-${format(new Date(), "yyyy-MM-dd")}.json`;
-      document.body.appendChild(a);
-      a.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-
-      toast({
-        title: "Export Successful",
-        description: "Audit log exported to JSON",
-      });
-    } catch (e: any) {
-      toast({
-        title: "Export Failed",
-        description: e.message || "Could not generate JSON report",
-        variant: "destructive"
-      });
-    }
-  }
-
-  const handleRefresh = () => { loadLogs(); fetchStats(); }
-
-  const uniqueUsers = [] as any[]; // Could fetch from API or derive from current logs page
-
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Audit Logs</h1>
-            <p className="text-muted-foreground">
-              Monitor security events and user activities
-              {realTimeEnabled && isMounted && (
-                <span className="ml-2 text-xs text-green-600 dark:text-green-400">
-                  • Live (Updated {format(lastUpdated, "HH:mm:ss")})
-                </span>
-              )}
-            </p>
-          </div>
-          <div className="flex items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="real-time"
-                checked={realTimeEnabled}
-                onCheckedChange={setRealTimeEnabled}
-                className="data-[state=checked]:bg-green-600"
-              />
-              <Label htmlFor="real-time" className="text-sm">Real-time</Label>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleRefresh} disabled={isLoading}>
-              <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2">
-                  <Download className="h-4 w-4" />
-                  <span className="hidden sm:inline">Export</span>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>Download Format</DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleExportCSV}>
-                  CSV Document (.csv)
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportJSON}>
-                  JSON Format (.json)
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Total Events</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.totalEvents}</div>
-              <p className="text-xs text-muted-foreground">All recorded events</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Critical Events</CardTitle>
-              <AlertTriangle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.criticalEvents}</div>
-              <p className="text-xs text-muted-foreground">Requires attention</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Failed Actions</CardTitle>
-              <XCircle className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.failedActions}</div>
-              <p className="text-xs text-muted-foreground">Security incidents</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Active Users</CardTitle>
-              <User className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stats.activeUsers}</div>
-              <p className="text-xs text-muted-foreground">Unique users</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Activity Chart */}
-        <Card>
-          <CardHeader className="pb-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-sm font-medium">Activity (Last 7 Days)</CardTitle>
-                <CardDescription className="text-xs">Log volume for current page — reload to refresh</CardDescription>
+      <div className="max-w-6xl mx-auto space-y-8 pb-20">
+        
+        {/* Header Section */}
+        <div className="flex flex-col gap-6 border-b pb-8 border-border">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+            <div className="space-y-1">
+              <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wider">
+                <ShieldCheck className="h-3 w-3" />
+                <span>Security</span>
+                <ChevronRight className="h-3 w-3 opacity-40" />
+                <span className="text-foreground">Audit Logs</span>
               </div>
-              <span className="text-2xl font-bold text-primary">{logs.length}</span>
+              <h1 className="text-3xl font-bold tracking-tight">Audit Operations</h1>
+              <p className="text-sm text-muted-foreground flex items-center gap-2">
+                Detailed record of all workspace activities
+                {realTimeEnabled && (
+                  <span className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600 text-[10px] font-black uppercase tracking-widest border border-emerald-500/20">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                  </span>
+                )}
+              </p>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-end gap-2 h-24">
-              {chartData.map(([day, count]) => (
-                <div key={day} className="flex flex-col items-center gap-1 flex-1">
-                  <div className="text-xs text-muted-foreground font-medium">{count > 0 ? count : ''}</div>
-                  <div
-                    className="w-full rounded-t-md bg-primary/70 hover:bg-primary transition-colors"
-                    style={{ height: `${Math.max(4, (count / maxChartVal) * 64)}px` }}
-                    title={`${day}: ${count} events`}
-                  />
-                  <div className="text-xs text-muted-foreground">{day}</div>
-                </div>
-              ))}
+            
+            <div className="flex items-center gap-3 no-print">
+               <div className="flex items-center gap-3 px-4 h-9 bg-card border rounded-lg shadow-sm">
+                  <Switch id="live-polling" checked={realTimeEnabled} onCheckedChange={setRealTimeEnabled} className="scale-75" />
+                  <Label htmlFor="live-polling" className="text-xs font-bold uppercase tracking-tighter opacity-70">Real-time</Label>
+               </div>
+               
+               <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="outline" size="sm" className="h-9 gap-2 shadow-sm font-semibold">
+                      <Download className="h-3.5 w-3.5" /> Export
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel className="text-[10px] uppercase font-black text-muted-foreground">Download format</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="gap-2 text-sm" onClick={() => handleExport('csv')}>
+                       <FileText className="h-4 w-4 opacity-70" /> CSV Spreadsheet
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="gap-2 text-sm" onClick={() => handleExport('json')}>
+                       <Terminal className="h-4 w-4 opacity-70" /> JSON Format
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+               </DropdownMenu>
+
+               <Button variant="outline" size="sm" onClick={() => loadData()} disabled={isLoading} className="h-9 w-9 p-0 shadow-sm">
+                  <RefreshCw className={cn("h-4 w-4", isLoading ? "animate-spin" : "")} />
+               </Button>
             </div>
-          </CardContent>
+          </div>
+        </div>
+
+        {/* Operational Stats Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+           <PremiumStatCard label="Total Operations" value={stats.totalEvents} sub="Across all categories" icon={Activity} />
+           <PremiumStatCard label="Security Risks" value={stats.criticalEvents} sub="Unusual behavior detected" icon={ShieldAlert} color="text-rose-600" bg="bg-rose-500/5" />
+           <PremiumStatCard label="Failed Attempts" value={stats.failedActions} sub="Unauthorized or rejected" icon={XCircle} color="text-amber-600" bg="bg-amber-500/5" />
+           <PremiumStatCard label="Unique Actors" value={stats.activeUsers} sub="Total unique identifiers" icon={Users} />
+        </div>
+
+        {/* Activity Volume Graph */}
+        <Card className="border bg-card/40 backdrop-blur-sm shadow-sm overflow-hidden">
+           <CardHeader className="border-b bg-muted/5 flex flex-row items-center justify-between py-4">
+              <div className="space-y-0.5">
+                 <CardTitle className="text-sm font-bold flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" /> Log Volume Distribution
+                 </CardTitle>
+                 <CardDescription className="text-xs">Event frequency trends over the last 7 days.</CardDescription>
+              </div>
+              <Badge variant="outline" className="font-black text-[10px] tracking-tighter opacity-60">PAGE VIEW ANALYTICS</Badge>
+           </CardHeader>
+           <CardContent className="pt-8">
+              <div className="h-32 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                   <BarChart data={chartData} margin={{ top: 0, right: 0, left: -35, bottom: 0 }}>
+                      <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
+                      <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(128,128,128,0.5)", fontWeight: 700 }} />
+                      <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(128,128,128,0.5)", fontWeight: 700 }} />
+                      <RechartsTooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--primary)/2%)" }} />
+                      <Bar dataKey="count" radius={[4, 4, 0, 0]}>
+                         {chartData.map((entry, index) => (
+                           <Cell 
+                             key={index} 
+                             fill={entry.count > 0 ? "hsl(var(--primary))" : "rgba(128,128,128,0.1)"} 
+                             fillOpacity={0.8}
+                           />
+                         ))}
+                      </Bar>
+                   </BarChart>
+                </ResponsiveContainer>
+              </div>
+           </CardContent>
         </Card>
 
-        {/* Filters & List ... (Keeping existing structure but removing client-side filtering logic for display, 
-           as we are now server-side filtering via loadLogs params, but we can reuse the UI controls) */}
+        {/* Audit Trail List */}
+        <Card className="border shadow-sm">
+           <CardHeader className="border-b bg-muted/5">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                 <div className="space-y-1">
+                    <CardTitle className="text-lg">Audit Trail</CardTitle>
+                    <CardDescription>Comprehensive immutable record of workspace interactions.</CardDescription>
+                 </div>
+                 
+                 <div className="flex flex-wrap items-center gap-3 no-print">
+                    <div className="relative w-full sm:w-64">
+                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground opacity-50" />
+                       <Input 
+                         placeholder="Filter logs..." 
+                         value={searchTerm} 
+                         onChange={e => setSearchTerm(e.target.value)}
+                         className="pl-9 h-9 text-xs"
+                       />
+                    </div>
+                    
+                    <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                       <SelectTrigger className="w-[140px] h-9 text-xs">
+                          <SelectValue placeholder="Category" />
+                       </SelectTrigger>
+                       <SelectContent>
+                          <SelectItem value="all">All Entries</SelectItem>
+                          {Object.keys(categoryConfig).map(k => (
+                             <SelectItem key={k} value={k}>{categoryConfig[k as keyof typeof categoryConfig].label}</SelectItem>
+                          ))}
+                       </SelectContent>
+                    </Select>
 
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle>Activity Log</CardTitle>
-                <CardDescription>Detailed audit trail of all system activities</CardDescription>
+                    <Select value={severityFilter} onValueChange={setSeverityFilter}>
+                       <SelectTrigger className="w-[140px] h-9 text-xs">
+                          <SelectValue placeholder="Severity" />
+                       </SelectTrigger>
+                       <SelectContent>
+                          <SelectItem value="all">All Severities</SelectItem>
+                          {Object.keys(severityConfig).map(k => (
+                             <SelectItem key={k} value={k}>{severityConfig[k as keyof typeof severityConfig].label}</SelectItem>
+                          ))}
+                       </SelectContent>
+                    </Select>
+                 </div>
               </div>
-              {activeFilterCount > 0 && (
-                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold border border-primary/20">
-                  <Filter className="h-3 w-3" /> {activeFilterCount} active filter{activeFilterCount > 1 ? 's' : ''}
-                  <button className="ml-1 hover:text-destructive" onClick={() => { setCategoryFilter('all'); setSeverityFilter('all'); setStatusFilter('all'); setDateRange({}); }}>✕</button>
-                </span>
-              )}
-            </div>
-          </CardHeader>
-          <CardContent>
-            {/* Filter UI Controls */}
-            <div className="flex flex-col md:flex-row gap-4 mb-6">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search activities..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9"
-                />
+           </CardHeader>
+           <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                 <table className="w-full text-left text-sm whitespace-nowrap">
+                    <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-black tracking-widest">
+                       <tr>
+                          <th className="px-6 py-4">Actor & Operation</th>
+                          <th className="px-6 py-4">Metadata</th>
+                          <th className="px-6 py-4">Context</th>
+                          <th className="px-6 py-4 text-right">Timestamp</th>
+                       </tr>
+                    </thead>
+                    <tbody className="divide-y relative">
+                       {isLoading && logs.length === 0 ? (
+                           Array.from({ length: 8 }).map((_, i) => (
+                             <tr key={i} className="animate-pulse">
+                                <td colSpan={4} className="px-6 py-8"><Skeleton className="h-8 w-full opacity-20" /></td>
+                             </tr>
+                           ))
+                       ) : logs.length === 0 ? (
+                           <tr>
+                              <td colSpan={4} className="py-20 text-center text-muted-foreground italic">
+                                 <History className="h-12 w-12 mx-auto mb-4 opacity-5" />
+                                 No audit logs recorded for this configuration.
+                              </td>
+                           </tr>
+                       ) : (
+                          logs.map((log) => {
+                             const config = categoryConfig[log.category];
+                             const status = statusConfig[log.status];
+                             const severity = severityConfig[log.severity];
+                             const DeviceIcon = getDeviceIcon(log.details.userAgent);
+
+                             return (
+                               <Dialog key={log.id}>
+                                 <DialogTrigger asChild>
+                                   <tr className="group hover:bg-muted/5 transition-all cursor-pointer">
+                                      <td className="px-6 py-5">
+                                         <div className="flex items-center gap-4">
+                                            <Avatar className="h-9 w-9 rounded-xl border border-border shadow-sm shrink-0">
+                                               <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
+                                                  {log.user.name.charAt(0)}
+                                               </AvatarFallback>
+                                            </Avatar>
+                                            <div className="flex flex-col min-w-0">
+                                               <span className="font-bold text-foreground text-[13px] group-hover:text-primary transition-colors truncate max-w-[280px]">
+                                                  {log.action}
+                                               </span>
+                                               <span className="text-[10px] text-muted-foreground font-medium flex items-center gap-1.5 mt-0.5">
+                                                  {log.user.email} · {log.user.id.slice(0, 8)}
+                                               </span>
+                                            </div>
+                                         </div>
+                                      </td>
+                                      <td className="px-6 py-5">
+                                         <div className="flex flex-col gap-1.5">
+                                            <div className="flex items-center gap-1.5">
+                                               <config.icon className={cn("h-3 w-3", config.color)} />
+                                               <span className="text-[10px] font-black uppercase tracking-tight text-muted-foreground">{config.label}</span>
+                                            </div>
+                                            <div className="flex items-center gap-1.5 opacity-60">
+                                               <DeviceIcon className="h-3 w-3" />
+                                               <span className="text-[10px] font-mono">{log.details.ip}</span>
+                                            </div>
+                                         </div>
+                                      </td>
+                                      <td className="px-6 py-5">
+                                         <Badge className={cn("rounded-full px-3 text-[10px] font-black tracking-tighter h-6", status.bg, status.color)}>
+                                            <status.icon className="h-3 w-3 mr-1.5" /> {status.label}
+                                         </Badge>
+                                      </td>
+                                      <td className="px-6 py-5 text-right">
+                                         <div className="flex flex-col items-end">
+                                            <span className="text-[11px] font-bold text-foreground/80 tabular-nums">{format(new Date(log.timestamp), "MMM dd, HH:mm:ss")}</span>
+                                            <span className="text-[9px] text-muted-foreground font-medium opacity-40 uppercase tracking-tighter mt-0.5">GMT {format(new Date(log.timestamp), "x")}</span>
+                                         </div>
+                                      </td>
+                                   </tr>
+                                 </DialogTrigger>
+                                 <DialogContent className="max-w-2xl border-border/50 shadow-2xl overflow-hidden p-0">
+                                    <div className="bg-muted/10 p-6 border-b">
+                                       <DialogHeader>
+                                          <div className="flex items-center gap-3 mb-2">
+                                             <Badge className={cn("px-2.5 h-6 font-black uppercase text-[10px] tracking-widest", status.bg, status.color)}>{status.label}</Badge>
+                                             <div className="flex items-center gap-1.5 text-rose-600">
+                                                <severity.icon className="h-3.5 w-3.5" />
+                                                <span className="text-[10px] font-black uppercase tracking-widest">{severity.label}</span>
+                                             </div>
+                                          </div>
+                                          <DialogTitle className="text-xl font-black tracking-tight">{log.action}</DialogTitle>
+                                          <DialogDescription className="font-mono text-[10px] opacity-60">TRACE_ID: {log.id}</DialogDescription>
+                                       </DialogHeader>
+                                    </div>
+                                    
+                                    <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                                       <div className="grid grid-cols-2 gap-8">
+                                          <DetailItem label="Identity Origin" value={log.user.email} sub={`ID: ${log.user.id}`} icon={User} />
+                                          <DetailItem label="Network Context" value={log.details.ip} sub={log.details.userAgent} icon={Globe} />
+                                          <DetailItem label="Target Resource" value={log.details.resource || 'Global Workspace'} sub="Primary scope" icon={LayoutGrid} />
+                                          <DetailItem label="Timestamp" value={format(new Date(log.timestamp), "PPPP")} sub={format(new Date(log.timestamp), "HH:mm:ss.SSS (xxx)")} icon={Clock} />
+                                       </div>
+
+                                       <div className="space-y-4">
+                                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
+                                             <History className="h-4 w-4" /> Observed Lifecycle
+                                          </h4>
+                                          <div className="p-4 rounded-xl border bg-muted/20 space-y-4 font-mono text-xs">
+                                             {log.changes ? Object.entries(log.changes).map(([field, delta]: any) => (
+                                                <div key={field} className="grid grid-cols-1 md:grid-cols-12 gap-3 border-b border-border/10 pb-3 last:border-0 last:pb-0">
+                                                   <span className="md:col-span-3 font-black text-primary opacity-60 uppercase tracking-tighter text-[10px]">{field}</span>
+                                                   <div className="md:col-span-9 flex flex-wrap items-center gap-2">
+                                                      <span className="px-2 py-0.5 rounded bg-rose-500/5 text-rose-600 line-through decoration-rose-600/30">{String(delta.old)}</span>
+                                                      <ArrowRight className="h-3 w-3 opacity-30" />
+                                                      <span className="px-2 py-0.5 rounded bg-emerald-500/5 text-emerald-600 font-bold">{String(delta.new)}</span>
+                                                   </div>
+                                                </div>
+                                             )) : (
+                                                <p className="text-muted-foreground italic text-[11px] font-sans">No complex property changes were detected for this interaction.</p>
+                                             )}
+                                          </div>
+                                       </div>
+                                    </div>
+                                 </DialogContent>
+                               </Dialog>
+                             );
+                          })
+                       )}
+                    </tbody>
+                 </table>
               </div>
 
-              <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <Filter className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Category" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Categories</SelectItem>
-                  {Object.entries(categoryConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              <Select value={severityFilter} onValueChange={setSeverityFilter}>
-                <SelectTrigger className="w-[160px]">
-                  <AlertTriangle className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Severity" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Severities</SelectItem>
-                  {Object.entries(severityConfig).map(([key, config]) => (
-                    <SelectItem key={key} value={key}>{config.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-
-              {/* Date Filter Dropdown */}
-              <Select
-                value={
-                  !dateRange.from && !dateRange.to ? "all" :
-                    dateRange.from && !dateRange.to ? "custom" :
-                      "custom" // simplified tracking for standard vs custom
-                }
-                onValueChange={(val) => {
-                  const now = new Date();
-                  switch (val) {
-                    case "1h":
-                      setDateRange({ from: new Date(now.getTime() - 60 * 60 * 1000), to: now });
-                      break;
-                    case "1d":
-                      setDateRange({ from: new Date(now.getTime() - 24 * 60 * 60 * 1000), to: now });
-                      break;
-                    case "1w":
-                      setDateRange({ from: new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000), to: now });
-                      break;
-                    case "1m":
-                      setDateRange({ from: new Date(now.setMonth(now.getMonth() - 1)), to: new Date() });
-                      break;
-                    case "1y":
-                      setDateRange({ from: new Date(now.setFullYear(now.getFullYear() - 1)), to: new Date() });
-                      break;
-                    case "all":
-                      setDateRange({});
-                      break;
-                    case "custom":
-                      // Keep current or set to empty to allow calendar selection
-                      break;
-                  }
-                }}
-              >
-                <SelectTrigger className="w-[180px]">
-                  <CalendarIcon className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Date Range" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="1h">Last 1 Hour</SelectItem>
-                  <SelectItem value="1d">Last 1 Day</SelectItem>
-                  <SelectItem value="1w">Last 1 Week</SelectItem>
-                  <SelectItem value="1m">Last 1 Month</SelectItem>
-                  <SelectItem value="1y">Last 1 Year</SelectItem>
-                  <SelectItem value="all">All Time</SelectItem>
-                </SelectContent>
-              </Select>
-
-              <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-[150px]">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  <SelectValue placeholder="Status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Statuses</SelectItem>
-                  <SelectItem value="success">Success</SelectItem>
-                  <SelectItem value="failed">Failed</SelectItem>
-                  <SelectItem value="pending">Pending</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-4">
-              {/* Logs List */}
-              <div className="space-y-4 mt-6">
-                {isLoading && logs.length === 0 ? (
-                  <div className="space-y-3">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                      <div key={i} className="flex items-start gap-4 p-4 border rounded-lg animate-pulse">
-                        {/* Avatar */}
-                        <div className="h-8 w-8 mt-1 rounded-full bg-muted shrink-0" />
-                        {/* Content */}
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center justify-between gap-4">
-                            <div className="flex items-center gap-2">
-                              <div className="h-4 w-48 rounded bg-muted" />
-                              <div className="h-5 w-16 rounded-full bg-muted" />
-                              <div className="h-5 w-12 rounded-full bg-muted" />
-                            </div>
-                            <div className="h-4 w-28 rounded bg-muted shrink-0" />
-                          </div>
-                          <div className="h-3 w-3/4 rounded bg-muted" />
-                          <div className="h-3 w-1/2 rounded bg-muted" />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : logs.length === 0 ? (
-                  <div className="text-center py-12 text-muted-foreground">
-                    <Shield className="h-12 w-12 mx-auto mb-4 opacity-50" />
-                    <h3 className="text-lg font-medium mb-2">No audit logs found</h3>
-                    <p className="text-sm">There are no audit logs to display for the selected filters.</p>
-                  </div>
-                ) : (
-                  logs.map((log) => {
-                    const CategoryIcon = categoryConfig[log.category]?.icon || Info
-                    const SeverityIcon = severityConfig[log.severity]?.icon || Info
-                    const StatusIcon = statusConfig[log.status]?.icon || Info
-                    const DeviceIcon = getDeviceIcon(log.details.userAgent)
-
-                    return (
-                      <Dialog key={log.id}>
-                        {/* ... Dialog Trigger & Content ... */}
-                        <DialogTrigger asChild>
-                          <div className="flex items-start gap-4 p-4 border rounded-lg hover:bg-accent/50 transition-colors cursor-pointer">
-                            <Avatar className="h-8 w-8 mt-1">
-                              <AvatarFallback className="bg-primary text-primary-foreground text-xs">
-                                {log.user.name?.charAt(0) || 'U'}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 space-y-2">
-                              <div className="flex items-center justify-between gap-4">
-                                <div className="flex items-center gap-2 overflow-hidden">
-                                  <h4 className="font-medium truncate max-w-[200px] sm:max-w-[400px]">{log.action}</h4>
-                                  <Badge variant="outline" className="shrink-0">{log.category}</Badge>
-                                  <Badge variant="outline" className="shrink-0">{log.severity}</Badge>
-                                </div>
-                                <div className="flex items-center gap-2 shrink-0">
-                                  <button
-                                    className="p-1 rounded hover:bg-muted transition-colors"
-                                    title="Copy IP"
-                                    onClick={(e) => { e.stopPropagation(); quickCopy(log.details.ip, `ip-${log.id}`); }}
-                                  >
-                                    {copiedField === `ip-${log.id}` ? <CheckCircle className="h-3.5 w-3.5 text-emerald-500" /> : <MapPin className="h-3.5 w-3.5 text-muted-foreground" />}
-                                  </button>
-                                  <span className="text-sm text-muted-foreground whitespace-nowrap">
-                                    {new Date(log.timestamp).toLocaleString()}
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-sm text-muted-foreground line-clamp-2 max-w-full break-all">{log.description}</p>
-                            </div>
-                          </div>
-                        </DialogTrigger>
-                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
-                          <DialogHeader>
-                            <DialogTitle className="break-all">{log.action}</DialogTitle>
-                            <DialogDescription>Event ID: {log.id}</DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-2 text-sm">
-                              <div className="font-medium">User:</div>
-                              <div>{log.user.name} ({log.user.email})</div>
-                              <div className="font-medium">IP Address:</div>
-                              <div>{log.details.ip}</div>
-                              <div className="font-medium">User Agent:</div>
-                              <div className="break-all">{log.details.userAgent}</div>
-                            </div>
-                            {log.description && (
-                              <div className="space-y-2">
-                                <div className="font-medium text-sm">Details:</div>
-                                <pre className="p-3 bg-muted rounded-md text-xs whitespace-pre-wrap break-all overflow-x-auto">
-                                  {log.description}
-                                </pre>
-                              </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )
-                  })
-                )}
+              {/* Pagination Controller */}
+              <div className="px-6 py-6 border-t flex flex-col sm:flex-row items-center justify-between gap-6 bg-muted/5">
+                 <div className="flex items-center gap-4">
+                   <p className="text-xs text-muted-foreground font-medium">
+                     Viewing <span className="font-bold text-foreground">{logs.length}</span> of <span className="font-bold text-foreground">{total}</span> events
+                   </p>
+                   <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-20 h-7 text-[10px] font-bold border-0 bg-transparent shadow-none hover:bg-muted/10 transition-colors">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 / pg</SelectItem>
+                      <SelectItem value="25">25 / pg</SelectItem>
+                      <SelectItem value="50">50 / pg</SelectItem>
+                      <SelectItem value="100">100 / pg</SelectItem>
+                    </SelectContent>
+                  </Select>
+                 </div>
+                 
+                 <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={page <= 1 || isLoading} onClick={() => setPage(p => p - 1)}>
+                       <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="h-8 px-4 flex items-center justify-center rounded-lg border bg-background text-[11px] font-bold">
+                       PAGE {page}
+                    </div>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={logs.length < pageSize || isLoading} onClick={() => setPage(p => p + 1)}>
+                       <ChevronRight className="h-4 w-4" />
+                    </Button>
+                 </div>
               </div>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between mt-6 pt-4 border-t">
-              <p className="text-sm text-muted-foreground">
-                Showing <strong>{logs.length}</strong> of <strong>{total}</strong> events
-              </p>
-              <div className="flex items-center gap-2">
-                <Button variant="outline" size="sm" disabled={page <= 1 || isLoading} onClick={() => setPage(p => p - 1)}>
-                  ← Prev
-                </Button>
-                <span className="text-sm px-2">Page {page}</span>
-                <Button variant="outline" size="sm" disabled={logs.length < pageSize || isLoading} onClick={() => setPage(p => p + 1)}>
-                  Next →
-                </Button>
-                <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
-                  <SelectTrigger className="w-20 h-8 text-xs">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="25">25</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </CardContent>
+           </CardContent>
         </Card>
       </div>
     </DashboardLayout>
-  )
+  );
+}
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
+
+function PremiumStatCard({ label, value, sub, icon: Icon, color = "text-primary", bg = "bg-primary/5" }: any) {
+  return (
+    <Card className="border bg-card/60 backdrop-blur-xl shadow-sm relative overflow-hidden group transition-all hover:bg-card">
+       <div className={cn("absolute right-0 top-0 h-24 w-24 -mr-6 -mt-6 opacity-5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-0 duration-500", color)}>
+          <Icon className="h-full w-full" />
+       </div>
+       <CardContent className="p-6">
+          <div className="flex flex-col gap-4">
+             <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center border border-border/50 bg-background", color)}>
+                <Icon className="h-5 w-5" />
+             </div>
+             <div className="space-y-1">
+                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">{label}</p>
+                <h2 className="text-2xl font-black tracking-tight tabular-nums">{value}</h2>
+                <p className="text-[11px] text-muted-foreground/80 font-medium whitespace-nowrap">{sub}</p>
+             </div>
+          </div>
+       </CardContent>
+    </Card>
+  );
+}
+
+function DetailItem({ label, value, sub, icon: Icon }: any) {
+  return (
+    <div className="space-y-2 group">
+       <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/60 transition-colors group-hover:text-primary">
+          <Icon className="h-3 w-3" /> {label}
+       </div>
+       <div className="space-y-0.5">
+          <p className="text-sm font-bold text-foreground break-all">{value}</p>
+          <p className="text-[11px] text-muted-foreground max-w-full truncate">{sub}</p>
+       </div>
+    </div>
+  );
+}
+
+function BarChart3({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+    )
+}
+
+function ChevronLeft({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="m15 18-6-6 6-6"/></svg>
+    )
 }

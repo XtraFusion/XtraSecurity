@@ -533,7 +533,18 @@ const VaultManager: React.FC = () => {
         }
       }
 
-      const branchData = branchesRes.data || [];
+      console.log("FETCHED BRANCHES:", branchesRes.data);
+      if (Array.isArray(branchesRes.data)) {
+        if (branchesRes.data.length === 0) {
+          setNotification({ type: "destructive", message: "DEBUG: branchesRes.data is an empty array" });
+        } else {
+          setNotification({ type: "default", message: `DEBUG: Loaded ${branchesRes.data.length} branches. First branch secrets: ${branchesRes.data[0].secrets?.length}` });
+        }
+      } else {
+        setNotification({ type: "destructive", message: `DEBUG: branchesRes.data is not an array: ${typeof branchesRes.data} - ${JSON.stringify(branchesRes.data).slice(0, 100)}` });
+      }
+      
+      const branchData = Array.isArray(branchesRes.data) ? branchesRes.data : (branchesRes.data.data || []);
       setBranches(branchData);
 
       if (branchData.length > 0) {
@@ -1000,8 +1011,8 @@ const VaultManager: React.FC = () => {
 
   const filteredSecrets = secrets.filter((secret) => {
     const matchesSearch =
-      secret.key.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      secret.description.toLowerCase().includes(searchQuery.toLowerCase());
+      (secret.key || "").toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (secret.description || "").toLowerCase().includes(searchQuery.toLowerCase());
     const matchesEnv = filterEnv === "all" || secret.environmentType === filterEnv;
     return matchesSearch && matchesEnv;
   });

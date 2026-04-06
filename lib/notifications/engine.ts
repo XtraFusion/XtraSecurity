@@ -97,6 +97,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
     const { sendSlackNotification } = await import("./slack");
     const { sendTeamsNotification } = await import("./teams");
     const { sendWebhookNotification } = await import("./webhook");
+    const { sendEmail } = await import("@/lib/email");
 
     const commonPayload = {
       title: event.title,
@@ -118,10 +119,21 @@ export async function notify(event: NotificationEvent): Promise<void> {
             if (webhookUrl) await sendSlackNotification(webhookUrl, commonPayload as any);
           } else if (channel.type === "teams") {
             const webhookUrl = (channel.config as any)?.teamsWebhook || (channel.config as any)?.webhookUrl;
-            if (webhookUrl) await sendTeamsNotification(webhookUrl, commonPayload);
+            if (webhookUrl) await sendTeamsNotification(webhookUrl, commonPayload as any);
           } else if (channel.type === "webhook") {
             const webhookUrl = (channel.config as any)?.webhookUrl;
-            if (webhookUrl) await sendWebhookNotification(webhookUrl, commonPayload);
+            if (webhookUrl) await sendWebhookNotification(webhookUrl, commonPayload as any);
+          } else if (channel.type === "email") {
+            const emailAddress = (channel.config as any)?.email;
+            if (emailAddress) {
+              const typeColor = commonPayload.type === "error" ? "#EF4444" : commonPayload.type === "warning" ? "#F59E0B" : "#6366F1";
+              await sendEmail({
+                to: emailAddress,
+                subject: `[XtraSecurity] ${event.title}`,
+                text: `${event.title}\n\n${event.message}`,
+                html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:8px"><div style="background:${typeColor};padding:12px 20px;border-radius:6px 6px 0 0"><h2 style="color:#fff;margin:0;font-size:16px">🔔 ${event.title}</h2></div><div style="padding:20px;background:#f9fafb"><p style="color:#111827;font-size:15px;margin-top:0">${event.message}</p>${event.description ? `<p style="color:#6b7280;font-size:13px">${event.description}</p>` : ""}</div><p style="font-size:11px;color:#9ca3af;padding:10px 20px 0">XtraSecurity &bull; ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p></div>`,
+              });
+            }
           }
         } catch (err) {
           console.error(`[Engine] Failed to dispatch to channel ${channel.name}:`, err);
@@ -129,20 +141,68 @@ export async function notify(event: NotificationEvent): Promise<void> {
       })
     );
 
-    // 5. Create a system notification (Alert) so it shows up in the UI
-    // Usually these engine-triggered events are important enough to be saved to the DB
-    await prisma.notification.create({
-      data: {
-        userId: "system", // Or associated user if known from event
-        userEmail: "system@xtrasecurity.in",
-        taskTitle: event.title,
-        description: event.description || event.message,
-        message: event.message,
-        status: event.severity,
-        read: false,
-        workspaceId: event.workspaceId,
+    // 5. Save a notification for the workspace owner so it shows in their Alerts tab.
+    // Also notify any team members who belong to this workspace via TeamUser.
+    try {
+      // Get workspace owner
+      const workspace = await prisma.workspace.findUnique({
+        where: { id: event.workspaceId },
+        select: { createdBy: true, user: { select: { email: true } } },
+      });
+
+      const recipients: { userId: string; userEmail: string }[] = [];
+
+      if (workspace) {
+        recipients.push({
+          userId: workspace.createdBy,
+          userEmail: workspace.user.email || "unknown@xtrasecurity.in",
+        });
       }
-    });
+
+      // Also include team members who are in this workspace's projects' teams
+      const teamUsers = await prisma.teamUser.findMany({
+        where: {
+          status: "active",
+          team: {
+            teamProjects: {
+              some: {
+                project: { workspaceId: event.workspaceId },
+              },
+            },
+          },
+        },
+        select: { userId: true, user: { select: { email: true } } },
+      });
+
+      for (const tu of teamUsers) {
+        if (!recipients.find((r) => r.userId === tu.userId)) {
+          recipients.push({
+            userId: tu.userId,
+            userEmail: tu.user.email || "",
+          });
+        }
+      }
+
+      // Create one Notification record per recipient
+      await Promise.allSettled(
+        recipients.map((r) =>
+          prisma.notification.create({
+            data: {
+              userId: r.userId,
+              userEmail: r.userEmail,
+              taskTitle: event.title,
+              description: event.description || event.message,
+              message: event.message,
+              status: event.severity,
+              read: false,
+              workspaceId: event.workspaceId,
+            },
+          })
+        )
+      );
+    } catch (notifErr) {
+      console.error("[Engine] Failed to persist notifications:", notifErr);
+    }
 
   } catch (error) {
     console.error("[Engine] Error processing notification:", error);

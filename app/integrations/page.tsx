@@ -1,13 +1,15 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
-import { Github, Gitlab, Trash2, RefreshCw, Check, Loader2, Lock, Link2, Unlink, ArrowRight, Globe, Shield, Triangle, ExternalLink, Eye, EyeOff, Info, Rocket, AlertCircle, Plus, RotateCcw, CloudLightning, Pencil } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { Github, Gitlab, Trash2, RefreshCw, Check, Loader2, Lock, Link2, Unlink, ArrowRight, Globe, Shield, Triangle, ExternalLink, Eye, EyeOff, Info, Rocket, AlertCircle, Plus, RotateCcw, CloudLightning, Pencil, Search, X } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { Project } from "@/util/Interface";
 import { ProjectController } from "@/util/ProjectController";
@@ -777,39 +779,49 @@ function ConnectionCard({ name, icon, iconBg, status, onConnect, onDisconnect, o
   tokenBased?: boolean;
 }) {
   return (
-    <div className={`rounded-lg border p-4 transition-colors ${status?.connected ? "border-green-500/30 bg-green-500/[0.03]" : "bg-card"}`}>
+    <div className={`group relative rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm ${
+      status?.connected ? "border-border" : "border-border/60 hover:border-border"
+    }`}>
       <div className="flex items-center gap-3">
-        <div className={`h-9 w-9 rounded-lg ${iconBg} flex items-center justify-center`}>{icon}</div>
+        <div className={`h-8 w-8 rounded-md ${iconBg} flex items-center justify-center shrink-0`}>{icon}</div>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-2">
-            <p className="font-medium text-sm">{name}</p>
-            {status?.connected && <span className="h-1.5 w-1.5 rounded-full bg-green-500" />}
-            {tokenBased && !status?.connected && <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground font-medium">Token</span>}
-          </div>
+          <p className="font-medium text-[13px] leading-tight">{name}</p>
           {status?.connected ? (
-            <p className="text-xs text-green-600 dark:text-green-400 truncate">
+            <p className="text-[11px] text-muted-foreground truncate mt-0.5">
               {name === "AWS" ? status.region : `@${status.username}`}
             </p>
-          ) : <p className="text-xs text-muted-foreground">Not connected</p>}
+          ) : (
+            <p className="text-[11px] text-muted-foreground/60 mt-0.5">
+              {tokenBased ? "Token · Not connected" : "Not connected"}
+            </p>
+          )}
         </div>
-      </div>
-      <div className="mt-3">
-        {status?.connected ? (
-          <div className="flex gap-2">
-            {onEdit && (
-              <Button variant="outline" size="sm" onClick={onEdit} className="flex-1 h-8 text-xs gap-1.5">
-                <Pencil className="h-3 w-3" /> Edit
+        <div className="shrink-0">
+          {status?.connected ? (
+            <div className="flex items-center gap-1.5">
+              <span className="flex items-center gap-1 text-[10px] font-medium text-green-600 dark:text-green-400 bg-green-500/10 px-1.5 py-0.5 rounded">
+                <span className="h-1 w-1 rounded-full bg-green-500" />Active
+              </span>
+              {onEdit && (
+                <Button variant="ghost" size="icon" onClick={onEdit} className="h-7 w-7 text-muted-foreground hover:text-foreground">
+                  <Pencil className="h-3 w-3" />
+                </Button>
+              )}
+              <Button variant="ghost" size="icon" onClick={onDisconnect} className="h-7 w-7 text-muted-foreground hover:text-destructive">
+                <Unlink className="h-3 w-3" />
               </Button>
-            )}
-            <Button variant="outline" size="sm" onClick={onDisconnect} className={`h-8 text-xs text-destructive border-destructive/20 hover:bg-destructive/5 gap-1.5 ${onEdit ? "flex-1" : "w-full"}`}>
-              <Unlink className="h-3 w-3" /> Disconnect
+            </div>
+          ) : (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={onConnect}
+              className="h-7 text-[11px] px-3 gap-1.5"
+            >
+              <Plus className="h-3 w-3" /> Connect
             </Button>
-          </div>
-        ) : (
-          <Button size="sm" onClick={onConnect} className={`w-full h-8 text-xs gap-1.5 ${name === "GitLab" ? "bg-[#FC6D26] hover:bg-[#e85d1a] text-white" : name === "Vercel" ? "bg-black hover:bg-neutral-800 text-white" : name === "Netlify" ? "bg-[#00C7B7] hover:bg-[#00a89c] text-white" : name === "AWS" ? "bg-[#FF9900] hover:bg-[#e6890a] text-white" : ""}`}>
-            <Link2 className="h-3 w-3" /> Connect
-          </Button>
-        )}
+          )}
+        </div>
       </div>
     </div>
   );
@@ -835,6 +847,8 @@ export default function IntegrationsPage() {
   const [slackStatus, setSlackStatus] = useState<IntegrationStatus | null>(null);
   const [discordStatus, setDiscordStatus] = useState<IntegrationStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [activeCategory, setActiveCategory] = useState<"all" | "source" | "deployment" | "cloud" | "notifications">("all");
 
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProject, setSelectedProject] = useState("");
@@ -1003,10 +1017,105 @@ export default function IntegrationsPage() {
 
   const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
   const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+
+  // ── Derived values (must stay above early returns so hooks order is stable) ──
+  const connectedCount = [githubStatus, gitlabStatus, vercelStatus, netlifyStatus, awsStatus, dopplerStatus, bitbucketStatus, gcpStatus, azureStatus, railwayStatus, flyStatus, renderStatus, doStatus, herokuStatus, slackStatus, discordStatus].filter(s => s?.connected).length;
+
+  const categories = [
+    { id: "all", label: "All" },
+    { id: "source", label: "Source Control" },
+    { id: "deployment", label: "Deployment" },
+    { id: "cloud", label: "Cloud" },
+    { id: "notifications", label: "Notifications" },
+  ] as const;
+
+  type IntegrationDef = { name: string; category: "source" | "deployment" | "cloud" | "notifications"; card: React.ReactNode; };
+
+  const allIntegrations: IntegrationDef[] = [
+    { name: "GitHub",       category: "source",        card: <ConnectionCard name="GitHub" icon={<Github className="h-5 w-5 text-white" />} iconBg="bg-[#24292e]" status={githubStatus} onConnect={() => { if (githubStatus?.authUrl) window.location.href = githubStatus.authUrl; else toast({ title: "GitHub Link Error", description: githubStatus?.error || "Unable to start GitHub authentication.", variant: "destructive" }); }} onDisconnect={() => disconnect("github")} /> },
+    { name: "GitLab",       category: "source",        card: <ConnectionCard name="GitLab" icon={<Gitlab className="h-5 w-5 text-white" />} iconBg="bg-[#FC6D26]" status={gitlabStatus} onConnect={() => { if (gitlabStatus?.authUrl) window.location.href = gitlabStatus.authUrl; else toast({ title: "GitLab Link Error", description: gitlabStatus?.error || "Unable to start GitLab authentication.", variant: "destructive" }); }} onDisconnect={() => disconnect("gitlab")} /> },
+    { name: "Bitbucket",    category: "source",        card: <ConnectionCard name="Bitbucket" icon={<img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className="h-6 w-6" />} iconBg="bg-white shadow-inner" status={bitbucketStatus} onConnect={() => setBitbucketModal(true)} onDisconnect={() => disconnect("bitbucket")} tokenBased /> },
+    { name: "Vercel",       category: "deployment",    card: <ConnectionCard name="Vercel" icon={<Triangle className="h-4 w-4 text-white fill-white" />} iconBg="bg-black" status={vercelStatus} onConnect={() => setVercelModal(true)} onDisconnect={() => disconnect("vercel")} tokenBased /> },
+    { name: "Netlify",      category: "deployment",    card: <ConnectionCard name="Netlify" icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="white"><path d="M16.934 8.219a4.467 4.467 0 0 0-3.205-3.197l-.812 2.568.013.04 3.204 3.205.823-2.571-.023-.045zm-4.148-3.56a4.467 4.467 0 0 0-4.728 1.07L9.92 7.59l3.678-2.93h-.812zm-5.444 1.794a4.466 4.466 0 0 0-1.07 4.727l2.57-.812-1.5-3.915zm-.705 5.452a4.467 4.467 0 0 0 3.197 3.205l.812-2.568-.013-.04-3.197-3.197-.822 2.572.023.028zm4.15 3.561a4.467 4.467 0 0 0 4.727-1.07l-1.862-1.862-3.678 2.932h.813zm5.443-1.795a4.466 4.466 0 0 0 1.07-4.727l-2.57.812 1.5 3.915z" /></svg>} iconBg="bg-[#00C7B7]" status={netlifyStatus} onConnect={() => setNetlifyModal(true)} onDisconnect={() => disconnect("netlify")} tokenBased /> },
+    { name: "Railway",      category: "deployment",    card: <ConnectionCard name="Railway" icon={<img src="/railway-color.svg" alt="Railway" className="h-6 w-6" />} iconBg="bg-[#0B0D0E]" status={railwayStatus} onConnect={() => setRailwayModal(true)} onDisconnect={() => disconnect("railway")} tokenBased /> },
+    { name: "Fly.io",       category: "deployment",    card: <ConnectionCard name="Fly.io" icon={<img src="/Fly.io Symbol SVG" alt="Fly.io" className="h-6 w-6" />} iconBg="bg-[#4222E9]" status={flyStatus} onConnect={() => setFlyModal(true)} onDisconnect={() => disconnect("fly")} tokenBased /> },
+    { name: "Render",       category: "deployment",    card: <ConnectionCard name="Render" icon={<img src="/Render Symbol SVG.svg" alt="Render" className="h-6 w-6" />} iconBg="bg-white border shadow-sm" status={renderStatus} onConnect={() => setRenderModal(true)} onDisconnect={() => disconnect("render")} tokenBased /> },
+    { name: "Heroku",       category: "deployment",    card: <ConnectionCard name="Heroku" icon={<img src="/Heroku Symbol SVG.svg" alt="Heroku" className="h-6 w-6" />} iconBg="bg-[#6762A6]" status={herokuStatus} onConnect={() => setHerokuModal(true)} onDisconnect={() => disconnect("heroku")} tokenBased /> },
+    { name: "AWS",          category: "cloud",         card: <ConnectionCard name="AWS" icon={<img src="/aws-logo.svg" alt="AWS" className="h-6 w-6" />} iconBg="bg-white" status={awsStatus} onConnect={() => setAwsModal(true)} onDisconnect={() => disconnect("aws")} onEdit={() => setAwsModal(true)} tokenBased /> },
+    { name: "Doppler",      category: "cloud",         card: <ConnectionCard name="Doppler" icon={<span className="text-white font-bold text-sm">D</span>} iconBg="bg-[#6366f1]" status={dopplerStatus} onConnect={() => setDopplerModal(true)} onDisconnect={() => disconnect("doppler")} tokenBased /> },
+    { name: "Google Cloud", category: "cloud",         card: <ConnectionCard name="Google Cloud" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4" /><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853" /><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05" /><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335" /></svg>} iconBg="bg-white border" status={gcpStatus} onConnect={() => setGcpModal(true)} onDisconnect={() => disconnect("gcp")} tokenBased /> },
+    { name: "Azure",        category: "cloud",         card: <ConnectionCard name="Azure" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="white" opacity=".9" /><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="white" opacity=".2" /><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="white" opacity=".4" /></svg>} iconBg="bg-[#0089D6]" status={azureStatus} onConnect={() => setAzureModal(true)} onDisconnect={() => disconnect("azure")} tokenBased /> },
+    { name: "DigitalOcean", category: "cloud",         card: <ConnectionCard name="DigitalOcean" icon={<img src="/DigitalOcean Holdings Symbol SVG.svg" alt="DigitalOcean" className="h-6 w-6" />} iconBg="bg-white" status={doStatus} onConnect={() => setDoModal(true)} onDisconnect={() => disconnect("digitalocean")} tokenBased /> },
+    { name: "Slack",        category: "notifications", card: <ConnectionCard name="Slack" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z" /></svg>} iconBg="bg-[#4A154B]" status={slackStatus} onConnect={() => setSlackModal(true)} onDisconnect={() => disconnect("slack")} tokenBased /> },
+    { name: "Discord",      category: "notifications", card: <ConnectionCard name="Discord" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z" /></svg>} iconBg="bg-[#5865F2]" status={discordStatus} onConnect={() => setDiscordModal(true)} onDisconnect={() => disconnect("discord")} tokenBased /> },
+  ];
+
+  // useMemo must be above early returns (Rules of Hooks)
+  const filteredIntegrations = useMemo(() => {
+    return allIntegrations.filter(i => {
+      const matchCat = activeCategory === "all" || i.category === activeCategory;
+      const matchSearch = i.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchCat && matchSearch;
+    });
+  }, [searchQuery, activeCategory, githubStatus, gitlabStatus, vercelStatus, netlifyStatus, awsStatus, dopplerStatus, bitbucketStatus, gcpStatus, azureStatus, railwayStatus, flyStatus, renderStatus, doStatus, herokuStatus, slackStatus, discordStatus]);
+
+  // ── Early returns (after all hooks) ──────────────────────────────────────────
   if (!loading && !(isPersonalWorkspace || isWorkspaceOwner)) {
     return <DashboardLayout><div className="flex flex-col items-center justify-center h-[60vh] space-y-4"><Shield className="h-10 w-10 text-muted-foreground" /><h2 className="text-xl font-semibold">Access Denied</h2><p className="text-muted-foreground text-sm">Only workspace owners can manage integrations.</p></div></DashboardLayout>;
   }
-  if (loading) return <DashboardLayout><div className="flex items-center justify-center h-[60vh]"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div></DashboardLayout>;
+  if (loading) return (
+    <DashboardLayout>
+      <div className="max-w-5xl space-y-8">
+        {/* Header */}
+        <div className="space-y-2">
+          <Skeleton className="h-7 w-40" />
+          <Skeleton className="h-4 w-72" />
+        </div>
+        {/* Filter bar */}
+        <div className="flex items-center gap-3">
+          <Skeleton className="h-9 w-80 rounded-lg" />
+          <Skeleton className="h-8 w-56 rounded-md ml-auto" />
+        </div>
+        {/* Cards */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          {Array.from({ length: 9 }).map((_, i) => (
+            <div key={i} className="rounded-lg border p-3.5">
+              <div className="flex items-center gap-3">
+                <Skeleton className="h-8 w-8 rounded-md shrink-0" />
+                <div className="space-y-1 flex-1">
+                  <Skeleton className="h-3.5 w-20" />
+                  <Skeleton className="h-2.5 w-24" />
+                </div>
+                <Skeleton className="h-7 w-20 rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+        {/* Sync */}
+        <div className="space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <div className="rounded-lg border">
+            <div className="px-4 py-3 border-b flex items-center gap-3">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-8 w-56 rounded-md" />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x">
+              {[1,2,3].map(i => (
+                <div key={i} className="p-4 space-y-1.5">
+                  <Skeleton className="h-2.5 w-20" />
+                  <Skeleton className="h-9 w-full rounded-md" />
+                </div>
+              ))}
+            </div>
+            <div className="border-t px-4 py-3 flex items-center justify-between">
+              <Skeleton className="h-3.5 w-32" />
+              <Skeleton className="h-7 w-16 rounded-md" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </DashboardLayout>
+  );
 
   const anyConnected = [githubStatus, gitlabStatus, vercelStatus, netlifyStatus, awsStatus, dopplerStatus, bitbucketStatus, gcpStatus, azureStatus, railwayStatus, flyStatus, renderStatus, doStatus, herokuStatus, slackStatus, discordStatus].some(s => s?.connected);
   const providerConnected: Record<SyncProvider, boolean | undefined> = { github: githubStatus?.connected, gitlab: gitlabStatus?.connected, vercel: vercelStatus?.connected, netlify: netlifyStatus?.connected, aws: awsStatus?.connected, doppler: dopplerStatus?.connected, bitbucket: bitbucketStatus?.connected, gcp: gcpStatus?.connected, azure: azureStatus?.connected, railway: railwayStatus?.connected, fly: flyStatus?.connected, render: renderStatus?.connected, digitalocean: doStatus?.connected, heroku: herokuStatus?.connected, slack: slackStatus?.connected, discord: discordStatus?.connected };
@@ -1034,70 +1143,119 @@ export default function IntegrationsPage() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl space-y-6">
+      <div className="max-w-5xl space-y-8">
+        {/* ── Header ────────────────────────────────────────── */}
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Integrations</h1>
-          <p className="text-muted-foreground text-sm mt-1">Connect external services and sync secrets to your deployment pipelines.</p>
+          <p className="text-muted-foreground text-sm mt-1">Connect services and sync secrets to CI/CD pipelines.</p>
         </div>
 
-        {/* Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          <ConnectionCard name="GitHub" icon={<Github className="h-5 w-5 text-white" />} iconBg="bg-[#24292e]" status={githubStatus} onConnect={() => { if (githubStatus?.authUrl) window.location.href = githubStatus.authUrl; else toast({ title: "GitHub Link Error", description: githubStatus?.error || "Unable to start GitHub authentication. Check your environment configuration.", variant: "destructive" }); }} onDisconnect={() => disconnect("github")} />
-          <ConnectionCard name="GitLab" icon={<Gitlab className="h-5 w-5 text-white" />} iconBg="bg-[#FC6D26]" status={gitlabStatus} onConnect={() => { if (gitlabStatus?.authUrl) window.location.href = gitlabStatus.authUrl; else toast({ title: "GitLab Link Error", description: gitlabStatus?.error || "Unable to start GitLab authentication.", variant: "destructive" }); }} onDisconnect={() => disconnect("gitlab")} />
-          <ConnectionCard name="Vercel" icon={<Triangle className="h-4 w-4 text-white fill-white" />} iconBg="bg-black" status={vercelStatus} onConnect={() => setVercelModal(true)} onDisconnect={() => disconnect("vercel")} tokenBased />
-          <ConnectionCard name="Netlify" icon={<svg className="h-4 w-4" viewBox="0 0 24 24" fill="white"><path d="M16.934 8.219a4.467 4.467 0 0 0-3.205-3.197l-.812 2.568.013.04 3.204 3.205.823-2.571-.023-.045zm-4.148-3.56a4.467 4.467 0 0 0-4.728 1.07L9.92 7.59l3.678-2.93h-.812zm-5.444 1.794a4.466 4.466 0 0 0-1.07 4.727l2.57-.812-1.5-3.915zm-.705 5.452a4.467 4.467 0 0 0 3.197 3.205l.812-2.568-.013-.04-3.197-3.197-.822 2.572.023.028zm4.15 3.561a4.467 4.467 0 0 0 4.727-1.07l-1.862-1.862-3.678 2.932h.813zm5.443-1.795a4.466 4.466 0 0 0 1.07-4.727l-2.57.812 1.5 3.915z" /></svg>} iconBg="bg-[#00C7B7]" status={netlifyStatus} onConnect={() => setNetlifyModal(true)} onDisconnect={() => disconnect("netlify")} tokenBased />
-          <ConnectionCard name="AWS" icon={<img src="/aws-logo.svg" alt="AWS" className="h-6 w-6" />} iconBg="bg-white" status={awsStatus} onConnect={() => setAwsModal(true)} onDisconnect={() => disconnect("aws")} onEdit={() => setAwsModal(true)} tokenBased />
-          <ConnectionCard name="Doppler" icon={<span className="text-white font-bold text-sm">D</span>} iconBg="bg-[#6366f1]" status={dopplerStatus} onConnect={() => setDopplerModal(true)} onDisconnect={() => disconnect("doppler")} tokenBased />
-          <ConnectionCard name="Bitbucket" icon={<img src="/Bitbucket Symbol SVG.svg" alt="Bitbucket" className="h-6 w-6" />} iconBg="bg-white shadow-inner" status={bitbucketStatus} onConnect={() => setBitbucketModal(true)} onDisconnect={() => disconnect("bitbucket")} tokenBased />
-          <ConnectionCard name="Google Cloud" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M12 2L4 5v14l8 3 8-3V5l-8-3z" fill="#4285F4" /><path d="M12 22l8-3V5l-8-3v20z" fill="#34A853" /><path d="M4 5v14l8 3v-7l-8-3.5V5z" fill="#FBBC05" /><path d="M20 5v14l-8 3v-7l8-3.5V5z" fill="#EA4335" /></svg>} iconBg="bg-white border" status={gcpStatus} onConnect={() => setGcpModal(true)} onDisconnect={() => disconnect("gcp")} tokenBased />
-          <ConnectionCard name="Azure" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" xmlns="http://www.w3.org/2000/svg"><path d="M11.52.53L1.13 11.16l1.39 12.31L12.92 23.3l9.95-10.74L21.48.69l-9.96-.16zm0 2.21l7.74.12 1.11 9.77-7.75 8.35-8.08-.11-1.08-9.59 8.06-8.54z" fill="white" opacity=".9" /><path d="M12.92 23.3s-9.95.17-10.4 0c-.45-.17 1.39-12.31 1.39-12.31l10.39-11 8.56.16 1.11 12.15-11.05 11z" fill="white" opacity=".2" /><path d="M1.13 11.16l1.39 12.31s9.54.1 10.4 0c.86-.1 1.08-11 1.08-11L1.13 11.16z" fill="white" opacity=".4" /></svg>} iconBg="bg-[#0089D6]" status={azureStatus} onConnect={() => setAzureModal(true)} onDisconnect={() => disconnect("azure")} tokenBased />
-          <ConnectionCard name="Railway" icon={<img src="/railway-color.svg" alt="Railway" className="h-6 w-6" />} iconBg="bg-[#0B0D0E]" status={railwayStatus} onConnect={() => setRailwayModal(true)} onDisconnect={() => disconnect("railway")} tokenBased />
-          <ConnectionCard name="Fly.io" icon={<img src="/Fly.io Symbol SVG" alt="Fly.io" className="h-6 w-6" />} iconBg="bg-[#4222E9]" status={flyStatus} onConnect={() => setFlyModal(true)} onDisconnect={() => disconnect("fly")} tokenBased />
-          <ConnectionCard name="Render" icon={<img src="/Render Symbol SVG.svg" alt="Render" className="h-6 w-6" />} iconBg="bg-white border shadow-sm" status={renderStatus} onConnect={() => setRenderModal(true)} onDisconnect={() => disconnect("render")} tokenBased />
-          <ConnectionCard name="DigitalOcean" icon={<img src="/DigitalOcean Holdings Symbol SVG.svg" alt="DigitalOcean" className="h-6 w-6" />} iconBg="bg-white" status={doStatus} onConnect={() => setDoModal(true)} onDisconnect={() => disconnect("digitalocean")} tokenBased />
-          <ConnectionCard name="Heroku" icon={<img src="/Heroku Symbol SVG.svg" alt="Heroku" className="h-6 w-6" />} iconBg="bg-[#6762A6]" status={herokuStatus} onConnect={() => setHerokuModal(true)} onDisconnect={() => disconnect("heroku")} tokenBased />
+        {/* ── Filter bar ───────────────────────────────────── */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1 border rounded-lg p-0.5 bg-muted/30">
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-md text-xs font-medium transition-all ${
+                  activeCategory === cat.id
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-muted-foreground hover:text-foreground"
+                }`}
+              >
+                {cat.label}
+              </button>
+            ))}
+          </div>
+          <div className="relative ml-auto w-full sm:w-56">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Filter..."
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              className="w-full h-8 pl-8 pr-7 text-xs rounded-md border bg-background/50 focus:outline-none focus:ring-1 focus:ring-primary/30 transition-shadow placeholder:text-muted-foreground/50"
+            />
+            {searchQuery && (
+              <button onClick={() => setSearchQuery("")} className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                <X className="h-3 w-3" />
+              </button>
+            )}
+          </div>
+          {connectedCount > 0 && (
+            <span className="text-[11px] font-medium text-muted-foreground">
+              {connectedCount}/{allIntegrations.length} active
+            </span>
+          )}
         </div>
 
-        {/* Notifications Section */}
-        <h2 className="text-lg font-semibold mt-8 mb-4">Notifications & Alerts</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mb-10">
-          <ConnectionCard name="Slack" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M5.042 15.165a2.528 2.528 0 0 1-2.52 2.523A2.528 2.528 0 0 1 0 15.165a2.527 2.527 0 0 1 2.522-2.52h2.52v2.52zM6.313 15.165a2.527 2.527 0 0 1 2.521-2.52 2.527 2.527 0 0 1 2.521 2.52v6.313A2.528 2.528 0 0 1 8.834 24a2.528 2.528 0 0 1-2.521-2.522v-6.313zM8.834 5.042a2.528 2.528 0 0 1-2.523-2.52A2.528 2.528 0 0 1 8.834 0a2.527 2.527 0 0 1 2.52 2.522v2.52H8.834zM8.834 6.313a2.527 2.527 0 0 1-2.52 2.521h6.313A2.528 2.528 0 0 1 24 8.834a2.528 2.528 0 0 1-2.522-2.521H8.834zM18.958 8.834a2.528 2.528 0 0 1 2.522-2.523A2.528 2.528 0 0 1 24 8.834a2.527 2.527 0 0 1-2.52 2.52h-2.52V8.834zM17.687 8.834a2.527 2.527 0 0 1-2.521 2.52 2.527 2.527 0 0 1-2.521-2.52V2.522A2.528 2.528 0 0 1 15.166 0a2.528 2.528 0 0 1 2.521 2.522v6.312zM15.166 18.958a2.528 2.528 0 0 1 2.523 2.522A2.528 2.528 0 0 1 15.166 24a2.527 2.527 0 0 1-2.52-2.52v-2.522h2.52zM15.166 17.687a2.527 2.527 0 0 1 2.52-2.521 2.527 2.527 0 0 1-2.52-2.521H8.833A2.528 2.528 0 0 1 0 15.166a2.528 2.528 0 0 1 2.522 2.521h12.644z" /></svg>} iconBg="bg-[#4A154B]" status={slackStatus} onConnect={() => setSlackModal(true)} onDisconnect={() => disconnect("slack")} tokenBased />
-          <ConnectionCard name="Discord" icon={<svg viewBox="0 0 24 24" className="h-5 w-5" fill="white" xmlns="http://www.w3.org/2000/svg"><path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0 12.64 12.64 0 0 0-.617-1.25.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057 19.9 19.9 0 0 0 5.993 3.03.078.078 0 0 0 .084-.028 14.006 14.006 0 0 0 1.226-1.994.076.076 0 0 0-.041-.106 13.107 13.107 0 0 1-1.872-.892.077.077 0 0 1-.008-.128 10.23 10.23 0 0 0 .372-.292.074.074 0 0 1 .077-.01c3.928 1.793 8.18 1.793 12.062 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127 12.299 12.299 0 0 1-1.873.892.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028 19.839 19.839 0 0 0 6.002-3.03.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.03zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.947 2.419-2.157 2.419zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419 0-1.333.955-2.419 2.157-2.419 1.21 0 2.176 1.096 2.157 2.419 0 1.334-.946 2.419-2.157 2.419z" /></svg>} iconBg="bg-[#5865F2]" status={discordStatus} onConnect={() => setDiscordModal(true)} onDisconnect={() => disconnect("discord")} tokenBased />
-        </div>
+        {/* ── Connections grid ──────────────────────────────── */}
+        {filteredIntegrations.length > 0 ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+            {filteredIntegrations.map(i => (
+              <div key={i.name}>{i.card}</div>
+            ))}
+          </div>
+        ) : (
+          <div className="rounded-lg border border-dashed p-10 text-center">
+            <Search className="h-6 w-6 mx-auto text-muted-foreground/30 mb-2" />
+            <p className="font-medium text-sm">No integrations match</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Try a different filter or search term.</p>
+          </div>
+        )}
 
-        {/* Sync section */}
+        {/* ── Sync Secrets ──────────────────────────────── */}
         {anyConnected && (
           <div className="space-y-4">
-            <div className="space-y-3">
-              <h2 className="text-lg font-semibold">Sync Secrets</h2>
-              {/* Provider tabs — full width row */}
-              <div className="flex items-center gap-1 bg-muted rounded-lg p-1 text-xs overflow-x-auto">
-                {(["github", "gitlab", "bitbucket", "vercel", "netlify", "aws", "doppler", "gcp", "azure", "railway", "fly", "render", "digitalocean", "heroku"] as SyncProvider[]).map(p => {
-                  const labels: Record<SyncProvider, string> = { github: "GitHub", gitlab: "GitLab", bitbucket: "Bitbucket", vercel: "Vercel", netlify: "Netlify", aws: "AWS Secrets", doppler: "Doppler", gcp: "Google Cloud", azure: "Azure Vault", railway: "Railway", fly: "Fly.io", render: "Render", digitalocean: "DigitalOcean", heroku: "Heroku", slack: "Slack", discord: "Discord" };
-                  return (
-                    <button key={p} onClick={() => setSyncProvider(p)} disabled={!providerConnected[p]}
-                      className={`flex items-center gap-1.5 px-3 py-2 rounded-md font-medium transition-all whitespace-nowrap ${syncProvider === p ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
-                        } ${!providerConnected[p] ? "opacity-30 cursor-not-allowed" : "cursor-pointer"}`}>
-                      {providerIcon(p)} {labels[p]}
-                    </button>
-                  );
-                })}
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-lg font-semibold">Sync Secrets</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">Push secrets from a project to a connected provider.</p>
               </div>
             </div>
 
-            <div className="rounded-lg border bg-card">
+            <div className="rounded-lg border bg-card overflow-hidden">
+              {/* Row 1: Destination provider selector */}
+              <div className="px-4 py-3 border-b bg-muted/20 flex items-center gap-3">
+                <Label className="text-xs font-medium text-muted-foreground whitespace-nowrap">Destination</Label>
+                <Select value={syncProvider} onValueChange={(v) => setSyncProvider(v as SyncProvider)}>
+                  <SelectTrigger className="h-8 w-56 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {(["github", "gitlab", "bitbucket", "vercel", "netlify", "aws", "doppler", "gcp", "azure", "railway", "fly", "render", "digitalocean", "heroku"] as SyncProvider[]).map(p => {
+                      const labels: Record<SyncProvider, string> = { github: "GitHub Actions", gitlab: "GitLab CI/CD", bitbucket: "Bitbucket", vercel: "Vercel", netlify: "Netlify", aws: "AWS Secrets Manager", doppler: "Doppler", gcp: "Google Cloud", azure: "Azure Key Vault", railway: "Railway", fly: "Fly.io", render: "Render", digitalocean: "DigitalOcean", heroku: "Heroku", slack: "Slack", discord: "Discord" };
+                      return (
+                        <SelectItem key={p} value={p} disabled={!providerConnected[p]}>
+                          <div className="flex items-center gap-2">
+                            {providerIcon(p)}
+                            <span>{labels[p]}</span>
+                            {!providerConnected[p] && <span className="text-[10px] text-muted-foreground/60 ml-auto">not connected</span>}
+                          </div>
+                        </SelectItem>
+                      );
+                    })}
+                  </SelectContent>
+                </Select>
+                <span className="text-[11px] text-muted-foreground ml-auto hidden sm:block">
+                  {({ github: "GitHub Actions Secrets", gitlab: "GitLab CI/CD Variables", bitbucket: "Bitbucket Repo Variables", vercel: "Vercel Env Vars", netlify: "Netlify Site Env Vars", aws: "AWS Secrets Manager", doppler: "Doppler Config", gcp: "GCP Secret Manager", azure: "Azure Key Vault", railway: "Railway Env Vars", fly: "Fly.io Secrets", render: "Render Env Vars", digitalocean: "DO App Platform", heroku: "Heroku Config Vars", slack: "Slack", discord: "Discord" } as Record<SyncProvider, string>)[syncProvider]}
+                </span>
+              </div>
+
+              {/* Row 2: Source config */}
               <div className={`grid grid-cols-1 divide-y ${syncProvider === "aws" ? "md:grid-cols-2 md:divide-y-0 md:divide-x" : "md:grid-cols-3 md:divide-y-0 md:divide-x"}`}>
                 {/* Project */}
-                <div className="p-4 space-y-2">
-                  <Label className="text-xs text-muted-foreground font-medium">Project</Label>
+                <div className="p-4 space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Project</Label>
                   <Select value={selectedProject} onValueChange={setSelectedProject}>
                     <SelectTrigger className="h-9"><SelectValue placeholder="Select project..." /></SelectTrigger>
                     <SelectContent>{projects.map(p => <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>)}</SelectContent>
                   </Select>
                 </div>
+
                 {/* Environment */}
-                <div className="p-4 space-y-2">
-                  <Label className="text-xs text-muted-foreground font-medium">Environment</Label>
+                <div className="p-4 space-y-1.5">
+                  <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Environment</Label>
                   <Select value={selectedEnv} onValueChange={setSelectedEnv}>
                     <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
                     <SelectContent>
@@ -1107,77 +1265,73 @@ export default function IntegrationsPage() {
                     </SelectContent>
                   </Select>
                 </div>
-                {/* Target selector */}
+
+                {/* Target */}
                 {syncProvider !== "aws" && (
-                  <div className="p-4 space-y-2">
-                    <Label className="text-xs text-muted-foreground font-medium">{repoLabel[syncProvider]}</Label>
+                  <div className="p-4 space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">{repoLabel[syncProvider]}</Label>
                     <Select value={selectedRepo} onValueChange={setSelectedRepo}>
                       <SelectTrigger className="h-9"><SelectValue placeholder="Select..." /></SelectTrigger>
-                      <SelectContent>{repos.map(r => (<SelectItem key={r.id} value={r.id.toString()}><div className="flex items-center gap-2"><Lock className="h-3 w-3 text-muted-foreground" />{r.fullName}{r.framework && <span className="text-[10px] text-muted-foreground">({r.framework})</span>}</div></SelectItem>))}</SelectContent>
+                      <SelectContent>{repos.map(r => (
+                        <SelectItem key={r.id} value={r.id.toString()}>
+                          <div className="flex items-center gap-2"><Lock className="h-3 w-3 text-muted-foreground" />{r.fullName}{r.framework && <span className="text-[10px] text-muted-foreground">({r.framework})</span>}</div>
+                        </SelectItem>
+                      ))}</SelectContent>
                     </Select>
                   </div>
                 )}
-              </div>
 
-              {/* AWS extra: path prefix */}
-              {syncProvider === "aws" && (
-                <div className="border-t px-4 py-3 grid grid-cols-2 gap-4">
-                  <div className="space-y-1.5"><Label className="text-xs text-muted-foreground">Path Prefix <span className="text-muted-foreground/60">(optional)</span></Label><Input placeholder="/myapp/prod/" value={awsPathPrefix} onChange={e => setAwsPathPrefix(e.target.value)} className="h-8 font-mono text-xs" /></div>
-                  <div className="space-y-1.5"><Label className="text-xs text-muted-foreground">Key Prefix <span className="text-muted-foreground/60">(optional)</span></Label><Input placeholder="APP_" value={secretPrefix} onChange={e => setSecretPrefix(e.target.value.toUpperCase())} className="h-8 font-mono text-xs" /></div>
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="border-t">
-                {/* Prefix row — only for non-AWS */}
-                {syncProvider !== "aws" && (
-                  <div className="px-4 py-2.5 flex items-center gap-3 border-b bg-muted/10">
-                    <Label className="text-xs text-muted-foreground whitespace-nowrap w-12">Prefix</Label>
-                    <Input
-                      placeholder="optional"
-                      value={secretPrefix}
-                      onChange={e => setSecretPrefix(e.target.value.toUpperCase())}
-                      className="h-8 font-mono text-xs w-36"
-                    />
-                    {secretPrefix && (
-                      <span className="text-[10px] text-muted-foreground">e.g. <span className="font-mono">{secretPrefix}_API_KEY</span></span>
-                    )}
+                {/* AWS path prefix */}
+                {syncProvider === "aws" && (
+                  <div className="p-4 space-y-1.5">
+                    <Label className="text-[11px] text-muted-foreground font-medium uppercase tracking-wider">Path Prefix</Label>
+                    <Input placeholder="/myapp/prod/" value={awsPathPrefix} onChange={e => setAwsPathPrefix(e.target.value)} className="h-9 font-mono text-xs" />
                   </div>
                 )}
-                {/* Action row */}
-                <div className="px-4 py-3 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-2 text-xs text-muted-foreground min-w-0">
-                    <span className="font-medium text-foreground truncate max-w-[120px]">
-                      {selectedProject ? projects.find(p => p.id === selectedProject)?.name : "—"}
-                    </span>
-                    <ArrowRight className="h-3 w-3 shrink-0" />
-                    <span className="flex items-center gap-1 font-medium text-foreground truncate max-w-[180px]">
-                      {providerIcon(syncProvider)}
-                      <span className="truncate">{selectedRepoObj?.fullName || (syncProvider === "aws" ? awsStatus?.region || "AWS" : "—")}</span>
-                    </span>
-                  </div>
-                  <div className="flex items-center gap-2 shrink-0">
-                    {canCompare && (
-                      <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={() => setShowCompare(v => !v)}>
-                        <AlertCircle className="h-3.5 w-3.5" />{showCompare ? "Hide Diff" : "View Diff"}
-                      </Button>
-                    )}
-                    <Button
-                      onClick={handleSync}
-                      disabled={syncing || !selectedProject || (!selectedRepo && syncProvider !== "aws") || !providerConnected[syncProvider]}
-                      size="sm" className="gap-2 h-8"
-                    >
-                      {syncing ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Syncing...</> : <><RefreshCw className="h-3.5 w-3.5" />Sync All</>}
+              </div>
+
+              {/* Action footer */}
+              <div className="border-t px-4 py-3 flex items-center gap-3 bg-muted/5">
+                <div className="flex items-center gap-2 mr-auto">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Label className="text-[11px] text-muted-foreground font-medium flex items-center gap-1 cursor-help whitespace-nowrap">
+                        Key Prefix <Info className="h-2.5 w-2.5 text-muted-foreground/40" />
+                      </Label>
+                    </TooltipTrigger>
+                    <TooltipContent>Prepend a prefix to all keys, e.g. PROD_DATABASE_URL</TooltipContent>
+                  </Tooltip>
+                  <Input
+                    placeholder="optional"
+                    value={secretPrefix}
+                    onChange={e => setSecretPrefix(e.target.value.toUpperCase())}
+                    className="h-7 font-mono text-[11px] w-24 bg-background"
+                  />
+                  {secretPrefix && <code className="text-[10px] text-muted-foreground">{secretPrefix}API_KEY</code>}
+                </div>
+
+                {/* Warning for restart-on-sync providers */}
+                {(syncProvider === "fly" || syncProvider === "render" || syncProvider === "digitalocean" || syncProvider === "heroku") && (
+                  <span className="text-[10px] text-amber-600 dark:text-amber-400 flex items-center gap-1">
+                    <Info className="h-3 w-3 shrink-0" />Triggers redeploy
+                  </span>
+                )}
+
+                <div className="flex items-center gap-2 shrink-0">
+                  {canCompare && (
+                    <Button variant="outline" size="sm" className="h-7 text-[11px] gap-1" onClick={() => setShowCompare(v => !v)}>
+                      <AlertCircle className="h-3 w-3" />{showCompare ? "Hide Diff" : "Diff"}
                     </Button>
-                  </div>
+                  )}
+                  <Button
+                    onClick={handleSync}
+                    disabled={syncing || !selectedProject || (!selectedRepo && syncProvider !== "aws") || !providerConnected[syncProvider]}
+                    size="sm" className="gap-1.5 h-7 text-[11px] px-4"
+                  >
+                    {syncing ? <><Loader2 className="h-3 w-3 animate-spin" />Syncing...</> : <><RefreshCw className="h-3 w-3" />Sync</>}
+                  </Button>
                 </div>
               </div>
-              {(syncProvider === "fly" || syncProvider === "render" || syncProvider === "digitalocean" || syncProvider === "heroku") && (
-                <div className="mt-4 flex items-center gap-2 text-[11px] text-amber-600 bg-amber-50 p-3 rounded-lg border border-amber-200 shadow-sm mx-4 mb-4">
-                  <Info className="h-4 w-4" />
-                  <p>Note: Updating secrets on **{syncProvider === "fly" ? "Fly.io" : syncProvider === "render" ? "Render" : syncProvider === "digitalocean" ? "DigitalOcean" : "Heroku"}** will trigger a new deployment/restart of your {syncProvider === "digitalocean" || syncProvider === "heroku" ? "app" : "service"}.</p>
-                </div>
-              )}
             </div>
 
             {/* Compare Panel for Vercel / Netlify */}
@@ -1211,7 +1365,7 @@ export default function IntegrationsPage() {
                         <td className="p-2.5 pl-4 font-mono text-xs">{res.key}</td>
                         <td className="p-2.5">{res.success ? <span className="text-xs text-green-600 dark:text-green-400 flex items-center gap-1"><Check className="h-3 w-3" />OK</span> : <span className="text-xs text-destructive">Failed</span>}</td>
                         <td className="p-2.5 text-xs text-muted-foreground truncate max-w-[200px]">{res.error || detailText[syncProvider]}</td>
-                        <td className="p-2.5">{res.success && <Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(res.key)}><Trash2 className="h-3 w-3" /></Button>}</td>
+                        <td className="p-2.5">{res.success && <Tooltip><TooltipTrigger asChild><Button variant="ghost" size="icon" className="h-6 w-6 opacity-0 group-hover:opacity-100 text-muted-foreground hover:text-destructive" onClick={() => handleDelete(res.key)}><Trash2 className="h-3 w-3" /></Button></TooltipTrigger><TooltipContent>Remove this secret from {syncProvider}</TooltipContent></Tooltip>}</td>
                       </tr>
                     ))}</tbody>
                   </table>
