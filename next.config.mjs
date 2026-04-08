@@ -21,7 +21,6 @@ const nextConfig = {
   },
   // SEO Optimization
   reactStrictMode: true,
-  swcMinify: true,
   compress: true,
   poweredByHeader: false,
   headers: async () => {
