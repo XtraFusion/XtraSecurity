@@ -1,71 +1,113 @@
-import { NextResponse } from "next/server";
+import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { hasPermission, AccessReviewPermissions } from "@/lib/permissions";
+import { getUserWorkspaceRole } from "@/lib/permissions";
 
-// GET /api/access-reviews - List pending reviews or review cycles
-export async function GET(req: Request) {
+// GET /api/access-reviews?workspaceId=xxx - List users in the workspace for review
+export async function GET(req: NextRequest) {
   try {
     const session = await getServerSession(authOptions);
     if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const canRead = await hasPermission(session.user.id, AccessReviewPermissions.READ);
-    if (!canRead) {
-        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const { searchParams } = new URL(req.url);
+    const workspaceId = searchParams.get("workspaceId");
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
     }
 
-    // 1. Find the start of the current review cycle
+    // Only workspace owners/admins can perform access reviews
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    if (role !== "owner" && role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Only workspace owners and admins can conduct access reviews." }, { status: 403 });
+    }
+
+    // 1. Find the start of the current review cycle for this workspace
     const lastCycle = await prisma.auditLog.findFirst({
-        where: { action: "access_review_start" },
-        orderBy: { timestamp: "desc" }
+      where: { action: "access_review_start", workspaceId },
+      orderBy: { timestamp: "desc" }
+    });
+    const cycleStartTime = lastCycle?.timestamp || new Date(0);
+
+    // 2. Find all users who have team membership in this workspace
+    const teamsInWorkspace = await prisma.team.findMany({
+      where: { workspaceId },
+      select: { id: true }
+    });
+    const teamIds = teamsInWorkspace.map(t => t.id);
+
+    const teamMemberships = await prisma.teamUser.findMany({
+      where: { teamId: { in: teamIds }, status: "active" },
+      select: { userId: true }
     });
 
-    const cycleStartTime = lastCycle?.timestamp || new Date(0); // Default to beginning of time if no cycle started
+    // 3. Find all users who own projects in this workspace
+    const projectsInWorkspace = await prisma.project.findMany({
+      where: { workspaceId },
+      select: { userId: true }
+    });
 
-    // 2. Fetch all users suitable for review (e.g., exclude the current admin or system users if needed)
+    // 4. Combine unique user IDs — exclude the reviewer themselves
+    const allUserIds = [
+      ...new Set([
+        ...teamMemberships.map(m => m.userId),
+        ...projectsInWorkspace.map(p => p.userId)
+      ])
+    ].filter(id => id !== session.user.id);
+
+    if (allUserIds.length === 0) {
+      return NextResponse.json([]);
+    }
+
+    // 5. Fetch full user details scoped to workspace members only
     const users = await prisma.user.findMany({
-        where: {
-            NOT: {
-                id: session.user.id // Optional: Don't review self? Or do. Let's keep it simple.
-            }
+      where: { id: { in: allUserIds } },
+      include: {
+        userRoles: {
+          include: { project: true, role: true }
         },
-        include: {
-            userRoles: {
-                include: { project: true, role: true }
-            },
-            // Fetch reviews for this user that happened AFTER the cycle start
-            reviewsReceived: {
-                where: {
-                    reviewedAt: {
-                        gte: cycleStartTime
-                    }
-                },
-                orderBy: { reviewedAt: "desc" },
-                take: 1
-            }
+        reviewsReceived: {
+          where: { reviewedAt: { gte: cycleStartTime } },
+          orderBy: { reviewedAt: "desc" },
+          take: 1
         }
+      }
     });
 
-    // 3. Map to response format
-    const reviews = users.map(u => {
-        const latestReview = u.reviewsReceived[0];
-        let status = "pending_review";
-        if (latestReview) {
-            status = latestReview.status; 
-        }
+    // 6. Fetch most recent AuditLog entry per user for real last-activity timestamp
+    const recentActivity = await prisma.auditLog.findMany({
+      where: { userId: { in: allUserIds } },
+      orderBy: { timestamp: "desc" },
+      distinct: ["userId"],
+      select: { userId: true, timestamp: true }
+    });
+    const activityMap = new Map(recentActivity.map(a => [a.userId, a.timestamp]));
 
-        return {
-            userId: u.id,
-            name: u.name,
-            email: u.email,
-            roles: u.userRoles.map(r => ({
-                role: r.role?.name || "Unknown",
-                project: r.project?.name || "Global"
-            })),
-            lastLogin: u.updatedAt, // Using updatedAt as proxy for now
-            status
-        };
+    // 7. Map to response
+    const reviews = users.map(u => {
+      const latestReview = u.reviewsReceived[0];
+      const status = latestReview ? latestReview.status : "pending_review";
+
+      // Only show roles scoped to this workspace's projects
+      const scopedRoles = u.userRoles
+        .filter(r => r.project?.workspaceId === workspaceId)
+        .map(r => ({
+          role: r.role?.name || "Unknown",
+          project: r.project?.name || "Global"
+        }));
+
+      // Use the most recent AuditLog timestamp; fall back to user updatedAt if none exists
+      const lastActive = activityMap.get(u.id) ?? u.updatedAt;
+
+      return {
+        userId: u.id,
+        name: u.name,
+        email: u.email,
+        roles: scopedRoles,
+        lastLogin: lastActive,
+        status
+      };
     });
 
     return NextResponse.json(reviews);
@@ -76,94 +118,129 @@ export async function GET(req: Request) {
   }
 }
 
-// POST /api/access-reviews - Start a new review cycle (Audit)
+// POST /api/access-reviews - Start a new review cycle for a workspace
 export async function POST(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        // Check permission (START_CYCLE or WRITE)
-        const canStart = await hasPermission(session.user.id, AccessReviewPermissions.START_CYCLE);
-         // Fallback to WRITE if explicit START_CYCLE not found? Or just enforce START_CYCLE.
-         // Let's allow WRITE to imply it for simplicity, or just check START_CYCLE.
-         // Based on plan: START_CYCLE.
-        if (!canStart) {
-             // Optional: check for generic write too?
-             const canWrite = await hasPermission(session.user.id, AccessReviewPermissions.WRITE);
-             if (!canWrite) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+    const { workspaceId } = await req.json();
+    if (!workspaceId) return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
 
-        // Log the start of a review cycle
-        await prisma.auditLog.create({
-            data: {
-                userId: session.user.id,
-                action: "access_review_start",
-                entity: "system",
-                entityId: "system", 
-                changes: { description: "Quarterly Access Review initiated" }
-            }
-        });
-
-        return NextResponse.json({ success: true, message: "Access review cycle started" });
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    if (role !== "owner" && role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
+
+    await prisma.auditLog.create({
+      data: {
+        userId: session.user.id,
+        action: "access_review_start",
+        entity: "workspace",
+        entityId: workspaceId,
+        workspaceId,
+        changes: { description: "Access Review cycle initiated" }
+      }
+    });
+
+    return NextResponse.json({ success: true, message: "Access review cycle started" });
+  } catch (error: any) {
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }
 
-// PUT /api/access-reviews - Submit a review decision
+// PUT /api/access-reviews - Approve or revoke a user's access within a workspace
 export async function PUT(req: Request) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-        const canWrite = await hasPermission(session.user.id, AccessReviewPermissions.WRITE);
-        if (!canWrite) {
-            return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        }
+    const body = await req.json();
+    const { userId, decision, workspaceId } = body;
 
-        const body = await req.json();
-        const { userId, decision } = body; // decision: "approve" | "revoke"
-
-        if (!userId || !["approve", "revoke"].includes(decision)) {
-            return NextResponse.json({ error: "Invalid request" }, { status: 400 });
-        }
-
-        const review = await prisma.accessReview.create({
-            data: {
-                userId,
-                reviewerId: session.user.id,
-                status: decision === "approve" ? "approved" : "revoked",
-                notes: `Manual review by ${session.user.name}`
-            }
-        });
-
-        // If revoked, perform revocation logic
-        if (decision === "revoke") {
-             // 1. Remove all Project Roles for this user
-             await prisma.userRole.deleteMany({
-                 where: { userId }
-             });
-
-             // 2. Remove team access assignments 
-             await prisma.teamUser.deleteMany({
-                 where: { userId }
-             });
-
-             await prisma.auditLog.create({
-                data: {
-                    userId: session.user.id,
-                    action: "access_revoked",
-                    entity: "user",
-                    entityId: userId,
-                    changes: { description: "User access revoked during review" }
-                }
-            });
-        }
-
-        return NextResponse.json({ success: true, review });
-
-    } catch (error: any) {
-         console.error("Error submitting review:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+    if (!userId || !workspaceId || !["approve", "revoke"].includes(decision)) {
+      return NextResponse.json({ error: "Invalid request: userId, workspaceId, and decision are required." }, { status: 400 });
     }
+
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    if (role !== "owner" && role !== "admin") {
+      return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // Create the review record
+    const review = await prisma.accessReview.create({
+      data: {
+        userId,
+        reviewerId: session.user.id,
+        status: decision === "approve" ? "approved" : "revoked",
+        notes: `${decision === "approve" ? "Access approved" : "Access revoked"} by ${session.user.name} in workspace ${workspaceId}`
+      }
+    });
+
+    if (decision === "revoke") {
+      // 1. Find all team IDs in this workspace
+      const teamsInWorkspace = await prisma.team.findMany({
+        where: { workspaceId },
+        select: { id: true }
+      });
+      const teamIds = teamsInWorkspace.map(t => t.id);
+
+      // 2. Remove user from all teams in this workspace only
+      await prisma.teamUser.deleteMany({
+        where: {
+          userId,
+          teamId: { in: teamIds }
+        }
+      });
+
+      // 3. Find all project IDs in this workspace
+      const projectsInWorkspace = await prisma.project.findMany({
+        where: { workspaceId },
+        select: { id: true }
+      });
+      const projectIds = projectsInWorkspace.map(p => p.id);
+
+      // 4. Remove user roles scoped to this workspace's projects only
+      await prisma.userRole.deleteMany({
+        where: {
+          userId,
+          projectId: { in: projectIds }
+        }
+      });
+
+      // 5. Audit log
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "access_revoked",
+          entity: "user",
+          entityId: userId,
+          workspaceId,
+          changes: {
+            description: `User access revoked from workspace ${workspaceId} during access review.`,
+            teamsAffected: teamIds.length,
+            projectsAffected: projectIds.length
+          }
+        }
+      });
+    } else {
+      // Audit approval
+      await prisma.auditLog.create({
+        data: {
+          userId: session.user.id,
+          action: "access_approved",
+          entity: "user",
+          entityId: userId,
+          workspaceId,
+          changes: { description: `User access approved in workspace ${workspaceId} during access review.` }
+        }
+      });
+    }
+
+    return NextResponse.json({ success: true, review });
+
+  } catch (error: any) {
+    console.error("Error submitting review:", error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
+  }
 }

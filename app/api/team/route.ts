@@ -143,8 +143,16 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
         },
     };
 
+    let isRestricted = true;
+
     if (workspaceId) {
         whereClause.workspaceId = workspaceId;
+        const { getUserWorkspaceRole } = await import("@/lib/permissions");
+        const role = await getUserWorkspaceRole(userId, workspaceId);
+        if (role === 'owner' || role === 'admin') {
+            isRestricted = false;
+            delete whereClause.members; // Owners and admins see all teams in workspace
+        }
     }
 
     // Fetch teams
@@ -155,16 +163,6 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
         members:true
       }
     });
-
-    // Check permissions if workspaceId is present
-    let isRestricted = true;
-    if (workspaceId) {
-        const { getUserWorkspaceRole } = await import("@/lib/permissions");
-        const role = await getUserWorkspaceRole(userId, workspaceId);
-        if (role === 'owner' || role === 'admin') {
-            isRestricted = false;
-        }
-    }
 
     // If restricted (member/viewer or no workspace specified), filter members
     if (isRestricted) {

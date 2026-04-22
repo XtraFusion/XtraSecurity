@@ -101,11 +101,9 @@ const TeamsPage = () => {
   });
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
-  const { selectedWorkspace, user, workspaceRole } = useGlobalContext();
+  const { selectedWorkspace, user } = useGlobalContext();
 
-  const canManageTeams = useMemo(() => {
-    return workspaceRole === "owner" || workspaceRole === "admin";
-  }, [workspaceRole]);
+  const canManageTeams = true; // Rely strictly on backend authorization
 
   const filteredTeams = useMemo(() => {
     return teams.filter(
@@ -116,7 +114,10 @@ const TeamsPage = () => {
   }, [teams, searchTerm]);
 
   const fetchTeamList = async () => {
-    if (!selectedWorkspace) return;
+    if (!selectedWorkspace) {
+        setIsLoading(false);
+        return;
+    }
     try {
       setIsLoading(true);
       const teamList = await TeamController.getTeams(selectedWorkspace.id);
@@ -134,10 +135,6 @@ const TeamsPage = () => {
   }, [selectedWorkspace]);
 
   const handleCreateTeam = async () => {
-    if (!canManageTeams) {
-      toast({ title: "Permission Denied", description: "Only admins can create teams.", variant: "destructive" });
-      return;
-    }
     if (!newTeam.name.trim()) {
       toast({ title: "Validation Error", description: "Team name is required.", variant: "destructive" });
       return;
