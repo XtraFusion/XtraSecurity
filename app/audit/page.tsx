@@ -201,7 +201,7 @@ export default function AuditLogsPage() {
       if (logsRes.data) {
         setLogs((logsRes.data.data || []).map((l: any) => ({
           ...l,
-          category: (l.entity as any) || 'system',
+          category: (l.entity && Object.hasOwn(categoryConfig, l.entity.toLowerCase())) ? l.entity.toLowerCase() : 'system',
           severity: l.action.toLowerCase().includes('critical') ? 'critical' : l.action.toLowerCase().includes('fail') ? 'warning' : 'info',
           status: l.action.toLowerCase().includes('fail') ? 'failed' : 'success',
           user: { id: l.user?.id || 'unknown', name: l.user?.name || 'Unknown', email: l.user?.email || '' },

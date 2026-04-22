@@ -55,7 +55,7 @@ export default async function SubscriptionPage() {
     const resourceUsage = {
         workspaces: { used: workspacesCount, limit: limits.maxWorkspaces },
         teams: { used: teamsCount, limit: limits.maxTeams },
-        projects: { used: totalProjects, limit: limits.maxProjectsPerWorkspace },
+        projects: { used: totalProjects, limit: limits.maxWorkspaces * limits.maxProjectsPerWorkspace },
     };
 
     return (

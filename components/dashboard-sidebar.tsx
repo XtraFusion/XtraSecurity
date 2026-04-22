@@ -139,6 +139,24 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                             })}
                         </div>
                     ))}
+                    {user?.role === 'admin' && (
+                        <div className="space-y-1 mt-6">
+                            <h4 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+                                System Admin
+                            </h4>
+                            <Link
+                                href="/admin/subscriptions"
+                                onClick={onClose}
+                                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${pathname.startsWith('/admin/subscriptions')
+                                    ? "bg-primary/10 text-primary"
+                                    : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                                    }`}
+                            >
+                                <ShieldCheck className="h-4 w-4" />
+                                Manage Subscriptions
+                            </Link>
+                        </div>
+                    )}
                 </nav>
             </ScrollArea>
 

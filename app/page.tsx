@@ -29,50 +29,50 @@ const FEATURES = [
   {
     icon: "lock",
     title: "Centralized Secret Vault",
-    desc: "One encrypted home for API keys, DB passwords, and OAuth tokens. Organized by project and environment with full version history and instant rollback.",
+    desc: "One encrypted home for all your secrets. Organized by project & environment with instant rollback.",
+    details: "Built with AES-256-GCM encryption, our vault ensures no plaintext ever touches the disk. Versioning is immutable by default, allowing you to trace ogni mutazione with SHA-256 integrity checks.",
     chips: ["AES-256-GCM", "Versioning", "Shadow Rotation"],
     color: "#3b82f6",
-    glow: "rgba(59,130,246,0.15)",
   },
   {
     icon: "leaf",
     title: "Git-like Versioning",
-    desc: "Branching, diffs, and merges for your secrets. Safely test changes in ephemeral branches before promoting to production. Roll back instantly if things go wrong.",
+    desc: "Branching, diffs, and merges for secrets. Safely test changes in ephemeral branches.",
+    details: "XtraSecurity introduces real-time secret comparisons and branch isolation. Promote changes from staging to prod with confidence using our 'Dry-run merge' CLI feature.",
     chips: ["Branching", "Diff Visualization", "Rollback"],
     color: "#10b981",
-    glow: "rgba(16,185,129,0.15)",
   },
   {
     icon: "search",
     title: "Security Intelligence",
-    desc: "Automated scanning for leaked secrets in your repos. Real-time health dashboards and stale secret warnings. Proactive protection against accidental exposure.",
+    desc: "Automated scanning for leaked secrets. Real-time health dashboards & stale warnings.",
+    details: "Our scan engine matches against 140+ secret types and custom patterns. Integrated with GitHub Webhooks for automated PR scanning before merge.",
     chips: ["Secret Scanning", "Health Dashboard", "Stale Warnings"],
     color: "#a855f7",
-    glow: "rgba(168,85,247,0.15)",
   },
   {
     icon: "puzzle",
     title: "Developer First",
-    desc: "Seamlessly integrate with your workflow. Native VS Code extension, multi-environment secret comparison, and a CLI that injects secrets in-memory.",
+    desc: "Native VS Code extension, multi-env sync, and a CLI that injects secrets in-memory.",
+    details: "The xtra-cli connects directly to your app's process memory — zero storage reliance. VS Code extension provides live intellisense for available workspace secrets.",
     chips: ["VS Code Ext", "Direct CLI", "Multi-Env Sync"],
     color: "#f97316",
-    glow: "rgba(249,115,22,0.15)",
   },
   {
     icon: "users",
     title: "Enterprise Governance",
-    desc: "Fine-grained RBAC with IP-level controls. Service accounts for CI/CD, JIT access for developers, and automated quarterly access reviews.",
+    desc: "Fine-grained RBAC with IP-level controls. Service accounts and JIT access reviews.",
+    details: "Implement JIT (Just-In-Time) access that auto-expires after use. Our engine supports attribute-based access control (ABAC) for complex multi-regional teams.",
     chips: ["RBAC + ABAC", "JIT Access", "Service Accounts"],
     color: "#06b6d4",
-    glow: "rgba(6,182,212,0.15)",
   },
   {
     icon: "eye",
     title: "Immutable Compliance",
-    desc: "Tamper-proof, SHA-256 chained audit logs. SOC 2 and ISO 27001 audit reports generated with one click. Every action is permanently recorded.",
+    desc: "Tamper-proof, SHA-256 audit logs. SOC 2 and ISO 27001 reports with one click.",
+    details: "XtraSecurity logs are chained and cryptographically signed. No admin — not even yours — can modify past activity, making us ready for any audit out-of-the-box.",
     chips: ["SHA-256 Logs", "SOC 2 Export", "Audit Chain"],
     color: "#ec4899",
-    glow: "rgba(236,72,153,0.15)",
   },
 ];
 
@@ -198,40 +198,24 @@ const DOPPLER_ROWS = [
 ];
 
 const INTEGRATIONS = [
-  { icon: "github", label: "GitHub" },
-  { icon: "cloud", label: "AWS" },
-  { icon: "message-circle", label: "Slack" },
-  { icon: "link", label: "Webhooks" },
-  { icon: "package", label: "Node.js SDK" },
-  { icon: "package", label: "Python SDK" },
-  { icon: "package", label: "Go SDK" },
+  { label: "GitHub", logo: "https://cdn.simpleicons.org/github/white" },
+  { label: "AWS", logo: "https://cdn.simpleicons.org/amazonservices/white" },
+  { label: "Slack", logo: "https://cdn.simpleicons.org/slack/white" },
+  { label: "Vercel", logo: "https://cdn.simpleicons.org/vercel/white" },
+  { label: "Google Cloud", logo: "https://cdn.simpleicons.org/googlecloud/white" },
+  { label: "Azure", logo: "https://cdn.simpleicons.org/microsoftazure/white" },
+  { label: "GitLab", logo: "https://cdn.simpleicons.org/gitlab/white" },
 ];
 
-const TESTIMONIALS = [
-  {
-    name: "Sarah Chen",
-    title: "Lead DevOps Engineer",
-    company: "TechFlow Inc.",
-    avatar: "👩‍💼",
-    quote: "XtraSecurity eliminated our secrets sprawl overnight. The CLI is so intuitive that our entire team adopted it within a day.",
-    highlight: "Team adoption in 1 day"
-  },
-  {
-    name: "Marcus Johnson",
-    title: "Security Lead",
-    company: "FinanceCore",
-    avatar: "👨‍💼",
-    quote: "We needed SOC 2 compliance fast. XtraSecurity's audit logs and built-in compliance reports saved us months of work.",
-    highlight: "SOC 2 ready in weeks"
-  },
-  {
-    name: "Emily Rodriguez",
-    title: "Engineering Manager",
-    company: "CloudScale",
-    avatar: "👩‍💻",
-    quote: "The JIT access feature gives us security without killing developer velocity. Best of both worlds.",
-    highlight: "Security + Developer velocity"
-  },
+const LOGS = [
+  { platform: "GitHub", message: "Secret \"PROD_DB_URL\" synced to 12 environments", time: "2s ago", icon: "github", color: "#24292e" },
+  { platform: "AWS", message: "Key rotation completed for \"IAM_ACCESS_KEY\" (Shadow Mode)", time: "15s ago", icon: "cloud", color: "#FF9900" },
+  { platform: "Slack", message: "Alert: JIT access granted to developer @alex (Duration: 2h)", time: "45s ago", icon: "message-circle", color: "#4A154B" },
+  { platform: "Vercel", message: "48 secrets injected into build \"prj_123456\"", time: "1m ago", icon: "triangle", color: "white" },
+  { platform: "Azure", message: "Security scan: 0 leaked secrets found in repo \"xtra-core\"", time: "3m ago", icon: "shield", color: "#0078D4" },
+  { platform: "GitLab", message: "Project \"api-gateway\" secrets synchronized", time: "5m ago", icon: "github", color: "#FC6D26" },
+  { platform: "Terraform", message: "Plan: 5 secrets to be updated in \"tf-prod-vpc\"", time: "8m ago", icon: "box", color: "#7B42BC" },
+  { platform: "K8s", message: "ExternalSecrets sync successful in namespace \"default\"", time: "12m ago", icon: "container", color: "#326ce5" },
 ];
 
 const FAQs = [
@@ -626,17 +610,17 @@ function HeroSection() {
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 text-5xl md:text-7xl font-black tracking-tight leading-[1.02] max-w-4xl mb-6"
+        className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8"
       >
-        <span className="text-white">Secrets Management</span>
+        <span className="text-white">The Secrets Engine</span>
         <br />
         <span style={{
-          background: "linear-gradient(135deg, #38bdf8, #0ea5e9, #6366f1, #a855f7)",
+          background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          Reimagined for DevOps.
+          Built for Velocity.
         </span>
       </motion.h1>
 
@@ -645,10 +629,10 @@ function HeroSection() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.6 }}
-        className="relative z-10 text-base md:text-lg text-slate-400 max-w-2xl mb-10 leading-relaxed"
+        className="relative z-10 text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed font-medium"
       >
-        Stop hardcoding API keys. Stop pasting secrets in Slack. XtraSecurity gives your team
-        a centralized, zero-trust vault — with built-in RBAC, audit logs, and one-click SOC 2.
+        Ditch the .env files. Secure your team's credentials with an encrypted, 
+        Git-like vault designed for modern engineering workflows.
       </motion.p>
 
       {/* CTAs */}
@@ -743,80 +727,78 @@ function StatsSection() {
 // ─────────────────────────────────────────────
 // FEATURES
 // ─────────────────────────────────────────────
+function FlipCard({ f }: { f: typeof FEATURES[0] }) {
+  const [isFlipped, setIsFlipped] = useState(false);
+
+  return (
+    <div
+      className="relative h-96 [perspective:1000px] group cursor-pointer"
+      onMouseEnter={() => setIsFlipped(true)}
+      onMouseLeave={() => setIsFlipped(false)}
+    >
+      <motion.div
+        animate={{ rotateY: isFlipped ? 180 : 0 }}
+        transition={{ duration: 0.8, ease: "easeOut" }}
+        className="relative w-full h-full [transform-style:preserve-3d]"
+      >
+        {/* Front Face */}
+        <div className="absolute inset-0 [backface-visibility:hidden] rounded-3xl overflow-hidden bg-white/[0.03] border border-white/[0.08] backdrop-blur-2xl shadow-2xl p-8 flex flex-col">
+          {/* Animated beam over border */}
+          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:via-white/50 transition-all duration-700" />
+          
+          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 flex-shrink-0 bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.1] shadow-xl"
+               style={{ color: f.color }}>
+            {getIcon(f.icon, 32)}
+          </div>
+          
+          <h3 className="text-xl font-black text-white mb-4 tracking-tight leading-tight">{f.title}</h3>
+          <p className="text-slate-400 text-sm leading-relaxed mb-6 font-medium">{f.desc}</p>
+          
+          <div className="mt-auto flex flex-wrap gap-2">
+            {f.chips.map((c) => (
+              <span key={c} className="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/[0.04] text-slate-300 border border-white/[0.06]">
+                {c}
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Back Face */}
+        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-3xl overflow-hidden bg-gradient-to-br from-[#1e293b]/90 to-[#0f172a]/95 border border-white/[0.1] backdrop-blur-3xl shadow-2xl p-8 flex flex-col justify-center text-center">
+            <div className="mb-6 mx-auto opacity-20" style={{ color: f.color }}>{getIcon(f.icon, 64)}</div>
+            <h4 className="text-lg font-black text-white mb-4 uppercase tracking-[0.2em] opacity-60">Technical Depth</h4>
+            <p className="text-slate-300 text-sm leading-relaxed font-medium mb-8">
+              {f.details}
+            </p>
+            <div className="mt-auto pt-6 border-t border-white/[0.05]">
+               <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ring-1 ring-cyan-400/20 px-3 py-1 rounded-full">Engineering Verified</span>
+            </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
 
 function FeaturesSection() {
   return (
-    <section id="features" className="py-28 px-6">
+    <section id="features" className="py-32 px-6">
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          label="Core Features"
+          label="Engineered for Teams"
           icon="settings"
-          title={<>Everything your team needs<br /><span className="text-cyan-400">to stop secrets from leaking</span></>}
-          sub="Six layers of security, developer tooling, and compliance — all in one platform."
+          title={<>Security that enhances<br /><span className="text-cyan-400 font-black">developer velocity</span></>}
+          sub="Everything you need to stop leaks without slowing down your deploy cycles."
         />
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-60px" }}
           variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
         >
           {FEATURES.map((f) => (
-            <motion.div
-              key={f.title}
-              variants={fadeUp}
-              whileHover={{ y: -4, transition: { duration: 0.2 } }}
-              className="group relative h-full rounded-2xl overflow-hidden cursor-default"
-              style={{
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                willChange: "transform",
-              }}
-            >
-              {/* Top gradient accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[3px] opacity-40 transition-all duration-300"
-                style={{
-                  background: `linear-gradient(90deg, ${f.color}, transparent)`,
-                }}
-              />
-
-              {/* Content */}
-              <div className="relative z-10 p-7 h-full flex flex-col">
-                {/* Icon */}
-                <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-6 flex-shrink-0 transition-transform duration-300"
-                  style={{
-                    background: `linear-gradient(135deg, ${f.color}25, ${f.color}08)`,
-                    border: `2px solid ${f.color}40`,
-                    boxShadow: `inset 0 1px 2px rgba(255,255,255,0.1)`,
-                    color: f.color,
-                  }}>
-                  {getIcon(f.icon, 28)}
-                </div>
-
-                {/* Title */}
-                <h3 className="text-base font-bold text-white mb-3 leading-tight tracking-tight">
-                  {f.title}
-                </h3>
-
-                {/* Description */}
-                <p className="text-sm text-slate-300 leading-relaxed mb-6 flex-grow">{f.desc}</p>
-
-                {/* Chips */}
-                <div className="flex flex-wrap gap-2 mt-auto">
-                  {f.chips.map((c) => (
-                    <span
-                      key={c}
-                      className="px-3 py-1.5 rounded-full text-[10px] font-semibold tracking-wide uppercase"
-                      style={{
-                        color: f.color,
-                        background: `${f.color}18`,
-                        border: `1.5px solid ${f.color}30`,
-                      }}>
-                      {c}
-                    </span>
-                  ))}
-                </div>
-              </div>
+            <motion.div key={f.title} variants={fadeUp}>
+              <FlipCard f={f} />
             </motion.div>
           ))}
         </motion.div>
@@ -1244,68 +1226,34 @@ function CompCell({ value, isUs }: { value: string; isUs?: boolean }) {
 // TESTIMONIALS
 // ─────────────────────────────────────────────
 
-function TestimonialsSection() {
+function IntegrationLogsMarquee() {
   return (
-    <section className="py-28 px-6">
-      <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="What Teams Say"
-          title={<>Loved by engineering leaders<br /><span className="text-cyan-400">at scale-ups and enterprises</span></>}
-          sub="See why teams are ditching spreadsheets and homegrown solutions for XtraSecurity."
-        />
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-3 gap-6"
-        >
-          {TESTIMONIALS.map((t) => (
-            <motion.div
-              key={t.name}
-              variants={fadeUp}
-              whileHover={{ y: -4, transition: { duration: 0.25 } }}
-              className="group relative h-full rounded-2xl overflow-hidden cursor-default transition-all flex flex-col"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.03), rgba(255,255,255,0.01))",
-                border: "1px solid rgba(255,255,255,0.08)",
-              }}
-            >
-              {/* Top accent line - cyan */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] opacity-30 transition-all duration-300"
-                style={{ background: "linear-gradient(90deg, rgba(6,182,212,0.6), transparent)" }}
-              />
-
-              <div className="relative z-10 p-7 flex flex-col h-full">
-                {/* Avatar & Info */}
-                <div className="flex items-start gap-4 mb-5">
-                  <span className="text-4xl flex-shrink-0 transition-transform duration-300">{t.avatar}</span>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-bold text-white text-sm leading-tight">{t.name}</div>
-                    <div className="text-xs text-slate-400 font-medium">{t.title}</div>
-                    <div className="text-xs text-slate-500">{t.company}</div>
-                  </div>
+    <section className="py-12 border-t border-b border-white/[0.04] bg-[#0a0f1e] overflow-hidden whitespace-nowrap relative group">
+      <div className="absolute inset-y-0 left-0 w-40 bg-gradient-to-r from-[#0a0f1e] to-transparent z-10 pointer-events-none" />
+      <div className="absolute inset-y-0 right-0 w-40 bg-gradient-to-l from-[#0a0f1e] to-transparent z-10 pointer-events-none" />
+      
+      <div className="flex animate-[marquee_50s_linear_infinite] group-hover:[animation-play-state:paused]">
+        {[...LOGS, ...LOGS].map((log, i) => (
+          <div key={i} className="inline-flex items-center gap-4 px-8 py-4 border-r border-white/[0.03]">
+             <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-white/[0.03] text-cyan-400">
+               {getIcon(log.icon === 'triangle' ? 'zap' : log.icon, 16)}
+             </div>
+             <div className="flex flex-col">
+                <div className="flex items-center gap-2">
+                   <span className="text-[10px] font-black uppercase tracking-widest text-slate-500">{log.platform}</span>
+                   <span className="text-[9px] font-medium text-slate-600">{log.time}</span>
                 </div>
-
-                {/* Quote */}
-                <p className="text-sm text-slate-300 leading-relaxed mb-5 flex-grow italic">&ldquo;{t.quote}&rdquo;</p>
-
-                {/* Highlight Badge */}
-                <div className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[10px] font-bold tracking-wide uppercase w-fit"
-                  style={{
-                    color: "#06b6d4",
-                    background: "linear-gradient(135deg, rgba(6,182,212,0.2), rgba(6,182,212,0.08))",
-                    border: "1.5px solid rgba(6,182,212,0.3)",
-                    backdropFilter: "blur(8px)",
-                  }}
-                >
-                  ✓ {t.highlight}
-                </div>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+                <p className="text-sm font-bold text-slate-300">{log.message}</p>
+             </div>
+          </div>
+        ))}
       </div>
+      <style>{`
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
+      `}</style>
     </section>
   );
 }
@@ -1380,29 +1328,35 @@ function FAQSection() {
 
 function IntegrationsSection() {
   return (
-    <section className="py-20 px-6">
+    <section className="py-24 px-6 relative">
+      {/* Background glow to unify section */}
+      <div className="absolute inset-x-0 bottom-0 h-96 bg-gradient-to-t from-cyan-500/5 to-transparent pointer-events-none" />
+
       <div className="max-w-6xl mx-auto">
         <SectionHeader
-          label="Integrations"
+          label="Unified Integrations"
           icon="folder"
-          title="Works with your existing stack"
+          title="Connect your entire cloud stack"
+          sub="Official integrations for your favorite platforms, with more added weekly."
         />
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true }}
           variants={fadeUpStagger}
-          className="flex flex-wrap items-center justify-center gap-3"
+          className="flex flex-wrap items-center justify-center gap-6"
         >
           {INTEGRATIONS.map((item) => (
             <motion.div
               key={item.label}
               variants={fadeUp}
-              whileHover={{ y: -3, borderColor: "rgba(14,165,233,0.4)" }}
-              className="flex items-center gap-2 px-5 py-3 rounded-full border border-white/[0.08] bg-white/[0.025] cursor-default transition-colors"
+              whileHover={{ scale: 1.05, y: -4 }}
+              className="flex items-center gap-4 px-6 py-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/[0.15] cursor-pointer transition-all duration-300 group shadow-lg"
             >
-              <div className="text-cyan-400 flex items-center justify-center leading-none">{getIcon(item.icon, 18)}</div>
-              <span className="text-sm font-semibold text-slate-300">{item.label}</span>
+              <div className="w-10 h-10 flex items-center justify-center filter group-hover:brightness-125 transition-all">
+                 <img src={item.logo} alt={item.label} className="w-6 h-6 object-contain opacity-70 group-hover:opacity-100 transition-opacity" />
+              </div>
+              <span className="text-sm font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">{item.label}</span>
             </motion.div>
           ))}
         </motion.div>
@@ -1565,7 +1519,7 @@ export default function Page() {
       <SecuritySection />
       <MetricsBar />
       <PricingSection />
-      <TestimonialsSection />
+      <IntegrationLogsMarquee />
       <CompareSection />
       <FAQSection />
       <IntegrationsSection />

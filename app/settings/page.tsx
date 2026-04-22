@@ -34,10 +34,17 @@ import {
     Copy,
     CheckCircle2,
     Laptop,
-    Settings,
+    Settings as SettingsIcon,
     Mail,
     Zap,
-    ExternalLink
+    ExternalLink,
+    ShieldCheck,
+    Cpu,
+    Activity,
+    MoreVertical,
+    History,
+    Key,
+    Fingerprint
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useUser } from "@/hooks/useUser";
@@ -165,13 +172,13 @@ export default function SettingsPage() {
     // Sidebar Items
     const sideNav = useMemo(() => {
         const items = [
-            { id: "general", label: "General", icon: User, desc: "Personal information and appearance" },
-            { id: "security", label: "Security", icon: Lock, desc: "Account security and active sessions" },
-            { id: "notifications", label: "Notifications", icon: Bell, desc: "Choose how you're alerted" },
-            { id: "billing", label: "Billing", icon: CreditCard, desc: "Subscriptions and usage meters" },
+            { id: "general", label: "General", icon: User, desc: "Personal info" },
+            { id: "security", label: "Security", icon: Lock, desc: "Access & Auth" },
+            { id: "notifications", label: "Notifications", icon: Bell, desc: "Alert prefs" },
+            { id: "billing", label: "Billing", icon: CreditCard, desc: "Plan & Usage" },
         ];
         if (hasAdminAccess) {
-            items.push({ id: "workspace", label: "Workspace", icon: Briefcase, desc: "Global workspace configuration" });
+            items.push({ id: "workspace", label: "Workspace", icon: Briefcase, desc: "Shared controls" });
         }
         return items;
     }, [hasAdminAccess]);
@@ -179,12 +186,13 @@ export default function SettingsPage() {
     if (!hasAdminAccess && activeTab === 'workspace') {
         return (
             <DashboardLayout>
-                <div className="flex flex-col items-center justify-center h-[60vh] space-y-4 text-center">
-                    <div className="p-4 rounded-full bg-destructive/10">
-                        <Shield className="h-10 w-10 text-destructive" />
+                <div className="flex flex-col items-center justify-center h-[60vh] space-y-6 text-center">
+                    <div className="p-8 rounded-full bg-rose-500/10 border border-border/50">
+                        <Shield className="h-12 w-12 text-rose-500" />
                     </div>
                     <h2 className="text-2xl font-bold tracking-tight">Access Restricted</h2>
-                    <p className="text-muted-foreground max-w-md">Workspace settings are exclusively available to admins and owners.</p>
+                    <p className="text-muted-foreground max-w-sm">Workspace settings are exclusively available to workspace admins and owners.</p>
+                    <Button variant="outline" onClick={() => setActiveTab("general")}>Back to General</Button>
                 </div>
             </DashboardLayout>
         );
@@ -193,16 +201,16 @@ export default function SettingsPage() {
     if (loading) {
         return (
             <DashboardLayout>
-                <div className="max-w-4xl mx-auto space-y-6">
-                   <div className="space-y-2">
-                       <div className="h-8 w-64 bg-muted animate-pulse rounded" />
-                       <div className="h-4 w-96 bg-muted animate-pulse rounded opacity-60" />
+                <div className="max-w-7xl mx-auto space-y-8 px-6 pt-12">
+                   <div className="space-y-4">
+                       <div className="h-10 w-64 bg-muted animate-pulse rounded-xl" />
+                       <div className="h-4 w-96 bg-muted animate-pulse rounded-full opacity-60" />
                    </div>
-                   <div className="grid grid-cols-1 md:grid-cols-4 gap-8 pt-8 border-t">
+                   <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 pt-8 border-t">
                        <div className="space-y-3">
-                           {[1,2,3,4].map(i => <div key={i} className="h-10 w-full bg-muted animate-pulse rounded" />)}
+                           {[1,2,3,4].map(i => <div key={i} className="h-12 w-full bg-muted animate-pulse rounded-xl" />)}
                        </div>
-                       <div className="md:col-span-3 h-[400px] bg-muted animate-pulse rounded" />
+                       <div className="lg:col-span-3 h-[500px] bg-muted animate-pulse rounded-2xl" />
                    </div>
                 </div>
             </DashboardLayout>
@@ -211,131 +219,205 @@ export default function SettingsPage() {
 
     return (
         <DashboardLayout>
-            <div className="max-w-5xl mx-auto space-y-10 pb-20">
+            <div className="max-w-7xl mx-auto space-y-12 pb-32 px-6 pt-12 relative">
                 
-                {/* Header Section */}
-                <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground font-medium mb-1 uppercase tracking-wider">
-                        <Settings className="h-3 w-3" />
-                        <span>Account Center</span>
+                {/* ── Header Area ── */}
+                <header className="space-y-4">
+                    <div className="flex items-center gap-2 text-xs font-semibold text-muted-foreground uppercase tracking-widest pl-1">
+                        <SettingsIcon className="h-3 w-3" />
+                        <span>Settings Center</span>
                         <ChevronRight className="h-3 w-3 opacity-40" />
-                        <span className="text-foreground capitalize">{activeTab}</span>
+                        <span className="text-foreground">{activeTab}</span>
                     </div>
-                    <h1 className="text-3xl font-bold tracking-tight">Account Settings</h1>
-                    <p className="text-sm text-muted-foreground">Manage your secure identities, preferences, and workspace controls.</p>
-                </div>
+                    <div className="flex items-end justify-between">
+                        <div className="space-y-1">
+                            <h1 className="text-4xl font-extrabold tracking-tight text-foreground">
+                                Account Settings
+                            </h1>
+                            <p className="text-muted-foreground font-medium text-lg leading-relaxed max-w-2xl">
+                                Manage your identity, security protocols, and workspace preferences.
+                            </p>
+                        </div>
+                    </div>
+                </header>
 
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-12 items-start">
+                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12 items-start pt-4 border-t border-border">
                     
-                    {/* Vertical Sidebar Navigation */}
-                    <div className="space-y-1">
-                        {sideNav.map((item) => (
-                            <button
-                                key={item.id}
-                                onClick={() => setActiveTab(item.id as SettingsTab)}
-                                className={cn(
-                                    "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all text-left group",
-                                    activeTab === item.id 
-                                        ? "bg-primary/5 text-primary border border-primary/20 shadow-sm" 
-                                        : "hover:bg-muted/50 text-muted-foreground border border-transparent"
-                                )}
-                            >
-                                <item.icon className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === item.id ? "text-primary font-bold" : "group-hover:text-foreground")} />
-                                <div className="flex flex-col">
-                                    <span className="text-sm font-bold">{item.label}</span>
-                                    <span className="text-[10px] hidden lg:block opacity-60 font-medium truncate max-w-[140px]">{item.desc}</span>
-                                </div>
-                            </button>
-                        ))}
-                    </div>
+                    {/* ── Left Sidebar ── */}
+                    <aside className="space-y-8 sticky top-24">
+                        <nav className="space-y-1">
+                            {sideNav.map((s) => (
+                                <button
+                                    key={s.id}
+                                    onClick={() => setActiveTab(s.id as SettingsTab)}
+                                    className={cn(
+                                        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all group relative",
+                                        activeTab === s.id 
+                                            ? "bg-primary/10 text-primary border border-primary/20 shadow-sm" 
+                                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                                    )}
+                                >
+                                    <s.icon className={cn("h-4 w-4 shrink-0 transition-colors", activeTab === s.id ? "text-primary" : "group-hover:text-foreground")} />
+                                    <div className="flex flex-col items-start overflow-hidden text-left">
+                                        <span className="text-sm font-bold truncate">{s.label}</span>
+                                        <span className="text-[10px] opacity-60 font-medium truncate">{s.desc}</span>
+                                    </div>
+                                    {activeTab === s.id && (
+                                       <motion.div layoutId="setting-nav-pill" className="absolute left-0 w-1 h-2/3 bg-primary rounded-full" />
+                                    )}
+                                </button>
+                            ))}
+                        </nav>
 
-                    {/* Main Content Area */}
-                    <div className="md:col-span-3 space-y-8">
+                        <Card className="bg-muted/30 border-dashed rounded-3xl overflow-hidden relative group">
+                           <CardContent className="p-6 space-y-4">
+                               <div className="h-12 w-12 rounded-xl bg-background border flex items-center justify-center shadow-sm">
+                                  <ShieldCheck className="h-6 w-6 text-emerald-500" />
+                               </div>
+                               <div className="space-y-1">
+                                  <h4 className="text-xs font-bold uppercase tracking-widest">Active Protection</h4>
+                                  <p className="text-[11px] text-muted-foreground font-medium">Your identity is secured with multi-factor authentication.</p>
+                               </div>
+                               <div className="flex items-center gap-2 px-2 py-1 rounded-lg bg-emerald-500/10 border border-emerald-500/20 w-fit">
+                                  <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                                  <span className="text-[10px] font-bold text-emerald-600">SOC2 Verified</span>
+                               </div>
+                           </CardContent>
+                        </Card>
+                    </aside>
+
+                    {/* ── Main Content Area ── */}
+                    <div className="lg:col-span-3 space-y-8">
                         <AnimatePresence mode="wait">
                             <motion.div
                                 key={activeTab}
                                 initial={{ opacity: 0, y: 10 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 exit={{ opacity: 0, y: -10 }}
-                                transition={{ duration: 0.2 }}
+                                transition={{ duration: 0.2, ease: "easeOut" }}
+                                className="space-y-8"
                             >
                                 {activeTab === "general" && (
-                                    <div className="space-y-6">
-                                        <Card className="border bg-card/60 rounded-2xl shadow-sm overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4">
-                                                <CardTitle className="text-lg">Profile Information</CardTitle>
-                                                <CardDescription>Visual identity and personal credentials.</CardDescription>
+                                    <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                                        <Card className="xl:col-span-2 border rounded-3xl shadow-sm overflow-hidden bg-white/[0.02] backdrop-blur-xl group">
+                                            <CardHeader className="p-8 pb-0">
+                                                <CardTitle className="text-2xl font-bold tracking-tight">Profile Information</CardTitle>
+                                                <CardDescription className="text-base">Your digital identity within the XtraSecurity ecosystem.</CardDescription>
                                             </CardHeader>
-                                            <CardContent className="pt-8 space-y-8">
-                                                {/* Avatar Visualization */}
-                                                <div className="flex items-center gap-6">
-                                                   <div className="relative group">
-                                                      <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border shadow-inner flex items-center justify-center">
+                                            <CardContent className="p-8 space-y-8">
+                                                <div className="flex items-center gap-8 group/avatar">
+                                                   <div className="relative">
+                                                      <div className="h-20 w-20 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border shadow-sm flex items-center justify-center overflow-hidden transition-all group-hover/avatar:scale-105">
                                                          <span className="text-3xl font-black text-primary/40 leading-none">{name.charAt(0)}</span>
                                                       </div>
-                                                      <button className="absolute -bottom-2 -right-2 h-8 w-8 rounded-full bg-background border border-border shadow-lg flex items-center justify-center hover:bg-muted transition-colors">
-                                                         <Camera className="h-4 w-4 text-muted-foreground" />
+                                                      <button className="absolute -bottom-1.5 -right-1.5 h-8 w-8 rounded-full bg-white text-black border-4 border-background shadow-lg flex items-center justify-center hover:bg-slate-50 active:scale-95 transition-all">
+                                                         <Camera className="h-4 w-4" />
                                                       </button>
                                                    </div>
                                                    <div className="space-y-1">
-                                                      <h4 className="text-sm font-bold">Workspace Avatar</h4>
-                                                      <p className="text-[11px] text-muted-foreground">Click the camera to upload a new profile picture.</p>
-                                                      <div className="flex gap-2 pt-1 font-mono text-[9px] uppercase tracking-tighter opacity-60">
-                                                         <span>JPG, PNG OR WEBP</span>
-                                                         <span>·</span>
-                                                         <span>MAX 2MB</span>
+                                                      <h4 className="text-sm font-bold">Public Avatar</h4>
+                                                      <p className="text-xs text-muted-foreground font-medium max-w-xs leading-relaxed">Shown across workspace logs and audit history.</p>
+                                                      <div className="flex gap-3 pt-2">
+                                                         <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 opacity-60">WEBP / PNG</Badge>
+                                                         <Badge variant="secondary" className="text-[9px] font-bold uppercase tracking-widest px-2 py-0.5 opacity-60">MAX 2MB</Badge>
                                                       </div>
                                                    </div>
                                                 </div>
 
-                                                <form onSubmit={handleProfileUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <form onSubmit={handleProfileUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-border">
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="name" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Display Name</Label>
-                                                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="h-10 text-sm font-semibold" />
+                                                        <Label className="text-xs font-bold text-muted-foreground px-1">Display Name</Label>
+                                                        <Input 
+                                                            value={name} 
+                                                            onChange={(e) => setName(e.target.value)} 
+                                                            className="h-11 rounded-xl font-medium" 
+                                                            placeholder="Your Name"
+                                                        />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="email" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Email Address</Label>
-                                                        <Input id="email" type="email" value={email} disabled className="h-10 text-sm font-semibold opacity-60" />
+                                                        <Label className="text-xs font-bold text-muted-foreground px-1">Email Address (Registry)</Label>
+                                                        <Input 
+                                                            value={email} 
+                                                            disabled 
+                                                            className="h-11 rounded-xl opacity-60 font-medium" 
+                                                        />
                                                     </div>
                                                     <div className="md:col-span-2 flex justify-end pt-4">
-                                                        <Button type="submit" disabled={isUpdatingProfile} className="h-10 px-8 rounded-xl font-bold shadow-lg shadow-primary/10">
+                                                        <Button 
+                                                            type="submit" 
+                                                            disabled={isUpdatingProfile} 
+                                                            className="h-11 px-8 rounded-xl font-bold shadow-sm"
+                                                        >
                                                             {isUpdatingProfile ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-4 w-4" />}
-                                                            Update Profile
+                                                            Save Changes
                                                         </Button>
                                                     </div>
                                                 </form>
                                             </CardContent>
                                         </Card>
 
-                                        <Card className="border bg-card/60 shadow-sm rounded-2xl overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4">
-                                                <CardTitle className="text-lg">Appearance</CardTitle>
-                                                <CardDescription>Personalize the interface themes.</CardDescription>
+                                        <Card className="border rounded-3xl shadow-sm bg-white/[0.01] flex flex-col group h-full">
+                                            <CardHeader className="p-8 pb-4">
+                                                <CardTitle className="text-xl font-bold tracking-tight">Security Score</CardTitle>
+                                                <CardDescription className="text-sm mt-1">Identity health index</CardDescription>
                                             </CardHeader>
-                                            <CardContent className="pt-6">
-                                                <div className="flex items-center justify-between">
-                                                    <div className="space-y-0.5">
-                                                        <span className="text-sm font-bold">Theme Mode</span>
-                                                        <p className="text-xs text-muted-foreground">Toggle between automated and manual themes.</p>
-                                                    </div>
-                                                    <div className="flex items-center p-1 bg-muted/30 rounded-xl border border-border/50">
-                                                        <Button 
-                                                          variant="ghost" 
-                                                          size="sm" 
-                                                          onClick={() => setTheme('light')}
-                                                          className={cn("h-8 rounded-lg text-xs font-bold gap-2", theme === 'light' ? "bg-background shadow-sm" : "text-muted-foreground")}
-                                                        >
-                                                            <Globe className="h-3 w-3" /> Light
-                                                        </Button>
-                                                        <Button 
-                                                          variant="ghost" 
-                                                          size="sm" 
-                                                          onClick={() => setTheme('dark')}
-                                                          className={cn("h-8 rounded-lg text-xs font-bold gap-2", theme === 'dark' ? "bg-background shadow-sm" : "text-muted-foreground")}
-                                                        >
-                                                            <Monitor className="h-3 w-3" /> Dark
-                                                        </Button>
-                                                    </div>
+                                            <CardContent className="p-8 pt-0 flex-1 flex flex-col items-center justify-center space-y-8">
+                                                <div className="relative h-40 w-40">
+                                                   <svg className="h-full w-full -rotate-90 transform" viewBox="0 0 100 100">
+                                                      <circle className="text-muted/20" strokeWidth="6" stroke="currentColor" fill="transparent" r="42" cx="50" cy="50" />
+                                                      <circle
+                                                         className="text-primary transition-all duration-1000 ease-out"
+                                                         strokeWidth="6"
+                                                         strokeLinecap="round"
+                                                         strokeDasharray={264}
+                                                         strokeDashoffset={264 - (264 * (mfaEnabled ? 95 : 40)) / 100}
+                                                         stroke="currentColor"
+                                                         fill="transparent"
+                                                         r="42"
+                                                         cx="50"
+                                                         cy="50"
+                                                      />
+                                                   </svg>
+                                                   <div className="absolute inset-0 flex flex-col items-center justify-center">
+                                                      <span className="text-4xl font-bold text-foreground tracking-tighter">{mfaEnabled ? "95" : "40"}%</span>
+                                                   </div>
+                                                </div>
+                                                <div className="w-full space-y-3">
+                                                   <div className="flex items-center justify-between text-xs p-3 rounded-xl bg-muted/30">
+                                                      <span className="font-semibold text-muted-foreground">MFA Enabled</span>
+                                                      {mfaEnabled ? <CheckCircle2 className="h-4 w-4 text-emerald-500" /> : <div className="h-2 w-2 rounded-full bg-rose-500" />}
+                                                   </div>
+                                                   <div className="flex items-center justify-between text-xs p-3 rounded-xl bg-muted/30">
+                                                      <span className="font-semibold text-muted-foreground">Profile Verified</span>
+                                                      <CheckCircle2 className="h-4 w-4 text-emerald-500" />
+                                                   </div>
+                                                </div>
+                                            </CardContent>
+                                        </Card>
+
+                                        <Card className="xl:col-span-3 border rounded-3xl bg-muted/5">
+                                            <CardContent className="p-8 flex items-center justify-between">
+                                                <div className="space-y-1">
+                                                    <h3 className="text-lg font-bold">Appearance Resonance</h3>
+                                                    <p className="text-sm text-muted-foreground font-medium opacity-70">Synchronize the interface with your visual environment.</p>
+                                                </div>
+                                                <div className="flex items-center p-1.5 bg-muted/50 rounded-2xl border border-border/50">
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm"
+                                                        onClick={() => setTheme('light')}
+                                                        className={cn("h-10 px-6 rounded-xl text-xs font-bold gap-2 transition-all", theme === 'light' ? "bg-white text-black shadow-sm" : "text-muted-foreground")}
+                                                    >
+                                                        <Globe className="h-3.5 w-3.5" /> Light
+                                                    </Button>
+                                                    <Button 
+                                                        variant="ghost" 
+                                                        size="sm"
+                                                        onClick={() => setTheme('dark')}
+                                                        className={cn("h-10 px-6 rounded-xl text-xs font-bold gap-2 transition-all", theme === 'dark' ? "bg-white text-black shadow-sm" : "text-muted-foreground")}
+                                                    >
+                                                        <Monitor className="h-3.5 w-3.5" /> Dark
+                                                    </Button>
                                                 </div>
                                             </CardContent>
                                         </Card>
@@ -343,26 +425,26 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "security" && (
-                                    <div className="space-y-6">
-                                        <Card className="border bg-card/60 rounded-2xl shadow-sm overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4 flex flex-row items-center justify-between">
-                                                <div className="space-y-0.5">
-                                                    <CardTitle className="text-lg">Two-Factor Authentication</CardTitle>
-                                                    <CardDescription>Multi-layered identity verification.</CardDescription>
+                                    <div className="space-y-8">
+                                        <Card className="border rounded-3xl overflow-hidden shadow-sm bg-white/[0.02]">
+                                            <CardHeader className="p-8 flex flex-row items-center justify-between border-b bg-muted/10">
+                                                <div className="space-y-1">
+                                                    <CardTitle className="text-2xl font-bold tracking-tight">Two-Factor Authentication</CardTitle>
+                                                    <CardDescription className="text-base text-muted-foreground">Multi-layered account protection.</CardDescription>
                                                 </div>
-                                                <Badge className={cn("font-black tracking-widest text-[9px]", mfaEnabled ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted text-muted-foreground border-border/50")}>
-                                                   {mfaEnabled ? "PROTECTED" : "VULNERABLE"}
+                                                <Badge variant="outline" className={cn("px-4 py-1.5 rounded-full font-bold uppercase tracking-widest text-[9px]", mfaEnabled ? "bg-emerald-500/10 text-emerald-600 border-emerald-500/20" : "bg-muted text-muted-foreground")}>
+                                                   {mfaEnabled ? "PROTECTED" : "UNPROTECTED"}
                                                 </Badge>
                                             </CardHeader>
-                                            <CardContent className="pt-8">
-                                                <div className="flex items-center justify-between p-6 rounded-2xl bg-primary/5 border border-primary/10">
-                                                   <div className="flex items-start gap-5">
-                                                      <div className="h-12 w-12 rounded-xl bg-background border flex items-center justify-center shadow-sm shrink-0">
-                                                         <Smartphone className="h-6 w-6 text-primary" />
+                                            <CardContent className="p-8">
+                                                <div className="flex items-center justify-between p-8 rounded-2xl border bg-muted/5 group/mfa hover:border-border transition-all">
+                                                   <div className="flex items-start gap-6">
+                                                      <div className="h-12 w-12 rounded-xl bg-background border flex items-center justify-center shadow-sm">
+                                                         <Smartphone className="h-6 w-6 text-muted-foreground" />
                                                       </div>
-                                                      <div className="space-y-1">
-                                                         <h4 className="text-sm font-bold">Authenticator Application</h4>
-                                                         <p className="text-xs text-muted-foreground max-w-sm">Protect your workspace with 6-digit TOTP codes from apps like Google Authenticator or Authy.</p>
+                                                      <div className="space-y-1 pt-1">
+                                                         <h4 className="text-lg font-bold">Authenticator Application</h4>
+                                                         <p className="text-sm text-muted-foreground max-w-xl font-medium leading-relaxed italic">Provisioning 6-digit cryptographic security tokens (TOTP).</p>
                                                       </div>
                                                    </div>
                                                    <Switch checked={mfaEnabled} onCheckedChange={handleSecurityUpdate} disabled={isUpdatingSecurity} className="data-[state=checked]:bg-emerald-500" />
@@ -370,32 +452,33 @@ export default function SettingsPage() {
                                             </CardContent>
                                         </Card>
 
-                                        <Card className="border bg-card/60 rounded-2xl shadow-sm overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4">
-                                                <CardTitle className="text-lg">Active Sessions</CardTitle>
-                                                <CardDescription>Hardware and network identities current logged in.</CardDescription>
+                                        <Card className="border rounded-3xl shadow-sm overflow-hidden">
+                                            <CardHeader className="p-8 border-b bg-muted/10">
+                                                <CardTitle className="text-2xl font-bold tracking-tight">Active Hardware Sessions</CardTitle>
+                                                <CardDescription className="text-base text-muted-foreground">Identities currently logged in across the Xtra matrix.</CardDescription>
                                             </CardHeader>
                                             <CardContent className="p-0">
-                                                <div className="divide-y border-b decoration-border/10">
-                                                    {(user?.sessions || [1]).map((s: any, i: number) => (
-                                                        <div key={i} className="flex items-center justify-between p-6 hover:bg-muted/5 transition-colors">
-                                                            <div className="flex items-center gap-5">
-                                                                <div className="h-10 w-10 rounded-xl bg-background border flex items-center justify-center shadow-inner shrink-0">
-                                                                    <Laptop className="h-5 w-5 text-muted-foreground" />
+                                                <div className="divide-y divide-border">
+                                                    {(user?.sessions || [1, 2]).map((s: any, i: number) => (
+                                                        <div key={i} className="flex items-center justify-between p-8 hover:bg-muted/5 transition-all">
+                                                            <div className="flex items-center gap-6">
+                                                                <div className="h-12 w-12 rounded-xl bg-muted/30 border flex items-center justify-center shadow-sm">
+                                                                    <Laptop className="h-6 w-6 text-muted-foreground" />
                                                                 </div>
-                                                                <div className="flex flex-col">
-                                                                    <div className="flex items-center gap-2">
-                                                                       <span className="text-sm font-bold">Windows PC (Chrome)</span>
-                                                                       {i === 0 && <Badge className="text-[8px] font-black tracking-widest bg-emerald-500/10 text-emerald-600 border-none px-1.5 h-4">THIS DEVICE</Badge>}
+                                                                <div className="flex flex-col gap-1">
+                                                                    <div className="flex items-center gap-3">
+                                                                       <span className="text-lg font-bold text-foreground leading-none">{i === 0 ? "Windows Workstation" : "MacBook Pro"}</span>
+                                                                       {i === 0 && <Badge variant="secondary" className="text-[9px] font-bold px-2 py-0.5 rounded-md uppercase tracking-widest text-emerald-600 bg-emerald-500/5 border-none">Current Session</Badge>}
                                                                     </div>
-                                                                    <div className="flex items-center gap-2 text-[11px] text-muted-foreground font-medium">
-                                                                       <MapPin className="h-3 w-3 opacity-40 shrink-0" />
-                                                                       <span>Greater London, UK · 192.168.1.1</span>
+                                                                    <div className="flex items-center gap-4 text-xs text-muted-foreground font-medium">
+                                                                       <span className="flex items-center gap-1.5"><Globe className="h-3 w-3 opacity-60" /> 192.168.1.{100+i}</span>
+                                                                       <span className="flex items-center gap-1.5"><MapPin className="h-3 w-3 opacity-60" /> London, UK</span>
+                                                                       <span className="flex items-center gap-1.5"><History className="h-3 w-3 opacity-60" /> Active now</span>
                                                                     </div>
                                                                 </div>
                                                             </div>
-                                                            <Button variant="ghost" size="sm" className="h-8 rounded-lg text-[10px] font-black tracking-widest uppercase hover:bg-rose-500/5 hover:text-rose-600">
-                                                                <LogOut className="h-3 w-3 mr-1.5" /> Force Logout
+                                                            <Button variant="ghost" size="sm" className="h-9 px-5 rounded-xl text-[10px] font-bold uppercase tracking-widest text-rose-500 hover:bg-rose-500/5 hover:text-rose-600">
+                                                                Force Revoke
                                                             </Button>
                                                         </div>
                                                     ))}
@@ -406,34 +489,34 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "notifications" && (
-                                    <div className="space-y-6">
-                                        <Card className="border bg-card/60 rounded-2xl shadow-sm overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4">
-                                                <CardTitle className="text-lg">Lifecycle Toggles</CardTitle>
-                                                <CardDescription>Configure precise alerting for system and security events.</CardDescription>
+                                    <div className="space-y-8">
+                                        <Card className="border rounded-3xl overflow-hidden glassmorphism shadow-sm">
+                                            <CardHeader className="p-8 border-b bg-muted/10">
+                                                <CardTitle className="text-2xl font-bold tracking-tight">Signal Configuration</CardTitle>
+                                                <CardDescription className="text-base text-muted-foreground">Alert lifecycle for security and system events.</CardDescription>
                                             </CardHeader>
-                                            <CardContent className="pt-8 space-y-8">
-                                                <NotificationItem 
+                                            <CardContent className="p-8 space-y-8">
+                                                <NotificationItemBasic 
                                                   id="n1" 
-                                                  label="Critical Security Alerts" 
-                                                  desc="Instant alerts for unauthorized access attempts or suspicious IP patterns." 
+                                                  label="Critical Security Pulse" 
+                                                  desc="Fingerprint updates, unauthorized logins, and hardware environment drift." 
                                                   defaultChecked 
-                                                  icon={ShieldCheck2}
-                                                  color="text-rose-600"
+                                                  icon={ShieldCheck}
+                                                  color="text-rose-500"
                                                 />
-                                                <Separator className="opacity-10" />
-                                                <NotificationItem 
+                                                <Separator />
+                                                <NotificationItemBasic 
                                                   id="n2" 
-                                                  label="Compliance & Auditing" 
-                                                  desc="Weekly snapshots of your security index and key health metrics." 
+                                                  label="Identity Rotation Logs" 
+                                                  desc="Weekly crystalline snapshots of your rotation engine and health index." 
                                                   icon={Zap}
-                                                  color="text-amber-600"
+                                                  color="text-amber-500"
                                                 />
-                                                <Separator className="opacity-10" />
-                                                <NotificationItem 
+                                                <Separator />
+                                                <NotificationItemBasic 
                                                   id="n3" 
-                                                  label="Product Pipeline" 
-                                                  desc="Updates on new Xtra-CLI versions, SDK releases and feature news." 
+                                                  label="Registry Protocol Updates" 
+                                                  desc="Lifecycle news about Xtra-CLI engine patches and core primitive releases." 
                                                   icon={ExternalLink}
                                                   color="text-primary"
                                                 />
@@ -447,66 +530,71 @@ export default function SettingsPage() {
                                 )}
 
                                 {activeTab === "workspace" && (
-                                    <div className="space-y-6">
-                                        <Card className="border bg-card/60 rounded-2xl shadow-sm overflow-hidden">
-                                            <CardHeader className="bg-muted/5 border-b pb-4">
-                                                <CardTitle className="text-lg">Workspace Intelligence</CardTitle>
-                                                <CardDescription>Global identifiers and branding preferences.</CardDescription>
+                                    <div className="space-y-12">
+                                        <Card className="border rounded-3xl overflow-hidden shadow-sm bg-white/[0.02]">
+                                            <CardHeader className="p-8 border-b bg-muted/10">
+                                                <CardTitle className="text-2xl font-bold tracking-tight">Identity Matrix</CardTitle>
+                                                <CardDescription className="text-base text-muted-foreground">Global identifiers and designation settings.</CardDescription>
                                             </CardHeader>
-                                            <CardContent className="pt-8 space-y-8">
-                                                <div className="p-5 rounded-2xl bg-muted/20 border border-border/50 flex items-center justify-between">
-                                                   <div className="flex items-center gap-4">
-                                                      <div className="h-10 w-10 rounded-xl bg-background border flex items-center justify-center shadow-inner">
-                                                         <Terminal className="h-5 w-5 text-muted-foreground opacity-50" />
+                                            <CardContent className="p-8 space-y-10">
+                                                <div className="p-8 rounded-2xl bg-muted/30 border border-dashed flex items-center justify-between group/ws transition-all">
+                                                   <div className="flex items-center gap-6">
+                                                      <div className="h-14 w-14 rounded-2xl bg-background border flex items-center justify-center shadow-sm group-hover/ws:border-primary/50 transition-colors">
+                                                         <Key className="h-7 w-7 text-muted-foreground opacity-40 group-hover/ws:text-primary transition-colors" />
                                                       </div>
-                                                      <div className="flex flex-col">
-                                                         <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Unique Identifier</span>
-                                                         <span className="text-xs font-mono font-bold">{selectedWorkspace?.id}</span>
+                                                      <div className="flex flex-col gap-1">
+                                                         <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Matrix Identifier</span>
+                                                         <span className="text-sm font-mono font-bold tracking-wider">{selectedWorkspace?.id}</span>
                                                       </div>
                                                    </div>
-                                                   <Button size="sm" variant="ghost" onClick={copyWorkspaceId} className="h-8 rounded-lg gap-2 text-[10px] font-bold uppercase tracking-widest">
-                                                      <Copy className="h-3 w-3" /> Copy ID
+                                                   <Button variant="ghost" size="sm" onClick={copyWorkspaceId} className="h-10 px-5 rounded-xl gap-2 text-[10px] font-bold uppercase tracking-widest hover:bg-white hover:text-black transition-all active:scale-95">
+                                                      <Copy className="h-4 w-4" /> Copy ID
                                                    </Button>
                                                 </div>
 
-                                                <form onSubmit={handleWorkspaceUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <form onSubmit={handleWorkspaceUpdate} className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-4">
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="wsName" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Trading Name</Label>
-                                                        <Input id="wsName" value={workspaceName} onChange={(e) => setWorkspaceName(e.target.value)} required className="h-10 text-sm font-semibold" />
+                                                        <Label className="text-xs font-bold text-muted-foreground px-1">Designation Name</Label>
+                                                        <Input 
+                                                            value={workspaceName} 
+                                                            onChange={(e) => setWorkspaceName(e.target.value)} 
+                                                            required 
+                                                            className="h-12 rounded-xl font-medium" 
+                                                        />
                                                     </div>
                                                     <div className="space-y-2">
-                                                        <Label htmlFor="wsIcon" className="text-xs font-black uppercase tracking-widest text-muted-foreground/60">Branding Icon</Label>
+                                                        <Label className="text-xs font-bold text-muted-foreground px-1">Visual Branding</Label>
                                                         <Input
-                                                            id="wsIcon"
                                                             value={workspaceIcon}
                                                             onChange={(e) => setWorkspaceIcon(e.target.value)}
                                                             placeholder="Emoji or URL"
-                                                            className="h-10 text-sm font-semibold"
+                                                            className="h-12 rounded-xl font-medium"
                                                         />
                                                     </div>
-                                                    <div className="md:col-span-2 flex justify-end pt-4">
-                                                        <Button type="submit" disabled={isUpdatingWorkspace} className="h-10 px-8 rounded-xl font-bold shadow-lg shadow-primary/10">
-                                                            {isUpdatingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                                                            Confirm Changes
+                                                    <div className="md:col-span-2 flex justify-end">
+                                                        <Button 
+                                                            type="submit" 
+                                                            disabled={isUpdatingWorkspace} 
+                                                            className="h-12 px-10 rounded-xl font-bold shadow-sm"
+                                                        >
+                                                            {isUpdatingWorkspace && <Loader2 className="mr-3 h-4 w-4 animate-spin" />}
+                                                            Commit Changes
                                                         </Button>
                                                     </div>
                                                 </form>
                                             </CardContent>
                                         </Card>
                                         
-                                        <Card className="border bg-rose-50/10 dark:bg-rose-500/5 rounded-2xl shadow-sm overflow-hidden border-rose-500/20">
-                                           <CardHeader className="bg-rose-500/5 border-b border-rose-500/10 pb-4">
-                                              <CardTitle className="text-lg text-rose-600">Danger Zone</CardTitle>
-                                              <CardDescription>Irreversible and destructive actions.</CardDescription>
+                                        <Card className="border-rose-500/20 bg-rose-500/5 rounded-3xl overflow-hidden glassmorphism group">
+                                           <CardHeader className="p-8 border-b border-rose-500/10 bg-rose-500/5">
+                                              <CardTitle className="text-2xl font-bold tracking-tight text-rose-500">Danger Operations</CardTitle>
+                                              <CardDescription className="text-base text-rose-400/80 font-medium italic">Irreversible system blackout actions.</CardDescription>
                                            </CardHeader>
-                                           <CardContent className="pt-6">
-                                              <div className="flex items-center justify-between">
-                                                 <div className="space-y-0.5">
-                                                    <span className="text-sm font-bold">Delete this workspace</span>
-                                                    <p className="text-xs text-muted-foreground whitespace-pre-wrap">Once deleted, all secrets, projects, and auditing data will be destroyed. This cannot be undone.</p>
-                                                 </div>
-                                                 <Button variant="destructive" size="sm" className="h-9 px-6 font-bold rounded-xl bg-rose-600 hover:bg-rose-700">Delete Workspace</Button>
-                                              </div>
+                                           <CardContent className="p-8 flex flex-col md:flex-row items-center justify-between gap-8">
+                                              <p className="text-sm text-rose-300 font-medium leading-relaxed max-w-xl">
+                                                Destroying a workspace will permanently vaporize all secrets, encryption branches, and cryptographically signed audit logs. There is no recovery.
+                                              </p>
+                                              <Button variant="destructive" className="h-12 px-10 font-bold rounded-2xl bg-rose-600 hover:bg-rose-700 shadow-lg shadow-rose-900/10 active:scale-95 transition-all">Blackout Workspace</Button>
                                            </CardContent>
                                         </Card>
                                     </div>
@@ -522,37 +610,19 @@ export default function SettingsPage() {
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
-function NotificationItem({ id, label, desc, defaultChecked = false, icon: Icon, color }: any) {
+function NotificationItemBasic({ id, label, desc, defaultChecked = false, icon: Icon, color }: any) {
     return (
-        <div className="flex items-start justify-between gap-6 group">
-            <div className="flex items-start gap-4">
-               <div className={cn("h-10 w-10 rounded-xl bg-background border flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform", color)}>
-                  <Icon className="h-5 w-5" />
+        <div className="flex items-center justify-between gap-8 group">
+            <div className="flex items-start gap-6">
+               <div className={cn("h-12 w-12 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-center shadow-sm shrink-0 group-hover:scale-105 transition-transform duration-500", color)}>
+                  <Icon className="h-6 w-6" />
                </div>
-               <div className="space-y-1">
-                  <Label htmlFor={id} className="text-sm font-bold block leading-none">{label}</Label>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-sm">{desc}</p>
+               <div className="space-y-1 pt-0.5">
+                  <Label htmlFor={id} className="text-lg font-bold block leading-none">{label}</Label>
+                  <p className="text-sm text-muted-foreground font-medium leading-relaxed max-w-sm">{desc}</p>
                </div>
             </div>
             <Switch id={id} defaultChecked={defaultChecked} className="data-[state=checked]:bg-emerald-500" />
         </div>
     );
-}
-
-function ShieldCheck2({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10"/><path d="m9 12 2 2 4-4"/></svg>
-    )
-}
-
-function Terminal({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-    )
-}
-
-function BarChart3({ className }: { className?: string }) {
-    return (
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-    )
 }
