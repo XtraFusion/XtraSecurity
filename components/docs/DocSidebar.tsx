@@ -12,11 +12,14 @@ import {
   ChevronRight,
   Github,
   MessageCircle,
+  ExternalLink,
+  LayoutDashboard,
   Zap,
-  Code2,
-  ExternalLink
+  Code2
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
+import Image from "next/image"
+import Link from "next/link"
 
 interface DocSidebarProps {
   activeSection: string
@@ -51,10 +54,10 @@ export function DocSidebar({
     )}>
       {/* ── Brand / Logo ─────────── ──────────────────────── */}
       <div className="h-14 flex items-center px-6 mb-4 mt-2">
-        <div className="flex items-center gap-2 font-semibold text-lg tracking-tight">
-          <Shield className="h-6 w-6 text-foreground" />
-          <span>XtraSecurity</span>
-        </div>
+        <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
+          <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={24} height={24} className="rounded-md" />
+          <span className="text-foreground">Xtra<span className="text-primary font-black italic">Security</span></span>
+        </Link>
       </div>
 
       {/* ── Search ───────────────────────────────────────── */}
@@ -134,8 +137,12 @@ export function DocSidebar({
             <MessageCircle className="h-4 w-4" /> Community Support
           </a>
           
+          <Link href="/dashboard" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2 mt-2 bg-primary/5 py-2 px-3 rounded-md border border-primary/10">
+            <LayoutDashboard className="h-4 w-4" /> Back to Dashboard
+          </Link>
+          
           <div className="flex items-center gap-2 mt-2 py-1.5 px-2 bg-transparent rounded border border-border w-fit">
-            <div className="w-1.5 h-1.5 rounded-full bg-foreground"></div>
+            <div className="w-1.5 h-1.5 rounded-full bg-foreground opacity-50"></div>
             <span className="text-[10px] font-mono text-muted-foreground">v2.4.0-stable</span>
           </div>
         </div>

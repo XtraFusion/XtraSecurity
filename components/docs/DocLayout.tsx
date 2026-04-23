@@ -4,7 +4,9 @@ import { cn } from "@/lib/utils"
 import { DocSidebar } from "./DocSidebar"
 import { DocTOC } from "./DocTOC"
 import { useState, useEffect } from "react"
-import { Menu, X, Shield } from "lucide-react"
+import { Menu, X, Shield, LayoutDashboard } from "lucide-react"
+import Image from "next/image"
+import Link from "next/link"
 
 interface DocLayoutProps {
   children: React.ReactNode
@@ -63,17 +65,22 @@ export function DocLayout({
       </div>
 
       {/* ── Mobile Top Bar ───────────────────────────────── */}
-      <header className="lg:hidden fixed top-0 w-full z-50 h-16 bg-background flex justify-between items-center px-6 border-b border-border">
-        <div className="flex items-center gap-3">
-          <Shield className="h-6 w-6 text-foreground" />
-          <span className="font-bold text-lg tracking-tight">XtraSecurity</span>
+      <header className="lg:hidden fixed top-0 w-full z-50 h-16 bg-background flex justify-between items-center px-6 border-b border-border shadow-sm">
+        <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
+          <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={24} height={24} className="rounded-md" />
+          <span className="text-foreground">Xtra<span className="text-primary font-black italic">Security</span></span>
+        </Link>
+        <div className="flex items-center gap-2">
+          <Link href="/dashboard" className="p-2 text-muted-foreground hover:text-primary transition-colors">
+            <LayoutDashboard className="h-5 w-5" />
+          </Link>
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-muted-foreground p-2"
+          >
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
-        <button
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="text-muted-foreground p-2"
-        >
-          {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-        </button>
       </header>
 
       {/* ── Mobile Menu Overlay ───────────────────────────── */}

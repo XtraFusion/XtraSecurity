@@ -54,8 +54,9 @@ const FEATURES = [
     icon: "puzzle",
     title: "Developer First",
     desc: "Native VS Code extension, multi-env sync, and a CLI that injects secrets in-memory.",
-    details: "The xtra-cli connects directly to your app's process memory — zero storage reliance. VS Code extension provides live intellisense for available workspace secrets.",
+    details: "The xtra-cli connects directly to your app's process memory — zero storage reliance. The official VS Code extension provides live intellisense, leak scanning, and drift detection.",
     chips: ["VS Code Ext", "Direct CLI", "Multi-Env Sync"],
+    link: "https://marketplace.visualstudio.com/items?itemName=XtraSecurity.xtra-vscode",
     color: "#f97316",
   },
   {
@@ -770,8 +771,20 @@ function FlipCard({ f }: { f: typeof FEATURES[0] }) {
             <p className="text-slate-300 text-sm leading-relaxed font-medium mb-8">
               {f.details}
             </p>
-            <div className="mt-auto pt-6 border-t border-white/[0.05]">
-               <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ring-1 ring-cyan-400/20 px-3 py-1 rounded-full">Engineering Verified</span>
+            <div className="mt-auto pt-6 border-t border-white/[0.05] flex flex-col items-center gap-3">
+               {f.link ? (
+                 <a 
+                   href={f.link} 
+                   target="_blank" 
+                   rel="noopener noreferrer"
+                   className="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-lg text-xs transition-colors no-underline uppercase tracking-widest"
+                   onClick={(e) => e.stopPropagation()}
+                 >
+                   Install Now
+                 </a>
+               ) : (
+                 <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ring-1 ring-cyan-400/20 px-3 py-1 rounded-full">Engineering Verified</span>
+               )}
             </div>
         </div>
       </motion.div>

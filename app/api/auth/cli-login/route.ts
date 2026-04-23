@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
           tier: keyRecord.user.tier || "free",
           type: "cli-token",
           iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60) // 14 days
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours (Zero Trust Compliance)
         };
       } else if (keyRecord.serviceAccountId && keyRecord.serviceAccount) {
         // Service Account API Key
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
           permissions: keyRecord.serviceAccount.permissions,
           type: "cli-token",
           iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60) // 14 days
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours (Zero Trust Compliance)
         };
       } else {
           return NextResponse.json({ error: "Invalid Access Key: Identity not found" }, { status: 401 });
@@ -158,7 +158,7 @@ export async function POST(req: NextRequest) {
           tier: user.tier || 'free',
           type: "cli-token",
           iat: Math.floor(Date.now() / 1000),
-          exp: Math.floor(Date.now() / 1000) + (14 * 24 * 60 * 60) // 14 days
+          exp: Math.floor(Date.now() / 1000) + (24 * 60 * 60) // 24 hours (Zero Trust Compliance)
       };
 
       const token = jwt.sign(payload, secret);

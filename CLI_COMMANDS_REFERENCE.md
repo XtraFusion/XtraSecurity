@@ -62,6 +62,21 @@ xtra ci secrets -p proj_123 -e production
 
 ---
 
+### 1.2 `xtra logout`
+**Description:** Log out from the current session and purge all local authentication tokens and secret caches.
+
+**Behavior:**
+- Deletes the local authentication token.
+- Scans and deletes all `cache.*` entries from the global configuration store.
+- Recommended before switching shared developer machines.
+
+**Example:**
+```bash
+xtra logout
+```
+
+---
+
 ## 2. Project & Workspace Commands
 
 ### 2.1 `xtra init`
@@ -440,6 +455,31 @@ xtra rotate DATABASE_PASSWORD --promote -p proj_123 -e production
 ✔ Successfully promoted 'DATABASE_PASSWORD' to version 5
 ```
 
+### 3.3 `xtra access` (JIT)
+**Description:** Request and manage Just-In-Time (JIT) access to protected environments or specific secrets.
+
+#### Subcommand: `xtra access request`
+**Description:** Submit a time-limited request for access.
+
+**Options:**
+- `-p, --project <id>` - Project ID
+- `-e, --env <env>` - Target environment (e.g., production)
+- `-d, --duration <time>` - Duration (e.g., 1h, 30m, 1d)
+- `-r, --reason <text>` - Rationale for access (required)
+- `-s, --secrets <ids>` - Comma-separated list of Secret IDs (for granular access)
+
+**Examples:**
+```bash
+# Request full environment access
+xtra access request -e production -r "Fixing bug in auth service" -d 2h
+
+# Granular access to specific secrets only
+xtra access request -e production -s sec_123,sec_456 -r "DB maintenance"
+```
+
+#### Subcommand: `xtra access list`
+**Description:** View your active or pending JIT requests.
+
 ---
 
 ## 4. Environment Commands
@@ -680,7 +720,26 @@ xtra run -e production ./myapp
 
 ---
 
-### 5.2 `xtra watch`
+### 5.2 `xtra jit-run`
+**Description:** Automated JIT workflow - claim access, wait for approval, and execute command in one step.
+
+**Options:**
+- `-t, --token <token>` - The JIT token provided by an admin
+- `-i, --interval <ms>` - Polling interval (default: 5000ms)
+
+**Behavior:**
+1. Claims the token from the server
+2. If pending, polls until an admin approves the request
+3. Once approved, fetches only the authorized secrets
+4. Injects them into the process and executes the command
+
+**Examples:**
+```bash
+# Automated JIT claim and execute
+xtra jit-run --token jit_abc123 -- npm start
+```
+
+### 5.3 `xtra watch`
 **Description:** Live reload mode - auto-restart process when secrets change in cloud.
 
 **Options:**
@@ -2197,6 +2256,28 @@ xtra run npm start  # Reads .env.local
 
 ---
 
+## 🚀 Beginner-Friendly Setup
+
+If you are new to XtraSecurity, follow these 3 steps to secure your stack in under 5 minutes:
+
+1. **Install the CLI & Extension**
+   - CLI: `npm install -g xtra-cli`
+   - VS Code: [Download from Marketplace](https://marketplace.visualstudio.com/items?itemName=XtraSecurity.xtra-vscode)
+
+2. **Initialize**
+   ```bash
+   xtra login   # Auth your device
+   xtra init    # Link your project folder
+   ```
+
+3. **Secure Run**
+   ```bash
+   xtra run npm start  # Your secrets are now safely injected!
+   ```
+
+---
+
 **End of Command Reference**
 Generated: February 25, 2026
-Total Commands Documented: 31+ main commands with 40+ subcommands
+Total Commands Documented: 32 main commands
+Official VS Code Extension: [XtraSecurity.xtra-vscode](https://marketplace.visualstudio.com/items?itemName=XtraSecurity.xtra-vscode)

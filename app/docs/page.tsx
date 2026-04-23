@@ -69,14 +69,12 @@ const CLI_COMMANDS: CommandEntry[] = [
     },
     {
         name: "Logout",
-        description: "Clear your local authentication session.",
+        description: "Securely logout and clear all local session data.",
         command: "xtra logout",
         section: "Authentication",
         icon: "shield",
-        longDesc: "Removes your access token from ~/.xtra/config.json and revokes the session on the server.",
-        options: [
-            { flag: "--all", desc: "Revoke all active sessions across all devices" }
-        ]
+        longDesc: "Properly terminates your session by removing the authentication token and purging all encrypted local secret caches. Recommended for shared development environments.",
+        options: []
     },
     {
         name: "WhoAmI",
@@ -175,25 +173,29 @@ const CLI_COMMANDS: CommandEntry[] = [
         ]
     },
     {
-        name: "JIT Request",
-        description: "Request Just-In-Time access to a protected environment.",
-        command: "xtra jit request <env>",
+        name: "Access Request",
+        description: "Submit a Just-In-Time access request for a sensitive environment.",
+        command: "xtra access request",
         section: "Security",
         icon: "shield",
-        longDesc: "Submits a JIT access request for high-privilege environments. Access expires automatically based on team policy.",
+        longDesc: "Requests temporary permission to access secrets. Requires a reason and duration. Once approved, the token can be used for injection.",
         options: [
-            { flag: "--duration <time>", desc: "Time duration e.g. 1h, 30m" },
-            { flag: "--reason <text>", desc: "Reason for request", required: true }
+            { flag: "-e, --env <name>", desc: "Target environment (e.g. production)", required: true },
+            { flag: "--reason <text>", desc: "Reason for access", required: true },
+            { flag: "--duration <time>", desc: "E.g. 1h, 30m, 1d", required: true },
+            { flag: "-s, --secrets <ids>", desc: "Comma-separated list of Secret IDs for granular access" }
         ]
     },
     {
-        name: "JIT Approve",
-        description: "Approve a pending JIT request (Admins only).",
-        command: "xtra jit approve <request_id>",
+        name: "JIT Run",
+        description: "Automated JIT workflow: claim, poll, and execute.",
+        command: "xtra jit-run --token <jit_token> -- <command>",
         section: "Security",
-        icon: "shield",
+        icon: "bolt",
+        longDesc: "A specialized command that claims a JIT token, waits for approval from an admin, and then automatically executes your command with the newly authorized secrets.",
         options: [
-            { flag: "-y, --yes", desc: "Skip confirmation prompt" }
+            { flag: "--token <id>", desc: "The JIT token provided by an admin", required: true },
+            { flag: "--interval <ms>", desc: "Polling interval while waiting for approval" }
         ]
     }
 ];
@@ -336,9 +338,17 @@ export default function DocsPage() {
                                             secrets leaking
                                         </span>
                                     </h1>
-                                    <p className="text-base text-muted-foreground max-w-2xl leading-relaxed">
-                                        Vault-grade secret management for modern engineering teams. Zero-trust by default, developer-first by design.
-                                    </p>
+                                    <div className="space-y-4 max-w-2xl">
+                                        <p className="text-base text-muted-foreground leading-relaxed">
+                                            XtraSecurity is a unified secrets management platform. It replaces insecure local config files with a <strong>Zero-Trust Injection Layer</strong> that works across your CLI, Team, and Production.
+                                        </p>
+                                        <PremiumCallout type="info" className="bg-primary/5 border-primary/20">
+                                            <div className="flex items-center gap-2 font-bold text-foreground mb-1 italic">
+                                                <Zap className="h-4 w-4 text-primary" /> New to Secrets Management?
+                                            </div>
+                                            XtraSecurity keeps your passwords (API keys, DB URLs) in the cloud. They are only "injected" into your app when you run it. If your computer is stolen or your code is leaked, your secrets remain safe.
+                                        </PremiumCallout>
+                                    </div>
                                 </div>
 
                                 {/* Quick stats row */}
@@ -357,6 +367,26 @@ export default function DocsPage() {
                             </div>
 
                             {/* Divider */}
+                            <div className="h-px bg-border/50" />
+
+                            {/* Step 0 */}
+                            <section className="space-y-6 scroll-mt-32">
+                                <StepHeader number={0} title="Get the VS Code Extension" />
+                                <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
+                                    Before we start, install the official extension to get real-time security scanning and secret auto-completion.
+                                </p>
+                                <div className="flex flex-wrap gap-4">
+                                    <Button 
+                                        asChild
+                                        className="h-11 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-sm rounded-lg shadow-lg flex items-center gap-2"
+                                    >
+                                        <a href="https://marketplace.visualstudio.com/items?itemName=XtraSecurity.xtra-vscode" target="_blank" rel="noopener noreferrer">
+                                            <Package className="h-4 w-4" /> Download for VS Code
+                                        </a>
+                                    </Button>
+                                </div>
+                            </section>
+
                             <div className="h-px bg-border/50" />
 
                             {/* Step 1 */}
@@ -515,8 +545,13 @@ export default function DocsPage() {
                                             Bring secrets management directly into VS Code. Browse secrets, inject into debugger, scan for leaks, and manage JIT access — all without leaving your editor.
                                         </p>
                                     </div>
-                                    <Button className="h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-md shadow-md transition-all flex items-center gap-2 shrink-0">
-                                        <Package className="h-4 w-4" /> Install Extension
+                                    <Button 
+                                        asChild
+                                        className="h-10 px-5 bg-primary hover:bg-primary/90 text-primary-foreground font-bold text-xs rounded-md shadow-md transition-all flex items-center gap-2 shrink-0"
+                                    >
+                                        <a href="https://marketplace.visualstudio.com/items?itemName=XtraSecurity.xtra-vscode" target="_blank" rel="noopener noreferrer">
+                                            <Package className="h-4 w-4" /> Install Extension
+                                        </a>
                                     </Button>
                                 </div>
                             </div>
