@@ -15,6 +15,9 @@ interface UserContextType {
   createProject: (projectData: any) => Promise<void>;
   workspaces: any[];
   refreshWorkspaces: () => Promise<void>;
+  selectedWorkspace: any | null;
+  setSelectedWorkspace: React.Dispatch<React.SetStateAction<any | null>>;
+  workspaceRole: string | null;
 }
 
 export const UserContext = createContext<UserContextType | any>(
@@ -26,6 +29,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<any | null>(null);
   // Initialize from LocalStorage or default to null
   const [selectedWorkspace, setSelectedWorkspace] = useState<any | null>(null);
+  const [workspaceRole, setWorkspaceRole] = useState<string | null>(null);
 
   const [workspaces, setWorkspaces] = useState<any[]>([]);
   const hasFetchedWorkspaces = useRef(false);
@@ -68,12 +72,21 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, []);
 
-  // Save workspace on change
+  // Save workspace and update role on change
   useEffect(() => {
     if (selectedWorkspace) {
       localStorage.setItem("selectedWorkspace", JSON.stringify(selectedWorkspace));
+      
+      // Update role from the workspaces list
+      const ws = workspaces.find(w => w.id === selectedWorkspace.id);
+      if (ws?.role) {
+        setWorkspaceRole(ws.role);
+      } else {
+        // Fallback: If not in list yet, it might be the owner (personal workspace)
+        setWorkspaceRole(selectedWorkspace.role || null);
+      }
     }
-  }, [selectedWorkspace]);
+  }, [selectedWorkspace, workspaces]);
 
   const [userStatus, setUserStatus] = useState<boolean | string>(false);
   const [loading, setLoading] = useState<boolean>(false);
@@ -150,6 +163,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         updateSecret,
         selectedWorkspace,
         setSelectedWorkspace,
+        workspaceRole,
         workspaces,
         refreshWorkspaces: fetchWorkspaces,
       }}

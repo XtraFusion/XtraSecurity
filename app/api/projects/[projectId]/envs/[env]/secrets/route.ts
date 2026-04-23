@@ -97,6 +97,26 @@ export const GET = withSecurity(async (
            (s.branchId === branch.id || (branch.name === "main" && s.branchId === null))
   );
 
+  // JIT FILTERING: If user has an active JIT grant for specific secrets, enforce it.
+  try {
+      const activeJit = await prisma.accessRequest.findFirst({
+          where: {
+              userId,
+              projectId,
+              status: "approved",
+              expiresAt: { gt: new Date() }
+          },
+          select: { secretIds: true }
+      });
+
+      if (activeJit && activeJit.secretIds && activeJit.secretIds.length > 0) {
+          // Filter out secrets not in the approved JIT list
+          envSecrets = envSecrets.filter(s => activeJit.secretIds.includes(s.id));
+      }
+  } catch (jitErr) {
+      console.error("JIT filtering failed:", jitErr);
+  }
+
   // 4. Return formatted key-values
   const includeVersions = req.nextUrl.searchParams.get("includeVersions") === "true";
   

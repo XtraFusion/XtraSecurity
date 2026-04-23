@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
       data: {
         userId: auth.userId,
         projectId: jitLink.projectId,
-        secretId: jitLink.secretIds.length === 1 ? jitLink.secretIds[0] : undefined,
+        secretIds: jitLink.secretIds, // Populating the array of allowed secret IDs
         reason,
         duration: jitLink.duration,
         status: "pending",

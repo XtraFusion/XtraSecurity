@@ -28,10 +28,7 @@ export async function GET(req: NextRequest) {
         }
         where.status = "pending";
         if (workspaceId) {
-            where.OR = [
-                { workspaceId: workspaceId },
-                { project: { workspaceId: workspaceId } }
-            ];
+            where.workspaceId = workspaceId;
         }
     } else if (mode === "history") {
         // Only admins can see full history
@@ -40,10 +37,7 @@ export async function GET(req: NextRequest) {
         }
         where.status = { in: ["approved", "rejected", "revoked", "expired"] };
         if (workspaceId) {
-            where.OR = [
-                { workspaceId: workspaceId },
-                { project: { workspaceId: workspaceId } }
-            ];
+            where.workspaceId = workspaceId;
         }
     } else if (mode === "approved") {
         // Show currently active (approved) requests — scoped to workspace
@@ -52,10 +46,7 @@ export async function GET(req: NextRequest) {
         where.expiresAt = { gte: new Date() };
         
         if (workspaceId) {
-            where.OR = [
-                { workspaceId: workspaceId },
-                { project: { workspaceId: workspaceId } }
-            ];
+            where.workspaceId = workspaceId;
         }
     } else {
         // Show MY requests — no workspace filter needed (JIT users may not be in workspace)

@@ -26,7 +26,11 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
         where: { id },
         include: { projects: true },
       });
-      return NextResponse.json(workspace);
+
+      return NextResponse.json({
+        ...workspace,
+        role: role
+      });
     }
 
     // 1. Get workspaces created by user
@@ -61,7 +65,11 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
       },
     });
 
-    const allWorkspaces = [...ownedWorkspaces, ...memberWorkspaces];
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const allWorkspaces = await Promise.all([...ownedWorkspaces, ...memberWorkspaces].map(async (w) => {
+      const role = await getUserWorkspaceRole(userId, w.id);
+      return { ...w, role };
+    }));
 
     return NextResponse.json(allWorkspaces);
   } catch (error) {

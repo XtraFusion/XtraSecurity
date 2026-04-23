@@ -2,7 +2,8 @@ import type React from "react"
 import type { Metadata, Viewport } from "next"
 import { GeistSans } from "geist/font/sans"
 import { GeistMono } from "geist/font/mono"
-import { ThemeProvider } from "@/components/theme-provider"
+import { Space_Grotesk, Inter } from "next/font/google"
+import { ThemeProvider } from "@/components/theme-provider" 
 import { UserProvider } from "@/hooks/useUser"
 import { defaultMetadata } from "@/lib/seo"
 import "./globals.css"
@@ -10,6 +11,16 @@ import Provider from "@/lib/provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Toaster as CustomToaster } from "@/components/ui/toaster"
 import { triggerLazyRotation } from "@/lib/rotation/lazy-cron";
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  variable: "--font-space-grotesk",
+})
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+})
 
 export const metadata: Metadata = {
   ...defaultMetadata,
@@ -38,11 +49,18 @@ export default async function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <head>
+        <link 
+          rel="stylesheet" 
+          href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=block" 
+        />
         <style>{`
 html {
-  font-family: ${GeistSans.style.fontFamily};
-  --font-sans: ${GeistSans.variable};
+  font-family: ${inter.style.fontFamily};
+  --font-sans: ${inter.variable};
   --font-mono: ${GeistMono.variable};
+  --font-space-grotesk: ${spaceGrotesk.style.fontFamily};
+  --font-inter: ${inter.style.fontFamily};
+  --font-geist: ${GeistSans.style.fontFamily};
 }
         `}</style>
         {/* JSON-LD Schema for Organization */}

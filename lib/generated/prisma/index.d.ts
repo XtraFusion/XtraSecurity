@@ -4309,13 +4309,11 @@ export namespace Prisma {
 
   export type SecretCountOutputType = {
     referencedBy: number
-    accessRequests: number
     shares: number
   }
 
   export type SecretCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     referencedBy?: boolean | SecretCountOutputTypeCountReferencedByArgs
-    accessRequests?: boolean | SecretCountOutputTypeCountAccessRequestsArgs
     shares?: boolean | SecretCountOutputTypeCountSharesArgs
   }
 
@@ -4335,13 +4333,6 @@ export namespace Prisma {
    */
   export type SecretCountOutputTypeCountReferencedByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SecretWhereInput
-  }
-
-  /**
-   * SecretCountOutputType without action
-   */
-  export type SecretCountOutputTypeCountAccessRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    where?: AccessRequestWhereInput
   }
 
   /**
@@ -11937,8 +11928,6 @@ export namespace Prisma {
     rotationPolicy: string | null
     isReference: boolean | null
     sourceSecretId: string | null
-    shadowStatus: string | null
-    shadowExpiresAt: Date | null
   }
 
   export type SecretMaxAggregateOutputType = {
@@ -11956,8 +11945,6 @@ export namespace Prisma {
     rotationPolicy: string | null
     isReference: boolean | null
     sourceSecretId: string | null
-    shadowStatus: string | null
-    shadowExpiresAt: Date | null
   }
 
   export type SecretCountAggregateOutputType = {
@@ -11979,8 +11966,6 @@ export namespace Prisma {
     isReference: number
     sourceSecretId: number
     shadowValue: number
-    shadowStatus: number
-    shadowExpiresAt: number
     _all: number
   }
 
@@ -12000,8 +11985,6 @@ export namespace Prisma {
     rotationPolicy?: true
     isReference?: true
     sourceSecretId?: true
-    shadowStatus?: true
-    shadowExpiresAt?: true
   }
 
   export type SecretMaxAggregateInputType = {
@@ -12019,8 +12002,6 @@ export namespace Prisma {
     rotationPolicy?: true
     isReference?: true
     sourceSecretId?: true
-    shadowStatus?: true
-    shadowExpiresAt?: true
   }
 
   export type SecretCountAggregateInputType = {
@@ -12042,8 +12023,6 @@ export namespace Prisma {
     isReference?: true
     sourceSecretId?: true
     shadowValue?: true
-    shadowStatus?: true
-    shadowExpiresAt?: true
     _all?: true
   }
 
@@ -12138,8 +12117,6 @@ export namespace Prisma {
     isReference: boolean
     sourceSecretId: string | null
     shadowValue: string[]
-    shadowStatus: string | null
-    shadowExpiresAt: Date | null
     _count: SecretCountAggregateOutputType | null
     _min: SecretMinAggregateOutputType | null
     _max: SecretMaxAggregateOutputType | null
@@ -12178,13 +12155,10 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: boolean
     shadowValue?: boolean
-    shadowStatus?: boolean
-    shadowExpiresAt?: boolean
     project?: boolean | ProjectDefaultArgs<ExtArgs>
     branch?: boolean | Secret$branchArgs<ExtArgs>
     sourceSecret?: boolean | Secret$sourceSecretArgs<ExtArgs>
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
-    accessRequests?: boolean | Secret$accessRequestsArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
     shares?: boolean | Secret$sharesArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
@@ -12211,17 +12185,14 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: boolean
     shadowValue?: boolean
-    shadowStatus?: boolean
-    shadowExpiresAt?: boolean
   }
 
-  export type SecretOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "description" | "environmentType" | "version" | "projectId" | "branchId" | "type" | "history" | "lastUpdated" | "updatedBy" | "permission" | "expiryDate" | "rotationPolicy" | "isReference" | "sourceSecretId" | "shadowValue" | "shadowStatus" | "shadowExpiresAt", ExtArgs["result"]["secret"]>
+  export type SecretOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "description" | "environmentType" | "version" | "projectId" | "branchId" | "type" | "history" | "lastUpdated" | "updatedBy" | "permission" | "expiryDate" | "rotationPolicy" | "isReference" | "sourceSecretId" | "shadowValue", ExtArgs["result"]["secret"]>
   export type SecretInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
     branch?: boolean | Secret$branchArgs<ExtArgs>
     sourceSecret?: boolean | Secret$sourceSecretArgs<ExtArgs>
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
-    accessRequests?: boolean | Secret$accessRequestsArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
     shares?: boolean | Secret$sharesArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
@@ -12234,7 +12205,6 @@ export namespace Prisma {
       branch: Prisma.$BranchPayload<ExtArgs> | null
       sourceSecret: Prisma.$SecretPayload<ExtArgs> | null
       referencedBy: Prisma.$SecretPayload<ExtArgs>[]
-      accessRequests: Prisma.$AccessRequestPayload<ExtArgs>[]
       rotationSchedule: Prisma.$RotationSchedulePayload<ExtArgs> | null
       shares: Prisma.$SecretSharePayload<ExtArgs>[]
     }
@@ -12257,8 +12227,6 @@ export namespace Prisma {
       isReference: boolean
       sourceSecretId: string | null
       shadowValue: string[]
-      shadowStatus: string | null
-      shadowExpiresAt: Date | null
     }, ExtArgs["result"]["secret"]>
     composites: {}
   }
@@ -12626,7 +12594,6 @@ export namespace Prisma {
     branch<T extends Secret$branchArgs<ExtArgs> = {}>(args?: Subset<T, Secret$branchArgs<ExtArgs>>): Prisma__BranchClient<$Result.GetResult<Prisma.$BranchPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     sourceSecret<T extends Secret$sourceSecretArgs<ExtArgs> = {}>(args?: Subset<T, Secret$sourceSecretArgs<ExtArgs>>): Prisma__SecretClient<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     referencedBy<T extends Secret$referencedByArgs<ExtArgs> = {}>(args?: Subset<T, Secret$referencedByArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
-    accessRequests<T extends Secret$accessRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Secret$accessRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccessRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rotationSchedule<T extends Secret$rotationScheduleArgs<ExtArgs> = {}>(args?: Subset<T, Secret$rotationScheduleArgs<ExtArgs>>): Prisma__RotationScheduleClient<$Result.GetResult<Prisma.$RotationSchedulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     shares<T extends Secret$sharesArgs<ExtArgs> = {}>(args?: Subset<T, Secret$sharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
@@ -12676,8 +12643,6 @@ export namespace Prisma {
     readonly isReference: FieldRef<"Secret", 'Boolean'>
     readonly sourceSecretId: FieldRef<"Secret", 'String'>
     readonly shadowValue: FieldRef<"Secret", 'String[]'>
-    readonly shadowStatus: FieldRef<"Secret", 'String'>
-    readonly shadowExpiresAt: FieldRef<"Secret", 'DateTime'>
   }
     
 
@@ -13107,30 +13072,6 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: SecretScalarFieldEnum | SecretScalarFieldEnum[]
-  }
-
-  /**
-   * Secret.accessRequests
-   */
-  export type Secret$accessRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the AccessRequest
-     */
-    select?: AccessRequestSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the AccessRequest
-     */
-    omit?: AccessRequestOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: AccessRequestInclude<ExtArgs> | null
-    where?: AccessRequestWhereInput
-    orderBy?: AccessRequestOrderByWithRelationInput | AccessRequestOrderByWithRelationInput[]
-    cursor?: AccessRequestWhereUniqueInput
-    take?: number
-    skip?: number
-    distinct?: AccessRequestScalarFieldEnum | AccessRequestScalarFieldEnum[]
   }
 
   /**
@@ -29537,7 +29478,6 @@ export namespace Prisma {
   export type AccessRequestMinAggregateOutputType = {
     id: string | null
     userId: string | null
-    secretId: string | null
     projectId: string | null
     reason: string | null
     duration: number | null
@@ -29552,7 +29492,6 @@ export namespace Prisma {
   export type AccessRequestMaxAggregateOutputType = {
     id: string | null
     userId: string | null
-    secretId: string | null
     projectId: string | null
     reason: string | null
     duration: number | null
@@ -29567,7 +29506,7 @@ export namespace Prisma {
   export type AccessRequestCountAggregateOutputType = {
     id: number
     userId: number
-    secretId: number
+    secretIds: number
     projectId: number
     reason: number
     duration: number
@@ -29592,7 +29531,6 @@ export namespace Prisma {
   export type AccessRequestMinAggregateInputType = {
     id?: true
     userId?: true
-    secretId?: true
     projectId?: true
     reason?: true
     duration?: true
@@ -29607,7 +29545,6 @@ export namespace Prisma {
   export type AccessRequestMaxAggregateInputType = {
     id?: true
     userId?: true
-    secretId?: true
     projectId?: true
     reason?: true
     duration?: true
@@ -29622,7 +29559,7 @@ export namespace Prisma {
   export type AccessRequestCountAggregateInputType = {
     id?: true
     userId?: true
-    secretId?: true
+    secretIds?: true
     projectId?: true
     reason?: true
     duration?: true
@@ -29724,7 +29661,7 @@ export namespace Prisma {
   export type AccessRequestGroupByOutputType = {
     id: string
     userId: string
-    secretId: string | null
+    secretIds: string[]
     projectId: string | null
     reason: string
     duration: number
@@ -29758,7 +29695,7 @@ export namespace Prisma {
   export type AccessRequestSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
     userId?: boolean
-    secretId?: boolean
+    secretIds?: boolean
     projectId?: boolean
     reason?: boolean
     duration?: boolean
@@ -29769,7 +29706,6 @@ export namespace Prisma {
     requestedAt?: boolean
     workspaceId?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
-    secret?: boolean | AccessRequest$secretArgs<ExtArgs>
     project?: boolean | AccessRequest$projectArgs<ExtArgs>
   }, ExtArgs["result"]["accessRequest"]>
 
@@ -29778,7 +29714,7 @@ export namespace Prisma {
   export type AccessRequestSelectScalar = {
     id?: boolean
     userId?: boolean
-    secretId?: boolean
+    secretIds?: boolean
     projectId?: boolean
     reason?: boolean
     duration?: boolean
@@ -29790,10 +29726,9 @@ export namespace Prisma {
     workspaceId?: boolean
   }
 
-  export type AccessRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "secretId" | "projectId" | "reason" | "duration" | "status" | "approvedBy" | "approvedAt" | "expiresAt" | "requestedAt" | "workspaceId", ExtArgs["result"]["accessRequest"]>
+  export type AccessRequestOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "userId" | "secretIds" | "projectId" | "reason" | "duration" | "status" | "approvedBy" | "approvedAt" | "expiresAt" | "requestedAt" | "workspaceId", ExtArgs["result"]["accessRequest"]>
   export type AccessRequestInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
-    secret?: boolean | AccessRequest$secretArgs<ExtArgs>
     project?: boolean | AccessRequest$projectArgs<ExtArgs>
   }
 
@@ -29801,13 +29736,12 @@ export namespace Prisma {
     name: "AccessRequest"
     objects: {
       user: Prisma.$UserPayload<ExtArgs>
-      secret: Prisma.$SecretPayload<ExtArgs> | null
       project: Prisma.$ProjectPayload<ExtArgs> | null
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
       userId: string
-      secretId: string | null
+      secretIds: string[]
       projectId: string | null
       reason: string
       duration: number
@@ -30181,7 +30115,6 @@ export namespace Prisma {
   export interface Prisma__AccessRequestClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
     readonly [Symbol.toStringTag]: "PrismaPromise"
     user<T extends UserDefaultArgs<ExtArgs> = {}>(args?: Subset<T, UserDefaultArgs<ExtArgs>>): Prisma__UserClient<$Result.GetResult<Prisma.$UserPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
-    secret<T extends AccessRequest$secretArgs<ExtArgs> = {}>(args?: Subset<T, AccessRequest$secretArgs<ExtArgs>>): Prisma__SecretClient<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     project<T extends AccessRequest$projectArgs<ExtArgs> = {}>(args?: Subset<T, AccessRequest$projectArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
@@ -30214,7 +30147,7 @@ export namespace Prisma {
   interface AccessRequestFieldRefs {
     readonly id: FieldRef<"AccessRequest", 'String'>
     readonly userId: FieldRef<"AccessRequest", 'String'>
-    readonly secretId: FieldRef<"AccessRequest", 'String'>
+    readonly secretIds: FieldRef<"AccessRequest", 'String[]'>
     readonly projectId: FieldRef<"AccessRequest", 'String'>
     readonly reason: FieldRef<"AccessRequest", 'String'>
     readonly duration: FieldRef<"AccessRequest", 'Int'>
@@ -30591,25 +30524,6 @@ export namespace Prisma {
      * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
      */
     options?: InputJsonValue
-  }
-
-  /**
-   * AccessRequest.secret
-   */
-  export type AccessRequest$secretArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
-    /**
-     * Select specific fields to fetch from the Secret
-     */
-    select?: SecretSelect<ExtArgs> | null
-    /**
-     * Omit specific fields from the Secret
-     */
-    omit?: SecretOmit<ExtArgs> | null
-    /**
-     * Choose, which related nodes to fetch as well
-     */
-    include?: SecretInclude<ExtArgs> | null
-    where?: SecretWhereInput
   }
 
   /**
@@ -42907,9 +42821,7 @@ export namespace Prisma {
     rotationPolicy: 'rotationPolicy',
     isReference: 'isReference',
     sourceSecretId: 'sourceSecretId',
-    shadowValue: 'shadowValue',
-    shadowStatus: 'shadowStatus',
-    shadowExpiresAt: 'shadowExpiresAt'
+    shadowValue: 'shadowValue'
   };
 
   export type SecretScalarFieldEnum = (typeof SecretScalarFieldEnum)[keyof typeof SecretScalarFieldEnum]
@@ -43150,7 +43062,7 @@ export namespace Prisma {
   export const AccessRequestScalarFieldEnum: {
     id: 'id',
     userId: 'userId',
-    secretId: 'secretId',
+    secretIds: 'secretIds',
     projectId: 'projectId',
     reason: 'reason',
     duration: 'duration',
@@ -44171,13 +44083,10 @@ export namespace Prisma {
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
-    shadowStatus?: StringNullableFilter<"Secret"> | string | null
-    shadowExpiresAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
     project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
     branch?: XOR<BranchNullableScalarRelationFilter, BranchWhereInput> | null
     sourceSecret?: XOR<SecretNullableScalarRelationFilter, SecretWhereInput> | null
     referencedBy?: SecretListRelationFilter
-    accessRequests?: AccessRequestListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
     shares?: SecretShareListRelationFilter
   }
@@ -44201,13 +44110,10 @@ export namespace Prisma {
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
-    shadowStatus?: SortOrder
-    shadowExpiresAt?: SortOrder
     project?: ProjectOrderByWithRelationInput
     branch?: BranchOrderByWithRelationInput
     sourceSecret?: SecretOrderByWithRelationInput
     referencedBy?: SecretOrderByRelationAggregateInput
-    accessRequests?: AccessRequestOrderByRelationAggregateInput
     rotationSchedule?: RotationScheduleOrderByWithRelationInput
     shares?: SecretShareOrderByRelationAggregateInput
   }
@@ -44234,13 +44140,10 @@ export namespace Prisma {
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
-    shadowStatus?: StringNullableFilter<"Secret"> | string | null
-    shadowExpiresAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
     project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
     branch?: XOR<BranchNullableScalarRelationFilter, BranchWhereInput> | null
     sourceSecret?: XOR<SecretNullableScalarRelationFilter, SecretWhereInput> | null
     referencedBy?: SecretListRelationFilter
-    accessRequests?: AccessRequestListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
     shares?: SecretShareListRelationFilter
   }, "id">
@@ -44264,8 +44167,6 @@ export namespace Prisma {
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
-    shadowStatus?: SortOrder
-    shadowExpiresAt?: SortOrder
     _count?: SecretCountOrderByAggregateInput
     _max?: SecretMaxOrderByAggregateInput
     _min?: SecretMinOrderByAggregateInput
@@ -44293,8 +44194,6 @@ export namespace Prisma {
     isReference?: BoolWithAggregatesFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableWithAggregatesFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
-    shadowStatus?: StringNullableWithAggregatesFilter<"Secret"> | string | null
-    shadowExpiresAt?: DateTimeNullableWithAggregatesFilter<"Secret"> | Date | string | null
   }
 
   export type SecretShareWhereInput = {
@@ -45477,7 +45376,7 @@ export namespace Prisma {
     NOT?: AccessRequestWhereInput | AccessRequestWhereInput[]
     id?: StringFilter<"AccessRequest"> | string
     userId?: StringFilter<"AccessRequest"> | string
-    secretId?: StringNullableFilter<"AccessRequest"> | string | null
+    secretIds?: StringNullableListFilter<"AccessRequest">
     projectId?: StringNullableFilter<"AccessRequest"> | string | null
     reason?: StringFilter<"AccessRequest"> | string
     duration?: IntFilter<"AccessRequest"> | number
@@ -45488,14 +45387,13 @@ export namespace Prisma {
     requestedAt?: DateTimeFilter<"AccessRequest"> | Date | string
     workspaceId?: StringNullableFilter<"AccessRequest"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    secret?: XOR<SecretNullableScalarRelationFilter, SecretWhereInput> | null
     project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
   }
 
   export type AccessRequestOrderByWithRelationInput = {
     id?: SortOrder
     userId?: SortOrder
-    secretId?: SortOrder
+    secretIds?: SortOrder
     projectId?: SortOrder
     reason?: SortOrder
     duration?: SortOrder
@@ -45506,7 +45404,6 @@ export namespace Prisma {
     requestedAt?: SortOrder
     workspaceId?: SortOrder
     user?: UserOrderByWithRelationInput
-    secret?: SecretOrderByWithRelationInput
     project?: ProjectOrderByWithRelationInput
   }
 
@@ -45516,7 +45413,7 @@ export namespace Prisma {
     OR?: AccessRequestWhereInput[]
     NOT?: AccessRequestWhereInput | AccessRequestWhereInput[]
     userId?: StringFilter<"AccessRequest"> | string
-    secretId?: StringNullableFilter<"AccessRequest"> | string | null
+    secretIds?: StringNullableListFilter<"AccessRequest">
     projectId?: StringNullableFilter<"AccessRequest"> | string | null
     reason?: StringFilter<"AccessRequest"> | string
     duration?: IntFilter<"AccessRequest"> | number
@@ -45527,14 +45424,13 @@ export namespace Prisma {
     requestedAt?: DateTimeFilter<"AccessRequest"> | Date | string
     workspaceId?: StringNullableFilter<"AccessRequest"> | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
-    secret?: XOR<SecretNullableScalarRelationFilter, SecretWhereInput> | null
     project?: XOR<ProjectNullableScalarRelationFilter, ProjectWhereInput> | null
   }, "id">
 
   export type AccessRequestOrderByWithAggregationInput = {
     id?: SortOrder
     userId?: SortOrder
-    secretId?: SortOrder
+    secretIds?: SortOrder
     projectId?: SortOrder
     reason?: SortOrder
     duration?: SortOrder
@@ -45557,7 +45453,7 @@ export namespace Prisma {
     NOT?: AccessRequestScalarWhereWithAggregatesInput | AccessRequestScalarWhereWithAggregatesInput[]
     id?: StringWithAggregatesFilter<"AccessRequest"> | string
     userId?: StringWithAggregatesFilter<"AccessRequest"> | string
-    secretId?: StringNullableWithAggregatesFilter<"AccessRequest"> | string | null
+    secretIds?: StringNullableListFilter<"AccessRequest">
     projectId?: StringNullableWithAggregatesFilter<"AccessRequest"> | string | null
     reason?: StringWithAggregatesFilter<"AccessRequest"> | string
     duration?: IntWithAggregatesFilter<"AccessRequest"> | number
@@ -47234,13 +47130,10 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     branch?: BranchCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
@@ -47264,10 +47157,7 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
@@ -47287,13 +47177,10 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
@@ -47316,10 +47203,7 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
@@ -47343,8 +47227,6 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
   }
 
   export type SecretUpdateManyMutationInput = {
@@ -47362,8 +47244,6 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type SecretUncheckedUpdateManyInput = {
@@ -47384,8 +47264,6 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type SecretShareCreateInput = {
@@ -48613,6 +48491,7 @@ export namespace Prisma {
 
   export type AccessRequestCreateInput = {
     id?: string
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     reason: string
     duration: number
     status?: string
@@ -48622,14 +48501,13 @@ export namespace Prisma {
     requestedAt?: Date | string
     workspaceId?: string | null
     user: UserCreateNestedOneWithoutAccessRequestsInput
-    secret?: SecretCreateNestedOneWithoutAccessRequestsInput
     project?: ProjectCreateNestedOneWithoutAccessRequestsInput
   }
 
   export type AccessRequestUncheckedCreateInput = {
     id?: string
     userId: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     projectId?: string | null
     reason: string
     duration: number
@@ -48642,6 +48520,7 @@ export namespace Prisma {
   }
 
   export type AccessRequestUpdateInput = {
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -48651,13 +48530,12 @@ export namespace Prisma {
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutAccessRequestsNestedInput
-    secret?: SecretUpdateOneWithoutAccessRequestsNestedInput
     project?: ProjectUpdateOneWithoutAccessRequestsNestedInput
   }
 
   export type AccessRequestUncheckedUpdateInput = {
     userId?: StringFieldUpdateOperationsInput | string
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
@@ -48672,7 +48550,7 @@ export namespace Prisma {
   export type AccessRequestCreateManyInput = {
     id?: string
     userId: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     projectId?: string | null
     reason: string
     duration: number
@@ -48685,6 +48563,7 @@ export namespace Prisma {
   }
 
   export type AccessRequestUpdateManyMutationInput = {
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -48697,7 +48576,7 @@ export namespace Prisma {
 
   export type AccessRequestUncheckedUpdateManyInput = {
     userId?: StringFieldUpdateOperationsInput | string
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
@@ -50364,8 +50243,6 @@ export namespace Prisma {
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
-    shadowStatus?: SortOrder
-    shadowExpiresAt?: SortOrder
   }
 
   export type SecretMaxOrderByAggregateInput = {
@@ -50383,8 +50260,6 @@ export namespace Prisma {
     rotationPolicy?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
-    shadowStatus?: SortOrder
-    shadowExpiresAt?: SortOrder
   }
 
   export type SecretMinOrderByAggregateInput = {
@@ -50402,8 +50277,6 @@ export namespace Prisma {
     rotationPolicy?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
-    shadowStatus?: SortOrder
-    shadowExpiresAt?: SortOrder
   }
   export type JsonWithAggregatesFilter<$PrismaModel = never> =
     | PatchUndefined<
@@ -51050,7 +50923,7 @@ export namespace Prisma {
   export type AccessRequestCountOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    secretId?: SortOrder
+    secretIds?: SortOrder
     projectId?: SortOrder
     reason?: SortOrder
     duration?: SortOrder
@@ -51069,7 +50942,6 @@ export namespace Prisma {
   export type AccessRequestMaxOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    secretId?: SortOrder
     projectId?: SortOrder
     reason?: SortOrder
     duration?: SortOrder
@@ -51084,7 +50956,6 @@ export namespace Prisma {
   export type AccessRequestMinOrderByAggregateInput = {
     id?: SortOrder
     userId?: SortOrder
-    secretId?: SortOrder
     projectId?: SortOrder
     reason?: SortOrder
     duration?: SortOrder
@@ -52784,13 +52655,6 @@ export namespace Prisma {
     connect?: SecretWhereUniqueInput | SecretWhereUniqueInput[]
   }
 
-  export type AccessRequestCreateNestedManyWithoutSecretInput = {
-    create?: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput> | AccessRequestCreateWithoutSecretInput[] | AccessRequestUncheckedCreateWithoutSecretInput[]
-    connectOrCreate?: AccessRequestCreateOrConnectWithoutSecretInput | AccessRequestCreateOrConnectWithoutSecretInput[]
-    createMany?: AccessRequestCreateManySecretInputEnvelope
-    connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-  }
-
   export type RotationScheduleCreateNestedOneWithoutSecretInput = {
     create?: XOR<RotationScheduleCreateWithoutSecretInput, RotationScheduleUncheckedCreateWithoutSecretInput>
     connectOrCreate?: RotationScheduleCreateOrConnectWithoutSecretInput
@@ -52809,13 +52673,6 @@ export namespace Prisma {
     connectOrCreate?: SecretCreateOrConnectWithoutSourceSecretInput | SecretCreateOrConnectWithoutSourceSecretInput[]
     createMany?: SecretCreateManySourceSecretInputEnvelope
     connect?: SecretWhereUniqueInput | SecretWhereUniqueInput[]
-  }
-
-  export type AccessRequestUncheckedCreateNestedManyWithoutSecretInput = {
-    create?: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput> | AccessRequestCreateWithoutSecretInput[] | AccessRequestUncheckedCreateWithoutSecretInput[]
-    connectOrCreate?: AccessRequestCreateOrConnectWithoutSecretInput | AccessRequestCreateOrConnectWithoutSecretInput[]
-    createMany?: AccessRequestCreateManySecretInputEnvelope
-    connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
   }
 
   export type RotationScheduleUncheckedCreateNestedOneWithoutSecretInput = {
@@ -52888,20 +52745,6 @@ export namespace Prisma {
     deleteMany?: SecretScalarWhereInput | SecretScalarWhereInput[]
   }
 
-  export type AccessRequestUpdateManyWithoutSecretNestedInput = {
-    create?: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput> | AccessRequestCreateWithoutSecretInput[] | AccessRequestUncheckedCreateWithoutSecretInput[]
-    connectOrCreate?: AccessRequestCreateOrConnectWithoutSecretInput | AccessRequestCreateOrConnectWithoutSecretInput[]
-    upsert?: AccessRequestUpsertWithWhereUniqueWithoutSecretInput | AccessRequestUpsertWithWhereUniqueWithoutSecretInput[]
-    createMany?: AccessRequestCreateManySecretInputEnvelope
-    set?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    disconnect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    delete?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    update?: AccessRequestUpdateWithWhereUniqueWithoutSecretInput | AccessRequestUpdateWithWhereUniqueWithoutSecretInput[]
-    updateMany?: AccessRequestUpdateManyWithWhereWithoutSecretInput | AccessRequestUpdateManyWithWhereWithoutSecretInput[]
-    deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
-  }
-
   export type RotationScheduleUpdateOneWithoutSecretNestedInput = {
     create?: XOR<RotationScheduleCreateWithoutSecretInput, RotationScheduleUncheckedCreateWithoutSecretInput>
     connectOrCreate?: RotationScheduleCreateOrConnectWithoutSecretInput
@@ -52938,20 +52781,6 @@ export namespace Prisma {
     update?: SecretUpdateWithWhereUniqueWithoutSourceSecretInput | SecretUpdateWithWhereUniqueWithoutSourceSecretInput[]
     updateMany?: SecretUpdateManyWithWhereWithoutSourceSecretInput | SecretUpdateManyWithWhereWithoutSourceSecretInput[]
     deleteMany?: SecretScalarWhereInput | SecretScalarWhereInput[]
-  }
-
-  export type AccessRequestUncheckedUpdateManyWithoutSecretNestedInput = {
-    create?: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput> | AccessRequestCreateWithoutSecretInput[] | AccessRequestUncheckedCreateWithoutSecretInput[]
-    connectOrCreate?: AccessRequestCreateOrConnectWithoutSecretInput | AccessRequestCreateOrConnectWithoutSecretInput[]
-    upsert?: AccessRequestUpsertWithWhereUniqueWithoutSecretInput | AccessRequestUpsertWithWhereUniqueWithoutSecretInput[]
-    createMany?: AccessRequestCreateManySecretInputEnvelope
-    set?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    disconnect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    delete?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
-    update?: AccessRequestUpdateWithWhereUniqueWithoutSecretInput | AccessRequestUpdateWithWhereUniqueWithoutSecretInput[]
-    updateMany?: AccessRequestUpdateManyWithWhereWithoutSecretInput | AccessRequestUpdateManyWithWhereWithoutSecretInput[]
-    deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
   }
 
   export type RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput = {
@@ -53333,16 +53162,14 @@ export namespace Prisma {
     update?: XOR<XOR<ServiceAccountUpdateToOneWithWhereWithoutApiKeysInput, ServiceAccountUpdateWithoutApiKeysInput>, ServiceAccountUncheckedUpdateWithoutApiKeysInput>
   }
 
+  export type AccessRequestCreatesecretIdsInput = {
+    set: string[]
+  }
+
   export type UserCreateNestedOneWithoutAccessRequestsInput = {
     create?: XOR<UserCreateWithoutAccessRequestsInput, UserUncheckedCreateWithoutAccessRequestsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccessRequestsInput
     connect?: UserWhereUniqueInput
-  }
-
-  export type SecretCreateNestedOneWithoutAccessRequestsInput = {
-    create?: XOR<SecretCreateWithoutAccessRequestsInput, SecretUncheckedCreateWithoutAccessRequestsInput>
-    connectOrCreate?: SecretCreateOrConnectWithoutAccessRequestsInput
-    connect?: SecretWhereUniqueInput
   }
 
   export type ProjectCreateNestedOneWithoutAccessRequestsInput = {
@@ -53351,22 +53178,17 @@ export namespace Prisma {
     connect?: ProjectWhereUniqueInput
   }
 
+  export type AccessRequestUpdatesecretIdsInput = {
+    set?: string[]
+    push?: string | string[]
+  }
+
   export type UserUpdateOneRequiredWithoutAccessRequestsNestedInput = {
     create?: XOR<UserCreateWithoutAccessRequestsInput, UserUncheckedCreateWithoutAccessRequestsInput>
     connectOrCreate?: UserCreateOrConnectWithoutAccessRequestsInput
     upsert?: UserUpsertWithoutAccessRequestsInput
     connect?: UserWhereUniqueInput
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutAccessRequestsInput, UserUpdateWithoutAccessRequestsInput>, UserUncheckedUpdateWithoutAccessRequestsInput>
-  }
-
-  export type SecretUpdateOneWithoutAccessRequestsNestedInput = {
-    create?: XOR<SecretCreateWithoutAccessRequestsInput, SecretUncheckedCreateWithoutAccessRequestsInput>
-    connectOrCreate?: SecretCreateOrConnectWithoutAccessRequestsInput
-    upsert?: SecretUpsertWithoutAccessRequestsInput
-    disconnect?: boolean
-    delete?: SecretWhereInput | boolean
-    connect?: SecretWhereUniqueInput
-    update?: XOR<XOR<SecretUpdateToOneWithWhereWithoutAccessRequestsInput, SecretUpdateWithoutAccessRequestsInput>, SecretUncheckedUpdateWithoutAccessRequestsInput>
   }
 
   export type ProjectUpdateOneWithoutAccessRequestsNestedInput = {
@@ -54298,6 +54120,7 @@ export namespace Prisma {
 
   export type AccessRequestCreateWithoutUserInput = {
     id?: string
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     reason: string
     duration: number
     status?: string
@@ -54306,13 +54129,12 @@ export namespace Prisma {
     expiresAt?: Date | string | null
     requestedAt?: Date | string
     workspaceId?: string | null
-    secret?: SecretCreateNestedOneWithoutAccessRequestsInput
     project?: ProjectCreateNestedOneWithoutAccessRequestsInput
   }
 
   export type AccessRequestUncheckedCreateWithoutUserInput = {
     id?: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     projectId?: string | null
     reason: string
     duration: number
@@ -54835,7 +54657,7 @@ export namespace Prisma {
     NOT?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
     id?: StringFilter<"AccessRequest"> | string
     userId?: StringFilter<"AccessRequest"> | string
-    secretId?: StringNullableFilter<"AccessRequest"> | string | null
+    secretIds?: StringNullableListFilter<"AccessRequest">
     projectId?: StringNullableFilter<"AccessRequest"> | string | null
     reason?: StringFilter<"AccessRequest"> | string
     duration?: IntFilter<"AccessRequest"> | number
@@ -55578,12 +55400,9 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     branch?: BranchCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
@@ -55606,10 +55425,7 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
@@ -55758,6 +55574,7 @@ export namespace Prisma {
 
   export type AccessRequestCreateWithoutProjectInput = {
     id?: string
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     reason: string
     duration: number
     status?: string
@@ -55767,13 +55584,12 @@ export namespace Prisma {
     requestedAt?: Date | string
     workspaceId?: string | null
     user: UserCreateNestedOneWithoutAccessRequestsInput
-    secret?: SecretCreateNestedOneWithoutAccessRequestsInput
   }
 
   export type AccessRequestUncheckedCreateWithoutProjectInput = {
     id?: string
     userId: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     reason: string
     duration: number
     status?: string
@@ -55979,8 +55795,6 @@ export namespace Prisma {
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
-    shadowStatus?: StringNullableFilter<"Secret"> | string | null
-    shadowExpiresAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
   }
 
   export type TeamProjectUpsertWithWhereUniqueWithoutProjectInput = {
@@ -56194,12 +56008,9 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
@@ -56222,10 +56033,7 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
@@ -56428,12 +56236,9 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     branch?: BranchCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
@@ -56457,9 +56262,6 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
@@ -56485,12 +56287,9 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     branch?: BranchCreateNestedOneWithoutSecretsInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
@@ -56513,10 +56312,7 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
@@ -56528,43 +56324,6 @@ export namespace Prisma {
 
   export type SecretCreateManySourceSecretInputEnvelope = {
     data: SecretCreateManySourceSecretInput | SecretCreateManySourceSecretInput[]
-  }
-
-  export type AccessRequestCreateWithoutSecretInput = {
-    id?: string
-    reason: string
-    duration: number
-    status?: string
-    approvedBy?: string | null
-    approvedAt?: Date | string | null
-    expiresAt?: Date | string | null
-    requestedAt?: Date | string
-    workspaceId?: string | null
-    user: UserCreateNestedOneWithoutAccessRequestsInput
-    project?: ProjectCreateNestedOneWithoutAccessRequestsInput
-  }
-
-  export type AccessRequestUncheckedCreateWithoutSecretInput = {
-    id?: string
-    userId: string
-    projectId?: string | null
-    reason: string
-    duration: number
-    status?: string
-    approvedBy?: string | null
-    approvedAt?: Date | string | null
-    expiresAt?: Date | string | null
-    requestedAt?: Date | string
-    workspaceId?: string | null
-  }
-
-  export type AccessRequestCreateOrConnectWithoutSecretInput = {
-    where: AccessRequestWhereUniqueInput
-    create: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput>
-  }
-
-  export type AccessRequestCreateManySecretInputEnvelope = {
-    data: AccessRequestCreateManySecretInput | AccessRequestCreateManySecretInput[]
   }
 
   export type RotationScheduleCreateWithoutSecretInput = {
@@ -56761,12 +56520,9 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
@@ -56789,9 +56545,6 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
@@ -56810,22 +56563,6 @@ export namespace Prisma {
   export type SecretUpdateManyWithWhereWithoutSourceSecretInput = {
     where: SecretScalarWhereInput
     data: XOR<SecretUpdateManyMutationInput, SecretUncheckedUpdateManyWithoutSourceSecretInput>
-  }
-
-  export type AccessRequestUpsertWithWhereUniqueWithoutSecretInput = {
-    where: AccessRequestWhereUniqueInput
-    update: XOR<AccessRequestUpdateWithoutSecretInput, AccessRequestUncheckedUpdateWithoutSecretInput>
-    create: XOR<AccessRequestCreateWithoutSecretInput, AccessRequestUncheckedCreateWithoutSecretInput>
-  }
-
-  export type AccessRequestUpdateWithWhereUniqueWithoutSecretInput = {
-    where: AccessRequestWhereUniqueInput
-    data: XOR<AccessRequestUpdateWithoutSecretInput, AccessRequestUncheckedUpdateWithoutSecretInput>
-  }
-
-  export type AccessRequestUpdateManyWithWhereWithoutSecretInput = {
-    where: AccessRequestScalarWhereInput
-    data: XOR<AccessRequestUpdateManyMutationInput, AccessRequestUncheckedUpdateManyWithoutSecretInput>
   }
 
   export type RotationScheduleUpsertWithoutSecretInput = {
@@ -56917,13 +56654,10 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     branch?: BranchCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
   }
 
@@ -56946,10 +56680,7 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
   }
 
@@ -56984,13 +56715,10 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
   }
 
@@ -57012,10 +56740,7 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
   }
 
@@ -57035,13 +56760,10 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     project: ProjectCreateNestedOneWithoutSecretsInput
     branch?: BranchCreateNestedOneWithoutSecretsInput
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestCreateNestedManyWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
   }
 
@@ -57064,10 +56786,7 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
   }
 
@@ -57127,13 +56846,10 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
 
@@ -57155,10 +56871,7 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
@@ -58841,63 +58554,6 @@ export namespace Prisma {
     create: XOR<UserCreateWithoutAccessRequestsInput, UserUncheckedCreateWithoutAccessRequestsInput>
   }
 
-  export type SecretCreateWithoutAccessRequestsInput = {
-    id?: string
-    key: string
-    value?: SecretCreatevalueInput | string[]
-    description: string
-    environmentType: string
-    version: string
-    type: string
-    history: InputJsonValue
-    lastUpdated?: Date | string
-    updatedBy: string
-    permission?: SecretCreatepermissionInput | string[]
-    expiryDate?: Date | string | null
-    rotationPolicy: string
-    isReference?: boolean
-    shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
-    project: ProjectCreateNestedOneWithoutSecretsInput
-    branch?: BranchCreateNestedOneWithoutSecretsInput
-    sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
-    referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
-    rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
-    shares?: SecretShareCreateNestedManyWithoutSecretInput
-  }
-
-  export type SecretUncheckedCreateWithoutAccessRequestsInput = {
-    id?: string
-    key: string
-    value?: SecretCreatevalueInput | string[]
-    description: string
-    environmentType: string
-    version: string
-    projectId: string
-    branchId?: string | null
-    type: string
-    history: InputJsonValue
-    lastUpdated?: Date | string
-    updatedBy: string
-    permission?: SecretCreatepermissionInput | string[]
-    expiryDate?: Date | string | null
-    rotationPolicy: string
-    isReference?: boolean
-    sourceSecretId?: string | null
-    shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
-    referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
-    rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
-    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
-  }
-
-  export type SecretCreateOrConnectWithoutAccessRequestsInput = {
-    where: SecretWhereUniqueInput
-    create: XOR<SecretCreateWithoutAccessRequestsInput, SecretUncheckedCreateWithoutAccessRequestsInput>
-  }
-
   export type ProjectCreateWithoutAccessRequestsInput = {
     id?: string
     name: string
@@ -59040,67 +58696,6 @@ export namespace Prisma {
     integrations?: IntegrationUncheckedUpdateManyWithoutUserNestedInput
     reviewsReceived?: AccessReviewUncheckedUpdateManyWithoutUserNestedInput
     reviewsGiven?: AccessReviewUncheckedUpdateManyWithoutReviewerNestedInput
-  }
-
-  export type SecretUpsertWithoutAccessRequestsInput = {
-    update: XOR<SecretUpdateWithoutAccessRequestsInput, SecretUncheckedUpdateWithoutAccessRequestsInput>
-    create: XOR<SecretCreateWithoutAccessRequestsInput, SecretUncheckedCreateWithoutAccessRequestsInput>
-    where?: SecretWhereInput
-  }
-
-  export type SecretUpdateToOneWithWhereWithoutAccessRequestsInput = {
-    where?: SecretWhereInput
-    data: XOR<SecretUpdateWithoutAccessRequestsInput, SecretUncheckedUpdateWithoutAccessRequestsInput>
-  }
-
-  export type SecretUpdateWithoutAccessRequestsInput = {
-    key?: StringFieldUpdateOperationsInput | string
-    value?: SecretUpdatevalueInput | string[]
-    description?: StringFieldUpdateOperationsInput | string
-    environmentType?: StringFieldUpdateOperationsInput | string
-    version?: StringFieldUpdateOperationsInput | string
-    type?: StringFieldUpdateOperationsInput | string
-    history?: InputJsonValue | InputJsonValue
-    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedBy?: StringFieldUpdateOperationsInput | string
-    permission?: SecretUpdatepermissionInput | string[]
-    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rotationPolicy?: StringFieldUpdateOperationsInput | string
-    isReference?: BoolFieldUpdateOperationsInput | boolean
-    shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
-    branch?: BranchUpdateOneWithoutSecretsNestedInput
-    sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
-    referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
-    shares?: SecretShareUpdateManyWithoutSecretNestedInput
-  }
-
-  export type SecretUncheckedUpdateWithoutAccessRequestsInput = {
-    key?: StringFieldUpdateOperationsInput | string
-    value?: SecretUpdatevalueInput | string[]
-    description?: StringFieldUpdateOperationsInput | string
-    environmentType?: StringFieldUpdateOperationsInput | string
-    version?: StringFieldUpdateOperationsInput | string
-    projectId?: StringFieldUpdateOperationsInput | string
-    branchId?: NullableStringFieldUpdateOperationsInput | string | null
-    type?: StringFieldUpdateOperationsInput | string
-    history?: InputJsonValue | InputJsonValue
-    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
-    updatedBy?: StringFieldUpdateOperationsInput | string
-    permission?: SecretUpdatepermissionInput | string[]
-    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    rotationPolicy?: StringFieldUpdateOperationsInput | string
-    isReference?: BoolFieldUpdateOperationsInput | boolean
-    sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
-    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type ProjectUpsertWithoutAccessRequestsInput = {
@@ -60904,7 +60499,7 @@ export namespace Prisma {
 
   export type AccessRequestCreateManyUserInput = {
     id?: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     projectId?: string | null
     reason: string
     duration: number
@@ -61281,6 +60876,7 @@ export namespace Prisma {
   }
 
   export type AccessRequestUpdateWithoutUserInput = {
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -61289,12 +60885,11 @@ export namespace Prisma {
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
-    secret?: SecretUpdateOneWithoutAccessRequestsNestedInput
     project?: ProjectUpdateOneWithoutAccessRequestsNestedInput
   }
 
   export type AccessRequestUncheckedUpdateWithoutUserInput = {
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
@@ -61307,7 +60902,7 @@ export namespace Prisma {
   }
 
   export type AccessRequestUncheckedUpdateManyWithoutUserInput = {
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     projectId?: NullableStringFieldUpdateOperationsInput | string | null
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
@@ -61627,8 +61222,6 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
   }
 
   export type TeamProjectCreateManyProjectInput = {
@@ -61677,7 +61270,7 @@ export namespace Prisma {
   export type AccessRequestCreateManyProjectInput = {
     id?: string
     userId: string
-    secretId?: string | null
+    secretIds?: AccessRequestCreatesecretIdsInput | string[]
     reason: string
     duration: number
     status?: string
@@ -61732,12 +61325,9 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
@@ -61759,10 +61349,7 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
@@ -61784,8 +61371,6 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type TeamProjectUpdateWithoutProjectInput = {
@@ -61905,6 +61490,7 @@ export namespace Prisma {
   }
 
   export type AccessRequestUpdateWithoutProjectInput = {
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -61914,12 +61500,11 @@ export namespace Prisma {
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
     user?: UserUpdateOneRequiredWithoutAccessRequestsNestedInput
-    secret?: SecretUpdateOneWithoutAccessRequestsNestedInput
   }
 
   export type AccessRequestUncheckedUpdateWithoutProjectInput = {
     userId?: StringFieldUpdateOperationsInput | string
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -61932,7 +61517,7 @@ export namespace Prisma {
 
   export type AccessRequestUncheckedUpdateManyWithoutProjectInput = {
     userId?: StringFieldUpdateOperationsInput | string
-    secretId?: NullableStringFieldUpdateOperationsInput | string | null
+    secretIds?: AccessRequestUpdatesecretIdsInput | string[]
     reason?: StringFieldUpdateOperationsInput | string
     duration?: IntFieldUpdateOperationsInput | number
     status?: StringFieldUpdateOperationsInput | string
@@ -61961,8 +61546,6 @@ export namespace Prisma {
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
   }
 
   export type SecretUpdateWithoutBranchInput = {
@@ -61980,12 +61563,9 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
@@ -62007,10 +61587,7 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
@@ -62032,8 +61609,6 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type SecretCreateManySourceSecretInput = {
@@ -62054,22 +61629,6 @@ export namespace Prisma {
     rotationPolicy: string
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
-    shadowStatus?: string | null
-    shadowExpiresAt?: Date | string | null
-  }
-
-  export type AccessRequestCreateManySecretInput = {
-    id?: string
-    userId: string
-    projectId?: string | null
-    reason: string
-    duration: number
-    status?: string
-    approvedBy?: string | null
-    approvedAt?: Date | string | null
-    expiresAt?: Date | string | null
-    requestedAt?: Date | string
-    workspaceId?: string | null
   }
 
   export type SecretShareCreateManySecretInput = {
@@ -62099,12 +61658,9 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
     branch?: BranchUpdateOneWithoutSecretsNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
   }
@@ -62126,10 +61682,7 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
-    accessRequests?: AccessRequestUncheckedUpdateManyWithoutSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
   }
@@ -62151,47 +61704,6 @@ export namespace Prisma {
     rotationPolicy?: StringFieldUpdateOperationsInput | string
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
-    shadowStatus?: NullableStringFieldUpdateOperationsInput | string | null
-    shadowExpiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-  }
-
-  export type AccessRequestUpdateWithoutSecretInput = {
-    reason?: StringFieldUpdateOperationsInput | string
-    duration?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
-    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
-    user?: UserUpdateOneRequiredWithoutAccessRequestsNestedInput
-    project?: ProjectUpdateOneWithoutAccessRequestsNestedInput
-  }
-
-  export type AccessRequestUncheckedUpdateWithoutSecretInput = {
-    userId?: StringFieldUpdateOperationsInput | string
-    projectId?: NullableStringFieldUpdateOperationsInput | string | null
-    reason?: StringFieldUpdateOperationsInput | string
-    duration?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
-    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
-  }
-
-  export type AccessRequestUncheckedUpdateManyWithoutSecretInput = {
-    userId?: StringFieldUpdateOperationsInput | string
-    projectId?: NullableStringFieldUpdateOperationsInput | string | null
-    reason?: StringFieldUpdateOperationsInput | string
-    duration?: IntFieldUpdateOperationsInput | number
-    status?: StringFieldUpdateOperationsInput | string
-    approvedBy?: NullableStringFieldUpdateOperationsInput | string | null
-    approvedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
-    requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
-    workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
   export type SecretShareUpdateWithoutSecretInput = {

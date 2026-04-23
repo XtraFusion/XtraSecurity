@@ -85,6 +85,11 @@ export function canRemoveMember(currentRole: string | null, targetRole: string) 
 }
 
 export async function getUserWorkspaceRole(userId: string, workspaceId: string) {
+  // Validate MongoDB ObjectID format (24 hex characters)
+  if (!workspaceId || !/^[0-9a-fA-F]{24}$/.test(workspaceId)) {
+    return null;
+  }
+
   // Check ownership
   const workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId },

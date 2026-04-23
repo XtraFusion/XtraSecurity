@@ -25,7 +25,32 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const deleteMember = await prisma.teamUser.deleteMany({ where: { id: memberId } });
+    const deleteMember = await prisma.teamUser.delete({ where: { id: memberId } });
+
+    // Revoke JIT Access Requests for this user in the workspace
+    // This ensures that removal from a team immediately cuts off temporary access.
+    try {
+        const workspace = await prisma.team.findUnique({
+            where: { id: teamUser.teamId },
+            select: { workspaceId: true }
+        });
+
+        if (workspace?.workspaceId) {
+            await prisma.accessRequest.updateMany({
+                where: {
+                    userId: teamUser.userId,
+                    workspaceId: workspace.workspaceId,
+                    status: "approved",
+                    expiresAt: { gt: new Date() }
+                },
+                data: {
+                    status: "revoked"
+                }
+            });
+        }
+    } catch (revokeErr) {
+        console.error("Failed to revoke JIT access during member removal:", revokeErr);
+    }
 
     // Audit log
     try {
@@ -35,7 +60,11 @@ export async function DELETE(req: Request) {
           action: "member_removed",
           entity: "team_user",
           entityId: memberId,
-          changes: { removedMemberId: memberId },
+          changes: { 
+              removedMemberId: memberId,
+              removedUserId: teamUser.userId,
+              teamId: teamUser.teamId
+          },
         },
       });
     } catch (auditErr) {
@@ -44,27 +73,28 @@ export async function DELETE(req: Request) {
 
     // Notification
     try {
-      if (teamUser) {
-        const targetUser = await prisma.user.findUnique({ where: { id: teamUser.userId } });
-        if (targetUser) {
-          await prisma.notification.create({
-            data: {
-              userId: targetUser.id,
-              userEmail: targetUser.email || "",
-              taskTitle: "Removed from team",
-              description: "You have been removed from a team",
-              message: `You were removed from the team by ${session.user.email}`,
-              status: "unread",
-              read: false,
-            },
-          });
-          await dispatchNotification({
-            title: "Team Member Removed",
-            message: `${targetUser.email} was removed from the team`,
-            type: "error",
-            fields: [{ label: "Removed by", value: session.user.email || "" }],
-          });
-        }
+      const targetUser = await prisma.user.findUnique({ where: { id: teamUser.userId } });
+      if (targetUser) {
+        await prisma.notification.create({
+          data: {
+            userId: targetUser.id,
+            userEmail: targetUser.email || "",
+            taskTitle: "Removed from team",
+            description: `You have been removed from the team by ${session.user.email}`,
+            message: `Your access to projects in this team (including active JIT windows) has been revoked.`,
+            status: "unread",
+            read: false,
+          },
+        });
+        await dispatchNotification({
+          title: "Team Member Removed",
+          message: `${targetUser.email} was removed from the team`,
+          type: "error",
+          fields: [
+              { label: "Removed by", value: session.user.email || "" },
+              { label: "Revoked Access", value: "JIT Sessions were invalidated" }
+          ],
+        });
       }
     } catch (notifErr) {
       console.error("Failed to create notification for member removal:", notifErr);

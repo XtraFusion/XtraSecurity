@@ -221,10 +221,6 @@ model Secret {
 
   // Shadow Rotation
   shadowValue     String[]
-  shadowStatus    String?
-  shadowExpiresAt DateTime?
-
-  accessRequests AccessRequest[]
   rotationSchedule RotationSchedule?
   shares         SecretShare[]
 }
@@ -466,8 +462,7 @@ model AccessRequest {
   id        String  @id @default(auto()) @map("_id") @db.ObjectId
   userId    String  @db.ObjectId
   user      User    @relation(fields: [userId], references: [id])
-  secretId  String? @db.ObjectId
-  secret    Secret? @relation(fields: [secretId], references: [id])
+  secretIds String[] @db.ObjectId // CHANGED to array for granular multi-secret access
   projectId String? @db.ObjectId // Optional: Request scope (Project level)
   project   Project? @relation(fields: [projectId], references: [id])
 
