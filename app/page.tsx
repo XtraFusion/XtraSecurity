@@ -1646,7 +1646,6 @@ function Footer() {
 // ─────────────────────────────────────────────
 
 export default function Page() {
-  const { theme, toggle } = useTheme();
 
   return (
     <div
@@ -1673,7 +1672,7 @@ export default function Page() {
         }
       `}</style>
 
-      <Navbar theme={theme} toggleTheme={toggle} />
+      <Navbar />
       <HeroSection />
       <StatsSection />
       <FeaturesSection />

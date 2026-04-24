@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Key, Clock, Eye, AlertTriangle, CheckCircle, Shield } from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SharePage({ params }: { params: { token: string } }) {
     const [state, setState] = useState<"loading" | "success" | "error">("loading");
@@ -48,9 +49,28 @@ export default function SharePage({ params }: { params: { token: string } }) {
                 {/* Card */}
                 <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-2xl">
                     {state === "loading" && (
-                        <div className="flex flex-col items-center py-8 gap-3">
-                            <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent" />
-                            <p className="text-slate-400 text-sm">Loading secret...</p>
+                        <div className="space-y-5 py-2">
+                            <div className="flex items-start justify-between gap-3">
+                                <div className="flex items-center gap-3">
+                                    <Skeleton className="h-10 w-10 rounded-lg shrink-0 bg-slate-800" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-6 w-32 bg-slate-800" />
+                                        <Skeleton className="h-3 w-48 bg-slate-800" />
+                                    </div>
+                                </div>
+                                <Skeleton className="h-6 w-20 rounded-full bg-slate-800" />
+                            </div>
+                            <div className="space-y-3 mt-6">
+                                <div className="flex items-center justify-between">
+                                    <Skeleton className="h-3 w-24 bg-slate-800" />
+                                    <Skeleton className="h-3 w-12 bg-slate-800" />
+                                </div>
+                                <Skeleton className="h-16 w-full rounded-xl bg-slate-800" />
+                            </div>
+                            <div className="flex items-center gap-4 border-t border-slate-800 pt-5 mt-5">
+                                <Skeleton className="h-4 w-24 bg-slate-800" />
+                                <Skeleton className="h-4 w-32 bg-slate-800" />
+                            </div>
                         </div>
                     )}
 

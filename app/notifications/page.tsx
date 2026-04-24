@@ -75,6 +75,7 @@ import { DashboardLayout } from "@/components/dashboard-layout";
 import { useSession } from "next-auth/react";
 import apiClient from "@/lib/axios";
 import { useGlobalContext } from "@/hooks/useUser";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface NotificationRule {
   id: string;
@@ -567,36 +568,39 @@ export default function NotificationsPage() {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6">
-          <div className="flex items-center justify-between">
+        <div className="space-y-6 max-w-6xl mx-auto p-4 sm:p-6 lg:p-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
             <div className="space-y-2">
-              <div className="h-8 bg-muted rounded w-64 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-96 animate-pulse"></div>
+              <Skeleton className="h-8 w-64" />
+              <Skeleton className="h-4 w-96" />
             </div>
-            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            <Skeleton className="h-10 w-32" />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mt-6">
             {Array.from({ length: 5 }).map((_, i) => (
               <Card key={i}>
                 <CardContent className="p-6">
-                  <div className="h-4 bg-muted rounded w-20 animate-pulse mb-2"></div>
-                  <div className="h-8 bg-muted rounded w-12 animate-pulse"></div>
+                  <Skeleton className="h-4 w-20 mb-2" />
+                  <Skeleton className="h-8 w-12" />
                 </CardContent>
               </Card>
             ))}
           </div>
-          <Card>
+          <Card className="mt-6">
             <CardHeader>
-              <div className="h-6 bg-muted rounded w-48 animate-pulse"></div>
+              <Skeleton className="h-6 w-48" />
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {Array.from({ length: 5 }).map((_, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 border rounded">
-                    <div className="h-4 bg-muted rounded w-32 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-24 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-20 animate-pulse"></div>
-                    <div className="h-4 bg-muted rounded w-4 animate-pulse"></div>
+                  <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border rounded gap-4">
+                    <Skeleton className="h-10 w-10 sm:h-8 sm:w-8" />
+                    <div className="flex-1 space-y-2">
+                         <Skeleton className="h-4 w-48" />
+                         <Skeleton className="h-4 w-full max-w-[300px]" />
+                    </div>
+                    <Skeleton className="h-4 w-20" />
+                    <Skeleton className="h-6 w-20" />
                   </div>
                 ))}
               </div>

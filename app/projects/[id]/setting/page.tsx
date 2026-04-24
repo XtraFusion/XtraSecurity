@@ -33,6 +33,7 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { motion } from "framer-motion";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // Types
 interface Project {
@@ -194,10 +195,30 @@ export default function ProjectSettings() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <p className="text-sm text-muted-foreground">Loading settings...</p>
+      <div className="min-h-screen bg-background pb-12">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-16" />
+          </div>
+          <div className="flex flex-col gap-2">
+            <Skeleton className="h-9 w-64" />
+            <Skeleton className="h-5 w-96 max-w-full" />
+          </div>
+          <Skeleton className="h-px w-full" />
+          <div className="grid gap-8">
+            <Skeleton className="h-[250px] w-full rounded-xl" />
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <Skeleton className="h-[300px] w-full rounded-xl" />
+              <Skeleton className="h-[300px] w-full rounded-xl" />
+            </div>
+            <Skeleton className="h-[200px] w-full rounded-xl" />
+          </div>
         </div>
       </div>
     );
