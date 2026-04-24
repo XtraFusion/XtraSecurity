@@ -5,6 +5,7 @@ import prisma from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { hashApiKey } from "@/lib/auth/service-account";
 import { incrementDailyUsage } from "@/lib/usage";
+import { redis } from "@/lib/redis";
 
 export interface AuthSession {
   userId: string;
@@ -51,6 +52,21 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
 
   if (apiKey) {
     const hash = hashApiKey(apiKey);
+    const cacheKey = `auth:apikey:${hash}`;
+
+    // A. Check Redis Cache
+    if (redis) {
+        try {
+            const cached = await redis.get(cacheKey);
+            if (cached) {
+                const parsedSession = JSON.parse(cached) as AuthSession;
+                incrementDailyUsage(parsedSession.userId);
+                return parsedSession;
+            }
+        } catch (err) {
+            console.error("Redis Auth Cache Error:", err);
+        }
+    }
     
     let keyRecord = await prisma.apiKey.findUnique({
       where: { key: hash },
@@ -69,31 +85,26 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
           return null;
       }
 
-      await prisma.apiKey.update({ 
+      // Background update (fire and forget) to avoid blocking API
+      prisma.apiKey.update({ 
         where: { id: keyRecord.id }, 
         data: { lastUsed: new Date() } 
-      });
+      }).catch(() => {});
       
+      let sessionData: AuthSession | null = null;
+
       if (keyRecord.userId && keyRecord.user) {
         const resolvedRole = await resolveUserRole(keyRecord.user.id, keyRecord.user.role);
         
-        // Update Daily Usage
-        incrementDailyUsage(keyRecord.user.id);
-
-        return {
+        sessionData = {
             userId: keyRecord.user.id,
             email: keyRecord.user.email,
             role: resolvedRole,
             tier: keyRecord.user.tier || 'free',
             apiKeyId: keyRecord.id
         };
-      }
-
-      if (keyRecord.serviceAccountId && keyRecord.serviceAccount) {
-          // Track Service Account Usage
-          incrementDailyUsage(`sa_${keyRecord.serviceAccount.id}`);
-
-          return {
+      } else if (keyRecord.serviceAccountId && keyRecord.serviceAccount) {
+          sessionData = {
               userId: `sa_${keyRecord.serviceAccount.id}`,
               email: `sa_${keyRecord.serviceAccount.name}@bot`,
               role: "service_account",
@@ -104,6 +115,16 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
               permissions: keyRecord.serviceAccount.permissions,
               apiKeyId: keyRecord.id
           };
+      }
+
+      if (sessionData) {
+          incrementDailyUsage(sessionData.userId);
+          
+          if (redis) {
+              // Cache for 5 minutes
+              redis.set(cacheKey, JSON.stringify(sessionData), "EX", 300).catch(()=>{});
+          }
+          return sessionData;
       }
 
       return null;

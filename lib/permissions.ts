@@ -1,12 +1,20 @@
 import prisma from "./db";
+import { redis } from "./redis";
 
 export async function getUserTeamRole(userId: string, teamId: string) {
   const teamUser = await prisma.teamUser.findFirst({ where: { userId, teamId } });
   return teamUser?.role || null;
 }
 
-// Helper to get effective project role
 export async function getUserProjectRole(userId: string, projectId: string) {
+  const cacheKey = `rbac:projectrole:${userId}:${projectId}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached;
+    } catch (e) {}
+  }
+
   // Check ownership
   const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -60,12 +68,17 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   if (roles.length === 0) return null;
 
   // Determine highest role
-  if (roles.includes("owner")) return "owner";
-  if (roles.includes("admin")) return "admin";
-  if (roles.includes("developer")) return "developer";
-  if (roles.includes("viewer")) return "viewer";
+  let finalRole = "viewer";
+  if (roles.includes("owner")) finalRole = "owner";
+  else if (roles.includes("admin")) finalRole = "admin";
+  else if (roles.includes("developer")) finalRole = "developer";
+  else if (roles.includes("viewer")) finalRole = "viewer";
   
-  return "viewer"; // Default fallback
+  if (redis) {
+      redis.set(cacheKey, finalRole, "EX", 300).catch(()=>{});
+  }
+  
+  return finalRole;
 }
 
 export function canManageMembers(role: string | null) {
@@ -181,6 +194,15 @@ export async function hasPermission(userId: string, permissionAction: string) {
  * Checks if a user has active, approved, and non-expired temporary access
  */
 export async function getUserSecretAccess(userId: string, projectId: string, secretId?: string) {
+  const cacheKey = `rbac:secretaccess:${userId}:${projectId}:${secretId || 'none'}`;
+  
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return JSON.parse(cached);
+    } catch(e) {}
+  }
+
   // 1. Get standard role
   const role = await getUserProjectRole(userId, projectId);
   
@@ -197,17 +219,21 @@ export async function getUserSecretAccess(userId: string, projectId: string, sec
       status: "approved",
       expiresAt: { gt: now },
       OR: [
-        { secretId: secretId || undefined },
-        { projectId: projectId, secretId: null } // Project-wide JIT
+        secretId ? { secretIds: { has: secretId } } : { id: "undefined-id-bypass" }, // If secretId passed, check array inclusion
+        { projectId: projectId, secretIds: { isEmpty: true } } // Project-wide JIT (empty array implies blanket access)
       ]
     },
     orderBy: { expiresAt: "desc" }
   });
 
   if (activeRequest) {
-    return { hasAccess: true, role: "developer", isJit: true, expiresAt: activeRequest.expiresAt };
+    const result = { hasAccess: true, role: "developer", isJit: true, expiresAt: activeRequest.expiresAt };
+    if (redis) redis.set(cacheKey, JSON.stringify(result), "EX", 60).catch(()=>{});
+    return result;
   }
 
   // 3. Fallback to standard role access
-  return { hasAccess: false, role };
+  const result = { hasAccess: false, role };
+  if (redis) redis.set(cacheKey, JSON.stringify(result), "EX", 60).catch(()=>{});
+  return result;
 }

@@ -219,6 +219,24 @@ export function withSecurity(handler: SecureHandler) {
                 errorMessage: "Rate Limit Exceeded"
             });
 
+            // Notify Rule Engine actively about the DoS burst attempt
+            if (workspaceIdToCheck || projectIdToCheck) {
+                notify({
+                    type: "suspicious_activity",
+                    title: "Rate Limit Exceeded (DDoS Protection)",
+                    message: `API boundaries were saturated by ${ip}. Action actively blocked to protect resources.`,
+                    description: `User Agent: ${userAgent || "Unknown"}`,
+                    severity: "warning",
+                    workspaceId: workspaceIdToCheck || "",
+                    projectId: projectIdToCheck || undefined,
+                    metadata: { ip, endpoint: req.nextUrl.pathname },
+                    fields: [
+                        { label: "IP Source", value: ip },
+                        { label: "Violated Endpoint", value: req.nextUrl.pathname }
+                    ]
+                }).catch(()=>{}); // Fire and forget
+            }
+
             return new NextResponse(JSON.stringify({ 
                 error: "Too Many Requests", 
                 retryAfter: limitRes.reset - Math.floor(Date.now() / 1000) 
@@ -271,6 +289,24 @@ export function withSecurity(handler: SecureHandler) {
                 errorMessage: error.message,
                 isAnomaly: true
             });
+            
+            // Notify Rule Engine about Fatal Runtime Crash
+            if (workspaceIdToCheck || projectIdToCheck) {
+                notify({
+                    type: "system_error",
+                    title: "Fatal System Exception (500)",
+                    message: `The server crashed attempting to process ${req.method} ${req.nextUrl.pathname}`,
+                    description: `An unhandled exception broke the API execution loop. Reason: ${error.message || "Unknown Core Panic"}`,
+                    severity: "error",
+                    workspaceId: workspaceIdToCheck || "",
+                    projectId: projectIdToCheck || undefined,
+                    metadata: { error: error.message, stack: error.stack },
+                    fields: [
+                        { label: "Endpoint", value: req.nextUrl.pathname },
+                        { label: "Exception Logic", value: error.message }
+                    ]
+                }).catch(()=>{});
+            }
             
             return new NextResponse(JSON.stringify({ error: "Internal Server Error" }), { status: 500 });
         }
