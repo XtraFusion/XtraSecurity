@@ -87,6 +87,7 @@ import apiClient from "@/lib/axios";
 import { useSession } from "next-auth/react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface TeamMember {
   id: string;
@@ -253,7 +254,31 @@ const TeamDetailPage = () => {
     }
   };
 
-  if (isLoading) return <DashboardLayout><div className="p-8 animate-pulse text-muted-foreground">Loading team engine...</div></DashboardLayout>;
+  if (isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
+          <div className="flex items-center gap-2 mb-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-24" />
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex items-center gap-5">
+              <Skeleton className="h-16 w-16 rounded-xl" />
+              <div>
+                <Skeleton className="h-8 w-48 mb-2" />
+                <Skeleton className="h-5 w-64" />
+              </div>
+            </div>
+            <Skeleton className="h-10 w-36" />
+          </div>
+          <Skeleton className="h-10 w-[300px] mb-6" />
+          <Skeleton className="h-[400px] w-full rounded-xl" />
+        </div>
+      </DashboardLayout>
+    );
+  }
   if (!team) return <DashboardLayout><div className="p-8">Team not found.</div></DashboardLayout>;
 
   return (
@@ -343,7 +368,6 @@ const TeamDetailPage = () => {
         <Tabs defaultValue="members" className="w-full">
             <TabsList className="bg-muted/50 p-1 mb-6">
                 <TabsTrigger value="members" className="px-6 rounded-md">Members</TabsTrigger>
-                <TabsTrigger value="activity" className="px-6 rounded-md">Activity Log</TabsTrigger>
                 <TabsTrigger value="settings" className="px-6 rounded-md">Settings</TabsTrigger>
             </TabsList>
 
@@ -439,31 +463,6 @@ const TeamDetailPage = () => {
                                 </div>
                             )}
                         </div>
-                    </CardContent>
-                </Card>
-            </TabsContent>
-
-            <TabsContent value="activity">
-                <Card className="border">
-                    <CardHeader>
-                        <CardTitle className="text-lg">Activity Feed</CardTitle>
-                        <CardDescription>Recent changes and operations performed by team members.</CardDescription>
-                    </CardHeader>
-                    <CardContent className="space-y-6">
-                        {[1, 2, 3].map(i => (
-                            <div key={i} className="flex gap-4">
-                                <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center shrink-0">
-                                    <Activity className="h-4 w-4 text-muted-foreground" />
-                                </div>
-                                <div>
-                                    <p className="text-sm font-medium">Policy Updated</p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">Role permissions were audited and synced with the workspace security engine.</p>
-                                    <p className="text-[10px] text-muted-foreground font-semibold mt-2 uppercase tracking-wide opacity-60 flex items-center gap-1.5">
-                                        <Clock className="h-2.5 w-2.5" /> 2 hours ago
-                                    </p>
-                                </div>
-                            </div>
-                        ))}
                     </CardContent>
                 </Card>
             </TabsContent>

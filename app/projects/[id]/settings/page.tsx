@@ -41,6 +41,7 @@ import { useToast } from '@/hooks/use-toast';
 import axios from '@/lib/axios';
 import { ServiceAccountsTab } from './service-accounts-tab';
 import { WebhooksTab } from './webhooks-tab';
+import { DashboardLayout } from "@/components/dashboard-layout";
 
 interface Team {
   id: string;
@@ -388,25 +389,37 @@ export default function ProjectSettings() {
 
   if (isPageLoading) {
     return (
-      <div className="container max-w-4xl mx-auto p-6 space-y-8">
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <Skeleton className="h-9 w-64" />
-            <Skeleton className="h-5 w-48" />
+      <DashboardLayout>
+        <div className="space-y-8">
+          {/* Breadcrumb Skeleton */}
+          <div className="flex items-center gap-2">
+            <Skeleton className="h-4 w-12" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-16" />
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-24" />
           </div>
-          <Skeleton className="h-10 w-32" />
+
+          <div className="flex items-center justify-between">
+            <div className="space-y-2">
+              <Skeleton className="h-9 w-64" />
+              <Skeleton className="h-5 w-48" />
+            </div>
+            <Skeleton className="h-10 w-32" />
+          </div>
+          <div className="space-y-4">
+            <Skeleton className="h-10 w-96 mb-6" />
+            <Skeleton className="h-[400px] w-full" />
+          </div>
         </div>
-        <div className="space-y-4">
-          <Skeleton className="h-10 w-full" />
-          <Skeleton className="h-[400px] w-full" />
-        </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="container max-w-4xl mx-auto p-6 space-y-8">
-      {/* Breadcrumbs */}
+    <DashboardLayout>
+      <div className="space-y-8">
+        {/* Breadcrumbs */}
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
@@ -914,6 +927,7 @@ export default function ProjectSettings() {
           <WebhooksTab />
         </TabsContent>
       </Tabs>
-    </div>
+      </div>
+    </DashboardLayout>
   );
 }

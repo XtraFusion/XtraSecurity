@@ -199,13 +199,36 @@ const DOPPLER_ROWS = [
 ];
 
 const INTEGRATIONS = [
-  { label: "GitHub", logo: "https://cdn.simpleicons.org/github/white" },
-  { label: "AWS", logo: "https://cdn.simpleicons.org/amazonservices/white" },
-  { label: "Slack", logo: "https://cdn.simpleicons.org/slack/white" },
-  { label: "Vercel", logo: "https://cdn.simpleicons.org/vercel/white" },
-  { label: "Google Cloud", logo: "https://cdn.simpleicons.org/googlecloud/white" },
-  { label: "Azure", logo: "https://cdn.simpleicons.org/microsoftazure/white" },
-  { label: "GitLab", logo: "https://cdn.simpleicons.org/gitlab/white" },
+  { label: "GitHub", logo: "https://img.icons8.com/fluency/48/github.png" },
+  { label: "AWS", logo: "https://img.icons8.com/color/48/amazon-web-services.png" },
+  { label: "Slack", logo: "https://img.icons8.com/color/48/slack-new.png" },
+  { label: "Vercel", logo: "https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" },
+  { label: "Google Cloud", logo: "https://img.icons8.com/color/48/google-cloud.png" },
+  { label: "Azure", logo: "https://img.icons8.com/color/48/azure-api-manager.png" },
+  { label: "GitLab", logo: "https://img.icons8.com/color/48/gitlab.png" },
+];
+
+const FORTRESS_FEATURES = [
+  {
+    title: "Decentralized Encryption",
+    body: "Even if XtraSecurity servers are breached, your secrets remain encrypted. The master key is never stored in one place; it's split across hardware HSMs.",
+    icon: "shield",
+  },
+  {
+    title: "Zero-Knowledge Architecture",
+    body: "Our engineers cannot see your secrets. Plaintext values are only reconstructed inside your authenticated client process or isolated workers.",
+    icon: "eye",
+  },
+  {
+    title: "Hardware-Bound Access",
+    body: "Access is tied to the unique hardware ID of your machine. A stolen CLI token is useless on another device, creating an unbreakable link.",
+    icon: "cpu",
+  },
+  {
+    title: "JIT Isolation",
+    body: "Secrets aren't accessible by default. High-stakes credentials require temporary Just-In-Time approval, with windows as small as 15 minutes.",
+    icon: "zap",
+  },
 ];
 
 const LOGS = [
@@ -286,37 +309,58 @@ const scaleIn = {
 
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder } from "lucide-react";
+import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder, Workflow, Cpu, History, ShieldCheck, GitBranch } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // ICON HELPER
 // ─────────────────────────────────────────────
 
 function getIcon(iconName: string, size: number = 24) {
-  const iconProps = { size, strokeWidth: 1.5 };
-  const icons: { [key: string]: React.ReactNode } = {
-    lock: <Lock {...iconProps} />,
-    leaf: <Leaf {...iconProps} />,
-    search: <Search {...iconProps} />,
-    puzzle: <Puzzle {...iconProps} />,
-    users: <Users {...iconProps} />,
-    eye: <Eye {...iconProps} />,
-    globe: <Globe {...iconProps} />,
-    "refresh-cw": <RefreshCw {...iconProps} />,
-    "alert-circle": <AlertCircle {...iconProps} />,
-    "clipboard-list": <ClipboardList {...iconProps} />,
-    home: <Home {...iconProps} />,
-    "hard-drive": <HardDrive {...iconProps} />,
-    key: <Key {...iconProps} />,
-    zap: <Zap {...iconProps} />,
-    github: <Github {...iconProps} />,
-    cloud: <Cloud {...iconProps} />,
-    "message-circle": <MessageCircle {...iconProps} />,
-    link: <LinkIcon {...iconProps} />,
-    shield: <Shield {...iconProps} />,
-    folder: <Folder {...iconProps} />,
+  const iconMap: { [key: string]: string } = {
+    lock: "lock",
+    leaf: "natural-food",
+    search: "search",
+    puzzle: "puzzle",
+    users: "groups",
+    eye: "visible",
+    globe: "globe",
+    "refresh-cw": "refresh",
+    "alert-circle": "error",
+    "clipboard-list": "list",
+    home: "home",
+    "hard-drive": "hard-drive",
+    key: "key",
+    zap: "lightning-bolt",
+    github: "github",
+    cloud: "cloud",
+    "message-circle": "speech-bubble",
+    link: "link",
+    shield: "shield",
+    folder: "folder",
+    workflow: "workflow",
+    cpu: "cpu",
+    history: "past",
+    "shield-check": "verified-badge",
+    "git-branch": "git-branch",
+    settings: "settings"
   };
-  return icons[iconName] || null;
+
+  const name = iconMap[iconName] || iconName;
+  // Use fluency as primary, but some icons are better in 'color' style
+  const style = ["git-branch", "github"].includes(name) ? "color" : "fluency";
+  
+  return (
+    <img 
+      src={`https://img.icons8.com/fluency/96/${name}.png`} 
+      width={size} 
+      height={size}
+      alt={iconName}
+      onError={(e) => {
+        (e.target as HTMLImageElement).src = `https://img.icons8.com/color/96/${name}.png`;
+      }}
+      style={{ width: size, height: size, filter: "drop-shadow(0 0 10px rgba(14,165,233,0.3))" }}
+    />
+  );
 }
 
 // ─────────────────────────────────────────────
@@ -794,26 +838,65 @@ function FlipCard({ f }: { f: typeof FEATURES[0] }) {
 
 function FeaturesSection() {
   return (
-    <section id="features" className="py-32 px-6">
-      <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="Engineered for Teams"
-          icon="settings"
-          title={<>Security that enhances<br /><span className="text-cyan-400 font-black">developer velocity</span></>}
-          sub="Everything you need to stop leaks without slowing down your deploy cycles."
-        />
-        <motion.div
+    <section id="features" className="py-32 px-6 bg-[#080e1e]">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-16">
+          <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Engineered for Absolute Security</h2>
+          <p className="text-slate-400 text-lg">Everything you need to manage secrets at scale.</p>
+        </div>
+
+        <motion.div 
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true, margin: "-60px" }}
+          viewport={{ once: true }}
           variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {FEATURES.map((f) => (
-            <motion.div key={f.title} variants={fadeUp}>
-              <FlipCard f={f} />
-            </motion.div>
-          ))}
+          {/* Row 1: Large + Small */}
+          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col p-8 md:p-10 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
+              {getIcon("history", 32)}
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-4">Secret Versioning</h3>
+            <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
+              Time-travel through your credentials. Every change is tracked, diffed, and instantly roll-backable across all environments.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="relative group flex flex-col p-8 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 blur-[60px] -mr-24 -mt-24 rounded-full" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
+              {getIcon("shield-check", 32)}
+            </div>
+            <h3 className="text-2xl font-black text-white mb-4">Granular RBAC</h3>
+            <p className="text-slate-400 text-base leading-relaxed">
+              Define who sees what with microscopic precision based on identity and workspace context.
+            </p>
+          </motion.div>
+
+          {/* Row 2: Small + Medium */}
+          <motion.div variants={fadeUp} className="relative group flex flex-col p-8 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 blur-[60px] -mr-24 -mt-24 rounded-full" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
+              {getIcon("clipboard-list", 32)}
+            </div>
+            <h3 className="text-2xl font-black text-white mb-4">Immutable Audit Logs</h3>
+            <p className="text-slate-400 text-base leading-relaxed">
+              Cryptographically verifiable logs of every read, write, and sync action. Tamper-proof by design.
+            </p>
+          </motion.div>
+
+          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col p-8 md:p-10 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
+            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
+              {getIcon("git-branch", 32)}
+            </div>
+            <h3 className="text-2xl md:text-3xl font-black text-white mb-4">Environment Branching</h3>
+            <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
+              Treat secrets like code. Branch, merge, and promote credentials from dev to staging to prod securely.
+            </p>
+          </motion.div>
         </motion.div>
       </div>
     </section>
@@ -884,64 +967,130 @@ function HowItWorksSection() {
 // SECURITY
 // ─────────────────────────────────────────────
 
-function SecuritySection() {
+function SecurityFortress() {
   return (
-    <section id="security" className="py-28 px-6">
-      <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="Security Architecture"
-          icon="shield"
-          title={<>Defense in depth —<br /><span className="text-cyan-400">six independent layers</span></>}
-          sub="One breach doesn't equal total compromise. Each layer operates independently so your secrets stay safe."
-        />
-        <motion.div
-          initial="hidden"
-          whileInView="show"
-          viewport={{ once: true, margin: "-60px" }}
-          variants={fadeUpStagger}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-14"
-        >
-          {SECURITY_PILLARS.map((p) => (
-            <motion.div
-              key={p.title}
-              variants={fadeUp}
-              whileHover={{ y: -3, transition: { duration: 0.2 } }}
-              className="group relative h-full rounded-2xl overflow-hidden cursor-default"
-              style={{
-                background: "rgba(255,255,255,0.025)",
-                border: "1px solid rgba(255,255,255,0.07)",
-                willChange: "transform",
-              }}
-            >
-              {/* Top accent line */}
-              <div className="absolute top-0 left-0 right-0 h-[2px] opacity-30 transition-all duration-300"
-                style={{ background: "linear-gradient(90deg, rgba(14,165,233,0.6), transparent)" }}
-              />
+    <section id="fortress" className="py-28 px-6 relative overflow-hidden bg-[#0a0f1e]">
+      <div className="absolute inset-0 z-0">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/5 blur-[120px] rounded-full" />
+      </div>
 
-              <div className="relative z-10 p-7">
-                <div className="mb-5 transition-transform duration-300 flex items-center justify-center w-10 h-10" style={{ color: "#06b6d4" }}>
-                  {getIcon(p.icon, 32)}
+      <div className="max-w-6xl mx-auto relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-20">
+          <div className="w-full lg:w-1/2 relative">
+            <div className="relative aspect-square max-w-[500px] mx-auto flex items-center justify-center">
+              <motion.div 
+                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
+                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+                className="relative"
+              >
+                <div className="w-48 h-48 rounded-[3rem] bg-gradient-to-br from-cyan-400 to-blue-600 p-1 shadow-[0_0_80px_rgba(37,99,235,0.3)]">
+                  <div className="w-full h-full rounded-[2.8rem] bg-[#0d1117] flex items-center justify-center">
+                    {getIcon("lock", 80)}
+                  </div>
                 </div>
-                <h4 className="text-base font-bold text-white mb-3 leading-tight">{p.title}</h4>
-                <p className="text-sm text-slate-300 leading-relaxed">{p.body}</p>
-              </div>
-            </motion.div>
-          ))}
-        </motion.div>
+              </motion.div>
+            </div>
+          </div>
 
-        <div className="text-center">
-          <motion.a
-            href="#pricing"
-            whileHover={{ scale: 1.03, y: -2 }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white no-underline"
-            style={{
-              background: "linear-gradient(135deg, #0ea5e9, #0284c7)",
-              boxShadow: "0 4px 24px rgba(14,165,233,0.35)",
-            }}
-          >
-            Start securing your secrets →
-          </motion.a>
+          <div className="w-full lg:w-1/2">
+            <SectionLabel>🛡️ Cryptographic Commitment</SectionLabel>
+            <h2 className="text-4xl md:text-5xl font-black text-white mt-4 mb-6 leading-tight">
+              Assume Breach.<br /><span className="text-cyan-400">Stay Secure.</span>
+            </h2>
+            <p className="text-lg text-slate-400 mb-10 leading-relaxed">
+              XtraSecurity is architected on the principle of <strong>Zero-Knowledge</strong>. Our infrastructure is mathematically incapable of accessing your plaintext secrets.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {FORTRESS_FEATURES.map((f) => (
+                <div key={f.title} className="group p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
+                  <div className="mb-4">
+                    {getIcon(f.icon, 32)}
+                  </div>
+                  <h4 className="text-white font-bold mb-2">{f.title}</h4>
+                  <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InteractiveSecurityPreview() {
+  return (
+    <section className="py-24 px-6 bg-[#080e1e] relative overflow-hidden">
+      <div className="max-w-6xl mx-auto">
+        <div className="bg-[#0d1117] rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
+          <div className="flex flex-col lg:flex-row h-full">
+            <div className="w-full lg:w-1/3 border-r border-white/5 bg-[#111827]/30 p-8">
+              <div className="flex items-center gap-3 mb-8">
+                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs font-black uppercase tracking-widest text-slate-400 font-mono">Live Security Intel</span>
+              </div>
+              
+              <div className="space-y-6">
+                {[ 
+                  { label: "Secrets Leaked", val: "0", color: "#10b981", icon: "shield-check" },
+                  { label: "Active JIT Sessions", val: "12", color: "#3b82f6", icon: "zap" },
+                  { label: "Policy Violations", val: "0", color: "#f59e0b", icon: "error" }
+                ].map((stat) => (
+                  <div key={stat.label} className="p-4 rounded-xl bg-white/5 border border-white/5">
+                    <div className="flex items-center justify-between mb-2">
+                       <span className="text-xs text-slate-500">{stat.label}</span>
+                       {getIcon(stat.icon, 16)}
+                    </div>
+                    <div className="text-2xl font-black text-white" style={{ color: stat.color }}>{stat.val}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div className="mt-12 p-6 rounded-2xl bg-cyan-500/5 border border-cyan-500/10">
+                <p className="text-xs text-cyan-400 font-bold mb-2 uppercase tracking-tighter">Security Posture</p>
+                <div className="text-xl font-bold text-white mb-4 italic">"Impenetrable"</div>
+                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                  <motion.div 
+                    initial={{ width: 0 }}
+                    whileInView={{ width: "98%" }}
+                    className="h-full bg-cyan-400"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="w-full lg:w-2/3 p-8 flex flex-col">
+              <div className="flex items-center justify-between mb-8">
+                <h3 className="text-xl font-bold text-white">Global Audit Feed</h3>
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-slate-500 uppercase tracking-widest">Auto-rotate:</span>
+                  <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Active</span>
+                </div>
+              </div>
+
+              <div className="flex-grow space-y-4 font-mono">
+                {LOGS.map((log, i) => (
+                  <motion.div 
+                    key={i}
+                    initial={{ opacity: 0, x: 20 }}
+                    whileInView={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.1 }}
+                    className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]"
+                  >
+                    <div className="w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center">
+                      {getIcon(log.icon === 'triangle' ? 'zap' : log.icon, 18)}
+                    </div>
+                    <div className="hidden sm:block text-xs font-bold text-slate-500 w-16">{log.time}</div>
+                    <div className="flex-grow text-xs text-slate-300">
+                      <span className="text-cyan-400 font-bold">[{log.platform.toUpperCase()}]</span> {log.message}
+                    </div>
+                    <div className="text-[10px] text-emerald-500 font-bold px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">VERIFIED</div>
+                  </motion.div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -1366,8 +1515,8 @@ function IntegrationsSection() {
               whileHover={{ scale: 1.05, y: -4 }}
               className="flex items-center gap-4 px-6 py-4 rounded-2xl border border-white/[0.08] bg-white/[0.025] hover:bg-white/[0.05] hover:border-white/[0.15] cursor-pointer transition-all duration-300 group shadow-lg"
             >
-              <div className="w-10 h-10 flex items-center justify-center filter group-hover:brightness-125 transition-all">
-                 <img src={item.logo} alt={item.label} className="w-6 h-6 object-contain opacity-70 group-hover:opacity-100 transition-opacity" />
+              <div className="w-10 h-10 flex items-center justify-center transition-all">
+                 <img src={item.logo} alt={item.label} className="w-8 h-8 object-contain opacity-90 group-hover:opacity-100 transition-opacity" />
               </div>
               <span className="text-sm font-black uppercase tracking-widest text-slate-400 group-hover:text-white transition-colors">{item.label}</span>
             </motion.div>
@@ -1529,7 +1678,8 @@ export default function Page() {
       <StatsSection />
       <FeaturesSection />
       <HowItWorksSection />
-      <SecuritySection />
+      <SecurityFortress />
+      <InteractiveSecurityPreview />
       <MetricsBar />
       <PricingSection />
       <IntegrationLogsMarquee />
