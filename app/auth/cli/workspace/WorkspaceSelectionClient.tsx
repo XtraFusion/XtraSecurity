@@ -7,6 +7,7 @@ import axios from "axios";
 import { Loader2, ArrowRight, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function WorkspaceSelectionClient() {
     const router = useRouter();
@@ -79,8 +80,23 @@ export default function WorkspaceSelectionClient() {
 
     if (status === "loading" || isLoading) {
         return (
-            <div className="flex h-screen w-full items-center justify-center bg-gray-50 dark:bg-gray-900">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <div className="flex min-h-screen w-full items-center justify-center bg-gray-50 p-4 dark:bg-gray-900">
+                <Card className="w-full max-w-md shadow-xl border-border/40 border">
+                    <CardHeader className="text-center">
+                        <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-full">
+                            <Skeleton className="h-12 w-12 rounded-full" />
+                        </div>
+                        <Skeleton className="h-7 w-48 mx-auto" />
+                        <Skeleton className="h-4 w-64 mx-auto mt-2" />
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="flex flex-col space-y-3">
+                            {[1, 2, 3].map((i) => (
+                                <Skeleton key={i} className="h-[72px] w-full rounded-lg" />
+                            ))}
+                        </div>
+                    </CardContent>
+                </Card>
             </div>
         );
     }

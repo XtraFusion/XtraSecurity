@@ -30,6 +30,7 @@ import {
   Loader2
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
+import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
 import {
   Dialog,
@@ -159,21 +160,40 @@ export default function ProjectsPage() {
     return (
       <DashboardLayout>
         <div className="space-y-8 p-8 max-w-[1600px] mx-auto">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-border/40 pb-6">
             <div className="space-y-2">
-              <div className="h-8 bg-muted rounded w-48 animate-pulse"></div>
-              <div className="h-4 bg-muted rounded w-64 animate-pulse"></div>
+              <Skeleton className="h-9 w-48" />
+              <Skeleton className="h-5 w-72 max-w-full" />
             </div>
-            <div className="h-10 bg-muted rounded w-32 animate-pulse"></div>
+            <div className="flex items-center gap-3 w-full md:w-auto">
+              <Skeleton className="h-10 w-full md:w-64" />
+              <Skeleton className="h-10 w-24 hidden md:block" />
+              <Skeleton className="h-10 w-32" />
+            </div>
           </div>
-          <div className="h-12 bg-muted rounded w-full max-w-md animate-pulse"></div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="animate-pulse h-48">
-                <CardHeader>
-                  <div className="h-6 bg-muted rounded w-3/4 mb-2"></div>
-                  <div className="h-4 bg-muted rounded w-1/2"></div>
+              <Card key={i} className="flex flex-col h-[220px]">
+                <CardHeader className="pb-4">
+                  <div className="flex justify-between items-start">
+                    <div className="space-y-2 w-full">
+                       <Skeleton className="h-6 w-3/4" />
+                       <Skeleton className="h-4 w-full" />
+                       <Skeleton className="h-4 w-5/6" />
+                    </div>
+                  </div>
                 </CardHeader>
+                <CardContent className="pb-4">
+                  <div className="flex items-center gap-4">
+                     <Skeleton className="h-4 w-12" />
+                     <Skeleton className="h-4 w-12" />
+                     <Skeleton className="h-4 w-20" />
+                  </div>
+                </CardContent>
+                <CardFooter className="pt-0 border-t bg-muted/5 py-3 mt-auto flex justify-between">
+                   <Skeleton className="h-3 w-32" />
+                   <Skeleton className="h-6 w-20" />
+                </CardFooter>
               </Card>
             ))}
           </div>
