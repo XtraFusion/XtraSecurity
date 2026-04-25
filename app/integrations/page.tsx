@@ -213,62 +213,28 @@ export default function IntegrationsPage() {
       </div>
 
       {/* ── Modals ────────────────────────────────────────── */}
-      <Modals.VercelConnectModal open={!!modals.vercel} onClose={() => setModalOpen("vercel", false)} onConnected={s => { setStatuses(p => ({ ...p, vercel: s })); refreshStatus("vercel"); }} />
-      <Modals.TokenModal open={!!modals.netlify} onClose={() => setModalOpen("netlify", false)} onConnected={s => { setStatuses(p => ({ ...p, netlify: s })); refreshStatus("netlify"); }} provider="netlify" providerName="Netlify" providerColor="#00C7B7"
-        steps={[{ text: "Open", link: { href: "https://app.netlify.com/user/applications#personal-access-tokens", label: "app.netlify.com → User Settings → Applications" } }, { text: "Click New access token, name it XtraSecurity" }, { text: "Copy immediately — shown once" }]}
-        scopeNote="No scope needed — inherits full account access." />
-      <Modals.AwsConnectModal open={!!modals.aws} onClose={() => setModalOpen("aws", false)} onConnected={s => { setStatuses(p => ({ ...p, aws: s })); refreshStatus("aws"); }} currentRegion={statuses.aws?.region} />
-      <Modals.TokenModal open={!!modals.doppler} onClose={() => setModalOpen("doppler", false)} onConnected={s => { setStatuses(p => ({ ...p, doppler: s })); refreshStatus("doppler"); }} provider="doppler" providerName="Doppler" providerColor="#6366f1"
-        steps={[
-          { text: "Open", link: { href: "https://dashboard.doppler.com/workplace/integrations/service-tokens", label: "Doppler Dashboard → Integrations → Service Tokens" } },
-          { text: "Or use a Personal Token: Account Settings → API Keys" },
-          { text: "Create token with read+write access, copy once" },
-        ]}
-        scopeNote="Use a Service Token (dp.st.xxx) for project-scoped access, or a Personal Token (dp.pt.xxx) for full account access." />
-      <Modals.BitbucketConnectModal open={!!modals.bitbucket} onClose={() => setModalOpen("bitbucket", false)} onConnected={s => { setStatuses(p => ({ ...p, bitbucket: s })); refreshStatus("bitbucket"); }} />
-      <Modals.GcpConnectModal open={!!modals.gcp} onClose={() => setModalOpen("gcp", false)} onConnected={s => { setStatuses(p => ({ ...p, gcp: s })); refreshStatus("gcp"); }} />
-      <Modals.AzureConnectModal open={!!modals.azure} onClose={() => setModalOpen("azure", false)} onConnected={s => { setStatuses(p => ({ ...p, azure: s })); refreshStatus("azure"); }} />
-      <Modals.RailwayConnectModal open={!!modals.railway} onClose={() => setModalOpen("railway", false)} onConnected={s => { setStatuses(p => ({ ...p, railway: s })); refreshStatus("railway"); }} />
-      <Modals.FlyConnectModal open={!!modals.fly} onClose={() => setModalOpen("fly", false)} onConnected={s => { setStatuses(p => ({ ...p, fly: s })); refreshStatus("fly"); }} />
-      <Modals.RenderConnectModal open={!!modals.render} onClose={() => setModalOpen("render", false)} onConnected={s => { setStatuses(p => ({ ...p, render: s })); refreshStatus("render"); }} />
-      <Modals.DOConnectModal open={!!modals.digitalocean} onClose={() => setModalOpen("digitalocean", false)} onConnected={s => { setStatuses(p => ({ ...p, digitalocean: s })); refreshStatus("digitalocean"); }} />
-      <Modals.HerokuConnectModal open={!!modals.heroku} onClose={() => setModalOpen("heroku", false)} onConnected={s => { setStatuses(p => ({ ...p, heroku: s })); refreshStatus("heroku"); }} />
-      <Modals.SlackConnectModal open={!!modals.slack} onClose={() => setModalOpen("slack", false)} onConnected={s => { setStatuses(p => ({ ...p, slack: s })); refreshStatus("slack"); }} />
-      <Modals.DiscordConnectModal open={!!modals.discord} onClose={() => setModalOpen("discord", false)} onConnected={s => { setStatuses(p => ({ ...p, discord: s })); refreshStatus("discord"); }} />
-      <Modals.TeamsConnectModal open={!!modals.teams} onClose={() => setModalOpen("teams", false)} onConnected={s => { setStatuses(p => ({ ...p, teams: s })); refreshStatus("teams"); }} />
-      <Modals.VaultConnectModal open={!!modals.vault} onClose={() => setModalOpen("vault", false)} onConnected={s => { setStatuses(p => ({ ...p, vault: s })); refreshStatus("vault"); }} />
-      <Modals.CircleCIConnectModal open={!!modals.circleci} onClose={() => setModalOpen("circleci", false)} onConnected={s => { setStatuses(p => ({ ...p, circleci: s })); refreshStatus("circleci"); }} />
-      <Modals.CloudflareConnectModal open={!!modals.cloudflare} onClose={() => setModalOpen("cloudflare", false)} onConnected={s => { setStatuses(p => ({ ...p, cloudflare: s })); refreshStatus("cloudflare"); }} />
-      <Modals.JenkinsConnectModal open={!!modals.jenkins} onClose={() => setModalOpen("jenkins", false)} onConnected={s => { setStatuses(p => ({ ...p, jenkins: s })); refreshStatus("jenkins"); }} />
-      <Modals.PagerDutyConnectModal open={!!modals.pagerduty} onClose={() => setModalOpen("pagerduty", false)} onConnected={s => { setStatuses(p => ({ ...p, pagerduty: s })); refreshStatus("pagerduty"); }} />
-      <Modals.TravisCIConnectModal open={!!modals.travisci} onClose={() => setModalOpen("travisci", false)} onConnected={s => { setStatuses(p => ({ ...p, travisci: s })); refreshStatus("travisci"); }} />
-      <Modals.SupabaseConnectModal open={!!modals.supabase} onClose={() => setModalOpen("supabase", false)} onConnected={s => { setStatuses(p => ({ ...p, supabase: s })); refreshStatus("supabase"); }} />
-      <Modals.TelegramConnectModal open={!!modals.telegram} onClose={() => setModalOpen("telegram", false)} onConnected={s => { setStatuses(p => ({ ...p, telegram: s })); refreshStatus("telegram"); }} />
-      <Modals.EmailConnectModal open={!!modals.email} onClose={() => setModalOpen("email", false)} onConnected={s => { setStatuses(p => ({ ...p, email: s })); refreshStatus("email"); }} />
-      <Modals.TerraformConnectModal open={!!modals.terraform} onClose={() => setModalOpen("terraform", false)} onConnected={s => { setStatuses(p => ({ ...p, terraform: s })); refreshStatus("terraform"); }} />
-      <Modals.BuildkiteConnectModal open={!!modals.buildkite} onClose={() => setModalOpen("buildkite", false)} onConnected={s => { setStatuses(p => ({ ...p, buildkite: s })); refreshStatus("buildkite"); }} />
-      <Modals.OpsgenieConnectModal open={!!modals.opsgenie} onClose={() => setModalOpen("opsgenie", false)} onConnected={s => { setStatuses(p => ({ ...p, opsgenie: s })); refreshStatus("opsgenie"); }} />
-      <Modals.ChecklyConnectModal open={!!modals.checkly} onClose={() => setModalOpen("checkly", false)} onConnected={s => { setStatuses(p => ({ ...p, checkly: s })); refreshStatus("checkly"); }} />
-      <Modals.HasuraConnectModal open={!!modals.hasura} onClose={() => setModalOpen("hasura", false)} onConnected={s => { setStatuses(p => ({ ...p, hasura: s })); refreshStatus("hasura"); }} />
-      <Modals.PostmanConnectModal open={!!modals.postman} onClose={() => setModalOpen("postman", false)} onConnected={s => { setStatuses(p => ({ ...p, postman: s })); refreshStatus("postman"); }} />
-      <Modals.ShopifyConnectModal open={!!modals.shopify} onClose={() => setModalOpen("shopify", false)} onConnected={s => { setStatuses(p => ({ ...p, shopify: s })); refreshStatus("shopify"); }} />
-      <Modals.TwilioConnectModal open={!!modals.twilio} onClose={() => setModalOpen("twilio", false)} onConnected={s => { setStatuses(p => ({ ...p, twilio: s })); refreshStatus("twilio"); }} />
-      <Modals.KubernetesConnectModal open={!!modals.kubernetes} onClose={() => setModalOpen("kubernetes", false)} onConnected={s => { setStatuses(p => ({ ...p, kubernetes: s })); refreshStatus("kubernetes"); }} />
-      <Modals.LinearConnectModal open={!!modals.linear} onClose={() => setModalOpen("linear", false)} onConnected={s => { setStatuses(p => ({ ...p, linear: s })); refreshStatus("linear"); }} />
-      <Modals.PlanetScaleConnectModal open={!!modals.planetscale} onClose={() => setModalOpen("planetscale", false)} onConnected={s => { setStatuses(p => ({ ...p, planetscale: s })); refreshStatus("planetscale"); }} />
-      <Modals.BitwardenConnectModal open={!!modals.bitwarden} onClose={() => setModalOpen("bitwarden", false)} onConnected={s => { setStatuses(p => ({ ...p, bitwarden: s })); refreshStatus("bitwarden"); }} />
-      <Modals.GhostConnectModal open={!!modals.ghost} onClose={() => setModalOpen("ghost", false)} onConnected={s => { setStatuses(p => ({ ...p, ghost: s })); refreshStatus("ghost"); }} />
-      <Modals.AppwriteConnectModal open={!!modals.appwrite} onClose={() => setModalOpen("appwrite", false)} onConnected={s => { setStatuses(p => ({ ...p, appwrite: s })); refreshStatus("appwrite"); }} />
-      <Modals.OnePasswordConnectModal open={!!modals.onepassword} onClose={() => setModalOpen("onepassword", false)} onConnected={s => { setStatuses(p => ({ ...p, onepassword: s })); refreshStatus("onepassword"); }} />
-      <Modals.FirebaseConnectModal open={!!modals.firebase} onClose={() => setModalOpen("firebase", false)} onConnected={s => { setStatuses(p => ({ ...p, firebase: s })); refreshStatus("firebase"); }} />
-      <Modals.SentryConnectModal open={!!modals.sentry} onClose={() => setModalOpen("sentry", false)} onConnected={s => { setStatuses(p => ({ ...p, sentry: s })); refreshStatus("sentry"); }} />
-      <Modals.NotionConnectModal open={!!modals.notion} onClose={() => setModalOpen("notion", false)} onConnected={s => { setStatuses(p => ({ ...p, notion: s })); refreshStatus("notion"); }} />
-      <Modals.GoogleDriveConnectModal open={!!modals.googledrive} onClose={() => setModalOpen("googledrive", false)} onConnected={s => { setStatuses(p => ({ ...p, googledrive: s })); refreshStatus("googledrive"); }} />
-      <Modals.ZapierConnectModal open={!!modals.zapier} onClose={() => setModalOpen("zapier", false)} onConnected={s => { setStatuses(p => ({ ...p, zapier: s })); refreshStatus("zapier"); }} />
-      <Modals.BitbucketPipelinesConnectModal open={!!modals.bitbucketpipelines} onClose={() => setModalOpen("bitbucketpipelines", false)} onConnected={s => { setStatuses(p => ({ ...p, bitbucketpipelines: s })); refreshStatus("bitbucketpipelines"); }} />
-      <Modals.GitLabSelfManagedConnectModal open={!!modals.gitlabselfmanaged} onClose={() => setModalOpen("gitlabselfmanaged", false)} onConnected={s => { setStatuses(p => ({ ...p, gitlabselfmanaged: s })); refreshStatus("gitlabselfmanaged"); }} />
-      <Modals.DiscordWebhookConnectModal open={!!modals.discordwebhook} onClose={() => setModalOpen("discordwebhook", false)} onConnected={s => { setStatuses(p => ({ ...p, discordwebhook: s })); refreshStatus("discordwebhook"); }} />
-      <Modals.MattermostConnectModal open={!!modals.mattermost} onClose={() => setModalOpen("mattermost", false)} onConnected={s => { setStatuses(p => ({ ...p, mattermost: s })); refreshStatus("mattermost"); }} />
+      {Object.entries(modals).map(([id, isOpen]) => {
+        if (!isOpen) return null;
+        
+        // Dynamic lookup from registry using the lowercase ID
+        const ModalComponent = (Modals.INTEGRATION_MODAL_REGISTRY as any)[id];
+
+        if (!ModalComponent) return null;
+
+        return (
+          <ModalComponent
+            key={id}
+            open={isOpen}
+            onClose={() => setModalOpen(id as any, false)}
+            onConnected={(s: any) => {
+              setStatuses((p: any) => ({ ...p, [id]: s }));
+              refreshStatus(id as any);
+            }}
+            // Provider-specific props
+            {...(id === "aws" ? { currentRegion: statuses.aws?.region } : {})}
+          />
+        );
+      })}
     </DashboardLayout>
   );
 }
