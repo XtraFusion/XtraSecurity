@@ -8,7 +8,11 @@
     "lint": "next lint",
     "start": "next start",
     "test": "jest",
-    "test:watch": "jest --watch"
+    "test:watch": "jest --watch",
+    "generate:sdk:node": "openapi-generator-cli generate -i ./app/api/openapi.json -g typescript-axios -o ./sdk/node --skip-validate-spec",
+    "generate:sdk:python": "openapi-generator-cli generate -i ./app/api/openapi.json -g python -o ./sdk/python --skip-validate-spec",
+    "generate:sdk:go": "openapi-generator-cli generate -i ./app/api/openapi.json -g go -o ./sdk/go --skip-validate-spec",
+    "generate:sdk:all": "npm run generate:sdk:node && npm run generate:sdk:python && npm run generate:sdk:go"
   },
   "dependencies": {
     "@aws-sdk/client-secrets-manager": "^3.1020.0",
@@ -106,6 +110,7 @@
     "ts-jest": "^29.4.6",
     "ts-node": "^10.9.2",
     "tw-animate-css": "1.3.3",
-    "typescript": "^5"
+    "typescript": "^5",
+    "@openapitools/openapi-generator-cli": "^2.16.1"
   }
 }

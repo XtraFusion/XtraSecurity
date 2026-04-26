@@ -1,0 +1,30 @@
+# NotificationRule
+
+
+## Properties
+
+Name | Type | Description | Notes
+------------ | ------------- | ------------- | -------------
+**id** | **string** |  | [optional] [default to undefined]
+**name** | **string** |  | [optional] [default to undefined]
+**description** | **string** |  | [optional] [default to undefined]
+**enabled** | **boolean** |  | [optional] [default to undefined]
+**triggers** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+**channels** | **Array&lt;string&gt;** |  | [optional] [default to undefined]
+
+## Example
+
+```typescript
+import { NotificationRule } from './api';
+
+const instance: NotificationRule = {
+    id,
+    name,
+    description,
+    enabled,
+    triggers,
+    channels,
+};
+```
+
+[[Back to Model list]](../README.md#documentation-for-models) [[Back to API list]](../README.md#documentation-for-api-endpoints) [[Back to README]](../README.md)

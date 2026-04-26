@@ -1,0 +1,785 @@
+openapi: 3.1.0
+info:
+  contact:
+    name: XtraSecurity Support
+    url: https://www.xtrasecurity.in/support
+  description: "The XtraSecurity API allows you to programmatically manage secrets,\
+    \ projects, teams, and notifications. Authenticate using Bearer tokens (API Keys)\
+    \ generated from the dashboard."
+  license:
+    name: MIT
+  title: XtraSecurity API
+  version: 1.0.0
+servers:
+- description: Current server
+  url: /api
+security:
+- BearerAuth: []
+tags:
+- description: Authentication and session management
+  name: Auth
+- description: Manage projects and their settings
+  name: Projects
+- description: Read and write environment secrets
+  name: Secrets
+- description: Manage secret branches
+  name: Branches
+- description: Manage teams and memberships
+  name: Teams
+- description: "Alerts, rules, and channels"
+  name: Notifications
+- description: JIT access requests and break-glass
+  name: Access
+- description: Immutable audit logs
+  name: Audit
+paths:
+  /projects:
+    get:
+      description: Returns all projects the authenticated user has access to.
+      operationId: listProjects
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Project"
+                type: array
+          description: A list of projects
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+          description: Unauthorized
+      summary: List all projects
+      tags:
+      - Projects
+    post:
+      operationId: createProject
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createProject_request"
+        required: true
+      responses:
+        "201":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Project"
+          description: Project created
+        "400":
+          description: Bad Request
+        "401":
+          description: Unauthorized
+      summary: Create a new project
+      tags:
+      - Projects
+  /projects/{projectId}/envs/{env}/secrets:
+    get:
+      description: Returns all decrypted key-value pairs for the given project and
+        environment. Requires `secret.read` permission.
+      operationId: getSecrets
+      parameters:
+      - description: The project ID
+        explode: false
+        in: path
+        name: projectId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - description: The environment
+        explode: false
+        in: path
+        name: env
+        required: true
+        schema:
+          enum:
+          - development
+          - staging
+          - production
+          type: string
+        style: simple
+      - description: The branch to read from
+        explode: true
+        in: query
+        name: branch
+        required: false
+        schema:
+          default: main
+          type: string
+        style: form
+      - description: Include version metadata for each secret
+        explode: true
+        in: query
+        name: includeVersions
+        required: false
+        schema:
+          default: false
+          type: boolean
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SecretsMap"
+          description: Key-value map of secrets
+        "401":
+          description: Unauthorized
+        "403":
+          description: Access Denied or JIT Elevation Required
+        "404":
+          description: Project or Branch not found
+      summary: Get all secrets for an environment
+      tags:
+      - Secrets
+    post:
+      description: Bulk upsert secrets. Provide a key-value map. Supports optimistic
+        locking via `expectedVersions`.
+      operationId: upsertSecrets
+      parameters:
+      - explode: false
+        in: path
+        name: projectId
+        required: true
+        schema:
+          type: string
+        style: simple
+      - explode: false
+        in: path
+        name: env
+        required: true
+        schema:
+          enum:
+          - development
+          - staging
+          - production
+          type: string
+        style: simple
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/upsertSecrets_request"
+        required: true
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/upsertSecrets_200_response"
+          description: Secrets upserted
+        "401":
+          description: Unauthorized
+        "404":
+          description: Project or Branch not found
+        "409":
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/upsertSecrets_409_response"
+          description: Version conflict detected
+      summary: Create or update secrets
+      tags:
+      - Secrets
+  /branch:
+    get:
+      operationId: listBranches
+      parameters:
+      - explode: true
+        in: query
+        name: projectId
+        required: true
+        schema:
+          type: string
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Branch"
+                type: array
+          description: List of branches
+        "401":
+          description: Unauthorized
+      summary: List branches for a project
+      tags:
+      - Branches
+    post:
+      operationId: createBranch
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createBranch_request"
+        required: true
+      responses:
+        "201":
+          description: Branch created
+        "400":
+          description: Bad Request
+      summary: Create a new branch
+      tags:
+      - Branches
+  /team:
+    get:
+      operationId: listTeams
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Team"
+                type: array
+          description: List of teams
+        "401":
+          description: Unauthorized
+      summary: List all teams
+      tags:
+      - Teams
+    post:
+      operationId: createTeam
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createTeam_request"
+        required: true
+      responses:
+        "201":
+          description: Team created
+      summary: Create a new team
+      tags:
+      - Teams
+  /notifications:
+    get:
+      operationId: listNotifications
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/Notification"
+                type: array
+          description: List of notifications
+        "401":
+          description: Unauthorized
+      summary: List all alert notifications
+      tags:
+      - Notifications
+  /notification-rules:
+    get:
+      operationId: listNotificationRules
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/NotificationRule"
+                type: array
+          description: List of rules
+      summary: List notification rules
+      tags:
+      - Notifications
+    post:
+      operationId: createNotificationRule
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createNotificationRule_request"
+        required: true
+      responses:
+        "201":
+          description: Rule created
+      summary: Create a notification rule
+      tags:
+      - Notifications
+  /notification-channels:
+    get:
+      operationId: listNotificationChannels
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/NotificationChannel"
+                type: array
+          description: List of channels
+      summary: List notification channels
+      tags:
+      - Notifications
+    post:
+      operationId: createNotificationChannel
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createNotificationChannel_request"
+        required: true
+      responses:
+        "201":
+          description: Channel created
+      summary: Create a notification channel
+      tags:
+      - Notifications
+  /access-requests:
+    get:
+      operationId: listAccessRequests
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/AccessRequest"
+                type: array
+          description: List of access requests
+      summary: List JIT access requests
+      tags:
+      - Access
+    post:
+      operationId: createAccessRequest
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/createAccessRequest_request"
+        required: true
+      responses:
+        "201":
+          description: Request submitted
+      summary: Submit a JIT access request
+      tags:
+      - Access
+  /audit:
+    get:
+      operationId: getAuditLogs
+      parameters:
+      - explode: true
+        in: query
+        name: workspaceId
+        required: false
+        schema:
+          type: string
+        style: form
+      - explode: true
+        in: query
+        name: limit
+        required: false
+        schema:
+          default: 50
+          type: integer
+        style: form
+      - explode: true
+        in: query
+        name: page
+        required: false
+        schema:
+          default: 1
+          type: integer
+        style: form
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                items:
+                  $ref: "#/components/schemas/AuditLog"
+                type: array
+          description: List of audit logs
+        "401":
+          description: Unauthorized
+        "403":
+          description: Forbidden - Admin only
+      summary: Get audit logs
+      tags:
+      - Audit
+components:
+  schemas:
+    Error:
+      example:
+        error: error
+        message: message
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+    Project:
+      example:
+        securityLevel: low
+        accessControl: private
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        description: description
+        id: id
+        status: active
+        updatedAt: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        status:
+          enum:
+          - active
+          - inactive
+          type: string
+        accessControl:
+          enum:
+          - private
+          - team
+          - public
+          type: string
+        securityLevel:
+          enum:
+          - low
+          - medium
+          - high
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+        updatedAt:
+          format: date-time
+          type: string
+    Branch:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        versionNo: versionNo
+        description: description
+        id: id
+        projectId: projectId
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        versionNo:
+          type: string
+        projectId:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+    Secret:
+      properties:
+        key:
+          type: string
+        value:
+          type: string
+        version:
+          type: string
+        isReference:
+          type: boolean
+        source:
+          enum:
+          - local
+          - linked
+          type: string
+    SecretsMap:
+      additionalProperties:
+        type: string
+      example:
+        DATABASE_URL: postgres://user:pass@host:5432/db
+        API_KEY: sk-abc123
+    Team:
+      example:
+        createdAt: 2000-01-23T04:56:07.000+00:00
+        name: name
+        description: description
+        id: id
+        teamColor: teamColor
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        teamColor:
+          type: string
+        createdAt:
+          format: date-time
+          type: string
+    Notification:
+      example:
+        severity: low
+        read: true
+        id: id
+        title: title
+        message: message
+        type: type
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        message:
+          type: string
+        severity:
+          enum:
+          - low
+          - medium
+          - high
+          - critical
+          type: string
+        type:
+          type: string
+        read:
+          type: boolean
+        timestamp:
+          format: date-time
+          type: string
+    NotificationRule:
+      example:
+        channels:
+        - channels
+        - channels
+        name: name
+        description: description
+        id: id
+        triggers:
+        - triggers
+        - triggers
+        enabled: true
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        enabled:
+          type: boolean
+        triggers:
+          items:
+            type: string
+          type: array
+        channels:
+          items:
+            type: string
+          type: array
+    NotificationChannel:
+      example:
+        name: name
+        id: id
+        type: slack
+        enabled: true
+      properties:
+        id:
+          type: string
+        type:
+          enum:
+          - slack
+          - email
+          - webhook
+          - teams
+          type: string
+        name:
+          type: string
+        enabled:
+          type: boolean
+    AccessRequest:
+      example:
+        duration: 0
+        reason: reason
+        requestedAt: 2000-01-23T04:56:07.000+00:00
+        id: id
+        status: pending
+      properties:
+        id:
+          type: string
+        reason:
+          type: string
+        duration:
+          description: Duration in minutes
+          type: integer
+        status:
+          enum:
+          - pending
+          - approved
+          - rejected
+          - expired
+          - revoked
+          type: string
+        requestedAt:
+          format: date-time
+          type: string
+    AuditLog:
+      example:
+        changes: "{}"
+        action: action
+        entityId: entityId
+        id: id
+        entity: entity
+        timestamp: 2000-01-23T04:56:07.000+00:00
+      properties:
+        id:
+          type: string
+        action:
+          type: string
+        entity:
+          type: string
+        entityId:
+          type: string
+        changes:
+          type: object
+        timestamp:
+          format: date-time
+          type: string
+    createProject_request:
+      properties:
+        name:
+          example: my-backend
+          type: string
+        description:
+          example: Production backend project
+          type: string
+        workspaceId:
+          type: string
+      required:
+      - name
+      - workspaceId
+    upsertSecrets_request:
+      properties:
+        secrets:
+          additionalProperties:
+            type: string
+          example:
+            DATABASE_URL: postgres://...
+            API_KEY: sk-...
+        branch:
+          default: main
+          type: string
+        expectedVersions:
+          additionalProperties:
+            type: string
+          description: For optimistic locking. Map of key to expected current version.
+    upsertSecrets_200_response:
+      example:
+        success: true
+        count: 0
+      properties:
+        success:
+          type: boolean
+        count:
+          type: integer
+    upsertSecrets_409_response:
+      example:
+        conflicts:
+        - ""
+        - ""
+        error: error
+      properties:
+        error:
+          type: string
+        conflicts:
+          items: {}
+          type: array
+    createBranch_request:
+      properties:
+        name:
+          example: feature/new-api
+          type: string
+        description:
+          type: string
+        projectId:
+          type: string
+      required:
+      - name
+      - projectId
+    createTeam_request:
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        teamColor:
+          example: "#4F46E5"
+          type: string
+      required:
+      - name
+    createNotificationRule_request:
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        triggers:
+          example:
+          - secret.rotate
+          - secret.access
+          items:
+            type: string
+          type: array
+        channels:
+          items:
+            type: string
+          type: array
+        conditions:
+          type: object
+      required:
+      - channels
+      - name
+      - triggers
+    createNotificationChannel_request:
+      properties:
+        type:
+          enum:
+          - slack
+          - email
+          - webhook
+          - teams
+          type: string
+        name:
+          example: Slack - Security Alerts
+          type: string
+        config:
+          description: "Channel-specific config. For Slack: `{ webhookUrl }`. For\
+            \ email: `{ email }`. For webhook: `{ url }`."
+          type: object
+      required:
+      - config
+      - name
+      - type
+    createAccessRequest_request:
+      properties:
+        reason:
+          example: "Debugging production issue #1234"
+          type: string
+        duration:
+          description: Duration in minutes
+          example: 60
+          type: integer
+        secretId:
+          type: string
+        projectId:
+          type: string
+      required:
+      - duration
+      - reason
+  securitySchemes:
+    BearerAuth:
+      bearerFormat: JWT
+      description: "API Key from the XtraSecurity dashboard. Pass it as `Authorization:\
+        \ Bearer <token>`."
+      scheme: bearer
+      type: http

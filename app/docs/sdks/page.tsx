@@ -8,12 +8,12 @@ import { ArrowLeft, Code } from "lucide-react";
 
 export default function SDKsPage() {
   const sdks = [
-    { name: "Node.js", status: "Stable", docs: "#nodejs" },
-    { name: "Python", status: "Stable", docs: "#python" },
-    { name: "Go", status: "Stable", docs: "#go" },
-    { name: "Java", status: "Beta", docs: "#java" },
-    { name: ".NET", status: "Coming", docs: "#dotnet" },
-    { name: "Rust", status: "Beta", docs: "#rust" }
+    { name: "Node.js", status: "Stable", docs: "/docs/sdks/node" },
+    { name: "Python", status: "Stable", docs: "/docs/sdks/python" },
+    { name: "Go", status: "Stable", docs: "/docs/sdks/go" },
+    { name: "Java", status: "Beta", docs: "#" },
+    { name: ".NET", status: "Coming", docs: "#" },
+    { name: "Rust", status: "Beta", docs: "#" }
   ];
 
   return (
@@ -46,11 +46,11 @@ export default function SDKsPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <a href={sdk.docs}>
+                <Link href={sdk.docs}>
                   <Button variant="outline" className="w-full">
                     View Documentation
                   </Button>
-                </a>
+                </Link>
               </CardContent>
             </Card>
           ))}
