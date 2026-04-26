@@ -149,6 +149,28 @@ const TeamDetailPage = () => {
     newRole?: TeamMember["role"];
   }>({ open: false, type: "remove" });
 
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+
+  const [dropdownPos, setDropdownPos] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (!(e.target as Element).closest('.custom-dropdown-container') && !(e.target as Element).closest('.dropdown-trigger-btn')) {
+        setActiveDropdown(null);
+      }
+    };
+    
+    const handleScroll = () => setActiveDropdown(null);
+
+    document.addEventListener('click', handleClickOutside);
+    window.addEventListener('scroll', handleScroll, true);
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+      window.removeEventListener('scroll', handleScroll, true);
+    };
+  }, []);
+
   const fetchTeamDetails = async () => {
     try {
       setIsLoading(true);
@@ -169,8 +191,11 @@ const TeamDetailPage = () => {
   };
 
   useEffect(() => {
-    if (teamId && session) fetchTeamDetails();
-  }, [teamId, session]);
+    if (teamId && session?.user?.id) {
+      fetchTeamDetails();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [teamId, session?.user?.id]);
 
   const filteredMembers = useMemo(() => {
     if (!team) return [];
@@ -436,21 +461,56 @@ const TeamDetailPage = () => {
                                             </td>
                                             <td className="px-6 py-4 text-right">
                                                 {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
-                                                    <DropdownMenu>
-                                                        <DropdownMenuTrigger asChild>
-                                                            <Button variant="ghost" size="icon" className="h-8 w-8">
-                                                                <MoreVertical className="h-4 w-4" />
-                                                            </Button>
-                                                        </DropdownMenuTrigger>
-                                                        <DropdownMenuContent align="end">
-                                                            <DropdownMenuLabel className="text-xs">Manage Role</DropdownMenuLabel>
-                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'admin' })} disabled={member.role === 'admin'}>Admin</DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'developer' })} disabled={member.role === 'developer'}>Developer</DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'viewer' })} disabled={member.role === 'viewer'}>Viewer</DropdownMenuItem>
-                                                            <DropdownMenuSeparator />
-                                                            <DropdownMenuItem onClick={() => setConfirmDialog({ open: true, type: 'remove', member })} className="text-destructive">Remove from Team</DropdownMenuItem>
-                                                        </DropdownMenuContent>
-                                                    </DropdownMenu>
+                                                    <div className="relative inline-block">
+                                                        <Button 
+                                                          variant="ghost" 
+                                                          size="icon" 
+                                                          className="h-8 w-8 dropdown-trigger-btn"
+                                                          onClick={(e) => {
+                                                            if (activeDropdown === member.id) {
+                                                              setActiveDropdown(null);
+                                                            } else {
+                                                              const rect = e.currentTarget.getBoundingClientRect();
+                                                              setDropdownPos({
+                                                                top: rect.bottom + 4,
+                                                                right: window.innerWidth - rect.right
+                                                              });
+                                                              setActiveDropdown(member.id);
+                                                            }
+                                                          }}
+                                                        >
+                                                            <MoreVertical className="h-4 w-4 pointer-events-none" />
+                                                        </Button>
+                                                        
+                                                        {activeDropdown === member.id && (
+                                                            <div 
+                                                              className="fixed w-48 rounded-md border border-border bg-popover shadow-xl z-[9999] overflow-hidden text-left p-1 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
+                                                              style={{ top: dropdownPos.top, right: dropdownPos.right }}
+                                                            >
+                                                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Manage Role</div>
+                                                                <button 
+                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'admin' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
+                                                                    disabled={member.role === 'admin'}
+                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'admin' }); setActiveDropdown(null); }}
+                                                                >Admin</button>
+                                                                <button 
+                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'developer' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
+                                                                    disabled={member.role === 'developer'}
+                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'developer' }); setActiveDropdown(null); }}
+                                                                >Developer</button>
+                                                                <button 
+                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'viewer' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
+                                                                    disabled={member.role === 'viewer'}
+                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'viewer' }); setActiveDropdown(null); }}
+                                                                >Viewer</button>
+                                                                <div className="h-px bg-border my-1" />
+                                                                <button 
+                                                                    className="w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors text-destructive hover:bg-destructive/10"
+                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'remove', member }); setActiveDropdown(null); }}
+                                                                >Remove from Team</button>
+                                                            </div>
+                                                        )}
+                                                    </div>
                                                 )}
                                             </td>
                                         </tr>
@@ -518,9 +578,9 @@ const TeamDetailPage = () => {
                  {confirmDialog.type === "remove" ? (
                      confirmDialog.member?.id === 'team' ? 
                      `Are you sure you want to delete ${confirmDialog.member?.name}? This action is terminal.` :
-                     `Are you sure you want to remove ${confirmDialog.member?.name}? They will lose all access to team resources immediately.`
+                     `Are you sure you want to remove ${confirmDialog.member?.user?.name || confirmDialog.member?.name || "this user"}? They will lose all access to team resources immediately.`
                  ) : (
-                     `Update role for ${confirmDialog.member?.name} to ${confirmDialog.newRole}?`
+                     `Update role for ${confirmDialog.member?.user?.name || confirmDialog.member?.name || "this user"} to ${confirmDialog.newRole}?`
                  )}
               </AlertDialogDescription>
             </AlertDialogHeader>

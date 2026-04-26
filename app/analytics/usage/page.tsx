@@ -276,8 +276,8 @@ export default function UsageAnalyticsPage() {
                     <AreaChart data={data.usageTimeline} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                       <defs>
                         <linearGradient id="colorCount" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.25}/>
-                          <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                          <stop offset="5%" stopColor="#10b981" stopOpacity={0.25}/>
+                          <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
@@ -289,15 +289,15 @@ export default function UsageAnalyticsPage() {
                         tickFormatter={(str) => new Date(str).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
                       />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(128,128,128,0.6)", fontWeight: 500 }} allowDecimals={false} />
-                      <RechartsTooltip content={<ChartTooltip />} cursor={{ fill: "transparent", stroke: "hsl(var(--primary))", strokeWidth: 1, strokeDasharray: "4 4" }} />
+                      <RechartsTooltip content={<ChartTooltip />} cursor={{ fill: "transparent", stroke: "#10b981", strokeWidth: 1, strokeDasharray: "4 4" }} />
                       <Area
                         type="monotone"
                         dataKey="count"
-                        stroke="hsl(var(--primary))"
+                        stroke="#10b981"
                         strokeWidth={3}
                         fillOpacity={1}
                         fill="url(#colorCount)"
-                        activeDot={{ r: 6, fill: "hsl(var(--primary))", stroke: "#fff", strokeWidth: 2 }}
+                        activeDot={{ r: 6, fill: "#10b981", stroke: "#fff", strokeWidth: 2 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>

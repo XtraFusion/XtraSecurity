@@ -21,12 +21,31 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-    // 1. Fetch SecurityEvents for secret fetches in this workspace
+    // 1. Find all projects in the workspace to catch events logged only with projectId
+    const wsProjects = await prisma.project.findMany({
+      where: { workspaceId },
+      select: { id: true }
+    });
+    const wsProjectIds = wsProjects.map(p => p.id);
+
+    // 2. Fetch SecurityEvents for secret fetches in this workspace
     const events = await prisma.securityEvent.findMany({
       where: {
-        workspaceId,
-        endpoint: { startsWith: "/api/secret" },
-        statusCode: 200,
+        AND: [
+          {
+            OR: [
+              { workspaceId },
+              { projectId: { in: wsProjectIds } }
+            ]
+          },
+          {
+            OR: [
+              { endpoint: { startsWith: "/api/secret" } },
+              { endpoint: { startsWith: "/api/cli/" } }
+            ]
+          }
+        ],
+        statusCode: { in: [200, 201] },
         timestamp: { gte: startDate }
       }
     });

@@ -147,7 +147,7 @@ const ChartTooltip = ({ active, payload, label }: any) => {
     <div className="bg-popover text-popover-foreground border text-[11px] p-2.5 rounded-lg shadow-xl backdrop-blur-md">
       <p className="text-muted-foreground font-medium mb-1">{label}</p>
       <div className="flex items-center gap-2">
-        <div className="h-2 w-2 rounded-full bg-primary" />
+        <div className="h-2 w-2 rounded-full bg-blue-500" />
         <p className="font-bold text-foreground text-sm">{payload[0].value} <span className="font-normal text-muted-foreground text-[10px]">events</span></p>
       </div>
     </div>
@@ -348,12 +348,12 @@ export default function AuditLogsPage() {
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(128,128,128,0.1)" />
                       <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(128,128,128,0.5)", fontWeight: 700 }} />
                       <YAxis axisLine={false} tickLine={false} tick={{ fontSize: 10, fill: "rgba(128,128,128,0.5)", fontWeight: 700 }} />
-                      <RechartsTooltip content={<ChartTooltip />} cursor={{ fill: "hsl(var(--primary)/2%)" }} />
+                      <RechartsTooltip content={<ChartTooltip />} cursor={{ fill: "rgba(59,130,246,0.05)" }} />
                       <Bar dataKey="count" radius={[4, 4, 0, 0]}>
                          {chartData.map((entry, index) => (
                            <Cell 
                              key={index} 
-                             fill={entry.count > 0 ? "hsl(var(--primary))" : "rgba(128,128,128,0.1)"} 
+                             fill={entry.count > 0 ? "#3b82f6" : "rgba(128,128,128,0.1)"} 
                              fillOpacity={0.8}
                            />
                          ))}
@@ -365,13 +365,12 @@ export default function AuditLogsPage() {
         </Card>
 
         {/* Audit Trail List */}
-        <Card className="border shadow-sm">
-           <CardHeader className="border-b bg-muted/5">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-                 <div className="space-y-1">
-                    <CardTitle className="text-lg">Audit Trail</CardTitle>
-                    <CardDescription>Comprehensive immutable record of workspace interactions.</CardDescription>
-                 </div>
+        <div className="border-t border-border/50 pt-8 mt-12">
+           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-8">
+              <div className="space-y-1">
+                 <h2 className="text-lg font-bold">Audit Trail</h2>
+                 <p className="text-sm text-muted-foreground">Comprehensive immutable record of workspace interactions.</p>
+              </div>
                  
                  <div className="flex flex-wrap items-center gap-3 no-print">
                     <div className="relative w-full sm:w-64">
@@ -409,8 +408,8 @@ export default function AuditLogsPage() {
                     </Select>
                  </div>
               </div>
-           </CardHeader>
-           <CardContent className="p-0">
+           
+           <div className="rounded-xl border border-border/50 bg-card/20 backdrop-blur-sm overflow-hidden mt-6">
               <div className="overflow-x-auto">
                  <table className="w-full text-left text-sm whitespace-nowrap">
                     <thead className="bg-muted/30 text-muted-foreground border-b uppercase text-[10px] font-black tracking-widest">
@@ -421,11 +420,11 @@ export default function AuditLogsPage() {
                           <th className="px-6 py-4 text-right">Timestamp</th>
                        </tr>
                     </thead>
-                    <tbody className="divide-y relative">
+                    <tbody className="divide-y divide-border/20 relative">
                        {isLoading && logs.length === 0 ? (
                            Array.from({ length: 8 }).map((_, i) => (
-                             <tr key={i} className="animate-pulse">
-                                <td colSpan={4} className="px-6 py-8"><Skeleton className="h-8 w-full opacity-20" /></td>
+                             <tr key={i} className="animate-pulse hover:bg-muted/5 transition-colors border-l-2 border-transparent">
+                                <td colSpan={4} className="px-6 py-6"><Skeleton className="h-6 w-full opacity-10" /></td>
                              </tr>
                            ))
                        ) : logs.length === 0 ? (
@@ -445,8 +444,8 @@ export default function AuditLogsPage() {
                              return (
                                <Dialog key={log.id}>
                                  <DialogTrigger asChild>
-                                   <tr className="group hover:bg-muted/5 transition-all cursor-pointer">
-                                      <td className="px-6 py-5">
+                                   <tr className="group hover:bg-muted/10 transition-all cursor-pointer border-l-2 border-transparent hover:border-primary/50">
+                                      <td className="px-6 py-4">
                                          <div className="flex items-center gap-4">
                                             <Avatar className="h-9 w-9 rounded-xl border border-border shadow-sm shrink-0">
                                                <AvatarFallback className="bg-primary/5 text-primary text-xs font-bold">
@@ -463,70 +462,104 @@ export default function AuditLogsPage() {
                                             </div>
                                          </div>
                                       </td>
-                                      <td className="px-6 py-5">
-                                         <div className="flex flex-col gap-1.5">
-                                            <div className="flex items-center gap-1.5">
-                                               <config.icon className={cn("h-3 w-3", config.color)} />
-                                               <span className="text-[10px] font-black uppercase tracking-tight text-muted-foreground">{config.label}</span>
+                                      <td className="px-6 py-4">
+                                         <div className="flex flex-col gap-2">
+                                            <div className="flex items-center gap-2">
+                                               <config.icon className={cn("h-3.5 w-3.5", config.color)} />
+                                               <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">{config.label}</span>
                                             </div>
-                                            <div className="flex items-center gap-1.5 opacity-60">
+                                            <div className="flex items-center gap-1.5 opacity-50">
                                                <DeviceIcon className="h-3 w-3" />
-                                               <span className="text-[10px] font-mono">{log.details.ip}</span>
+                                               <span className="text-[10px] font-mono tracking-wider">{log.details.ip}</span>
                                             </div>
                                          </div>
                                       </td>
-                                      <td className="px-6 py-5">
-                                         <Badge className={cn("rounded-full px-3 text-[10px] font-black tracking-tighter h-6", status.bg, status.color)}>
+                                      <td className="px-6 py-4">
+                                         <Badge className={cn("rounded-md px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest border border-border/50", status.bg, status.color)}>
                                             <status.icon className="h-3 w-3 mr-1.5" /> {status.label}
                                          </Badge>
                                       </td>
-                                      <td className="px-6 py-5 text-right">
-                                         <div className="flex flex-col items-end">
-                                            <span className="text-[11px] font-bold text-foreground/80 tabular-nums">{format(new Date(log.timestamp), "MMM dd, HH:mm:ss")}</span>
-                                            <span className="text-[9px] text-muted-foreground font-medium opacity-40 uppercase tracking-tighter mt-0.5">GMT {format(new Date(log.timestamp), "x")}</span>
+                                      <td className="px-6 py-4 text-right">
+                                         <div className="flex flex-col items-end gap-1">
+                                            <span className="text-[11px] font-mono font-bold text-foreground/80">{format(new Date(log.timestamp), "MMM dd, HH:mm:ss")}</span>
+                                            <span className="text-[9px] font-mono text-muted-foreground opacity-50 uppercase tracking-widest">GMT {format(new Date(log.timestamp), "x")}</span>
                                          </div>
                                       </td>
                                    </tr>
                                  </DialogTrigger>
-                                 <DialogContent className="max-w-2xl border-border/50 shadow-2xl overflow-hidden p-0">
-                                    <div className="bg-muted/10 p-6 border-b">
-                                       <DialogHeader>
-                                          <div className="flex items-center gap-3 mb-2">
-                                             <Badge className={cn("px-2.5 h-6 font-black uppercase text-[10px] tracking-widest", status.bg, status.color)}>{status.label}</Badge>
-                                             <div className="flex items-center gap-1.5 text-rose-600">
-                                                <severity.icon className="h-3.5 w-3.5" />
-                                                <span className="text-[10px] font-black uppercase tracking-widest">{severity.label}</span>
-                                             </div>
+                                 <DialogContent className="max-w-2xl border-border/30 shadow-2xl overflow-hidden p-0 bg-[#0a0a0a] text-zinc-300 font-mono">
+                                    <div className="bg-black/40 p-4 border-b border-border/10 flex items-center justify-between">
+                                       <div className="flex items-center gap-3">
+                                          <div className="flex gap-1.5">
+                                             <div className="h-2.5 w-2.5 rounded-full bg-rose-500/80"></div>
+                                             <div className="h-2.5 w-2.5 rounded-full bg-amber-500/80"></div>
+                                             <div className="h-2.5 w-2.5 rounded-full bg-emerald-500/80"></div>
                                           </div>
-                                          <DialogTitle className="text-xl font-black tracking-tight">{log.action}</DialogTitle>
-                                          <DialogDescription className="font-mono text-[10px] opacity-60">TRACE_ID: {log.id}</DialogDescription>
-                                       </DialogHeader>
+                                          <div className="h-4 w-[1px] bg-border/30 mx-2"></div>
+                                          <span className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Console | {log.action}</span>
+                                       </div>
+                                       <Badge className={cn("px-2 h-5 font-black uppercase text-[8px] tracking-widest border-0", status.bg, status.color)}>{status.label}</Badge>
                                     </div>
                                     
-                                    <div className="p-8 space-y-8 max-h-[60vh] overflow-y-auto custom-scrollbar">
-                                       <div className="grid grid-cols-2 gap-8">
-                                          <DetailItem label="Identity Origin" value={log.user.email} sub={`ID: ${log.user.id}`} icon={User} />
-                                          <DetailItem label="Network Context" value={log.details.ip} sub={log.details.userAgent} icon={Globe} />
-                                          <DetailItem label="Target Resource" value={log.details.resource || 'Global Workspace'} sub="Primary scope" icon={LayoutGrid} />
-                                          <DetailItem label="Timestamp" value={format(new Date(log.timestamp), "PPPP")} sub={format(new Date(log.timestamp), "HH:mm:ss.SSS (xxx)")} icon={Clock} />
+                                    <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar text-xs">
+                                       <div className="space-y-4">
+                                          <div className="flex items-start gap-4">
+                                             <span className="text-primary mt-1 opacity-80">{">"}</span>
+                                             <div className="flex flex-col gap-1">
+                                                <span className="font-bold text-white text-sm">Execution Context</span>
+                                                <span className="opacity-50">TRACE_ID: {log.id}</span>
+                                             </div>
+                                          </div>
+                                          
+                                          <div className="grid grid-cols-2 gap-x-8 gap-y-4 pl-6 opacity-80">
+                                             <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Actor</span>
+                                                <div className="text-white break-all">{log.user.email} <span className="opacity-50 text-[10px]">({log.user.id})</span></div>
+                                             </div>
+                                             <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Network</span>
+                                                <div className="text-white truncate max-w-[200px]" title={log.details.ip}>{log.details.ip} <span className="opacity-50 text-[10px]">({log.details.userAgent})</span></div>
+                                             </div>
+                                             <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Target</span>
+                                                <div className="text-white">{log.details.resource || 'Global Workspace'}</div>
+                                             </div>
+                                             <div className="space-y-1">
+                                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Time</span>
+                                                <div className="text-white">{format(new Date(log.timestamp), "HH:mm:ss.SSS")} <span className="opacity-50 text-[10px]">({format(new Date(log.timestamp), "MMM dd")})</span></div>
+                                             </div>
+                                          </div>
                                        </div>
 
+                                       <div className="h-[1px] w-full bg-border/10 my-4" />
+
                                        <div className="space-y-4">
-                                          <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground flex items-center gap-2">
-                                             <History className="h-4 w-4" /> Observed Lifecycle
-                                          </h4>
-                                          <div className="p-4 rounded-xl border bg-muted/20 space-y-4 font-mono text-xs">
-                                             {log.changes ? Object.entries(log.changes).map(([field, delta]: any) => (
-                                                <div key={field} className="grid grid-cols-1 md:grid-cols-12 gap-3 border-b border-border/10 pb-3 last:border-0 last:pb-0">
-                                                   <span className="md:col-span-3 font-black text-primary opacity-60 uppercase tracking-tighter text-[10px]">{field}</span>
-                                                   <div className="md:col-span-9 flex flex-wrap items-center gap-2">
-                                                      <span className="px-2 py-0.5 rounded bg-rose-500/5 text-rose-600 line-through decoration-rose-600/30">{String(delta.old)}</span>
-                                                      <ArrowRight className="h-3 w-3 opacity-30" />
-                                                      <span className="px-2 py-0.5 rounded bg-emerald-500/5 text-emerald-600 font-bold">{String(delta.new)}</span>
+                                          <div className="flex items-start gap-4">
+                                             <span className="text-primary mt-1 opacity-80">{">"}</span>
+                                             <div className="flex flex-col gap-1">
+                                                <span className="font-bold text-white text-sm">Delta Inspector</span>
+                                                <span className="opacity-50">Payload mutations</span>
+                                             </div>
+                                          </div>
+                                          <div className="pl-6">
+                                             {log.changes && Object.keys(log.changes).length > 0 ? Object.entries(log.changes).map(([field, delta]: any) => (
+                                                <div key={field} className="flex flex-col gap-2 mb-4 last:mb-0">
+                                                   <span className="font-bold text-primary opacity-80 uppercase tracking-widest text-[10px] border-b border-border/10 pb-1 inline-block">{field}</span>
+                                                   <div className="grid grid-cols-2 gap-4 bg-black/40 rounded border border-border/10 p-3">
+                                                      <div className="space-y-1">
+                                                         <span className="text-[8px] uppercase tracking-widest opacity-50 text-rose-400">Previous</span>
+                                                         <div className="text-rose-300 break-all">{String(delta.old)}</div>
+                                                      </div>
+                                                      <div className="space-y-1">
+                                                         <span className="text-[8px] uppercase tracking-widest opacity-50 text-emerald-400">Current</span>
+                                                         <div className="text-emerald-300 font-bold break-all">{String(delta.new)}</div>
+                                                      </div>
                                                    </div>
                                                 </div>
                                              )) : (
-                                                <p className="text-muted-foreground italic text-[11px] font-sans">No complex property changes were detected for this interaction.</p>
+                                                <div className="bg-black/40 rounded border border-border/10 p-4 opacity-50 text-center">
+                                                   No property mutations detected in this trace.
+                                                </div>
                                              )}
                                           </div>
                                        </div>
@@ -541,38 +574,38 @@ export default function AuditLogsPage() {
               </div>
 
               {/* Pagination Controller */}
-              <div className="px-6 py-6 border-t flex flex-col sm:flex-row items-center justify-between gap-6 bg-muted/5">
+              <div className="px-6 py-4 border-t border-border/50 flex flex-col sm:flex-row items-center justify-between gap-6 bg-black/10">
                  <div className="flex items-center gap-4">
-                   <p className="text-xs text-muted-foreground font-medium">
-                     Viewing <span className="font-bold text-foreground">{logs.length}</span> of <span className="font-bold text-foreground">{total}</span> events
+                   <p className="text-xs text-muted-foreground font-medium font-mono uppercase tracking-widest">
+                     <span className="text-foreground">{logs.length}</span> / <span className="text-foreground">{total}</span> EVENTS
                    </p>
                    <Select value={String(pageSize)} onValueChange={v => { setPageSize(Number(v)); setPage(1); }}>
-                    <SelectTrigger className="w-20 h-7 text-[10px] font-bold border-0 bg-transparent shadow-none hover:bg-muted/10 transition-colors">
+                    <SelectTrigger className="w-24 h-8 text-[10px] font-bold uppercase tracking-widest border border-border/50 bg-background/50 hover:bg-muted/10 transition-colors">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="10">10 / pg</SelectItem>
-                      <SelectItem value="25">25 / pg</SelectItem>
-                      <SelectItem value="50">50 / pg</SelectItem>
-                      <SelectItem value="100">100 / pg</SelectItem>
+                      <SelectItem value="10">10 / PG</SelectItem>
+                      <SelectItem value="25">25 / PG</SelectItem>
+                      <SelectItem value="50">50 / PG</SelectItem>
+                      <SelectItem value="100">100 / PG</SelectItem>
                     </SelectContent>
                   </Select>
                  </div>
                  
                  <div className="flex items-center gap-2">
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={page <= 1 || isLoading} onClick={() => setPage(p => p - 1)}>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-border/50 bg-background/50" disabled={page <= 1 || isLoading} onClick={() => setPage(p => p - 1)}>
                        <ChevronLeft className="h-4 w-4" />
                     </Button>
-                    <div className="h-8 px-4 flex items-center justify-center rounded-lg border bg-background text-[11px] font-bold">
+                    <div className="h-8 px-4 flex items-center justify-center rounded-lg border border-border/50 bg-background/50 text-[10px] uppercase tracking-widest font-bold">
                        PAGE {page}
                     </div>
-                    <Button variant="outline" size="sm" className="h-8 w-8 p-0" disabled={logs.length < pageSize || isLoading} onClick={() => setPage(p => p + 1)}>
+                    <Button variant="outline" size="sm" className="h-8 w-8 p-0 border-border/50 bg-background/50" disabled={logs.length < pageSize || isLoading} onClick={() => setPage(p => p + 1)}>
                        <ChevronRight className="h-4 w-4" />
                     </Button>
                  </div>
               </div>
-           </CardContent>
-        </Card>
+           </div>
+        </div>
       </div>
     </DashboardLayout>
   );
@@ -582,23 +615,24 @@ export default function AuditLogsPage() {
 
 function PremiumStatCard({ label, value, sub, icon: Icon, color = "text-primary", bg = "bg-primary/5" }: any) {
   return (
-    <Card className="border bg-card/60 backdrop-blur-xl shadow-sm relative overflow-hidden group transition-all hover:bg-card">
-       <div className={cn("absolute right-0 top-0 h-24 w-24 -mr-6 -mt-6 opacity-5 rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-0 duration-500", color)}>
+    <div className="relative group overflow-hidden rounded-2xl border border-border/40 bg-card/20 backdrop-blur-xl transition-all hover:bg-card/40 p-6 flex flex-col gap-4">
+       {/* Background Accent Gradient */}
+       <div className={cn("absolute inset-0 opacity-[0.03] group-hover:opacity-10 transition-opacity duration-500 bg-gradient-to-br from-transparent to-current", color)} />
+       
+       <div className={cn("absolute right-0 top-0 h-32 w-32 -mr-10 -mt-10 opacity-[0.03] rotate-12 transition-transform group-hover:scale-110 group-hover:rotate-0 duration-700", color)}>
           <Icon className="h-full w-full" />
        </div>
-       <CardContent className="p-6">
-          <div className="flex flex-col gap-4">
-             <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center border border-border/50 bg-background", color)}>
-                <Icon className="h-5 w-5" />
-             </div>
-             <div className="space-y-1">
-                <p className="text-[10px] font-black uppercase text-muted-foreground tracking-[0.2em]">{label}</p>
-                <h2 className="text-2xl font-black tracking-tight tabular-nums">{value}</h2>
-                <p className="text-[11px] text-muted-foreground/80 font-medium whitespace-nowrap">{sub}</p>
-             </div>
-          </div>
-       </CardContent>
-    </Card>
+
+       <div className={cn("h-10 w-10 rounded-xl flex items-center justify-center border border-border/30 bg-background/50 shadow-sm backdrop-blur-md z-10", color)}>
+          <Icon className="h-5 w-5" />
+       </div>
+       
+       <div className="space-y-1.5 z-10 relative">
+          <p className="text-[10px] font-black uppercase text-muted-foreground/80 tracking-[0.2em]">{label}</p>
+          <h2 className="text-2xl font-black tracking-tight tabular-nums text-foreground">{value}</h2>
+          <p className="text-[11px] text-muted-foreground/60 font-medium whitespace-nowrap">{sub}</p>
+       </div>
+    </div>
   );
 }
 
