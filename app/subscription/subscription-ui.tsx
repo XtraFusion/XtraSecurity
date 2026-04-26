@@ -345,7 +345,7 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                             Provision Pro Topology
                         </DialogTitle>
                         <DialogDescription className="text-sm font-medium">
-                            Upgrade to Pro configuration for unified security management ($9/mo). Apply authorization key if available.
+                            Upgrade to Pro configuration for unified security management ($29/mo). Apply authorization key if available.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-6">

@@ -32,11 +32,10 @@ interface DocSidebarProps {
 
 const SECTIONS = [
   { id: "quickstart", label: "Getting Started", icon: Zap },
-  { id: "cli", label: "CLI Reference", icon: Terminal },
+  { id: "cli", label: "CLI Reference", icon: Terminal, href: "/docs/cli" },
   { id: "vscode", label: "VS Code Extension", icon: Puzzle },
-  { id: "integrations", label: "Integrations", icon: Layers },
-  { id: "sdks", label: "SDKs", icon: Code2 },
-  { id: "security", label: "Security & JIT", icon: Shield },
+  { id: "integrations", label: "Integrations", icon: Layers, href: "/docs/integrations" },
+  { id: "sdks", label: "SDKs", icon: Code2, href: "/docs/sdks" },
 ]
 
 export function DocSidebar({
@@ -85,18 +84,31 @@ export function DocSidebar({
 
           return (
             <div key={section.id}>
-              <button
-                onClick={() => setActiveSection(section.id)}
-                className={cn(
-                  "w-full px-3 py-2 rounded-md transition-all flex items-center gap-3 text-sm font-medium",
-                  isActive
-                    ? "text-foreground bg-accent/50"
-                    : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
-                )}
-              >
-                <Icon className={cn("h-4 w-4", isActive ? "text-foreground" : "text-muted-foreground")} />
-                {section.label}
-              </button>
+              {section.href ? (
+                <Link
+                  href={section.href}
+                  className={cn(
+                    "w-full px-3 py-2 rounded-md transition-all flex items-center gap-3 text-sm font-medium",
+                    "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4 text-muted-foreground")} />
+                  {section.label}
+                </Link>
+              ) : (
+                <button
+                  onClick={() => setActiveSection(section.id)}
+                  className={cn(
+                    "w-full px-3 py-2 rounded-md transition-all flex items-center gap-3 text-sm font-medium",
+                    isActive
+                      ? "text-foreground bg-accent/50"
+                      : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                  )}
+                >
+                  <Icon className={cn("h-4 w-4", isActive ? "text-foreground" : "text-muted-foreground")} />
+                  {section.label}
+                </button>
+              )}
 
               {/* Sub-sections */}
               <AnimatePresence>

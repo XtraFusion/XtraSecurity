@@ -143,12 +143,12 @@ const PRICING = [
   },
   {
     plan: "Pro",
-    price: "$9",
-    originalPrice: "$29",
+    price: "$29",
+    originalPrice: "$49",
     period: "/ month",
     desc: "For engineering teams who need serious security controls and compliance automation.",
     featured: true,
-    badge: "Most Popular - 69% Off",
+    badge: "Most Popular - 40% Off",
     cta: "Start free trial",
     features: [
       { label: "10,000 API requests / day", ok: true },
@@ -309,7 +309,7 @@ const scaleIn = {
 
 import { useSession, signOut } from "next-auth/react";
 import { useTheme } from "next-themes";
-import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder, Workflow, Cpu, History, ShieldCheck, GitBranch } from "lucide-react";
+import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder, Workflow, Cpu, History, ShieldCheck, GitBranch, ArrowRight, Layers } from "lucide-react";
 
 // ─────────────────────────────────────────────
 // ICON HELPER
@@ -735,7 +735,7 @@ function HeroSection() {
 }
 
 // ─────────────────────────────────────────────
-// STATS
+// TRUST BANNER
 // ─────────────────────────────────────────────
 
 function StatsSection() {
@@ -743,160 +743,203 @@ function StatsSection() {
   const inView = useInView(ref, { once: true, margin: "-60px" });
 
   return (
-    <section ref={ref} className="relative z-10 border-t border-b border-white/[0.06] bg-gradient-to-b from-transparent via-white/[0.02] to-transparent">
-      <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-4">
-        {STATS.map((s, i) => (
+    <section ref={ref} className="relative z-10 border-t border-b border-white/[0.04] bg-[#0a0f1e] py-16">
+      <div className="max-w-6xl mx-auto px-6">
+        <div className="text-center mb-10">
+          <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-slate-500">
+            Trusted by teams shipping to production
+          </p>
+        </div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-0 md:divide-x divide-white/[0.04]">
           <motion.div
-            key={s.num}
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 10 }}
             animate={inView ? { opacity: 1, y: 0 } : {}}
-            transition={{ delay: i * 0.1, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
-            className="py-10 px-8 text-center border-r border-white/[0.06] last:border-r-0 hover:bg-white/[0.02] transition-colors"
+            transition={{ delay: 0.1, duration: 0.6 }}
+            className="text-center px-4"
           >
-            <div className="text-3xl md:text-4xl font-black mb-2 tracking-tight" style={{
-              background: "linear-gradient(135deg, hsl(220 90% 60%), hsl(45 100% 55%))",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              backgroundClip: "text",
-            }}>
-              {s.num}
-            </div>
-            <div className="text-sm text-slate-400 leading-snug max-w-[160px] mx-auto">{s.label}</div>
+            <div className="text-xl md:text-2xl font-black text-white mb-1.5">AES-256-GCM</div>
+            <div className="text-xs text-slate-400">Zero-Knowledge Encryption</div>
           </motion.div>
-        ))}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.2, duration: 0.6 }}
+            className="text-center px-4"
+          >
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">50+</div>
+            <div className="text-xs text-slate-400">Platform integrations</div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.3, duration: 0.6 }}
+            className="text-center px-4"
+          >
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">2 min</div>
+            <div className="text-xs text-slate-400">Setup time</div>
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={inView ? { opacity: 1, y: 0 } : {}}
+            transition={{ delay: 0.4, duration: 0.6 }}
+            className="text-center px-4"
+          >
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">100%</div>
+            <div className="text-xs text-slate-400">Audit trail coverage</div>
+          </motion.div>
+        </div>
       </div>
     </section>
   );
 }
 
 // ─────────────────────────────────────────────
-// FEATURES
+// FEATURES BENTO GRID
 // ─────────────────────────────────────────────
-function FlipCard({ f }: { f: typeof FEATURES[0] }) {
-  const [isFlipped, setIsFlipped] = useState(false);
-
-  return (
-    <div
-      className="relative h-96 [perspective:1000px] group cursor-pointer"
-      onMouseEnter={() => setIsFlipped(true)}
-      onMouseLeave={() => setIsFlipped(false)}
-    >
-      <motion.div
-        animate={{ rotateY: isFlipped ? 180 : 0 }}
-        transition={{ duration: 0.8, ease: "easeOut" }}
-        className="relative w-full h-full [transform-style:preserve-3d]"
-      >
-        {/* Front Face */}
-        <div className="absolute inset-0 [backface-visibility:hidden] rounded-3xl overflow-hidden bg-white/[0.03] border border-white/[0.08] backdrop-blur-2xl shadow-2xl p-8 flex flex-col">
-          {/* Animated beam over border */}
-          <div className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:via-white/50 transition-all duration-700" />
-          
-          <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-8 flex-shrink-0 bg-gradient-to-br from-white/[0.05] to-transparent border border-white/[0.1] shadow-xl"
-               style={{ color: f.color }}>
-            {getIcon(f.icon, 32)}
-          </div>
-          
-          <h3 className="text-xl font-black text-white mb-4 tracking-tight leading-tight">{f.title}</h3>
-          <p className="text-slate-400 text-sm leading-relaxed mb-6 font-medium">{f.desc}</p>
-          
-          <div className="mt-auto flex flex-wrap gap-2">
-            {f.chips.map((c) => (
-              <span key={c} className="px-3 py-1.5 rounded-full text-[9px] font-black uppercase tracking-widest bg-white/[0.04] text-slate-300 border border-white/[0.06]">
-                {c}
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Back Face */}
-        <div className="absolute inset-0 [backface-visibility:hidden] [transform:rotateY(180deg)] rounded-3xl overflow-hidden bg-gradient-to-br from-[#1e293b]/90 to-[#0f172a]/95 border border-white/[0.1] backdrop-blur-3xl shadow-2xl p-8 flex flex-col justify-center text-center">
-            <div className="mb-6 mx-auto opacity-20" style={{ color: f.color }}>{getIcon(f.icon, 64)}</div>
-            <h4 className="text-lg font-black text-white mb-4 uppercase tracking-[0.2em] opacity-60">Technical Depth</h4>
-            <p className="text-slate-300 text-sm leading-relaxed font-medium mb-8">
-              {f.details}
-            </p>
-            <div className="mt-auto pt-6 border-t border-white/[0.05] flex flex-col items-center gap-3">
-               {f.link ? (
-                 <a 
-                   href={f.link} 
-                   target="_blank" 
-                   rel="noopener noreferrer"
-                   className="w-full py-2 bg-cyan-500 hover:bg-cyan-400 text-slate-900 font-bold rounded-lg text-xs transition-colors no-underline uppercase tracking-widest"
-                   onClick={(e) => e.stopPropagation()}
-                 >
-                   Install Now
-                 </a>
-               ) : (
-                 <span className="text-[10px] font-black text-cyan-400 uppercase tracking-widest ring-1 ring-cyan-400/20 px-3 py-1 rounded-full">Engineering Verified</span>
-               )}
-            </div>
-        </div>
-      </motion.div>
-    </div>
-  );
-}
 
 function FeaturesSection() {
   return (
-    <section id="features" className="py-32 px-6 bg-[#080e1e]">
-      <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tight">Engineered for Absolute Security</h2>
-          <p className="text-slate-400 text-lg">Everything you need to manage secrets at scale.</p>
+    <section id="features" className="py-32 px-6 bg-[#0a0f1e]">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-20">
+          <h2 className="text-4xl md:text-5xl font-medium text-white mb-6 tracking-tight">
+            Why companies choose XtraSecurity
+          </h2>
+          <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
+            Built for how modern teams actually work. Where humans, pipelines, and AI agents all need secrets to operate.
+          </p>
         </div>
 
         <motion.div 
           initial="hidden"
           whileInView="show"
-          viewport={{ once: true }}
+          viewport={{ once: true, margin: "-100px" }}
           variants={fadeUpStagger}
           className="grid grid-cols-1 md:grid-cols-3 gap-6"
         >
-          {/* Row 1: Large + Small */}
-          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col p-8 md:p-10 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
-              {getIcon("history", 32)}
+          {/* Card 1: Large image card */}
+          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col rounded-3xl border border-white/10 bg-[#111318] hover:border-white/20 transition-all overflow-hidden h-[420px] shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-t from-[#111318] via-[#111318]/40 to-transparent z-10 pointer-events-none" />
+            
+            <div className="absolute top-0 left-0 w-full h-[320px] overflow-hidden rounded-t-3xl">
+              <img 
+                src="/landing page hero image.png" 
+                alt="XtraSecurity Dashboard" 
+                className="w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-700"
+              />
             </div>
-            <h3 className="text-2xl md:text-3xl font-black text-white mb-4">Secret Versioning</h3>
-            <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
-              Time-travel through your credentials. Every change is tracked, diffed, and instantly roll-backable across all environments.
-            </p>
+
+            <div className="relative z-20 mt-auto p-8 pt-12">
+              <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Centralized Secret Vault</h3>
+              <p className="text-slate-400 text-sm mb-5 leading-relaxed max-w-md">
+                One encrypted home for all your secrets. Organized by project & environment with instant rollback and granular access controls.
+              </p>
+              <Link href="/docs" className="inline-flex items-center gap-1.5 text-sm font-bold text-white hover:text-cyan-400 transition-colors">
+                Learn more <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="relative group flex flex-col p-8 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-purple-500/10 blur-[60px] -mr-24 -mt-24 rounded-full" />
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
-              {getIcon("shield-check", 32)}
+          {/* Card 2: Permissions UI */}
+          <motion.div variants={fadeUp} className="relative group flex flex-col rounded-3xl border border-white/10 bg-[#111318] hover:border-white/20 transition-all overflow-hidden h-[420px] shadow-2xl">
+            
+            <div className="absolute top-0 left-0 w-full h-[250px] flex items-center justify-center p-6 bg-gradient-to-b from-white/[0.02] to-transparent">
+              <div className="relative w-full h-full max-w-[280px]">
+                {/* Back Panel */}
+                <div className="absolute top-4 left-0 right-12 bg-[#1a1d24] rounded-xl border border-white/10 p-5 shadow-2xl opacity-60">
+                   <div className="text-xs font-bold text-white mb-4">Workspace Permissions</div>
+                   <div className="space-y-3">
+                     <div className="flex items-center gap-3"><div className="w-4 h-4 rounded-md bg-cyan-500/80 flex items-center justify-center text-[10px] text-white">-</div><div className="text-[11px] font-medium text-slate-300">All Permissions</div></div>
+                     <div className="flex items-center gap-3"><div className="w-4 h-4 rounded-md bg-cyan-500/80 flex items-center justify-center text-[10px] text-white">✓</div><div className="text-[11px] font-medium text-slate-300">Project Access</div></div>
+                     <div className="flex items-center gap-3"><div className="w-4 h-4 rounded-md bg-cyan-500/80 flex items-center justify-center text-[10px] text-white">✓</div><div className="text-[11px] font-medium text-slate-300">Admin on All Projects</div></div>
+                   </div>
+                </div>
+                {/* Front Panel */}
+                <div className="absolute bottom-4 right-0 left-12 bg-[#20242d] rounded-xl border border-white/20 p-5 shadow-2xl backdrop-blur-xl group-hover:-translate-y-2 group-hover:shadow-cyan-500/10 transition-all duration-500">
+                   <div className="text-xs font-bold text-white mb-4">Project Permissions</div>
+                   <div className="space-y-3">
+                     <div className="flex items-center gap-3"><div className="w-4 h-4 rounded-md bg-cyan-500/80 flex items-center justify-center text-[10px] text-white font-medium">-</div><div className="text-[11px] text-white font-bold">All Permissions</div></div>
+                     <div className="flex items-center gap-3 pl-2"><div className="w-4 h-4 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-white/50">-</div><div className="text-[11px] font-medium text-slate-400">Environments</div></div>
+                     <div className="flex items-center gap-3 pl-4"><div className="w-4 h-4 rounded-md bg-cyan-500/80 flex items-center justify-center text-[10px] text-white">✓</div><div className="text-[11px] font-medium text-slate-300">Create Environments</div></div>
+                   </div>
+                </div>
+              </div>
             </div>
-            <h3 className="text-2xl font-black text-white mb-4">Granular RBAC</h3>
-            <p className="text-slate-400 text-base leading-relaxed">
-              Define who sees what with microscopic precision based on identity and workspace context.
-            </p>
+
+            <div className="relative z-20 mt-auto p-8">
+              <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Eliminate secrets sprawl</h3>
+              <p className="text-slate-400 text-sm mb-5 leading-relaxed">
+                49% of breaches involve credentials. Secure your infrastructure with strict RBAC policies.
+              </p>
+              <Link href="/docs" className="inline-flex items-center gap-1.5 text-sm font-bold text-white hover:text-cyan-400 transition-colors">
+                Learn more <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </motion.div>
 
-          {/* Row 2: Small + Medium */}
-          <motion.div variants={fadeUp} className="relative group flex flex-col p-8 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-emerald-500/10 blur-[60px] -mr-24 -mt-24 rounded-full" />
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
-              {getIcon("clipboard-list", 32)}
+          {/* Card 3: Automate your APIs */}
+          <motion.div variants={fadeUp} className="relative group flex flex-col rounded-3xl border border-white/10 bg-[#111318] hover:border-white/20 transition-all overflow-hidden h-[420px] shadow-2xl">
+            <div className="absolute top-0 left-0 w-full h-[250px] flex items-center justify-center bg-gradient-to-b from-white/[0.02] to-transparent">
+               <div className="flex items-center gap-4 group-hover:gap-6 transition-all duration-500">
+                 <div className="w-16 h-16 rounded-3xl bg-[#1a1d24] border border-white/10 flex items-center justify-center shadow-2xl relative">
+                   <div className="absolute inset-0 bg-white/5 rounded-3xl blur-md" />
+                   <RefreshCw className="w-6 h-6 text-slate-400 relative z-10" />
+                 </div>
+                 <div className="text-slate-600 text-lg">→</div>
+                 <div className="w-20 h-20 rounded-3xl bg-[#20242d] border border-cyan-500/30 flex items-center justify-center shadow-[0_0_30px_-5px_rgba(6,182,212,0.3)] relative z-10">
+                   <div className="absolute inset-0 bg-cyan-500/10 rounded-3xl blur-md" />
+                   <Layers className="w-8 h-8 text-cyan-400 relative z-10" />
+                 </div>
+                 <div className="text-slate-600 text-lg">→</div>
+                 <div className="w-16 h-16 rounded-3xl bg-[#1a1d24] border border-white/10 flex items-center justify-center shadow-2xl relative">
+                   <div className="absolute inset-0 bg-white/5 rounded-3xl blur-md" />
+                   <Zap className="w-6 h-6 text-slate-400 relative z-10" />
+                 </div>
+               </div>
             </div>
-            <h3 className="text-2xl font-black text-white mb-4">Immutable Audit Logs</h3>
-            <p className="text-slate-400 text-base leading-relaxed">
-              Cryptographically verifiable logs of every read, write, and sync action. Tamper-proof by design.
-            </p>
+
+            <div className="relative z-20 mt-auto p-8">
+              <h3 className="text-xl font-bold text-white mb-2 tracking-tight">Automate your APIs</h3>
+              <p className="text-slate-400 text-sm mb-5 leading-relaxed">
+                Empower your growing teams and ensure your DevOps infrastructure scales efficiently.
+              </p>
+              <Link href="/docs" className="inline-flex items-center gap-1.5 text-sm font-bold text-white hover:text-cyan-400 transition-colors">
+                Learn more <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </motion.div>
+          
+          {/* Card 4: Audit Logs (spanning 2 cols) */}
+          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col rounded-3xl border border-white/10 bg-[#111318] hover:border-white/20 transition-all overflow-hidden h-[420px] shadow-2xl">
+            <div className="absolute inset-0 bg-gradient-to-l from-white/[0.02] to-transparent pointer-events-none" />
+            <div className="absolute top-0 right-0 w-1/2 h-full p-8 flex items-center justify-end">
+              <div className="w-[120%] h-[80%] bg-[#1a1d24] rounded-xl border border-white/10 overflow-hidden relative shadow-2xl transform translate-x-12 group-hover:translate-x-8 transition-transform duration-700">
+                 <div className="absolute inset-0 bg-gradient-to-b from-transparent to-[#111318] z-10 pointer-events-none" />
+                 <div className="p-6 space-y-4 opacity-80">
+                   {LOGS.slice(0,5).map((log, i) => (
+                     <div key={i} className="flex items-start gap-4">
+                       <div className="w-7 h-7 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center flex-shrink-0 text-xs text-cyan-400 font-bold">✓</div>
+                       <div>
+                         <div className="text-xs font-medium text-slate-200 mb-1">{log.message}</div>
+                         <div className="text-[10px] text-slate-500 font-mono">{log.time}</div>
+                       </div>
+                     </div>
+                   ))}
+                 </div>
+              </div>
+            </div>
+
+            <div className="relative z-20 mt-auto p-8 w-full md:w-1/2 h-full flex flex-col justify-end">
+              <h3 className="text-2xl font-bold text-white mb-3 tracking-tight">Immutable Audit Logs</h3>
+              <p className="text-slate-400 text-sm mb-5 leading-relaxed max-w-sm">
+                Cryptographically verifiable logs of every read, write, and sync action. Tamper-proof by design, making SOC 2 compliance effortless.
+              </p>
+              <Link href="/docs" className="inline-flex items-center gap-1.5 text-sm font-bold text-white hover:text-cyan-400 transition-colors">
+                Learn more <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </motion.div>
 
-          <motion.div variants={fadeUp} className="md:col-span-2 relative group flex flex-col p-8 md:p-10 rounded-[2rem] border border-white/10 bg-white/[0.03] hover:bg-white/[0.05] transition-all overflow-hidden min-h-[280px]">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 blur-[80px] -mr-32 -mt-32 rounded-full" />
-            <div className="w-12 h-12 rounded-lg flex items-center justify-center mb-8">
-              {getIcon("git-branch", 32)}
-            </div>
-            <h3 className="text-2xl md:text-3xl font-black text-white mb-4">Environment Branching</h3>
-            <p className="text-slate-400 text-lg leading-relaxed max-w-xl">
-              Treat secrets like code. Branch, merge, and promote credentials from dev to staging to prod securely.
-            </p>
-          </motion.div>
         </motion.div>
       </div>
     </section>
@@ -909,52 +952,67 @@ function FeaturesSection() {
 
 function HowItWorksSection() {
   return (
-    <section id="how-it-works" className="py-28 px-6 bg-gradient-to-b from-transparent via-white/[0.015] to-transparent">
-      <div className="max-w-6xl mx-auto">
-        <SectionHeader
-          label="How it Works"
-          icon="refresh-cw"
-          title="Four simple steps to zero-trust"
-        />
+    <section id="how-it-works" className="py-32 px-6 bg-[#0a0f1e] overflow-hidden">
+      <div className="max-w-[1200px] mx-auto">
+        <div className="text-center mb-28">
+          <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400 mb-4">
+            HOW XTRASECURITY WORKS
+          </p>
+          <h2 className="text-4xl md:text-5xl font-medium text-white tracking-tight">
+            Four steps to absolute security
+          </h2>
+        </div>
 
         <motion.div
           initial="hidden"
           whileInView="show"
           viewport={{ once: true, margin: "-60px" }}
           variants={fadeUpStagger}
-          className="max-w-2xl mx-auto"
+          className="grid grid-cols-1 md:grid-cols-4 gap-12 md:gap-4 relative"
         >
           {STEPS.map((s, i) => (
             <motion.div
               key={s.num}
               variants={fadeUp}
-              className="flex gap-6 mb-10 last:mb-0"
+              className="relative flex flex-col items-center text-center group"
             >
-              {/* Left: Number & Icon */}
-              <div className="flex flex-col items-center gap-6">
-                <div className="w-14 h-14 rounded-full flex items-center justify-center text-xl font-bold font-mono flex-shrink-0 border-2"
-                  style={{
-                    background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 38%))",
-                    borderColor: "rgba(14,165,233,0.4)",
-                    color: "white",
-                  }}>
-                  {s.num}
+              {/* SVG Arrow connecting to the next step */}
+              {i < STEPS.length - 1 && (
+                <div className="hidden md:block absolute top-12 left-[60%] w-[80%] h-[40px] pointer-events-none z-0">
+                  <svg viewBox="0 0 100 40" fill="none" preserveAspectRatio="none" className="w-full h-full text-white/[0.05] group-hover:text-cyan-500/30 transition-colors duration-500">
+                    <path d="M0,35 C30,-5 70,-5 100,35" stroke="currentColor" strokeWidth="2" strokeDasharray="4 4" strokeLinecap="round" fill="none" />
+                    <path d="M92,25 L102,36 L88,38" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" fill="none" />
+                  </svg>
                 </div>
-                {i < STEPS.length - 1 && (
-                  <div className="w-1 h-16 bg-gradient-to-b from-cyan-400/40 to-cyan-400/10 rounded-full" />
-                )}
+              )}
+
+              {/* 3D Number */}
+              <div 
+                className="text-[80px] font-black italic mb-10 relative z-10 transition-transform duration-500 group-hover:-translate-y-2 group-hover:-translate-x-2"
+                style={{
+                  color: "#f8fafc",
+                  textShadow: `
+                    1px 1px 0px #cbd5e1,
+                    2px 2px 0px #94a3b8,
+                    3px 3px 0px #64748b,
+                    4px 4px 0px #475569,
+                    5px 5px 0px #0ea5e9,
+                    6px 6px 0px #0284c7,
+                    7px 7px 0px #0369a1,
+                    8px 8px 0px #075985,
+                    15px 15px 25px rgba(0,0,0,0.6)
+                  `,
+                  WebkitTextStroke: "1px #ffffff"
+                }}
+              >
+                {parseInt(s.num, 10)}
               </div>
 
-              {/* Right: Content */}
-              <div className="pt-2 pb-8 border-l border-dashed border-white/[0.15] pl-6 flex-1">
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="text-cyan-400 flex items-center justify-center leading-none" style={{ color: "#0ea5e9" }}>
-                    {getIcon(s.icon, 20)}
-                  </div>
-                  <h3 className="text-lg font-bold text-white">{s.title}</h3>
-                </div>
-                <p className="text-slate-400 leading-relaxed">{s.body}</p>
-              </div>
+              {/* Content */}
+              <h3 className="text-lg font-bold text-white mb-4 tracking-tight px-4">{s.title}</h3>
+              <p className="text-slate-400 text-sm leading-relaxed px-4 md:px-2">
+                {s.body}
+              </p>
             </motion.div>
           ))}
         </motion.div>
@@ -969,133 +1027,102 @@ function HowItWorksSection() {
 
 function SecurityFortress() {
   return (
-    <section id="fortress" className="py-28 px-6 relative overflow-hidden bg-[#0a0f1e]">
+    <section id="fortress" className="py-32 px-6 relative overflow-hidden bg-[#0a0f1e]">
       <div className="absolute inset-0 z-0">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/5 blur-[120px] rounded-full" />
+        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
       </div>
 
-      <div className="max-w-6xl mx-auto relative z-10">
-        <div className="flex flex-col lg:flex-row items-center gap-20">
-          <div className="w-full lg:w-1/2 relative">
-            <div className="relative aspect-square max-w-[500px] mx-auto flex items-center justify-center">
-              <motion.div 
-                animate={{ scale: [1, 1.05, 1], rotate: [0, 5, -5, 0] }}
-                transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
-                className="relative"
-              >
-                <div className="w-48 h-48 rounded-[3rem] bg-gradient-to-br from-cyan-400 to-blue-600 p-1 shadow-[0_0_80px_rgba(37,99,235,0.3)]">
-                  <div className="w-full h-full rounded-[2.8rem] bg-[#0d1117] flex items-center justify-center">
-                    {getIcon("lock", 80)}
-                  </div>
-                </div>
-              </motion.div>
+      <div className="max-w-[1300px] mx-auto relative z-10">
+        <div className="flex flex-col lg:flex-row items-center gap-16 lg:gap-12">
+          
+          {/* Left Side: Text & CTAs */}
+          <div className="w-full lg:w-[40%] xl:w-[35%]">
+            <div className="flex items-center gap-2 mb-5">
+              <Shield className="w-4 h-4 text-cyan-500" fill="currentColor" fillOpacity={0.2} />
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-cyan-500">
+                Explore Features
+              </span>
             </div>
-          </div>
-
-          <div className="w-full lg:w-1/2">
-            <SectionLabel>🛡️ Cryptographic Commitment</SectionLabel>
-            <h2 className="text-4xl md:text-5xl font-black text-white mt-4 mb-6 leading-tight">
-              Assume Breach.<br /><span className="text-cyan-400">Stay Secure.</span>
+            
+            <h2 className="text-4xl md:text-[3.25rem] font-medium text-white mb-6 leading-[1.1] tracking-tight">
+              Assume Breach.<br /><span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-cyan-400">Stay Secure.</span>
             </h2>
-            <p className="text-lg text-slate-400 mb-10 leading-relaxed">
-              XtraSecurity is architected on the principle of <strong>Zero-Knowledge</strong>. Our infrastructure is mathematically incapable of accessing your plaintext secrets.
+            
+            <p className="text-[15px] text-slate-400 mb-10 leading-relaxed max-w-[400px]">
+              XtraSecurity is architected on the principle of <strong className="text-slate-200 font-semibold">Zero-Knowledge</strong>. Our infrastructure is mathematically incapable of accessing your plaintext secrets.
             </p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {FORTRESS_FEATURES.map((f) => (
-                <div key={f.title} className="group p-6 rounded-2xl border border-white/[0.06] bg-white/[0.02] hover:bg-white/[0.04] transition-all">
-                  <div className="mb-4">
-                    {getIcon(f.icon, 32)}
-                  </div>
-                  <h4 className="text-white font-bold mb-2">{f.title}</h4>
-                  <p className="text-sm text-slate-400 leading-relaxed">{f.body}</p>
-                </div>
-              ))}
+            <div className="flex flex-wrap items-center gap-4">
+              <Link href="/docs" className="px-6 py-3 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-black text-white font-bold text-sm transition-colors shadow-xl">
+                Try for free!
+              </Link>
+              <Link href="/docs/cli" className="px-6 py-3 rounded-lg bg-transparent hover:bg-white/5 text-slate-300 font-bold text-sm transition-colors">
+                View Demo &gt;
+              </Link>
             </div>
           </div>
-        </div>
-      </div>
-    </section>
-  );
-}
 
-function InteractiveSecurityPreview() {
-  return (
-    <section className="py-24 px-6 bg-[#080e1e] relative overflow-hidden">
-      <div className="max-w-6xl mx-auto">
-        <div className="bg-[#0d1117] rounded-[2.5rem] border border-white/10 overflow-hidden shadow-[0_40px_100px_rgba(0,0,0,0.6)]">
-          <div className="flex flex-col lg:flex-row h-full">
-            <div className="w-full lg:w-1/3 border-r border-white/5 bg-[#111827]/30 p-8">
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-3 h-3 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-xs font-black uppercase tracking-widest text-slate-400 font-mono">Live Security Intel</span>
-              </div>
-              
-              <div className="space-y-6">
-                {[ 
-                  { label: "Secrets Leaked", val: "0", color: "#10b981", icon: "shield-check" },
-                  { label: "Active JIT Sessions", val: "12", color: "#3b82f6", icon: "zap" },
-                  { label: "Policy Violations", val: "0", color: "#f59e0b", icon: "error" }
-                ].map((stat) => (
-                  <div key={stat.label} className="p-4 rounded-xl bg-white/5 border border-white/5">
-                    <div className="flex items-center justify-between mb-2">
-                       <span className="text-xs text-slate-500">{stat.label}</span>
-                       {getIcon(stat.icon, 16)}
-                    </div>
-                    <div className="text-2xl font-black text-white" style={{ color: stat.color }}>{stat.val}</div>
-                  </div>
-                ))}
-              </div>
+          {/* Right Side: Climbing Cards (3 items) */}
+          <div className="w-full lg:w-[60%] xl:w-[65%] relative mt-16 lg:mt-0">
+            <div className="flex flex-col sm:flex-row items-end justify-center gap-6 pb-24">
+              {FORTRESS_FEATURES.slice(0, 3).map((f, i) => {
+                // Determine styling based on index to match the 3 icons in the image
+                let iconUrl = "";
+                let glowColor = "";
+                if (i === 0) {
+                  // Orange icon
+                  iconUrl = "https://img.icons8.com/fluency/96/lock.png";
+                  glowColor = "bg-orange-500/20";
+                } else if (i === 1) {
+                  // Pink icon
+                  iconUrl = "https://img.icons8.com/fluency/96/shield.png";
+                  glowColor = "bg-pink-500/20";
+                } else {
+                  // Blue icon
+                  iconUrl = "https://img.icons8.com/fluency/96/visible.png";
+                  glowColor = "bg-blue-500/20";
+                }
 
-              <div className="mt-12 p-6 rounded-2xl bg-cyan-500/5 border border-cyan-500/10">
-                <p className="text-xs text-cyan-400 font-bold mb-2 uppercase tracking-tighter">Security Posture</p>
-                <div className="text-xl font-bold text-white mb-4 italic">"Impenetrable"</div>
-                <div className="w-full h-1.5 bg-white/5 rounded-full overflow-hidden">
+                // Climbing offsets: 1st is lowest (translate-y-24), 2nd middle (translate-y-12), 3rd highest (translate-y-0)
+                const translateY = i === 0 ? "sm:translate-y-24" : i === 1 ? "sm:translate-y-12" : "sm:translate-y-0";
+
+                return (
                   <motion.div 
-                    initial={{ width: 0 }}
-                    whileInView={{ width: "98%" }}
-                    className="h-full bg-cyan-400"
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="w-full lg:w-2/3 p-8 flex flex-col">
-              <div className="flex items-center justify-between mb-8">
-                <h3 className="text-xl font-bold text-white">Global Audit Feed</h3>
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] text-slate-500 uppercase tracking-widest">Auto-rotate:</span>
-                  <span className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Active</span>
-                </div>
-              </div>
-
-              <div className="flex-grow space-y-4 font-mono">
-                {LOGS.map((log, i) => (
-                  <motion.div 
-                    key={i}
-                    initial={{ opacity: 0, x: 20 }}
-                    whileInView={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.1 }}
-                    className="flex items-center gap-4 p-4 rounded-xl bg-white/[0.02] border border-white/[0.04]"
+                    initial={{ opacity: 0, y: 30 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true, margin: "-50px" }}
+                    transition={{ delay: i * 0.15 }}
+                    key={f.title} 
+                    className={`group relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-500 shadow-2xl flex flex-col items-center text-center hover:-translate-y-2 w-full sm:w-[280px] h-[320px] ${translateY}`}
                   >
-                    <div className="w-8 h-8 rounded-lg bg-black/20 flex items-center justify-center">
-                      {getIcon(log.icon === 'triangle' ? 'zap' : log.icon, 18)}
+                    {/* Glowing Squircle Icon Container */}
+                    <div className="mb-8 mt-4 relative">
+                      {/* Diffuse colored glow behind icon */}
+                      <div className={`absolute inset-0 ${glowColor} blur-2xl rounded-full scale-[2] group-hover:scale-[2.5] transition-all duration-500 pointer-events-none`} />
+                      
+                      <div className="w-20 h-20 rounded-[1.25rem] bg-white border border-white/20 flex items-center justify-center relative z-10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+                        <img 
+                          src={iconUrl} 
+                          alt={f.title} 
+                          className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-500"
+                        />
+                      </div>
                     </div>
-                    <div className="hidden sm:block text-xs font-bold text-slate-500 w-16">{log.time}</div>
-                    <div className="flex-grow text-xs text-slate-300">
-                      <span className="text-cyan-400 font-bold">[{log.platform.toUpperCase()}]</span> {log.message}
-                    </div>
-                    <div className="text-[10px] text-emerald-500 font-bold px-2 py-1 rounded bg-emerald-500/10 border border-emerald-500/20">VERIFIED</div>
+
+                    <h4 className="text-white font-bold mb-3 text-[16px] whitespace-nowrap">{f.title}</h4>
+                    <p className="text-[13px] text-slate-400 leading-relaxed mx-auto line-clamp-3">{f.body}</p>
                   </motion.div>
-                ))}
-              </div>
+                );
+              })}
             </div>
           </div>
+          
         </div>
       </div>
     </section>
   );
 }
+
 
 // ─────────────────────────────────────────────
 // METRICS BAR
@@ -1678,7 +1705,7 @@ export default function Page() {
       <FeaturesSection />
       <HowItWorksSection />
       <SecurityFortress />
-      <InteractiveSecurityPreview />
+
       <MetricsBar />
       <PricingSection />
       <IntegrationLogsMarquee />

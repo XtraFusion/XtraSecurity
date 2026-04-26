@@ -44,8 +44,8 @@ export const DAILY_LIMITS: Record<Tier, RateLimitConfig> = {
   pro: { 
     points: 10000, 
     duration: 86400, 
-    price: "$9", 
-    originalPrice: "$29",
+    price: "$29", 
+    originalPrice: "$49",
     features: [
       "10,000 API requests / day",
       "3 Workspaces (5 projects each)",

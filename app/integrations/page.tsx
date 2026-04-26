@@ -17,6 +17,7 @@ import { useUser } from "@/hooks/useUser";
 import { ConnectionCard } from "@/components/integrations/IntegrationComponents";
 import { SyncSection } from "@/components/integrations/SyncSection";
 import * as Modals from "@/components/integrations/IntegrationModals";
+import { IntegrationCommandPalette } from "@/components/integrations/IntegrationCommandPalette";
 import { INTEGRATION_METADATA } from "@/lib/integrations/config";
 import { SyncProvider } from "@/lib/integrations/types";
 import { useIntegrations } from "@/hooks/useIntegrations";
@@ -40,6 +41,7 @@ export default function IntegrationsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<"all" | "source" | "deployment" | "cloud" | "notifications">("all");
   const [syncProvider, setSyncProvider] = useState<SyncProvider>("github");
+  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
   const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
@@ -127,18 +129,16 @@ export default function IntegrationsPage() {
             ))}
           </div>
           <div className="relative w-full md:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
-            <Input
-              placeholder="Search integrations..."
-              value={searchQuery}
-              onChange={e => setSearchQuery(e.target.value)}
-              className="h-9 pl-9 text-xs bg-background/50 border-none focus-visible:ring-1"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                <X className="h-3 w-3" />
-              </button>
-            )}
+            <button
+              onClick={() => setCommandPaletteOpen(true)}
+              className="flex items-center w-full h-9 px-3 text-sm text-muted-foreground bg-background/50 border rounded-md hover:bg-background/80 transition-colors"
+            >
+              <Search className="h-4 w-4 mr-2 opacity-50" />
+              <span className="flex-1 text-left">Search...</span>
+              <kbd className="pointer-events-none inline-flex h-5 select-none items-center gap-1 rounded border bg-muted px-1.5 font-mono text-[10px] font-medium text-muted-foreground opacity-100">
+                <span className="text-xs">⌘</span>K
+              </kbd>
+            </button>
           </div>
         </div>
 
@@ -235,6 +235,13 @@ export default function IntegrationsPage() {
           />
         );
       })}
+
+      <IntegrationCommandPalette
+        open={commandPaletteOpen}
+        onOpenChange={setCommandPaletteOpen}
+        onSelectProvider={handleConnect}
+        statuses={statuses}
+      />
     </DashboardLayout>
   );
 }

@@ -44,23 +44,34 @@ export function useIntegrations() {
 
   const fetchAll = useCallback(async () => {
     setLoading(true);
-    const providers: SyncProvider[] = [
-      "github", "gitlab", "vercel", "netlify", "aws", "doppler", "bitbucket", 
-      "gcp", "azure", "railway", "fly", "render", "digitalocean", "heroku", 
-      "slack", "discord", "teams", "vault", "circleci", "cloudflare", "jenkins", 
-      "pagerduty", "travisci", "supabase", "telegram", "email", "terraform", 
-      "buildkite", "opsgenie", "checkly", "hasura", "postman", "shopify", 
-      "twilio", "kubernetes", "linear", "planetscale", "bitwarden", "ghost", 
-      "appwrite", "onepassword", "firebase", "sentry", "notion", "googledrive", 
-      "zapier", "bitbucketpipelines", "gitlabselfmanaged", "discordwebhook", "mattermost"
-    ];
 
-    await Promise.all([
-      ...providers.map(p => fetchStatus(p)),
-      ProjectController.fetchProjects().then(d => { if (Array.isArray(d)) setProjects(d); })
-    ]);
+    try {
+      // 1. Fetch bulk statuses and projects in parallel
+      const [statusRes, projectsRes] = await Promise.all([
+        fetch('/api/integrations/status'),
+        ProjectController.fetchProjects()
+      ]);
+
+      if (statusRes.ok) {
+        const data = await statusRes.json();
+        if (data.statuses) {
+          setStatuses(data.statuses);
+          
+          // 2. Fetch repos ONLY for connected providers
+          const connectedProviders = Object.keys(data.statuses).filter(p => data.statuses[p].connected);
+          connectedProviders.forEach(p => fetchRepos(p as SyncProvider));
+        }
+      }
+
+      if (Array.isArray(projectsRes)) {
+        setProjects(projectsRes);
+      }
+    } catch (e) {
+      console.error("Failed to load integrations", e);
+    }
+
     setLoading(false);
-  }, [fetchStatus]);
+  }, [fetchRepos]);
 
   const disconnect = useCallback(async (provider: SyncProvider) => {
     try {

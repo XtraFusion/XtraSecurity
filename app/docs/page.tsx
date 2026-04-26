@@ -54,151 +54,7 @@ interface CommandEntry {
     icon?: string;
 }
 
-const CLI_COMMANDS: CommandEntry[] = [
-    {
-        name: "Login",
-        description: "Authenticate the CLI with your XtraSecurity account.",
-        command: "xtra login",
-        section: "Authentication",
-        icon: "shield",
-        longDesc: "Opens a browser window for SSO authentication. Once complete, an access token is stored locally in ~/.xtra/config.json.",
-        options: [
-            { flag: "--sso", desc: "Force SSO login flow" },
-            { flag: "--key <key>", desc: "Authenticate using a static access key" }
-        ]
-    },
-    {
-        name: "Logout",
-        description: "Securely logout and clear all local session data.",
-        command: "xtra logout",
-        section: "Authentication",
-        icon: "shield",
-        longDesc: "Properly terminates your session by removing the authentication token and purging all encrypted local secret caches. Recommended for shared development environments.",
-        options: []
-    },
-    {
-        name: "WhoAmI",
-        description: "Display the currently authenticated user/service details.",
-        command: "xtra whoami",
-        section: "Authentication",
-        icon: "shield",
-        options: [
-            { flag: "--json", desc: "Output JSON format" }
-        ]
-    },
-    {
-        name: "Run",
-        description: "Execute a command with secrets injected into the environment.",
-        command: "xtra run -- <command>",
-        section: "Execution",
-        icon: "bolt",
-        longDesc: "Fetches secrets for the current project and injects them as environment variables before executing the child process. The secrets never touch the disk.",
-        options: [
-            { flag: "--env <name>", desc: "Specify environment (e.g., production, preview)" },
-            { flag: "--project <id>", desc: "Override project ID" }
-        ]
-    },
-    {
-        name: "Secrets List",
-        description: "List all secrets available for the current project.",
-        command: "xtra secrets ls",
-        section: "Management",
-        icon: "lock",
-        longDesc: "Lists secret names, tags, and metadata (but not the actual values).",
-        options: [
-            { flag: "--json", desc: "Output results in JSON format" },
-            { flag: "--env <name>", desc: "Filter by environment" }
-        ]
-    },
-    {
-        name: "Secret Get",
-        description: "Retrieve the value of a specific secret.",
-        command: "xtra secrets get <KEY>",
-        section: "Management",
-        icon: "lock",
-        options: [
-            { flag: "--env <name>", desc: "Fetch from a specific environment" }
-        ]
-    },
-    {
-        name: "Secret Set",
-        description: "Create or update a secret value.",
-        command: "xtra secrets set <KEY> [VALUE]",
-        section: "Management",
-        icon: "lock",
-        longDesc: "If VALUE is omitted, you will be securely prompted to enter it. Warning: providing VALUE in the command line may be recorded in your shell history.",
-        options: [
-            { flag: "--env <name>", desc: "Target environment" }
-        ]
-    },
-    {
-        name: "Secret Delete",
-        description: "Delete a secret permanently.",
-        command: "xtra secrets rm <KEY>",
-        section: "Management",
-        icon: "lock",
-        options: [
-            { flag: "-y, --yes", desc: "Skip confirmation prompt" },
-            { flag: "--env <name>", desc: "Target environment to delete from" }
-        ]
-    },
-    {
-        name: "Environments List",
-        description: "List all environments in the current project.",
-        command: "xtra env ls",
-        section: "Management",
-        icon: "layers",
-        longDesc: "Lists all environments (e.g., Development, Staging, Production) within the active project."
-    },
-    {
-        name: "Init",
-        description: "Initialize a new XtraSecurity project in the current directory.",
-        command: "xtra init",
-        section: "Setup",
-        icon: "account_tree",
-        longDesc: "Creates an `.xtra.json` configuration file, linking the local folder to an Xtra cloud project.",
-        options: [
-            { flag: "-y, --yes", desc: "Skip interactive prompts" },
-            { flag: "--project <id>", desc: "Specify existing project ID to link" }
-        ]
-    },
-    {
-        name: "Projects List",
-        description: "List all projects you have access to.",
-        command: "xtra project ls",
-        section: "Setup",
-        icon: "account_tree",
-        options: [
-            { flag: "--json", desc: "JSON output" }
-        ]
-    },
-    {
-        name: "Access Request",
-        description: "Submit a Just-In-Time access request for a sensitive environment.",
-        command: "xtra access request",
-        section: "Security",
-        icon: "shield",
-        longDesc: "Requests temporary permission to access secrets. Requires a reason and duration. Once approved, the token can be used for injection.",
-        options: [
-            { flag: "-e, --env <name>", desc: "Target environment (e.g. production)", required: true },
-            { flag: "--reason <text>", desc: "Reason for access", required: true },
-            { flag: "--duration <time>", desc: "E.g. 1h, 30m, 1d", required: true },
-            { flag: "-s, --secrets <ids>", desc: "Comma-separated list of Secret IDs for granular access" }
-        ]
-    },
-    {
-        name: "JIT Run",
-        description: "Automated JIT workflow: claim, poll, and execute.",
-        command: "xtra jit-run --token <jit_token> -- <command>",
-        section: "Security",
-        icon: "bolt",
-        longDesc: "A specialized command that claims a JIT token, waits for approval from an admin, and then automatically executes your command with the newly authorized secrets.",
-        options: [
-            { flag: "--token <id>", desc: "The JIT token provided by an admin", required: true },
-            { flag: "--interval <ms>", desc: "Polling interval while waiting for approval" }
-        ]
-    }
-];
+
 
 const VSCODE_FEATURES = [
     {
@@ -257,23 +113,7 @@ export default function DocsPage() {
     const [activeSection, setActiveSection] = useState("quickstart");
     const [searchQuery, setSearchQuery] = useState("");
 
-    const filteredCommands = useMemo(() => {
-        return CLI_COMMANDS.filter(cmd => 
-            cmd.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cmd.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cmd.command.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            cmd.section.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-    }, [searchQuery]);
 
-    const groupedCommands = useMemo(() => {
-        const groups: Record<string, CommandEntry[]> = {};
-        CLI_COMMANDS.forEach(cmd => {
-            if (!groups[cmd.section]) groups[cmd.section] = [];
-            groups[cmd.section].push(cmd);
-        });
-        return groups;
-    }, []);
 
     const sectionBadgeClass = (color?: string) => {
         return "bg-muted/50 border-border text-muted-foreground hover:text-foreground transition-colors";
@@ -291,9 +131,7 @@ export default function DocsPage() {
             searchQuery={searchQuery}
             setSearchQuery={setSearchQuery}
             subSections={
-                activeSection === 'cli' 
-                    ? Object.keys(groupedCommands).map(key => ({ id: key.toLowerCase(), label: key })) 
-                    : activeSection === 'vscode' 
+                activeSection === 'vscode' 
                     ? [
                         { id: "installation", label: "Installation" },
                         { id: "features", label: "Features" },
@@ -302,7 +140,6 @@ export default function DocsPage() {
             }
             tocItems={
                 activeSection === 'quickstart' ? ["Introduction", "Install", "Authenticate", "Initialize"] :
-                activeSection === 'cli' ? Object.keys(groupedCommands) :
                 activeSection === 'vscode' ? ["Installation", "Features"] : []
             }
         >
@@ -453,77 +290,11 @@ export default function DocsPage() {
                             </section>
 
                             {/* Next Step Nav */}
-                            <DocNavButtons next={{ label: "CLI Reference", section: "cli" }} setActiveSection={setActiveSection} />
+                            <DocNavButtons next={{ label: "VS Code Extension", section: "vscode" }} setActiveSection={setActiveSection} />
                         </div>
                     )}
 
-                    {/* ══════════════════════════════════════════════
-                        CLI REFERENCE SECTION
-                    ══════════════════════════════════════════════ */}
-                    {activeSection === "cli" && (
-                        <div className="space-y-12">
-                            {/* Section Header */}
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[11px] font-semibold tracking-tight text-primary">
-                                    <Terminal className="h-3.5 w-3.5" />
-                                    CLI Reference
-                                </div>
-                                <h1 className="text-3xl font-bold text-foreground tracking-tight">Command Reference</h1>
-                                <p className="text-muted-foreground max-w-2xl">Complete reference for all <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">xtra</code> CLI commands.</p>
-                            </div>
 
-                            {/* Section pills */}
-                            <div className="flex flex-wrap gap-2">
-                                {Object.entries(groupedCommands).map(([section, cmds]) => (
-                                    <div key={section} className={cn("px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-tight flex items-center gap-2", sectionBadgeClass(SECTION_COLORS[section]))}>
-                                        <span>{section}</span>
-                                        <span className="opacity-50">×{cmds.length}</span>
-                                    </div>
-                                ))}
-                            </div>
-
-                            {/* Search result header */}
-                            {searchQuery && (
-                                <div className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-                                    {filteredCommands.length} result{filteredCommands.length !== 1 ? "s" : ""} for "{searchQuery}"
-                                </div>
-                            )}
-
-                            {/* Commands */}
-                            {searchQuery ? (
-                                <div className="space-y-6">
-                                    {filteredCommands.map((cmd, i) => <CommandCard key={i} cmd={cmd} />)}
-                                    {filteredCommands.length === 0 && (
-                                        <EmptyState message={`No commands matching "${searchQuery}"`} />
-                                    )}
-                                </div>
-                            ) : (
-                                <div className="space-y-12">
-                                    {Object.entries(groupedCommands).map(([section, cmds]) => (
-                                        <div key={section} id={section.toLowerCase()} className="space-y-6 scroll-mt-32">
-                                            {/* Section divider */}
-                                            <div className="flex items-center gap-4">
-                                                <div className="h-px flex-1 bg-border/50" />
-                                                <div className={cn("px-3 py-1 rounded-full border text-[10px] font-bold uppercase tracking-wider", sectionBadgeClass(SECTION_COLORS[section]))}>
-                                                    {section}
-                                                </div>
-                                                <div className="h-px flex-1 bg-border/50" />
-                                            </div>
-                                            <div className="space-y-6">
-                                                {cmds.map((cmd, i) => <CommandCard key={i} cmd={cmd} />)}
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-
-                            <DocNavButtons 
-                                prev={{ label: "Quickstart", section: "quickstart" }}
-                                next={{ label: "VS Code Extension", section: "vscode" }}
-                                setActiveSection={setActiveSection}
-                            />
-                        </div>
-                    )}
 
                     {/* ══════════════════════════════════════════════
                         VS CODE SECTION
@@ -579,57 +350,13 @@ export default function DocsPage() {
                             </section>
 
                             <DocNavButtons 
-                                prev={{ label: "CLI Reference", section: "cli" }}
-                                next={{ label: "Integrations", section: "integrations" }}
+                                prev={{ label: "Quickstart", section: "quickstart" }}
                                 setActiveSection={setActiveSection}
                             />
                         </div>
                     )}
 
-                    {/* ══════════════════════════════════════════════
-                        INTEGRATIONS SECTION
-                    ══════════════════════════════════════════════ */}
-                    {activeSection === "integrations" && (
-                        <div className="space-y-12">
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[11px] font-semibold tracking-tight text-primary">
-                                    <Globe className="h-3.5 w-3.5" />
-                                    Integrations
-                                </div>
-                                <h1 className="text-3xl font-bold text-foreground tracking-tight">Connect Everything</h1>
-                                <p className="text-muted-foreground max-w-2xl">XtraSecurity integrates natively with your existing tools and infrastructure.</p>
-                            </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                {INTEGRATIONS.map((int) => (
-                                    <IntegrationCard key={int.id} item={int} />
-                                ))}
-                            </div>
-                            <PremiumCallout type="note">
-                                Don't see your provider? Xtra supports any system via the{" "}
-                                <span className="text-primary font-bold cursor-pointer hover:underline">Webhook Web Engine</span>.
-                            </PremiumCallout>
-                        </div>
-                    )}
-
-                    {/* ══════════════════════════════════════════════
-                        SDKs SECTION
-                    ══════════════════════════════════════════════ */}
-                    {activeSection === "sdks" && (
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[11px] font-semibold tracking-tight text-primary">
-                                    <Code2 className="h-3.5 w-3.5" />
-                                    SDKs
-                                </div>
-                                <h1 className="text-3xl font-bold text-foreground tracking-tight">Native SDKs</h1>
-                            </div>
-                            <PremiumCallout type="info">
-                                SDK documentation is coming soon. Install the Node.js SDK today with{" "}
-                                <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">npm install xtra-sdk</code>.
-                            </PremiumCallout>
-                        </div>
-                    )}
 
                     {/* ══════════════════════════════════════════════
                         SECURITY & JIT SECTION
