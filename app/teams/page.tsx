@@ -66,8 +66,8 @@ import { toast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 import { useGlobalContext } from "@/hooks/useUser";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { Skeleton } from "@/components/ui/skeleton";
 import { TeamController } from "@/util/TeamContoller";
+import { PremiumTeamCard } from "@/components/teams/PremiumTeamCard";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 import apiClient from "@/lib/axios";
 import { cn } from "@/lib/utils";
@@ -116,8 +116,8 @@ const TeamsPage = () => {
 
   const fetchTeamList = async () => {
     if (!selectedWorkspace) {
-        setIsLoading(false);
-        return;
+      setIsLoading(false);
+      return;
     }
     try {
       setIsLoading(true);
@@ -197,48 +197,10 @@ const TeamsPage = () => {
   if (isLoading) {
     return (
       <DashboardLayout>
-        <div className="space-y-6 p-6 md:p-10 max-w-7xl mx-auto">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-border">
-            <div className="space-y-2">
-              <Skeleton className="h-8 w-40" />
-              <Skeleton className="h-4 w-64" />
-            </div>
-            <div className="flex flex-wrap items-center gap-3">
-              <Skeleton className="h-10 w-64 rounded-md" />
-              <Skeleton className="h-10 w-24 rounded-md" />
-              <Skeleton className="h-10 w-32 rounded-md" />
-            </div>
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            {[1, 2, 3, 4].map((i) => (
-              <Card key={i} className="border bg-card">
-                <CardContent className="p-6 flex items-center justify-between">
-                  <div className="space-y-2">
-                    <Skeleton className="h-3 w-20" />
-                    <Skeleton className="h-6 w-12" />
-                  </div>
-                  <Skeleton className="h-10 w-10 rounded-lg" />
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-             {[1, 2, 3, 4, 5, 6].map((i) => (
-                <Card key={i} className="flex flex-col rounded-xl overflow-hidden h-[200px]">
-                   <CardHeader className="p-6">
-                      <div className="flex justify-between items-start">
-                         <div className="flex items-center gap-4">
-                            <Skeleton className="h-12 w-12 rounded-lg" />
-                            <div className="space-y-2">
-                               <Skeleton className="h-5 w-32" />
-                               <Skeleton className="h-3 w-24" />
-                            </div>
-                         </div>
-                      </div>
-                      <Skeleton className="h-4 w-full mt-4" />
-                   </CardHeader>
-                </Card>
-             ))}
+        <div className="space-y-6 p-8 animate-pulse">
+          <div className="h-10 bg-muted/20 w-48 rounded" />
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map(i => <div key={i} className="h-24 bg-muted/10 rounded-lg" />)}
           </div>
         </div>
       </DashboardLayout>
@@ -248,7 +210,7 @@ const TeamsPage = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6 p-6 md:p-10 max-w-7xl mx-auto">
-        
+
         {/* Header Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 pb-6 border-b border-border">
           <div className="space-y-1">
@@ -268,7 +230,7 @@ const TeamsPage = () => {
                 className="pl-9 h-10"
               />
             </div>
-            
+
             <div className="flex items-center gap-1 border rounded-md p-1 bg-muted/20">
               <Button
                 variant={viewMode === "grid" ? "secondary" : "ghost"}
@@ -384,7 +346,7 @@ const TeamsPage = () => {
               )}
             >
               {filteredTeams.map((team) => (
-                <TeamCard
+                <PremiumTeamCard
                   key={team.id}
                   team={team}
                   viewMode={viewMode}
@@ -405,7 +367,7 @@ const TeamsPage = () => {
               </p>
               {canManageTeams && (
                 <Button onClick={() => setCreateDialogOpen(true)} className="mt-6" variant="outline">
-                   <Plus className="mr-2 h-4 w-4" /> Create First Team
+                  <Plus className="mr-2 h-4 w-4" /> Create First Team
                 </Button>
               )}
             </div>
@@ -418,7 +380,7 @@ const TeamsPage = () => {
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Team</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete <span className="font-semibold">{deleteDialog.team?.name}</span>? 
+                Are you sure you want to delete <span className="font-semibold">{deleteDialog.team?.name}</span>?
                 This will remove all member associations and access to shared projects.
               </AlertDialogDescription>
             </AlertDialogHeader>
@@ -432,102 +394,6 @@ const TeamsPage = () => {
         </AlertDialog>
       </div>
     </DashboardLayout>
-  );
-};
-
-const TeamCard = ({ team, viewMode, canManage, onDelete, onNavigate }: { 
-  team: Team, 
-  viewMode: "grid" | "list", 
-  canManage: boolean, 
-  onDelete: () => void,
-  onNavigate: () => void
-}) => {
-  return (
-    <Card
-      className={cn(
-        "group cursor-pointer hover:border-primary/40 transition-colors",
-        viewMode === "list" ? "flex flex-row items-center justify-between p-4" : "flex flex-col rounded-xl overflow-hidden"
-      )}
-      onClick={onNavigate}
-    >
-      <div className={cn(
-        "flex flex-1",
-        viewMode === "list" ? "items-center" : "flex-col"
-      )}>
-        <CardHeader className={cn(viewMode === "list" ? "p-0 flex-1" : "p-6")}>
-          <div className="flex justify-between items-start">
-            <div className="flex items-center gap-4">
-              <div className={cn(
-                "flex items-center justify-center rounded-lg text-white font-bold",
-                team.teamColor || "bg-blue-500",
-                viewMode === "list" ? "h-10 w-10 text-xs" : "h-12 w-12 text-sm"
-              )}>
-                {team.name.substring(0, 2).toUpperCase()}
-              </div>
-              <div>
-                <CardTitle className={cn("font-semibold", viewMode === "list" ? "text-base" : "text-lg")}>
-                  {team.name}
-                </CardTitle>
-                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
-                   {team.isPrivate ? (
-                     <span className="flex items-center gap-1"><Lock className="h-3 w-3" /> Private</span>
-                   ) : (
-                    <span className="flex items-center gap-1"><Globe className="h-3 w-3" /> Public</span>
-                   )}
-                   <span className="flex items-center gap-1">
-                     <Users className="h-3 w-3" /> {team.members?.length || 0}
-                   </span>
-                </div>
-              </div>
-            </div>
-
-            {canManage && (
-              <div onClick={e => e.stopPropagation()}>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 ml-2">
-                       <MoreVertical className="h-4 w-4" />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={onNavigate}>
-                      <Edit3 className="mr-2 h-4 w-4" /> Edit Details
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={onDelete} className="text-destructive">
-                      <Trash2 className="mr-2 h-4 w-4" /> Delete Team
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
-            )}
-          </div>
-          {viewMode === "grid" && (
-            <CardDescription className="line-clamp-2 mt-4 text-sm min-h-[2.5rem]">
-              {team.description || "No description provided."}
-            </CardDescription>
-          )}
-        </CardHeader>
-
-        {viewMode === "grid" && (
-          <CardFooter className="px-6 py-4 border-t bg-muted/5 mt-auto flex justify-between items-center">
-            <div className="flex -space-x-2">
-              {team.members?.slice(0, 3).map((m, i) => (
-                <div key={i} className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-medium overflow-hidden">
-                   {m.name?.[0]?.toUpperCase() || <Shield className="h-3 w-3" />}
-                </div>
-              ))}
-              {team.members?.length > 3 && (
-                <div className="h-6 w-6 rounded-full border-2 border-background bg-muted flex items-center justify-center text-[10px] font-medium">
-                  +{team.members.length - 3}
-                </div>
-              )}
-            </div>
-            <ArrowRight className="h-4 w-4 text-muted-foreground group-hover:text-primary transition-colors" />
-          </CardFooter>
-        )}
-      </div>
-    </Card>
   );
 };
 

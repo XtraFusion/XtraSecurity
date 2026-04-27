@@ -17,6 +17,7 @@ export async function GET(req: Request) {
                 email: true,
                 image: true,
                 mfaEnabled: true,
+                tier: true,
                 sessions: {
                     select: {
                         id: true,

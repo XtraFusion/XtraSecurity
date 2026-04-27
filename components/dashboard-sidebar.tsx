@@ -83,10 +83,36 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
     const { user, selectedWorkspace } = useUser();
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
+    const scrollAreaRef = React.useRef<HTMLDivElement>(null);
+    const scrollTopRef = React.useRef<number>(0);
 
     React.useEffect(() => {
         setMounted(true);
     }, []);
+
+    // Preserve scroll position across navigations
+    const handleScroll = React.useCallback(() => {
+        const viewport = scrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]');
+        if (viewport) {
+            scrollTopRef.current = viewport.scrollTop;
+        }
+    }, []);
+
+    React.useEffect(() => {
+        const viewport = scrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]');
+        if (viewport) {
+            viewport.addEventListener('scroll', handleScroll, { passive: true });
+            return () => viewport.removeEventListener('scroll', handleScroll);
+        }
+    }, [handleScroll]);
+
+    React.useEffect(() => {
+        const viewport = scrollAreaRef.current?.querySelector<HTMLElement>('[data-slot="scroll-area-viewport"]');
+        if (viewport) {
+            // Restore scroll position after navigation re-render
+            viewport.scrollTop = scrollTopRef.current;
+        }
+    }, [pathname]);
 
     const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
     const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
@@ -108,7 +134,8 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
             </div>
 
             {/* Navigation */}
-            <ScrollArea className="flex-1 min-h-0 px-4 py-2">
+            <div ref={scrollAreaRef} className="flex-1 min-h-0">
+            <ScrollArea className="h-full px-4 py-2">
                 <nav className="space-y-6">
                     {NAV_GROUPS.map((group) => (
                         <div key={group.label} className="space-y-1">
@@ -159,6 +186,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                     )}
                 </nav>
             </ScrollArea>
+            </div>
 
             {/* User Footer */}
             <div className="p-4 border-t border-border/40 bg-zinc-50/50 dark:bg-zinc-900/50">
