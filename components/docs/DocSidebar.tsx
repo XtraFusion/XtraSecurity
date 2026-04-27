@@ -10,8 +10,6 @@ import {
   Search,
   Command,
   ChevronRight,
-  Github,
-  MessageCircle,
   ExternalLink,
   LayoutDashboard,
   Zap,
@@ -142,13 +140,6 @@ export function DocSidebar({
       {/* ── Footer / Support ───────────────────────────────────────── */}
       <div className="mt-auto p-4 border-t border-border bg-background">
         <div className="flex flex-col gap-3">
-          <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
-            <Github className="h-4 w-4" /> Github Repository
-          </a>
-          <a href="#" className="text-xs font-medium text-muted-foreground hover:text-foreground transition-colors flex items-center gap-2">
-            <MessageCircle className="h-4 w-4" /> Community Support
-          </a>
-          
           <Link href="/dashboard" className="text-xs font-bold text-primary hover:text-primary/80 transition-colors flex items-center gap-2 mt-2 bg-primary/5 py-2 px-3 rounded-md border border-primary/10">
             <LayoutDashboard className="h-4 w-4" /> Back to Dashboard
           </Link>
