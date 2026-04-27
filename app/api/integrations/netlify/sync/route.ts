@@ -268,7 +268,8 @@ export async function POST(req: NextRequest) {
       auth.userId,
       "Netlify Sync Complete",
       `Successfully synced ${syncResults.length} secrets to Netlify site.`,
-      `Site: ${netlifySiteId} | Environment: ${environment}`
+      `Site: ${netlifySiteId} | Environment: ${environment}`,
+      project.workspaceId
     ).catch(e => console.error("Notify Error:", e));
 
     return NextResponse.json({
@@ -322,12 +323,19 @@ export async function DELETE(req: NextRequest) {
     );
 
     if (deleteRes.ok || deleteRes.status === 204) {
+      // Find workspace for notifications
+      const project = await prisma.project.findFirst({
+        where: { userId: auth.userId },
+        select: { workspaceId: true }
+      });
+
       // Trigger Unified Notifications (non-blocking)
       notify(
         auth.userId,
         "Secret Deleted from Netlify",
         `Removed '${secretName}' from Netlify site.`,
-        `Site: ${netlifySiteId}`
+        `Site: ${netlifySiteId}`,
+        project?.workspaceId
       ).catch(e => console.error("Notify Error:", e));
 
       return NextResponse.json({ success: true, deleted: secretName });

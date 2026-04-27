@@ -102,7 +102,8 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
           "Team Created",
           `Team "${team.name}" created`,
           `You successfully created team "${team.name}".`,
-          "success"
+          "success",
+          workspaceId
         );
     } catch (notifError) {
         console.error("Failed to create notification:", notifError);
@@ -226,7 +227,8 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
       "Team Deleted",
       "Team deleted", 
       "The team has been successfully deleted.",
-      "warning"
+      "warning",
+      team.workspaceId
     );
 
     return NextResponse.json({ message: "Team deleted successfully" }, { status: 200 });

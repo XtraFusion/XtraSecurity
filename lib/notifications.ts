@@ -9,7 +9,8 @@ export async function createNotification(
   taskTitle: string,
   description: string,
   message: string,
-  status: NotificationStatus = "info"
+  status: NotificationStatus = "info",
+  workspaceId?: string | null
 ) {
   try {
     const notification = await prisma.notification.create({
@@ -21,10 +22,11 @@ export async function createNotification(
         message,
         status,
         read: false,
+        workspaceId: workspaceId || null
       },
     });
 
-    // Fire and forget email (don't block the UI await)
+    // 1. Send hardcoded primary email (Legacy/Primary)
     if (userEmail) {
       sendEmail({
         to: userEmail,
@@ -40,8 +42,18 @@ export async function createNotification(
             <p style="font-size: 12px; color: #9ca3af; margin-top: 30px;">This is an automated message from your XtraSecurity platform.</p>
           </div>
         `
-      }).catch(err => console.error("Failed to send notification email:", err));
+      }).catch(err => console.error("Failed to send primary notification email:", err));
     }
+
+    // 2. Dispatch to ALL configured workspace channels (Slack, Discord, secondary Emails, etc.)
+    const { dispatchNotification } = await import("./notifications/dispatch");
+    dispatchNotification({
+      title: taskTitle,
+      message,
+      description,
+      type: status as any,
+      workspaceId,
+    }).catch(err => console.error("Failed to dispatch to workspace channels:", err));
 
     return notification;
   } catch (error) {

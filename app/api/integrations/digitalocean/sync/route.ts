@@ -71,6 +71,19 @@ export async function POST(req: NextRequest) {
     const currentApp = appRes.data.app;
     const spec = currentApp.spec;
 
+    // 1. Fetch project for workspace context and verify access
+    const project = await prisma.project.findFirst({
+      where: {
+        id: projectId,
+        OR: [{ userId: auth.userId }, { teamProjects: { some: { team: { members: { some: { userId: auth.userId, status: "active" } } } } } }]
+      },
+      select: { workspaceId: true }
+    });
+
+    if (!project) {
+        return NextResponse.json({ error: "Project not found or access denied" }, { status: 403 });
+    }
+
     // 2. Fetch secrets from XtraSecurity
     const allSecrets = await prisma.secret.findMany({
       where: { projectId },
@@ -129,7 +142,9 @@ export async function POST(req: NextRequest) {
       auth.userId,
       "DigitalOcean Sync Complete",
       `Successfully synced ${results.length} secrets to DigitalOcean App Platform.`,
-      `App: ${appId} | Environment: ${environment}`
+      `Successfully synced ${results.length} secrets to DigitalOcean App Platform.`,
+      `App: ${appId} | Environment: ${environment}`,
+      project.workspaceId
     ).catch(e => console.error("Notify Error:", e));
 
     return NextResponse.json({
@@ -176,13 +191,22 @@ export async function DELETE(req: NextRequest) {
       });
     }
 
-    // Trigger Unified Notifications (non-blocking)
-    notify(
-      auth.userId,
-      "Secret Deleted from DigitalOcean",
-      `Removed '${secretName}' from DigitalOcean App.`,
-      `App: ${appId}`
-    ).catch(e => console.error("Notify Error:", e));
+    if (true) {
+        // Find workspace for notifications
+        const project = await prisma.project.findFirst({
+            where: { userId: auth.userId },
+            select: { workspaceId: true }
+        });
+
+        // Trigger Unified Notifications (non-blocking)
+        notify(
+            auth.userId,
+            "Secret Deleted from DigitalOcean",
+            `Removed '${secretName}' from DigitalOcean App.`,
+            `App: ${appId}`,
+            project?.workspaceId
+        ).catch(e => console.error("Notify Error:", e));
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

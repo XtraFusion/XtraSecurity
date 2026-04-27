@@ -32,9 +32,9 @@ import { useIntegrations } from "@/hooks/useIntegrations";
  * - lib/integrations/config: Metadata and config for all integrations.
  */
 export default function IntegrationsPage() {
-  const { user, selectedWorkspace } = useUser();
+  const { user, selectedWorkspace, sessionStatus } = useUser();
   const { 
-    statuses, repos, modals, loading, projects, 
+    statuses, repos, modals, loading: integrationsLoading, projects, 
     setModalOpen, disconnect, refresh, refreshStatus, setStatuses 
   } = useIntegrations();
 
@@ -80,7 +80,11 @@ export default function IntegrationsPage() {
     }
   };
 
-  if (!loading && !(isPersonalWorkspace || isWorkspaceOwner)) {
+  // Improved access check: Only show Access Denied if session is authenticated AND user is loaded AND we are NOT integrations-loading
+  const isProfileLoading = sessionStatus === "loading" || (!user && sessionStatus === "authenticated");
+  const isAccessDenied = !isProfileLoading && !integrationsLoading && !(isPersonalWorkspace || isWorkspaceOwner);
+
+  if (isAccessDenied) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
@@ -91,6 +95,8 @@ export default function IntegrationsPage() {
       </DashboardLayout>
     );
   }
+
+  const loading = integrationsLoading || isProfileLoading;
 
   return (
     <DashboardLayout>

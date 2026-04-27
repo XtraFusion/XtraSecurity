@@ -244,7 +244,7 @@ export default function AccessRequestsPage() {
                     </div>
 
                     <AnimatePresence mode="wait">
-                        <TabsContent value="my-requests" className="outline-none focus:outline-none">
+                        <TabsContent key="my-requests" value="my-requests" className="outline-none focus:outline-none">
                             <motion.div variants={containerVariants} initial="hidden" animate="visible" className="space-y-4">
                                 <RequestTable 
                                     requests={filteredRequests(myRequests)} 
@@ -255,26 +255,27 @@ export default function AccessRequestsPage() {
                         </TabsContent>
 
                         {isAdmin && (
-                            <>
-                                <TabsContent value="approvals">
-                                    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                                        <RequestTable 
-                                            requests={filteredRequests(pendingRequests)} 
-                                            viewType="pending"
-                                            onAction={handleDecision}
-                                        />
-                                    </motion.div>
-                                </TabsContent>
-                                <TabsContent value="history">
-                                    <motion.div variants={containerVariants} initial="hidden" animate="visible">
-                                        <RequestTable 
-                                            requests={filteredRequests(historyRequests)} 
-                                            viewType="history"
-                                            onAction={handleDecision}
-                                        />
-                                    </motion.div>
-                                </TabsContent>
-                            </>
+                            <TabsContent key="approvals" value="approvals">
+                                <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                                    <RequestTable 
+                                        requests={filteredRequests(pendingRequests)} 
+                                        viewType="pending"
+                                        onAction={handleDecision}
+                                    />
+                                </motion.div>
+                            </TabsContent>
+                        )}
+                        
+                        {isAdmin && (
+                            <TabsContent key="history" value="history">
+                                <motion.div variants={containerVariants} initial="hidden" animate="visible">
+                                    <RequestTable 
+                                        requests={filteredRequests(historyRequests)} 
+                                        viewType="history"
+                                        onAction={handleDecision}
+                                    />
+                                </motion.div>
+                            </TabsContent>
                         )}
                     </AnimatePresence>
                 </Tabs>

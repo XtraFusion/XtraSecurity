@@ -16,11 +16,10 @@ interface DashboardLayoutProps {
 
 export function DashboardLayout({ children }: DashboardLayoutProps) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user } = useUser();
+  const { user, sessionStatus } = useUser();
 
-  if (!user) {
-    return null;
-  }
+  // If session is definitely unauthenticated, we might want to redirect, 
+  // but for now we just show the layout as it handles missing user gracefully.
 
   return (
     <div className="min-h-screen bg-muted/20">

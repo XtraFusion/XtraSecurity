@@ -211,7 +211,8 @@ export async function POST(req: NextRequest) {
       auth.userId,
       "AWS Sync Complete",
       `Successfully synced ${syncResults.length} secrets to AWS Secrets Manager.`,
-      `Environment: ${environment}`
+      `Environment: ${environment}`,
+      project.workspaceId
     ).catch(e => console.error("Notify Error:", e));
 
     return NextResponse.json({
@@ -250,11 +251,19 @@ export async function DELETE(req: NextRequest) {
     }));
 
     if (secretName) {
+      // Find workspace for notifications
+      const project = await prisma.project.findFirst({
+        where: { userId: auth.userId },
+        select: { workspaceId: true }
+      });
+
       // Trigger Unified Notifications (non-blocking)
       notify(
         auth.userId,
         "Secret Deleted from AWS",
-        `Removed '${secretName}' from AWS Secrets Manager.`
+        `Removed '${secretName}' from AWS Secrets Manager.`,
+        undefined,
+        project?.workspaceId
       ).catch(e => console.error("Notify Error:", e));
     }
 

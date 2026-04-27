@@ -162,42 +162,52 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
 
             {/* User Footer */}
             <div className="p-4 border-t border-border/40 bg-zinc-50/50 dark:bg-zinc-900/50">
-                <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="w-full justify-start px-2 h-auto py-2 hover:bg-background">
-                            <div className="flex items-center gap-3 w-full">
-                                <UserAvatar name={user?.name} image={user?.image} className="h-8 w-8" />
-                                <div className="flex flex-col items-start min-w-0 flex-1">
-                                    <span className="text-sm font-medium truncate w-full text-left">{user?.name}</span>
-                                    <span className="text-xs text-muted-foreground truncate w-full text-left">{user?.email}</span>
+                {!user ? (
+                    <div className="flex items-center gap-3 px-2 py-2">
+                        <div className="h-8 w-8 rounded-full bg-muted animate-pulse shrink-0" />
+                        <div className="flex flex-col gap-1.5 flex-1 min-w-0">
+                            <div className="h-3 w-20 bg-muted animate-pulse rounded" />
+                            <div className="h-2 w-32 bg-muted animate-pulse rounded" />
+                        </div>
+                    </div>
+                ) : (
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-start px-2 h-auto py-2 hover:bg-background">
+                                <div className="flex items-center gap-3 w-full">
+                                    <UserAvatar name={user?.name} image={user?.image} className="h-8 w-8" />
+                                    <div className="flex flex-col items-start min-w-0 flex-1">
+                                        <span className="text-sm font-medium truncate w-full text-left">{user?.name}</span>
+                                        <span className="text-xs text-muted-foreground truncate w-full text-left">{user?.email}</span>
+                                    </div>
+                                    <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
                                 </div>
-                                <Settings className="h-4 w-4 text-muted-foreground shrink-0" />
-                            </div>
-                        </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={10}>
-                        <DropdownMenuLabel>My Account</DropdownMenuLabel>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
-                            {mounted && resolvedTheme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
-                            <span>Toggle Theme</span>
-                        </DropdownMenuItem>
-                        {hasAdminAccess && (
-                            <DropdownMenuItem asChild>
-                                <Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-56" side="right" sideOffset={10}>
+                            <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')}>
+                                {mounted && resolvedTheme === 'dark' ? <Sun className="mr-2 h-4 w-4" /> : <Moon className="mr-2 h-4 w-4" />}
+                                <span>Toggle Theme</span>
                             </DropdownMenuItem>
-                        )}
-                        {hasAdminAccess && (
-                            <DropdownMenuItem asChild>
-                                <Link href="/subscription"><CreditCard className="mr-2 h-4 w-4" /> Subscription & Usages</Link>
+                            {hasAdminAccess && (
+                                <DropdownMenuItem asChild>
+                                    <Link href="/profile"><User className="mr-2 h-4 w-4" /> Profile</Link>
+                                </DropdownMenuItem>
+                            )}
+                            {hasAdminAccess && (
+                                <DropdownMenuItem asChild>
+                                    <Link href="/subscription"><CreditCard className="mr-2 h-4 w-4" /> Subscription & Usages</Link>
+                                </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => logout()}>
+                                <LogOut className="mr-2 h-4 w-4" /> Log out
                             </DropdownMenuItem>
-                        )}
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem className="text-destructive focus:text-destructive" onClick={() => logout()}>
-                            <LogOut className="mr-2 h-4 w-4" /> Log out
-                        </DropdownMenuItem>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                )}
             </div>
         </div>
     );

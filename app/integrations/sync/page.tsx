@@ -87,6 +87,8 @@ export default function SyncDashboardPage() {
 
   useEffect(() => { fetchSyncData(); }, [selectedWorkspace]);
 
+  const isDark = useIsDark();
+
   if (loading) {
     return (
       <DashboardLayout>
@@ -136,8 +138,6 @@ export default function SyncDashboardPage() {
   const summary = data?.summary || { total24h: 0, failed24h: 0, successRate: 100 };
   const connected = integrations.filter((i: any) => i.status === "connected").length;
   const totalSecrets = history.reduce((acc: number, log: any) => acc + (log.metadata?.secretsCount || 0), 0);
-
-  const isDark = useIsDark();
 
   return (
     <DashboardLayout>

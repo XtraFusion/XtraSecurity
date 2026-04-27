@@ -11,6 +11,7 @@ interface UserContextType {
   userStatus: boolean | string;
   setUserStatus: React.Dispatch<React.SetStateAction<boolean | string>>;
   loading: boolean;
+  sessionStatus: "loading" | "authenticated" | "unauthenticated";
   fetchUser: () => Promise<void>;
   createProject: (projectData: any) => Promise<void>;
   workspaces: any[];
@@ -156,6 +157,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         userStatus,
         setUserStatus,
         loading,
+        sessionStatus: status, // Exposing session status
         fetchUser,
         createSecret,
         fetchSecrets,

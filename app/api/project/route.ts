@@ -330,7 +330,8 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
       "Project Created",
       `Project "${project.name}" created`,
       `You successfully created project "${project.name}" in workspace ${newProject.workspaceId}.`,
-      "success"
+      "success",
+      newProject.workspaceId
     );
     
     // Audit Log
@@ -421,7 +422,8 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
        "Project Deleted",
        `Project "${project.name}" deleted`,
        `Project "${project.name}" and all associated data have been permanently deleted.`,
-       "warning"
+       "warning",
+       project.workspaceId
     );
 
     return NextResponse.json(
@@ -570,7 +572,8 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
        action,
        details,
        details, 
-       "info"
+       "info",
+       existingProject.workspaceId
     );
 
     return NextResponse.json(project);

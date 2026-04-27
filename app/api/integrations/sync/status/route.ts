@@ -20,22 +20,31 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-    // 1. Fetch connected integrations for the user
+    // 0. Fetch connected integrations for the user
     const integrations = await prisma.integration.findMany({
       where: { 
         userId: (session.user as any).id
       }
     });
 
-    // 2. Fetch sync logs from AuditLog
+    // 1. Fetch all projects in the workspace
+    const wsProjects = await prisma.project.findMany({
+      where: { workspaceId },
+      select: { id: true }
+    });
+    const wsProjectIds = wsProjects.map(p => p.id);
+
+    // 2. Fetch sync logs from AuditLog for these projects
     const syncLogs = await prisma.auditLog.findMany({
       where: {
-        workspaceId,
-        action: { endsWith: "_sync" },
-        // timestamp: { gte: last24h } // We want a mix of recent and historical
+        OR: [
+          { workspaceId },
+          { entityId: { in: wsProjectIds } }
+        ],
+        action: { endsWith: "_sync" }
       },
       orderBy: { timestamp: "desc" },
-      take: 50,
+      take: 100,
       include: {
         user: {
            select: { name: true, image: true, email: true }
