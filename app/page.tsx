@@ -127,7 +127,7 @@ const PRICING = [
     period: "forever",
     desc: "Perfect for personal projects and small teams getting started.",
     featured: false,
-    cta: "Get started free",
+    cta: "Upgrade now",
     features: [
       { label: "1000 API requests / day", ok: true },
       { label: "1 Workspace & 1 Team", ok: true },
@@ -308,6 +308,7 @@ const scaleIn = {
 // ─────────────────────────────────────────────
 
 import { useSession, signOut } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useTheme } from "next-themes";
 import { Loader2, Lock, Leaf, Search, Puzzle, Users, Eye, Globe, RefreshCw, AlertCircle, ClipboardList, Home, HardDrive, Key, Zap, Github, Cloud, MessageCircle, Link as LinkIcon, Shield, Folder, Workflow, Cpu, History, ShieldCheck, GitBranch, ArrowRight, Layers } from "lucide-react";
 
@@ -428,6 +429,7 @@ function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { theme, setTheme } = useTheme();
   const { data: session, status } = useSession();
+  const router = useRouter();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -437,8 +439,14 @@ function Navbar() {
 
   const handleNav = (href: string) => {
     setMobileOpen(false);
-    const el = document.querySelector(href);
-    if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    if (href.startsWith("#")) {
+      // Anchor link — smooth scroll
+      const el = document.querySelector(href);
+      if (el) setTimeout(() => el.scrollIntoView({ behavior: "smooth", block: "start" }), 50);
+    } else {
+      // Page route — navigate
+      router.push(href);
+    }
   };
 
   return (

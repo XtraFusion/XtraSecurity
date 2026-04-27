@@ -13,7 +13,8 @@ import {
   ExternalLink,
   LayoutDashboard,
   Zap,
-  Code2
+  Code2,
+  PlayCircle
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
@@ -34,6 +35,7 @@ const SECTIONS = [
   { id: "vscode", label: "VS Code Extension", icon: Puzzle },
   { id: "integrations", label: "Integrations", icon: Layers, href: "/docs/integrations" },
   { id: "sdks", label: "SDKs", icon: Code2, href: "/docs/sdks" },
+  { id: "tutorials", label: "Tutorials", icon: PlayCircle, href: "/tutorials", comingSoon: true },
 ]
 
 export function DocSidebar({
@@ -91,7 +93,12 @@ export function DocSidebar({
                   )}
                 >
                   <Icon className={cn("h-4 w-4 text-muted-foreground")} />
-                  {section.label}
+                  <span className="flex-1">{section.label}</span>
+                  {(section as any).comingSoon && (
+                    <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                      Soon
+                    </span>
+                  )}
                 </Link>
               ) : (
                 <button

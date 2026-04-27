@@ -143,6 +143,30 @@
   body {
     @apply bg-background text-foreground;
   }
+
+  /* Global pointer cursor for all interactive elements */
+  button,
+  [role="button"],
+  [role="tab"],
+  [role="menuitem"],
+  [role="option"],
+  [role="combobox"],
+  [role="switch"],
+  [role="checkbox"],
+  [role="radio"],
+  select,
+  summary,
+  label[for],
+  a[href] {
+    cursor: pointer;
+  }
+
+  /* Keep default cursor for disabled states */
+  button:disabled,
+  [role="button"][aria-disabled="true"],
+  [disabled] {
+    cursor: not-allowed;
+  }
 }
 
 @layer utilities {

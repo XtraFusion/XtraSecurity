@@ -130,7 +130,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
                   alt={selectedWorkspace?.label}
                   className={selectedWorkspace?.icon?.startsWith("http") ? "object-cover" : "grayscale"}
                 />
-                <AvatarFallback>WS</AvatarFallback>
+                <AvatarFallback delayMs={600}><div className="h-full w-full rounded-full bg-muted" /></AvatarFallback>
               </Avatar>
             )}
             <span className="truncate flex-1 text-left">
@@ -139,7 +139,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
             <ChevronsUpDown className="ml-auto h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[200px] p-0">
+        <PopoverContent className="w-full p-0" align="start" style={{ width: "var(--radix-popover-trigger-width)" }}>
           <Command>
             <CommandList>
               <CommandInput placeholder="Search workspace..." />
@@ -167,7 +167,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
                           alt={workspace.label}
                           className={workspace.icon?.startsWith("http") ? "object-cover" : "grayscale"}
                         />
-                        <AvatarFallback>WS</AvatarFallback>
+                        <AvatarFallback delayMs={600}><div className="h-full w-full rounded-full bg-muted" /></AvatarFallback>
                       </Avatar>
                     )}
                     {workspace.label}
