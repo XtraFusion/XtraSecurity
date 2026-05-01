@@ -63,16 +63,34 @@ export async function GET(
     const formattedHistory = history.map((h: any) => {
         let value = "";
         try {
-            if (h.value && h.value.length > 0) {
-                 const raw = h.value[0];
-                 const parsed = JSON.parse(raw);
-                 if (parsed.iv && parsed.encryptedData) {
-                     value = decrypt(parsed);
-                 } else {
-                     value = raw;
-                 }
+            let raw = h.value;
+            
+            // 1. Handle Array Format (Standard for main value)
+            if (Array.isArray(raw) && raw.length > 0) {
+                raw = raw[0];
+            }
+
+            if (typeof raw === "string") {
+                // 2. Check if it's a JSON-serialized encrypted object
+                if (raw.startsWith("{") && raw.includes("iv") && raw.includes("encryptedData")) {
+                    try {
+                        const parsed = JSON.parse(raw);
+                        value = decrypt(parsed);
+                    } catch (e) {
+                        value = raw; // Fallback to raw if JSON parse fails
+                    }
+                } else if (raw === "[unchanged]") {
+                    value = "Value unchanged in this version";
+                } else {
+                    // 3. It's plain text (Legacy)
+                    value = raw;
+                }
+            } else if (typeof raw === "object" && raw !== null && raw.iv && raw.encryptedData) {
+                // 4. It's a direct object (Legacy)
+                value = decrypt(raw);
             }
         } catch (e) {
+            console.error("[History] Decryption failed for version", h.version, e);
             value = "Error decrypting or legacy format";
         }
 

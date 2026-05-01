@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getServerSession } from "next-auth";
-import { getUserTeamRole, canEditRole } from "@/lib/permissions";
+import { getUserTeamRole, canEditRole, invalidateUserRbacCache } from "@/lib/permissions";
 import { authOptions } from "../../auth/[...nextauth]/route";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 
@@ -45,6 +45,11 @@ export async function PUT(req: Request) {
                         where: { id: memberId },
                         data: { role: newRole },
                 });
+
+                // Invalidate cache
+                if (targetTeamUser.userId) {
+                    await invalidateUserRbacCache(targetTeamUser.userId);
+                }
 
         // Create audit log
         try {

@@ -57,16 +57,13 @@ export async function dispatchWebhookEvent(
 
     if (webhooks.length === 0) return;
 
-    const body = JSON.stringify(buildMessage({ ...payload, event }));
+    const { addWebhookJob } = await import("@/lib/queue/webhook-queue");
+    const body = buildMessage({ ...payload, event });
 
     await Promise.allSettled(
       webhooks.map((wh) =>
-        fetch(wh.url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body,
-        }).catch((err) =>
-          console.error(`[webhook] Failed to POST to ${wh.url}:`, err)
+        addWebhookJob({ url: wh.url, body }).catch((err) =>
+          console.error(`[webhook] Failed to queue webhook for ${wh.url}:`, err)
         )
       )
     );

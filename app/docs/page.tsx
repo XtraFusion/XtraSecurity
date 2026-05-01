@@ -28,6 +28,13 @@ import {
     ArrowRight,
     Sparkles,
     Activity,
+    Share2,
+    Users,
+    Settings,
+    UserPlus,
+    PlayCircle,
+    Monitor,
+    Cloud,
     LucideIcon
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
@@ -136,11 +143,41 @@ export default function DocsPage() {
                         { id: "installation", label: "Installation" },
                         { id: "features", label: "Features" },
                       ] 
+                    : activeSection === 'management'
+                    ? [
+                        { id: "projects", label: "Projects" },
+                        { id: "teams", label: "Teams" },
+                        { id: "permissions", label: "Permissions" },
+                        { id: "tokens", label: "Access Tokens" },
+                      ]
+                    : activeSection === 'workflow'
+                    ? [
+                        { id: "run", label: "In-Memory Injection" },
+                        { id: "watch", label: "Live Reloading" },
+                        { id: "offline", label: "Offline Mode" },
+                      ]
+                    : activeSection === 'cicd'
+                    ? [
+                        { id: "github", label: "GitHub Actions" },
+                        { id: "gitlab", label: "GitLab CI" },
+                        { id: "docker", label: "Docker Integration" },
+                      ]
+                    : activeSection === 'security'
+                    ? [
+                        { id: "sharing", label: "Secret Sharing" },
+                        { id: "jit", label: "JIT Access" },
+                        { id: "rotation", label: "Secret Rotation" },
+                        { id: "audit", label: "Audit Logs" },
+                      ]
                     : []
             }
             tocItems={
                 activeSection === 'quickstart' ? ["Introduction", "Install", "Authenticate", "Initialize"] :
-                activeSection === 'vscode' ? ["Installation", "Features"] : []
+                activeSection === 'management' ? ["Projects", "Teams", "Permissions", "Access Tokens"] :
+                activeSection === 'workflow' ? ["In-Memory Injection", "Live Reloading", "Offline Mode"] :
+                activeSection === 'cicd' ? ["GitHub Actions", "GitLab CI", "Docker Integration"] :
+                activeSection === 'vscode' ? ["Installation", "Features"] : 
+                activeSection === 'security' ? ["Secret Sharing", "JIT Access", "Secret Rotation", "Audit Logs"] : []
             }
         >
             <AnimatePresence mode="wait">
@@ -290,7 +327,401 @@ export default function DocsPage() {
                             </section>
 
                             {/* Next Step Nav */}
-                            <DocNavButtons next={{ label: "VS Code Extension", section: "vscode" }} setActiveSection={setActiveSection} />
+                            <DocNavButtons next={{ label: "Workspace Management", section: "management" }} setActiveSection={setActiveSection} />
+                        </div>
+                    )}
+
+
+
+                    {/* ══════════════════════════════════════════════
+                        MANAGEMENT SECTION
+                    ══════════════════════════════════════════════ */}
+                    {activeSection === "management" && (
+                        <div className="space-y-12">
+                            {/* Hero card */}
+                            <div className="relative rounded-2xl overflow-hidden border border-border bg-card p-8 lg:p-10 shadow-sm">
+                                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-7">
+                                    <div className="h-16 w-16 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shadow-sm shrink-0">
+                                        <Blocks className="h-8 w-8 text-blue-500" />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-blue-500/5 border border-blue-500/10 text-[10px] font-bold uppercase tracking-wider text-blue-500">
+                                            <Workflow className="h-3 w-3" /> Workspace Management
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Organize Your Workflow</h1>
+                                        <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">
+                                            Master the core organizational features of XtraSecurity. Learn how to structure projects, collaborate with teams, and manage fine-grained permissions.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Projects */}
+                            <section id="projects" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Package} title="Projects" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Projects are the top-level containers for your secrets. Each project represents a specific application, service, or repository.
+                                    </p>
+                                    
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Zap className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">Project Creation</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Create a project via the Dashboard or CLI using <code className="bg-muted px-1 py-0.5 rounded text-primary">xtra project create</code>. Projects automatically get <strong>Development</strong>, <strong>Staging</strong>, and <strong>Production</strong> environments.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Settings className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">Environments & Branches</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Manage secrets per environment. You can also create branch-specific secrets to support feature-branch workflows without polluting main environments.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Teams */}
+                            <section id="teams" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Users} title="Teams" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Teams allow you to group users and manage their access collectively across multiple projects.
+                                    </p>
+
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                        <div className="p-4 rounded-xl border bg-primary/5 border-primary/20 space-y-2">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <UserPlus className="h-4 w-4 text-primary" />
+                                                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">Collaboration</h4>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Invite teammates via email. Once they join, they can be added to specific teams or granted direct project access.
+                                            </p>
+                                        </div>
+                                        <div className="p-4 rounded-xl border bg-muted/30 space-y-2">
+                                            <div className="flex items-center gap-2 mb-1">
+                                                <Shield className="h-4 w-4 text-muted-foreground" />
+                                                <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">Organization</h4>
+                                            </div>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Create separate teams for Frontend, Backend, and DevOps to ensure people only see the secrets they need.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Permissions */}
+                            <section id="permissions" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Lock} title="Permissions & Access" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        XtraSecurity uses a robust RBAC (Role-Based Access Control) system to ensure zero-trust security.
+                                    </p>
+
+                                    <div className="rounded-xl border overflow-hidden">
+                                        <table className="w-full text-left text-xs">
+                                            <thead className="bg-muted/50 border-b">
+                                                <tr>
+                                                    <th className="px-4 py-3 font-bold uppercase tracking-wider text-muted-foreground">Role</th>
+                                                    <th className="px-4 py-3 font-bold uppercase tracking-wider text-muted-foreground">Capabilities</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y">
+                                                <tr>
+                                                    <td className="px-4 py-3 font-bold text-foreground">Viewer</td>
+                                                    <td className="px-4 py-3 text-muted-foreground">Can view and fetch secrets, but cannot edit or delete.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="px-4 py-3 font-bold text-foreground">Editor</td>
+                                                    <td className="px-4 py-3 text-muted-foreground">Can manage secrets, create branches, and trigger syncs.</td>
+                                                </tr>
+                                                <tr>
+                                                    <td className="px-4 py-3 font-bold text-foreground">Admin</td>
+                                                    <td className="px-4 py-3 text-muted-foreground">Full control over project settings, team assignments, and audit logs.</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+
+                                    <PremiumCallout type="tip">
+                                        You can assign a team to a project with a specific role. For example, assign the "Frontend Team" as "Viewers" to the "API Project".
+                                    </PremiumCallout>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Secret Rotation */}
+                            <section id="rotation" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Workflow} title="Secret Rotation" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Rotate secrets without downtime using our <strong>Shadow Mode</strong> strategy. This allows you to test new credentials before promoting them to active.
+                                    </p>
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Activity className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-sm font-bold text-foreground">1. Initiate Rotation</h4>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                    Run <code className="bg-muted px-1 py-0.5 rounded text-primary">xtra rotate DB_PASS</code>. This creates a "Shadow" version of the secret.
+                                                </p>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Shield className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-sm font-bold text-foreground">2. Verify & Promote</h4>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                    Once verified in your staging environment, run <code className="bg-muted px-1 py-0.5 rounded text-primary">xtra rotate DB_PASS --promote</code> to make it the active version.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Access Tokens */}
+                            <section id="tokens" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Key} title="Access Tokens" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Access Tokens are used for programmatic authentication in CI/CD pipelines, staging servers, and local development machines.
+                                    </p>
+
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Globe className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">Creating Tokens</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Go to <strong>Settings &gt; Access Tokens</strong> to generate a new token. You can scope tokens to specific environments (e.g., a Production-only token for your web server).
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border border-primary/20 bg-primary/5">
+                                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                                                <Terminal className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground italic">Usage in CI/CD</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Set your token as the <code className="bg-muted px-1 py-0.5 rounded text-primary">XTRA_ACCESS_KEY</code> environment variable in your CI provider (GitHub Actions, GitLab, etc.) to automate secret injection.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <DocNavButtons 
+                                prev={{ label: "Quickstart", section: "quickstart" }}
+                                next={{ label: "Development Workflow", section: "workflow" }}
+                                setActiveSection={setActiveSection}
+                            />
+                        </div>
+                    )}
+
+
+
+                    {/* ══════════════════════════════════════════════
+                        WORKFLOW SECTION
+                    ══════════════════════════════════════════════ */}
+                    {activeSection === "workflow" && (
+                        <div className="space-y-12">
+                            {/* Hero card */}
+                            <div className="relative rounded-2xl overflow-hidden border border-border bg-card p-8 lg:p-10 shadow-sm">
+                                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-7">
+                                    <div className="h-16 w-16 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-sm shrink-0">
+                                        <PlayCircle className="h-8 w-8 text-emerald-500" />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/10 text-[10px] font-bold uppercase tracking-wider text-emerald-500">
+                                            <Zap className="h-3 w-3" /> Daily Workflows
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Development Patterns</h1>
+                                        <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">
+                                            Learn how to integrate XtraSecurity into your daily coding routine. From live-reloading to offline development.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* xtra run */}
+                            <section id="run" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Terminal} title="In-Memory Injection" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        The <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">xtra run</code> command is the core of our platform. It fetches secrets and injects them directly into your application's memory.
+                                    </p>
+                                    <PremiumCodeBlock 
+                                        options={[
+                                            { language: "Node.js", code: "xtra run node index.js", filename: "Terminal" },
+                                            { language: "Python", code: "xtra run python manage.py runserver" },
+                                            { language: "Docker", code: "xtra run -- docker build -t myapp ." },
+                                        ]} 
+                                    />
+                                    <PremiumCallout type="tip">
+                                        Use the <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">--shell</code> flag if your command contains pipes, redirections, or environment variables.
+                                    </PremiumCallout>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* xtra watch */}
+                            <section id="watch" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Activity} title="Live Reloading" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Keep your dev server running. <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">xtra watch</code> polls for secret changes and automatically restarts your process when you update a value in the cloud.
+                                    </p>
+                                    <PremiumCodeBlock 
+                                        options={[
+                                            { language: "Watch", code: "xtra watch --interval 3 npm run dev", filename: "Terminal" },
+                                        ]} 
+                                    />
+                                    <p className="text-xs text-muted-foreground italic">
+                                        * Note: Watch mode is disabled for production environments to prevent accidental downtime.
+                                    </p>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Offline Mode */}
+                            <section id="offline" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Cloud} title="Offline Mode" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Coding on a plane? No problem. Use <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">xtra local sync</code> to pull cloud secrets into an encrypted local cache.
+                                    </p>
+                                    <div className="grid grid-cols-1 gap-4">
+                                        <div className="p-4 rounded-xl border bg-muted/30 flex items-start gap-4">
+                                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                                                <Monitor className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div className="space-y-1">
+                                                <h4 className="text-sm font-bold text-foreground">Sync & Go</h4>
+                                                <p className="text-xs text-muted-foreground leading-relaxed">
+                                                    Run <code className="bg-muted px-1 py-0.5 rounded text-primary">xtra local on</code> to force the CLI to read from your local cache instead of trying to reach the cloud API.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <DocNavButtons 
+                                prev={{ label: "Workspace Management", section: "management" }}
+                                next={{ label: "CI/CD Integration", section: "cicd" }}
+                                setActiveSection={setActiveSection}
+                            />
+                        </div>
+                    )}
+
+
+
+                    {/* ══════════════════════════════════════════════
+                        CI/CD SECTION
+                    ══════════════════════════════════════════════ */}
+                    {activeSection === "cicd" && (
+                        <div className="space-y-12">
+                            {/* Hero card */}
+                            <div className="relative rounded-2xl overflow-hidden border border-border bg-card p-8 lg:p-10 shadow-sm">
+                                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-7">
+                                    <div className="h-16 w-16 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-sm shrink-0">
+                                        <Globe className="h-8 w-8 text-purple-500" />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[10px] font-bold uppercase tracking-wider text-purple-500">
+                                            <Server className="h-3 w-3" /> Automation
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-foreground tracking-tight">CI/CD Pipelines</h1>
+                                        <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">
+                                            Inject secrets into your builds and deployments without ever storing them in your CI provider's database.
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* GitHub Actions */}
+                            <section id="github" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Github} title="GitHub Actions" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Use the official XtraSecurity CLI in your GitHub workflows. Simply set your <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">XTRA_ACCESS_KEY</code> as a GitHub Secret.
+                                    </p>
+                                    <PremiumCodeBlock 
+                                        options={[
+                                            { language: "YAML", code: `jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install Xtra CLI
+        run: npm install -g xtra-cli
+      - name: Deploy with Secrets
+        env:
+          XTRA_ACCESS_KEY: \${{ secrets.XTRA_ACCESS_KEY }}
+        run: xtra run -e production -- npm run deploy`, filename: "workflow.yml" },
+                                        ]} 
+                                    />
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Docker */}
+                            <section id="docker" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Package} title="Docker Integration" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        Inject secrets directly into Docker builds using build-args or during runtime via the entrypoint.
+                                    </p>
+                                    <PremiumCodeBlock 
+                                        options={[
+                                            { language: "Dockerfile", code: `FROM node:18
+RUN npm install -g xtra-cli
+COPY . .
+# Secrets are injected only during this step
+RUN xtra run -e staging -- npm run build`, filename: "Dockerfile" },
+                                        ]} 
+                                    />
+                                </div>
+                            </section>
+
+                            <DocNavButtons 
+                                prev={{ label: "Development Workflow", section: "workflow" }}
+                                next={{ label: "VS Code Extension", section: "vscode" }}
+                                setActiveSection={setActiveSection}
+                            />
                         </div>
                     )}
 
@@ -362,22 +793,131 @@ export default function DocsPage() {
                         SECURITY & JIT SECTION
                     ══════════════════════════════════════════════ */}
                     {activeSection === "security" && (
-                        <div className="space-y-8">
-                            <div className="space-y-4">
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-muted/50 border border-border text-[11px] font-semibold tracking-tight text-foreground">
-                                    <Shield className="h-3.5 w-3.5" />
-                                    Security & JIT
+                        <div className="space-y-12">
+                            {/* Hero card */}
+                            <div className="relative rounded-2xl overflow-hidden border border-border bg-card p-8 lg:p-10 shadow-sm">
+                                <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-7">
+                                    <div className="h-16 w-16 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shadow-sm shrink-0">
+                                        <Shield className="h-8 w-8 text-amber-500" />
+                                    </div>
+                                    <div className="space-y-2 flex-1">
+                                        <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-amber-500/5 border border-amber-500/10 text-[10px] font-bold uppercase tracking-wider text-amber-500">
+                                            <Lock className="h-3 w-3" /> Zero-Trust Security
+                                        </div>
+                                        <h1 className="text-2xl font-bold text-foreground tracking-tight">Enterprise Security Suite</h1>
+                                        <p className="text-muted-foreground max-w-lg leading-relaxed text-sm">
+                                            XtraSecurity provides advanced tools to share secrets securely and manage temporary access without permanent credential exposure.
+                                        </p>
+                                    </div>
                                 </div>
-                                <h1 className="text-3xl font-bold text-foreground tracking-tight">Zero-Trust Security</h1>
-                                <p className="text-muted-foreground max-w-2xl">Just-in-time access, rotated credentials, and full audit trails for every secret access.</p>
                             </div>
-                            <PremiumCallout type="tip">
-                                See the{" "}
-                                <button onClick={() => setActiveSection("cli")} className="text-primary font-bold underline underline-offset-2">
-                                    CLI Reference
-                                </button>{" "}
-                                for JIT access commands like <code className="bg-muted px-1.5 py-0.5 rounded text-primary font-mono text-xs">xtra jit request</code>.
-                            </PremiumCallout>
+
+                            {/* Secret Sharing */}
+                            <section id="sharing" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Share2} title="Secret Sharing" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        <strong>Secret Sharing</strong> allows you to generate a unique, end-to-end encrypted link for a specific secret. This is the safest way to send a database password or API key to a teammate or external contractor.
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                                        <div className="p-4 rounded-xl border bg-muted/20 space-y-2">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">When to use it?</h4>
+                                            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                                                <li>Onboarding a new developer</li>
+                                                <li>Sending credentials to a contractor</li>
+                                                <li>One-time password transfers</li>
+                                            </ul>
+                                        </div>
+                                        <div className="p-4 rounded-xl border bg-muted/20 space-y-2">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">Security Guards</h4>
+                                            <ul className="text-xs text-muted-foreground space-y-1 list-disc pl-4">
+                                                <li>Self-destructing links</li>
+                                                <li>Max view limits (e.g. 1 view)</li>
+                                                <li>Passphrase protection</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+
+                                    <PremiumCallout type="note">
+                                        Once a share link expires or hits its view limit, the underlying token is purged from our database. The original secret in your vault remains untouched.
+                                    </PremiumCallout>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* JIT Access */}
+                            <section id="jit" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Zap} title="JIT (Just-In-Time) Access" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        <strong>JIT Access</strong> implements the principle of least privilege by granting temporary, auditable access to your entire secret vault or specific environments.
+                                    </p>
+
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-primary/5 border-primary/20">
+                                            <div className="h-8 w-8 rounded bg-primary/10 flex items-center justify-center shrink-0">
+                                                <Activity className="h-4 w-4 text-primary" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">The Workflow</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    An admin generates a JIT request link. A developer opens the link to request access. Once an admin approves the request, the developer gets access for a limited time (e.g., 60 minutes). Access is automatically revoked when the timer expires.
+                                                </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Terminal className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">CLI Injection</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Developers can use a specialized CLI command to request and activate JIT access directly from their terminal, allowing them to run apps with production secrets without ever seeing the raw values.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Audit Logs */}
+                            <section id="audit" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Activity} title="Audit Logs" />
+                                <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed max-w-2xl">
+                                    Every interaction with a shared secret or a JIT session is logged. Admins can see exactly who accessed which secret, from what IP address, and at what time.
+                                </p>
+                                <div className="p-1 border rounded-xl bg-zinc-950 overflow-hidden shadow-2xl">
+                                    <div className="flex items-center gap-1.5 px-3 py-2 bg-zinc-900/50 border-b border-zinc-800">
+                                        <div className="w-2.5 h-2.5 rounded-full bg-red-500/20" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-amber-500/20" />
+                                        <div className="w-2.5 h-2.5 rounded-full bg-emerald-500/20" />
+                                        <span className="text-[10px] font-mono text-zinc-500 ml-2">audit_log_preview.txt</span>
+                                    </div>
+                                    <div className="p-4 font-mono text-[11px] leading-relaxed">
+                                        <div className="flex gap-4">
+                                            <span className="text-zinc-600">[2024-05-01 10:24:12]</span>
+                                            <span className="text-emerald-500">ACCESS_GRANTED</span>
+                                            <span className="text-zinc-400">User: dev_alice | Secret: DB_PASSWORD | IP: 192.168.1.45</span>
+                                        </div>
+                                        <div className="flex gap-4 opacity-70">
+                                            <span className="text-zinc-600">[2024-05-01 11:24:12]</span>
+                                            <span className="text-rose-500">ACCESS_EXPIRED</span>
+                                            <span className="text-zinc-400">Session: jit_req_892 | Auto-revoked by System</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <DocNavButtons 
+                                prev={{ label: "VS Code Extension", section: "vscode" }}
+                                next={{ label: "CLI Reference", section: "cli" }}
+                                setActiveSection={setActiveSection}
+                            />
                         </div>
                     )}
                 </motion.div>

@@ -3,17 +3,53 @@ import { Metadata } from 'next';
 const SITE_NAME = 'XtraSecurity';
 const DOMAIN = 'xtrasecurity.in';
 const SITE_URL = `https://${DOMAIN}`;
-const DESCRIPTION = 'Professional secrets management platform with enterprise-grade security, compliance, and developer-first features. Protect your API keys, database passwords, and OAuth tokens.';
+const DESCRIPTION = 'XtraSecurity is the ultimate environment manager for developers. Securely manage .env files, API keys, and database credentials across teams with end-to-end encryption and automated rotation.';
 const AUTHOR = 'XtraSecurity';
 
 export const defaultMetadata: Metadata = {
   title: {
-    default: `${SITE_NAME} - Secrets Management & Compliance Platform`,
+    default: `Environment Manager | Securely Manage .env Files & API Keys | ${SITE_NAME}`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DESCRIPTION,
   keywords: [
-    // Primary keywords
+    // Primary Keywords (High Intent)
+    'environment manager',
+    'env variable manager',
+    'environment configuration tool',
+    '.env file manager',
+    'environment secrets manager',
+    'API key management tool',
+    'development environment manager',
+    'environment variable storage',
+    'secure env manager',
+    'team environment variables',
+
+    // Secondary Keywords (Medium Intent)
+    'manage environment variables',
+    'environment variable tool',
+    '.env file editor',
+    'development secrets manager',
+    'environment configuration platform',
+    'cloud environment manager',
+    'dotenv manager',
+    'environment variable organizer',
+    'secure API key storage',
+    'environment variable sharing',
+
+    // Long-tail Keywords (Specific Intent)
+    'how to manage environment variables in teams',
+    'best environment variable manager for developers',
+    'secure way to store API keys',
+    'environment variable management best practices',
+    'share environment variables securely',
+    'centralized environment configuration',
+    'environment variable vault',
+    'manage .env files across projects',
+    'environment variable GUI tool',
+    'team environment secrets sharing',
+
+    // Legacy/Core Keywords
     'secrets management',
     'secret vault',
     'API key management',
@@ -22,62 +58,13 @@ export const defaultMetadata: Metadata = {
     'secret manager',
     'credential management',
     'secrets manager',
-    
-    // Competitor comparison keywords
     'AWS Secrets Manager alternative',
-    'Google Secret Manager alternative',
-    'best secrets manager',
-    'secrets manager comparison',
-    'AWS Secrets Manager vs',
-    'Google Cloud Secret Manager competitor',
     'Infisical alternative',
     'Vault HashiCorp alternative',
-    
-    // Long-tail keywords
-    'secure secrets management for developers',
-    'centralized secrets management platform',
-    'secrets rotation automation',
-    'secrets scanning and detection',
-    'secrets encryption at rest',
-    'secrets encryption in transit',
-    
-    // Compliance & security
-    'compliance',
-    'SOC 2',
-    'ISO 27001',
-    'GDPR compliance',
-    'compliance reports',
-    'audit logs',
-    'tamper-proof audit trail',
-    
-    // Developer tools
-    'developer tools',
-    'security platform',
-    'DevSecOps platform',
-    'CI/CD secrets management',
-    'secrets in CI/CD pipeline',
-    'GitHub Actions secrets',
-    'GitLab CI secrets',
-    
-    // Use cases
-    'password management',
-    'database credentials',
-    'API credentials',
-    'OAuth token management',
-    'SSH key management',
-    'TLS certificate management',
-    'infrastructure security',
-    'secrets for microservices',
-    
-    // Advanced features
-    'just-in-time access',
-    'JIT access for developers',
-    'service accounts',
-    'RBAC secrets management',
-    'IP-based access control',
-    'secret versioning',
     'secret rotation',
     'shadow rotation',
+    'JIT access',
+    'just-in-time access',
   ],
   authors: [{ name: AUTHOR }],
   creator: AUTHOR,

@@ -93,11 +93,7 @@ export async function notify(event: NotificationEvent): Promise<void> {
 
     if (channels.length === 0) return;
 
-    // Call dispatch logic for each matched channel
-    const { sendSlackNotification } = await import("./slack");
-    const { sendTeamsNotification } = await import("./teams");
-    const { sendWebhookNotification } = await import("./webhook");
-    const { sendEmail } = await import("@/lib/email");
+    const { addNotificationJob } = await import("@/lib/queue/notification-queue");
 
     const commonPayload = {
       title: event.title,
@@ -111,33 +107,20 @@ export async function notify(event: NotificationEvent): Promise<void> {
       platform: "XtraSecurity",
     };
 
+    // Offload to BullMQ for reliable delivery
     await Promise.allSettled(
       channels.map(async (channel) => {
-        try {
-          if (channel.type === "slack") {
-            const webhookUrl = (channel.config as any)?.webhookUrl || (channel.config as any)?.slackChannel;
-            if (webhookUrl) await sendSlackNotification(webhookUrl, commonPayload as any);
-          } else if (channel.type === "teams") {
-            const webhookUrl = (channel.config as any)?.teamsWebhook || (channel.config as any)?.webhookUrl;
-            if (webhookUrl) await sendTeamsNotification(webhookUrl, commonPayload as any);
-          } else if (channel.type === "webhook") {
-            const webhookUrl = (channel.config as any)?.webhookUrl;
-            if (webhookUrl) await sendWebhookNotification(webhookUrl, commonPayload as any);
-          } else if (channel.type === "email") {
-            const emailAddress = (channel.config as any)?.email;
-            if (emailAddress) {
-              const typeColor = commonPayload.type === "error" ? "#EF4444" : commonPayload.type === "warning" ? "#F59E0B" : "#6366F1";
-              await sendEmail({
-                to: emailAddress,
-                subject: `[XtraSecurity] ${event.title}`,
-                text: `${event.title}\n\n${event.message}`,
-                html: `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:8px"><div style="background:${typeColor};padding:12px 20px;border-radius:6px 6px 0 0"><h2 style="color:#fff;margin:0;font-size:16px">🔔 ${event.title}</h2></div><div style="padding:20px;background:#f9fafb"><p style="color:#111827;font-size:15px;margin-top:0">${event.message}</p>${event.description ? `<p style="color:#6b7280;font-size:13px">${event.description}</p>` : ""}</div><p style="font-size:11px;color:#9ca3af;padding:10px 20px 0">XtraSecurity &bull; ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p></div>`,
-              });
-            }
-          }
-        } catch (err) {
-          console.error(`[Engine] Failed to dispatch to channel ${channel.name}:`, err);
+        let payload = { ...commonPayload };
+        
+        // Add channel-specific email data if needed
+        if (channel.type === "email") {
+          const typeColor = commonPayload.type === "error" ? "#EF4444" : commonPayload.type === "warning" ? "#F59E0B" : "#6366F1";
+          (payload as any).subject = `[XtraSecurity] ${event.title}`;
+          (payload as any).text = `${event.title}\n\n${event.message}`;
+          (payload as any).html = `<div style="font-family:sans-serif;max-width:600px;margin:0 auto;padding:20px;border:1px solid #e5e7eb;border-radius:8px"><div style="background:${typeColor};padding:12px 20px;border-radius:6px 6px 0 0"><h2 style="color:#fff;margin:0;font-size:16px">🔔 ${event.title}</h2></div><div style="padding:20px;background:#f9fafb"><p style="color:#111827;font-size:15px;margin-top:0">${event.message}</p>${event.description ? `<p style="color:#6b7280;font-size:13px">${event.description}</p>` : ""}</div><p style="font-size:11px;color:#9ca3af;padding:10px 20px 0">XtraSecurity &bull; ${new Date().toLocaleString("en-IN", { timeZone: "Asia/Kolkata" })}</p></div>`;
         }
+
+        await addNotificationJob({ channel, payload });
       })
     );
 

@@ -55,10 +55,15 @@ export function useIntegrations() {
       if (statusRes.ok) {
         const data = await statusRes.json();
         if (data.statuses) {
-          setStatuses(data.statuses);
+          // Normalize keys to lowercase just in case
+          const normalized: Record<string, IntegrationStatus> = {};
+          Object.keys(data.statuses).forEach(k => {
+            normalized[k.toLowerCase()] = data.statuses[k];
+          });
+          setStatuses(normalized);
           
           // 2. Fetch repos ONLY for connected providers
-          const connectedProviders = Object.keys(data.statuses).filter(p => data.statuses[p].connected);
+          const connectedProviders = Object.keys(normalized).filter(p => normalized[p].connected);
           connectedProviders.forEach(p => fetchRepos(p as SyncProvider));
         }
       }

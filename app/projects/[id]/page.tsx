@@ -46,7 +46,8 @@ import {
   Link as LinkIcon,
   Loader2,
   GitCompare,
-  ArrowRight
+  ArrowRight,
+  Cloud
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Button } from "@/components/ui/button";
@@ -75,7 +76,14 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Dialog } from "@/components/ui/dialog-custom";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogHeader, 
+  DialogTitle, 
+  DialogDescription, 
+  DialogFooter 
+} from "@/components/ui/dialog";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -89,11 +97,14 @@ import { SecretHistoryModal } from "@/components/SecretHistoryModal";
 import { AccessRequestModal } from "@/components/AccessRequestModal";
 import { AccessRequestAdmin } from "@/components/AccessRequestAdmin";
 import { JitGenerateModal } from "@/components/JitGenerateModal";
+import { BreakGlassModal } from "@/components/BreakGlassModal";
+import { SyncTargetsModal } from "@/components/SyncTargetsModal";
+import { ShareSecretModal } from "@/components/ShareSecretModal";
 
 // --- Types ---
 
 interface SecretVersion {
-  version: number;
+  version: string;
   value: string;
   description: string;
   updatedBy: string;
@@ -111,7 +122,7 @@ interface Secret {
   projectId: string;
   branchId: string;
   updatedBy?: string;
-  version: number;
+  version: string;
   history?: SecretVersion[];
   permission: string[];
   expiryDate: Date;
@@ -119,6 +130,7 @@ interface Secret {
   rotationType?: string;
   type: string;
   status?: "active" | "expiring" | "expired" | "rotating";
+  changeReason?: string;
 }
 
 interface Branch {
@@ -209,6 +221,7 @@ const SecretCard = ({
   onRequestAccess,
   onShare,
   onGenerateJit,
+  onSyncTargets,
 }: {
   secret: Secret;
   isVisible: boolean;
@@ -221,6 +234,7 @@ const SecretCard = ({
   onRequestAccess: () => void;
   onShare: () => void;
   onGenerateJit: () => void;
+  onSyncTargets: () => void;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const SecretIcon = SECRET_TYPES.find((t) => t.value === secret.type)?.icon || Key;
@@ -287,15 +301,21 @@ const SecretCard = ({
               <DropdownMenuItem onClick={onViewHistory} className="gap-2">
                 <History className="h-4 w-4" /> History
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-primary">
+              <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-white">
                 <Share2 className="h-4 w-4" /> Share Secret
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-amber-500">
+              <DropdownMenuItem 
+                onClick={onSyncTargets}
+                className="gap-2 text-emerald-600 focus:text-white"
+              >
+                <Cloud className="h-4 w-4" /> Cloud Sync
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-white">
                 <Shield className="h-4 w-4" /> JIT Access
                 <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-destructive">
+              <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-white">
                 <Trash2 className="h-4 w-4" /> Delete
               </DropdownMenuItem>
             </DropdownMenuContent>
@@ -485,12 +505,6 @@ const VaultManager: React.FC = () => {
   // Share State
   const [shareSecret, setShareSecret] = React.useState<Secret | null>(null);
   const [isShareOpen, setIsShareOpen] = React.useState(false);
-  const [shareExpiry, setShareExpiry] = React.useState("24");
-  const [shareMaxViews, setShareMaxViews] = React.useState<string>("1");
-  const [shareLabel, setShareLabel] = React.useState("");
-  const [isCreatingShare, setIsCreatingShare] = React.useState(false);
-  const [shareResult, setShareResult] = React.useState<{ url: string; expiresAt: string } | null>(null);
-  const [shareCopied, setShareCopied] = React.useState(false);
 
   // JIT Generate Modal State
   const [isJitModalOpen, setIsJitModalOpen] = React.useState(false);
@@ -511,6 +525,11 @@ const VaultManager: React.FC = () => {
     removed: any[];
     modified: any[];
   } | null>(null);
+
+  // Break Glass State
+  const [isBreakGlassOpen, setIsBreakGlassOpen] = React.useState(false);
+  const [isSyncTargetsOpen, setIsSyncTargetsOpen] = React.useState(false);
+  const [syncTargetSecret, setSyncTargetSecret] = React.useState<{id: string, key: string} | null>(null);
 
   // --- Data Loading ---
 
@@ -743,8 +762,11 @@ const VaultManager: React.FC = () => {
 
     setIsEditingSecret(true);
     try {
-      await axios.put(`/api/secret?id=${editingSecret.id}`, editingSecret);
-      setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? editingSecret : s)));
+      await axios.put(`/api/secret?id=${editingSecret.id}`, {
+        ...editingSecret,
+        changeReason: editingSecret.changeReason
+      });
+      setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, changeReason: "" } : s)));
       setIsEditSecretOpen(false);
       setEditingSecret(null);
       setNotification({ type: "default", message: "✓ Secret updated successfully" });
@@ -827,34 +849,9 @@ const VaultManager: React.FC = () => {
     setNotification({ type: "default", message: `✓ .env.example exported with ${secretsToExport.length} keys` });
   };
 
-  // Feature 3: Share a secret
   const handleShare = (secret: Secret) => {
     setShareSecret(secret);
-    setShareResult(null);
-    setShareExpiry("24");
-    setShareMaxViews("1");
-    setShareLabel("");
-    setShareCopied(false);
     setIsShareOpen(true);
-  };
-
-  const createShareLink = async () => {
-    if (!shareSecret) return;
-    setIsCreatingShare(true);
-    try {
-      const response = await axios.post("/api/secret/share", {
-        secretId: shareSecret.id,
-        expiresInHours: parseInt(shareExpiry),
-        maxViews: shareMaxViews === "unlimited" ? null : parseInt(shareMaxViews),
-        label: shareLabel || null,
-      });
-      setShareResult({ url: response.data.shareUrl, expiresAt: response.data.expiresAt });
-    } catch (error: any) {
-      const errorMsg = error.response?.data?.error || "Failed to create share link";
-      setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
-    } finally {
-      setIsCreatingShare(false);
-    }
   };
 
   // Feature 2: Bulk Delete
@@ -1152,6 +1149,14 @@ const VaultManager: React.FC = () => {
                 Settings
               </Button>
             )}
+            <Button 
+              variant="outline" 
+              onClick={() => setIsBreakGlassOpen(true)}
+              className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10 text-red-600 font-bold"
+            >
+              <ShieldAlert className="h-4 w-4 mr-2" />
+              Break Glass
+            </Button>
             <Button onClick={() => setIsAddSecretOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Secret
@@ -1371,6 +1376,10 @@ const VaultManager: React.FC = () => {
                         }}
                         onShare={() => handleShare(secret)}
                         onGenerateJit={() => setIsJitModalOpen(true)}
+                        onSyncTargets={() => {
+                          setSyncTargetSecret({ id: secret.id, key: secret.key });
+                          setIsSyncTargetsOpen(true);
+                        }}
                       />
                     </div>
                   ))}
@@ -1482,12 +1491,16 @@ const VaultManager: React.FC = () => {
 
       {/* Add Secret Modal */}
       <Dialog
-        isOpen={isAddSecretOpen}
-        onClose={() => { setIsAddSecretOpen(false); setEnvImportText(""); setAddSecretTab("details"); }}
-        title="Add New Secret"
-        description={`Add a secret to ${selectedBranch?.name || "current branch"}`}
-        className="max-w-lg"
+        open={isAddSecretOpen}
+        onOpenChange={(open) => !open && (setIsAddSecretOpen(false) || setEnvImportText("") || setAddSecretTab("details"))}
       >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Add New Secret</DialogTitle>
+            <DialogDescription>
+              Add a secret to {selectedBranch?.name || "current branch"}
+            </DialogDescription>
+          </DialogHeader>
         <Tabs value={addSecretTab} onValueChange={setAddSecretTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -1690,15 +1703,18 @@ const VaultManager: React.FC = () => {
             </Button>
           )}
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* Edit Secret Modal */}
       <Dialog
-        isOpen={isEditSecretOpen}
-        onClose={() => { setIsEditSecretOpen(false); setEditingSecret(null); }}
-        title="Edit Secret"
-        className="max-w-lg"
+        open={isEditSecretOpen}
+        onOpenChange={(open) => !open && (setIsEditSecretOpen(false) || setEditingSecret(null))}
       >
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Edit Secret</DialogTitle>
+          </DialogHeader>
         {editingSecret && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1717,6 +1733,14 @@ const VaultManager: React.FC = () => {
               <Label>Description</Label>
               <Input value={editingSecret.description} onChange={(e) => setEditingSecret({ ...editingSecret, description: e.target.value })} />
             </div>
+            <div className="space-y-2">
+              <Label>Change Reason (Audit Log)</Label>
+              <Input 
+                placeholder="Why are you changing this secret?"
+                value={editingSecret.changeReason || ""} 
+                onChange={(e) => setEditingSecret({ ...editingSecret, changeReason: e.target.value })} 
+              />
+            </div>
             <div className="flex justify-end gap-2 mt-6">
               <Button variant="outline" onClick={() => { setIsEditSecretOpen(false); setEditingSecret(null); }}>
                 Cancel
@@ -1728,26 +1752,19 @@ const VaultManager: React.FC = () => {
             </div>
           </div>
         )}
+        </DialogContent>
       </Dialog>
 
-      {/* History Modal */}
-      <SecretHistoryModal
-        open={isHistoryOpen}
-        onClose={() => setIsHistoryOpen(false)}
-        projectId={projectId}
-        env={historySecret?.environmentType || ""}
-        secretKey={historySecret?.key || ""}
-        secretId={historySecret?.id}
-        onRollbackSuccess={() => loadProject(true)}
-      />
 
       {/* CLI Setup Docs Modal */}
       <Dialog
-        isOpen={isDocsOpen}
-        onClose={() => setIsDocsOpen(false)}
-        title="CLI Setup Instructions"
-        className="max-w-2xl"
+        open={isDocsOpen}
+        onOpenChange={setIsDocsOpen}
       >
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>CLI Setup Instructions</DialogTitle>
+          </DialogHeader>
         <div className="space-y-4 flex flex-col max-h-[70vh] pr-2 overflow-y-auto mt-4">
           <p className="text-sm text-muted-foreground">
             Use the Xtra CLI to sync secrets directly to your local development environment. These commands are tailored to your currently selected branch and environment.
@@ -1859,15 +1876,18 @@ const VaultManager: React.FC = () => {
             <Button onClick={() => setIsDocsOpen(false)}>Done</Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* Add Branch Modal */}
       <Dialog
-        isOpen={isAddBranchOpen}
-        onClose={() => setIsAddBranchOpen(false)}
-        title="Create New Branch"
-        className="max-w-md"
+        open={isAddBranchOpen}
+        onOpenChange={setIsAddBranchOpen}
       >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Create New Branch</DialogTitle>
+          </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Branch Name</Label>
@@ -1895,67 +1915,72 @@ const VaultManager: React.FC = () => {
             </Button>
           </div>
         </div>
+        </DialogContent>
       </Dialog>
 
       {/* Custom Delete Confirmation Modal */}
-      {secretToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => !deletingSecretId && setSecretToDelete(null)}>
-          <div
-            className="bg-background w-full max-w-md flex flex-col rounded-lg border shadow-lg overflow-hidden m-4 p-6 relative"
-            onClick={e => e.stopPropagation()}
-          >
-            <div className="flex items-center gap-3 mb-4 text-destructive">
+      <Dialog
+        open={!!secretToDelete}
+        onOpenChange={(open) => !open && !deletingSecretId && setSecretToDelete(null)}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <div className="flex items-center gap-3 mb-2 text-destructive">
               <Trash2 className="h-6 w-6" />
-              <h2 className="text-lg font-semibold">Delete Secret</h2>
+              <DialogTitle className="text-lg font-semibold">Delete Secret</DialogTitle>
             </div>
-            <p className="text-sm text-muted-foreground mb-6">
-              Are you sure you want to delete the secret <strong>{secretToDelete.key}</strong>? This action cannot be undone and will permanently remove all of its version history.
-            </p>
-            <div className="flex justify-end gap-3">
-              <Button variant="outline" onClick={() => setSecretToDelete(null)} disabled={!!deletingSecretId}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={confirmDeleteSecret} disabled={!!deletingSecretId}>
-                {deletingSecretId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
-                Delete
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            <DialogDescription>
+              Are you sure you want to delete the secret <strong>{secretToDelete?.key}</strong>? This action cannot be undone and will permanently remove all of its version history.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex justify-end gap-3 mt-4">
+            <Button variant="outline" onClick={() => setSecretToDelete(null)} disabled={!!deletingSecretId}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={confirmDeleteSecret} disabled={!!deletingSecretId}>
+              {deletingSecretId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Env Sync Modal */}
-      {isEnvSyncOpen && (() => {
-        const envs = ["development", "staging", "production"] as const;
-        const keysByEnv: Record<string, Set<string>> = {};
-        for (const env of envs) {
-          keysByEnv[env] = new Set(secrets.filter(s => s.environmentType === env).map(s => s.key));
-        }
-        const allKeys = new Set(secrets.map(s => s.key));
-        const syncIssues: { key: string; missingIn: string[] }[] = [];
-        for (const key of Array.from(allKeys)) {
-          const missingIn = envs.filter(env => !keysByEnv[env].has(key));
-          if (missingIn.length > 0) {
-            syncIssues.push({ key, missingIn });
+      <Dialog
+        open={isEnvSyncOpen}
+        onOpenChange={setIsEnvSyncOpen}
+      >
+        {isEnvSyncOpen && (() => {
+          const envs = ["development", "staging", "production"] as const;
+          const keysByEnv: Record<string, Set<string>> = {};
+          for (const env of envs) {
+            keysByEnv[env] = new Set(secrets.filter(s => s.environmentType === env).map(s => s.key));
           }
-        }
-        const envColors: Record<string, string> = {
-          development: "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-800",
-          staging: "bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-800",
-          production: "bg-red-500/10 text-red-600 border-red-200 dark:border-red-800",
-        };
-        return (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsEnvSyncOpen(false)}>
-            <div className="bg-background w-full max-w-2xl max-h-[85vh] flex flex-col rounded-lg border shadow-lg overflow-hidden m-4" onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between px-6 py-4 border-b">
-                <div>
-                  <h2 className="text-lg font-semibold flex items-center gap-2">
-                    <GitBranch className="h-5 w-5 text-primary" /> Environment Sync Status
-                  </h2>
-                  <p className="text-sm text-muted-foreground mt-0.5">Keys that exist in some environments but are missing in others</p>
+          const allKeys = new Set(secrets.map(s => s.key));
+          const syncIssues: { key: string; missingIn: string[] }[] = [];
+          for (const key of Array.from(allKeys)) {
+            const missingIn = envs.filter(env => !keysByEnv[env].has(key));
+            if (missingIn.length > 0) {
+              syncIssues.push({ key, missingIn });
+            }
+          }
+          const envColors: Record<string, string> = {
+            development: "bg-blue-500/10 text-blue-600 border-blue-200 dark:border-blue-800",
+            staging: "bg-amber-500/10 text-amber-600 border-amber-200 dark:border-amber-800",
+            production: "bg-red-500/10 text-red-600 border-red-200 dark:border-red-800",
+          };
+          return (
+            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+              <DialogHeader className="px-6 py-4 border-b">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                      <GitBranch className="h-5 w-5 text-primary" /> Environment Sync Status
+                    </DialogTitle>
+                    <DialogDescription className="text-sm text-muted-foreground mt-0.5">Keys that exist in some environments but are missing in others</DialogDescription>
+                  </div>
                 </div>
-                <Button variant="ghost" size="sm" onClick={() => setIsEnvSyncOpen(false)}>✕</Button>
-              </div>
+              </DialogHeader>
 
               {/* Summary badges */}
               <div className="flex items-center gap-3 px-6 py-3 border-b bg-muted/30">
@@ -2010,27 +2035,28 @@ const VaultManager: React.FC = () => {
                 </p>
                 <Button onClick={() => setIsEnvSyncOpen(false)}>Close</Button>
               </div>
-            </div>
-          </div>
-        );
-      })()}
+            </DialogContent>
+          );
+        })()}
+      </Dialog>
 
       {/* Bulk Delete Confirmation */}
-      {isBulkDeleteConfirmOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => setIsBulkDeleteConfirmOpen(false)}>
-          <div
-            className="bg-background w-full max-w-md flex flex-col rounded-xl border shadow-xl overflow-hidden m-4 p-6"
-            onClick={e => e.stopPropagation()}
-          >
+      <Dialog
+        open={isBulkDeleteConfirmOpen}
+        onOpenChange={setIsBulkDeleteConfirmOpen}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
             <div className="flex items-center gap-3 mb-2 text-destructive">
               <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
                 <Trash2 className="h-5 w-5 text-destructive" />
               </div>
-              <div>
-                <h2 className="text-lg font-semibold text-foreground">Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}?</h2>
-                <p className="text-sm text-muted-foreground">This action cannot be undone.</p>
+              <div className="text-left">
+                <DialogTitle className="text-lg font-semibold text-foreground">Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}?</DialogTitle>
+                <DialogDescription className="text-sm text-muted-foreground">This action cannot be undone.</DialogDescription>
               </div>
             </div>
+          </DialogHeader>
 
             <div className="my-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg max-h-40 overflow-y-auto">
               {Array.from(selectedSecretIds).map(id => {
@@ -2045,7 +2071,7 @@ const VaultManager: React.FC = () => {
               })}
             </div>
 
-            <div className="flex justify-end gap-3 mt-2">
+            <DialogFooter className="flex justify-end gap-3 mt-2">
               <Button variant="outline" onClick={() => setIsBulkDeleteConfirmOpen(false)}>
                 Cancel
               </Button>
@@ -2053,137 +2079,31 @@ const VaultManager: React.FC = () => {
                 {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
                 Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}
               </Button>
-            </div>
-          </div>
-        </div>
-      )}
+            </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-      {/* Share Secret Dialog */}
-      {isShareOpen && shareSecret && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={() => !isCreatingShare && setIsShareOpen(false)}>
-          <div
-            className="bg-background w-full max-w-md flex flex-col rounded-xl border shadow-xl overflow-hidden m-4"
-            onClick={e => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-6 py-4 border-b">
-              <div className="flex items-center gap-3">
-                <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Share2 className="h-5 w-5 text-primary" />
-                </div>
-                <div>
-                  <h2 className="font-semibold text-foreground">Share Secret</h2>
-                  <p className="text-xs text-muted-foreground font-mono">{shareSecret.key}</p>
-                </div>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => setIsShareOpen(false)}>✕</Button>
-            </div>
-
-            <div className="px-6 py-5 space-y-4">
-              {!shareResult ? (
-                <>
-                  {/* Expiry */}
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium">Expires After</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[["1h", "1"], ["24h", "24"], ["7d", "168"], ["30d", "720"]].map(([label, val]) => (
-                        <button
-                          key={val}
-                          onClick={() => setShareExpiry(val)}
-                          className={`py-2 rounded-lg border text-sm font-medium transition-colors ${shareExpiry === val ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Max Views */}
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium">Max Views</Label>
-                    <div className="grid grid-cols-4 gap-2">
-                      {[["1x", "1"], ["5x", "5"], ["10x", "10"], ["∞", "unlimited"]].map(([label, val]) => (
-                        <button
-                          key={val}
-                          onClick={() => setShareMaxViews(val)}
-                          className={`py-2 rounded-lg border text-sm font-medium transition-colors ${shareMaxViews === val ? "bg-primary text-primary-foreground border-primary" : "border-border hover:bg-muted"}`}
-                        >
-                          {label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Label */}
-                  <div className="space-y-1.5">
-                    <Label className="text-sm font-medium">Note (optional)</Label>
-                    <Input
-                      placeholder="e.g. for new dev onboarding"
-                      value={shareLabel}
-                      onChange={e => setShareLabel(e.target.value)}
-                    />
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-2">
-                    <Button variant="outline" onClick={() => setIsShareOpen(false)}>Cancel</Button>
-                    <Button onClick={createShareLink} disabled={isCreatingShare}>
-                      {isCreatingShare ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <LinkIcon className="mr-2 h-4 w-4" />}
-                      Generate Link
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="space-y-4">
-                  <div className="flex items-center gap-2 text-emerald-600 font-medium">
-                    <div className="h-8 w-8 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                      <Check className="h-4 w-4" />
-                    </div>
-                    Share link created!
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <Label className="text-sm text-muted-foreground">Share URL</Label>
-                    <div className="flex items-center gap-2">
-                      <code className="flex-1 text-xs bg-muted rounded-lg px-3 py-2.5 font-mono break-all">{shareResult.url}</code>
-                      <Button
-                        size="sm"
-                        variant={shareCopied ? "default" : "outline"}
-                        className="shrink-0"
-                        onClick={() => {
-                          navigator.clipboard?.writeText(shareResult.url);
-                          setShareCopied(true);
-                          setTimeout(() => setShareCopied(false), 2000);
-                        }}
-                      >
-                        {shareCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-                      </Button>
-                    </div>
-                  </div>
-
-                  <div className="text-xs text-muted-foreground bg-muted/50 rounded-lg p-3 space-y-1">
-                    <div>⏱ Expires: {new Date(shareResult.expiresAt).toLocaleString()}</div>
-                    <div>👁 Max views: {shareMaxViews === "unlimited" ? "Unlimited" : shareMaxViews}</div>
-                  </div>
-
-                  <div className="flex justify-end gap-3 pt-1">
-                    <Button variant="outline" onClick={() => setShareResult(null)}>Create Another</Button>
-                    <Button onClick={() => setIsShareOpen(false)}>Done</Button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+      {/* Share Secret Modal */}
+      <ShareSecretModal
+        isOpen={isShareOpen}
+        onClose={() => setIsShareOpen(false)}
+        secret={shareSecret}
+        onSuccess={(msg) => setNotification({ type: "default", message: msg })}
+        onError={(msg) => setNotification({ type: "destructive", message: msg })}
+      />
 
       {/* Copy Secrets Modal */}
       <Dialog
-        isOpen={isCopyModalOpen}
-        onClose={() => setIsCopyModalOpen(false)}
-        title="Copy Secrets"
-        description="Duplicate secrets from the current branch to another branch or environment."
-        className="max-w-md"
+        open={isCopyModalOpen}
+        onOpenChange={setIsCopyModalOpen}
       >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Copy Secrets</DialogTitle>
+            <DialogDescription>
+              Duplicate secrets from the current branch to another branch or environment.
+            </DialogDescription>
+          </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between text-sm font-medium text-muted-foreground mb-2">
             <span>Source ({selectedBranch?.name})</span>
@@ -2250,17 +2170,22 @@ const VaultManager: React.FC = () => {
               Copy Secrets
             </Button>
           </div>
-        </div>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* Compare Branches Modal */}
       <Dialog
-        isOpen={isCompareModalOpen}
-        onClose={() => { setIsCompareModalOpen(false); setCompareResults(null); }}
-        title="Compare Branches"
-        description="See what secrets have changed between your current branch and another."
-        className="max-w-3xl"
+        open={isCompareModalOpen}
+        onOpenChange={(open) => !open && (setIsCompareModalOpen(false) || setCompareResults(null))}
       >
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Compare Branches</DialogTitle>
+            <DialogDescription>
+              See what secrets have changed between your current branch and another.
+            </DialogDescription>
+          </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-lg border">
             <div className="flex-1 space-y-1">
@@ -2363,7 +2288,8 @@ const VaultManager: React.FC = () => {
               )}
             </div>
           )}
-        </div>
+          </div>
+        </DialogContent>
       </Dialog>
 
       {/* JIT Generate Modal */}
@@ -2385,6 +2311,37 @@ const VaultManager: React.FC = () => {
         secretId={requestAccessSecret?.id}
         secretKey={requestAccessSecret?.key}
       />
+
+      {/* Break Glass Modal */}
+      <BreakGlassModal
+        open={isBreakGlassOpen}
+        onClose={() => setIsBreakGlassOpen(false)}
+        projectId={projectId}
+        projectName={project?.name || "Project"}
+      />
+
+      {/* Sync Targets Modal */}
+      {syncTargetSecret && (
+        <SyncTargetsModal
+          open={isSyncTargetsOpen}
+          onClose={() => setIsSyncTargetsOpen(false)}
+          secretId={syncTargetSecret.id}
+          secretKey={syncTargetSecret.key}
+        />
+      )}
+
+      {/* Secret History Modal */}
+      {historySecret && (
+        <SecretHistoryModal
+          open={isHistoryOpen}
+          onOpenChange={setIsHistoryOpen}
+          projectId={projectId}
+          env={historySecret.environmentType}
+          secretKey={historySecret.key}
+          secretId={historySecret.id}
+          onRollbackSuccess={handleRefresh}
+        />
+      )}
     </DashboardLayout>
   );
 };

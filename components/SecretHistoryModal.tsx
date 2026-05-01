@@ -3,11 +3,18 @@
 import { useState, useCallback, useEffect } from "react";
 import {
     History, RotateCcw, Eye, EyeOff, ChevronDown, ChevronRight,
-    Clock, User, Tag, X, AlertTriangle,
+    Clock, User, Tag, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from "@/components/ui/dialog";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -26,11 +33,11 @@ interface SecretHistoryData {
 
 interface SecretHistoryModalProps {
     open: boolean;
-    onClose: () => void;
+    onOpenChange: (open: boolean) => void;
     projectId: string;
     env: string;
     secretKey: string;
-    secretId?: string; // Add this
+    secretId?: string;
     onRollbackSuccess?: () => void;
 }
 
@@ -48,11 +55,13 @@ function fmtDate(iso: string) {
 
 function VersionRow({
     entry,
+    prevEntry,
     isCurrent,
     onRollback,
     rolling,
 }: {
     entry: HistoryEntry;
+    prevEntry?: HistoryEntry;
     isCurrent: boolean;
     onRollback: (version: string) => void;
     rolling: boolean;
@@ -60,18 +69,20 @@ function VersionRow({
     const [expanded, setExpanded] = useState(false);
     const [revealed, setRevealed] = useState(false);
 
+    const hasChanged = prevEntry && entry.value !== prevEntry.value;
+
     return (
         <div
-            className={`rounded-lg border transition-colors ${isCurrent
-                ? "border-primary/40 bg-primary/5"
-                : "border-border bg-muted/20 hover:bg-muted/40"
+            className={`rounded-lg border transition-all ${isCurrent
+                ? "border-primary/40 bg-primary/5 shadow-sm"
+                : "border-border bg-card/50 hover:bg-card/80"
                 }`}
         >
             {/* Header row */}
             <div className="flex items-center gap-3 p-3">
                 <button
                     onClick={() => setExpanded((v) => !v)}
-                    className="text-muted-foreground hover:text-foreground transition-colors"
+                    className="text-muted-foreground hover:text-foreground transition-colors p-1"
                 >
                     {expanded
                         ? <ChevronDown className="h-4 w-4" />
@@ -79,15 +90,17 @@ function VersionRow({
                 </button>
 
                 {/* Version badge */}
-                <Badge
-                    variant={isCurrent ? "default" : "secondary"}
-                    className="font-mono text-xs shrink-0"
-                >
-                    v{entry.version}
-                </Badge>
+                <div className="flex flex-col items-center">
+                    <Badge
+                        variant={isCurrent ? "default" : "outline"}
+                        className="font-mono text-[10px] h-5 px-1.5 shrink-0"
+                    >
+                        v{entry.version}
+                    </Badge>
+                </div>
 
                 {isCurrent && (
-                    <Badge className="text-xs bg-green-500/20 text-green-600 border-green-500/30 shrink-0">
+                    <Badge className="text-[10px] h-5 bg-emerald-500/10 text-emerald-600 border-emerald-500/20 shrink-0">
                         Current
                     </Badge>
                 )}
@@ -95,16 +108,16 @@ function VersionRow({
                 {/* Meta */}
                 <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-muted-foreground">
                     <span className="flex items-center gap-1">
-                        <Clock className="h-3 w-3" />
+                        <Clock className="h-3.5 w-3.5 opacity-70" />
                         {fmtDate(entry.updatedAt)}
                     </span>
                     <span className="flex items-center gap-1">
-                        <User className="h-3 w-3" />
+                        <User className="h-3.5 w-3.5 opacity-70" />
                         {entry.updatedBy}
                     </span>
                     {entry.description && (
-                        <span className="flex items-center gap-1 italic">
-                            <Tag className="h-3 w-3" />
+                        <span className="flex items-center gap-1 italic truncate max-w-[200px]">
+                            <Tag className="h-3.5 w-3.5 opacity-70" />
                             {entry.description}
                         </span>
                     )}
@@ -113,32 +126,69 @@ function VersionRow({
                 {/* Rollback button */}
                 {!isCurrent && (
                     <Button
-                        variant="outline"
+                        variant="ghost"
                         size="sm"
                         onClick={() => onRollback(entry.version)}
                         disabled={rolling}
-                        className="gap-1 shrink-0 text-xs"
+                        className="h-8 gap-1.5 text-xs hover:bg-primary/10 hover:text-primary border border-transparent hover:border-primary/20"
                     >
-                        <RotateCcw className="h-3 w-3" />
-                        {rolling ? "Rolling back…" : "Rollback"}
+                        <RotateCcw className="h-3.5 w-3.5" />
+                        {rolling ? "Restoring…" : "Rollback"}
                     </Button>
                 )}
             </div>
 
-            {/* Expanded value */}
+            {/* Expanded Content (Diff View) */}
             {expanded && (
-                <div className="px-4 pb-3 border-t border-border/50 pt-3">
-                    <div className="flex items-center gap-2">
-                        <code className="flex-1 bg-muted rounded px-3 py-2 text-xs font-mono break-all">
-                            {revealed ? entry.value || "(empty)" : "••••••••••••••••"}
-                        </code>
+                <div className="px-4 pb-4 border-t border-border/50 pt-4 space-y-3 bg-muted/30">
+                    <div className="flex items-center justify-between mb-1">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                            Value Change
+                        </span>
                         <button
                             onClick={() => setRevealed((v) => !v)}
-                            className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground"
-                            title={revealed ? "Hide value" : "Reveal value"}
+                            className="text-[10px] flex items-center gap-1 text-primary hover:underline"
                         >
-                            {revealed ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                            {revealed ? <><EyeOff className="h-3 w-3" /> Hide</> : <><Eye className="h-3 w-3" /> Reveal</>}
                         </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-2">
+                        {/* If we have a previous version, show the diff */}
+                        {prevEntry && hasChanged ? (
+                            <div className="space-y-2">
+                                <div className="rounded border border-red-500/20 bg-red-500/5 p-2 relative overflow-hidden">
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-red-500/40" />
+                                    <span className="text-[9px] font-bold text-red-600/70 absolute right-2 top-1">REMOVED</span>
+                                    <code className="block text-xs font-mono text-red-700/80 line-through decoration-red-500/50">
+                                        {revealed ? prevEntry.value : "••••••••••••••••"}
+                                    </code>
+                                </div>
+                                <div className="rounded border border-emerald-500/20 bg-emerald-500/5 p-2 relative overflow-hidden">
+                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500/40" />
+                                    <span className="text-[9px] font-bold text-emerald-600/70 absolute right-2 top-1">ADDED</span>
+                                    <code className="block text-xs font-mono text-emerald-700">
+                                        {revealed ? entry.value : "••••••••••••••••"}
+                                    </code>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="rounded border border-border bg-muted p-3">
+                                <code className="block text-xs font-mono break-all whitespace-pre-wrap">
+                                    {revealed ? entry.value || "(empty)" : "••••••••••••••••"}
+                                </code>
+                                {!prevEntry && (
+                                    <p className="text-[10px] text-muted-foreground mt-2 italic">
+                                        Initial version creation.
+                                    </p>
+                                )}
+                                {prevEntry && !hasChanged && (
+                                    <p className="text-[10px] text-muted-foreground mt-2 italic">
+                                        Value remained the same (only metadata changed).
+                                    </p>
+                                )}
+                            </div>
+                        )}
                     </div>
                 </div>
             )}
@@ -150,7 +200,7 @@ function VersionRow({
 
 export function SecretHistoryModal({
     open,
-    onClose,
+    onOpenChange,
     projectId,
     env,
     secretKey,
@@ -177,7 +227,6 @@ export function SecretHistoryModal({
                 throw new Error(errData.error || `HTTP ${res.status}`);
             }
             const resData = await res.json();
-            console.log("History response:", resData);
             setData(resData);
         } catch (e: any) {
             console.error("History fetch error:", e);
@@ -185,7 +234,7 @@ export function SecretHistoryModal({
         } finally {
             setLoading(false);
         }
-    }, [open, projectId, env, secretKey]);
+    }, [open, projectId, env, secretKey, toast]);
 
     // Fetch when modal opens
     useEffect(() => {
@@ -193,8 +242,6 @@ export function SecretHistoryModal({
             fetchHistory();
         }
     }, [open, fetchHistory]);
-
-    if (!open) return null;
 
     const handleRollback = async (version: string) => {
         if (confirmVersion !== version) {
@@ -210,7 +257,7 @@ export function SecretHistoryModal({
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
-                        secretId: secretId, // Recommended way
+                        secretId: secretId,
                         targetVersion: version,
                         changeReason: `Rollback to v${version} via History Console`
                     }),
@@ -223,7 +270,7 @@ export function SecretHistoryModal({
                 description: `Secret rolled back to v${version} (now v${result.version})`,
             });
             onRollbackSuccess?.();
-            onClose();
+            onOpenChange(false);
         } catch (e: any) {
             toast({ title: "Rollback failed", description: e.message, variant: "destructive" });
         } finally {
@@ -234,32 +281,24 @@ export function SecretHistoryModal({
     const historyEntries = data?.history ?? [];
 
     return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm" onClick={onClose}>
-            <div
-                className="bg-background w-full max-w-2xl max-h-[80vh] flex flex-col rounded-lg border shadow-lg overflow-hidden m-4 relative"
-                onClick={e => e.stopPropagation()} // Prevent closing when clicking inside
-            >
-                <div className="flex flex-col space-y-1.5 p-6 border-b">
+        <Dialog open={open} onOpenChange={onOpenChange}>
+            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
+                <DialogHeader className="p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <History className="h-5 w-5 text-primary" />
                         </div>
-                        <div className="flex-1">
-                            <h2 className="text-lg font-semibold font-mono leading-none tracking-tight">{secretKey}</h2>
-                            <p className="text-sm text-muted-foreground mt-1">
+                        <div className="flex-1 text-left">
+                            <DialogTitle className="text-lg font-semibold font-mono leading-none tracking-tight">
+                                {secretKey}
+                            </DialogTitle>
+                            <DialogDescription className="text-sm text-muted-foreground mt-1">
                                 Version history · {env} environment
                                 {data && ` · Current: v${data.currentVersion}`}
-                            </p>
+                            </DialogDescription>
                         </div>
-                        <button
-                            onClick={onClose}
-                            className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground"
-                        >
-                            <X className="h-4 w-4" />
-                            <span className="sr-only">Close</span>
-                        </button>
                     </div>
-                </div>
+                </DialogHeader>
 
                 {/* Confirm rollback banner */}
                 {confirmVersion && (
@@ -268,18 +307,23 @@ export function SecretHistoryModal({
                         <span className="flex-1">
                             Click <strong>Rollback</strong> again on v{confirmVersion} to confirm. This will create a new version.
                         </span>
-                        <button onClick={() => setConfirmVersion(null)} className="text-muted-foreground hover:text-foreground">
-                            <X className="h-4 w-4" />
-                        </button>
+                        <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => setConfirmVersion(null)}
+                            className="h-6 w-6 p-0"
+                        >
+                            <AlertTriangle className="h-3 w-3" />
+                        </Button>
                     </div>
                 )}
 
                 {/* Content */}
                 <div className="flex-1 overflow-y-auto space-y-2 p-6">
                     {loading ? (
-                        <div className="space-y-2">
-                            {[1, 2, 3].map((i) => (
-                                <div key={i} className="h-14 rounded-lg bg-muted animate-pulse" />
+                        <div className="space-y-3">
+                            {[1, 2, 3, 4].map((i) => (
+                                <div key={i} className="h-16 rounded-lg bg-muted animate-pulse" />
                             ))}
                         </div>
                     ) : historyEntries.length === 0 ? (
@@ -290,8 +334,9 @@ export function SecretHistoryModal({
                     ) : (
                         historyEntries.map((entry, idx) => (
                             <VersionRow
-                                key={entry.version}
+                                key={`${entry.version}-${entry.updatedAt}`}
                                 entry={entry}
+                                prevEntry={historyEntries[idx + 1]}
                                 isCurrent={idx === 0}
                                 onRollback={handleRollback}
                                 rolling={rollingBack === entry.version}
@@ -299,7 +344,7 @@ export function SecretHistoryModal({
                         ))
                     )}
                 </div>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     );
 }

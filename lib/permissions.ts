@@ -1,9 +1,24 @@
 import prisma from "./db";
 import { redis } from "./redis";
 
+const CACHE_TTL = 600; // 10 minutes
+
 export async function getUserTeamRole(userId: string, teamId: string) {
+  const cacheKey = `rbac:teamrole:${userId}:${teamId}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached;
+    } catch (e) {}
+  }
+
   const teamUser = await prisma.teamUser.findFirst({ where: { userId, teamId } });
-  return teamUser?.role || null;
+  const role = teamUser?.role || null;
+
+  if (redis && role) {
+    await redis.set(cacheKey, role, "EX", CACHE_TTL).catch(() => {});
+  }
+  return role;
 }
 
 export async function getUserProjectRole(userId: string, projectId: string) {
@@ -31,8 +46,11 @@ export async function getUserProjectRole(userId: string, projectId: string) {
         select: { projectId: true }
     });
     // Service Account is strictly locked to its own project
-    if (sa && sa.projectId === projectId) return "developer";
-    return null;
+    const role = (sa && sa.projectId === projectId) ? "developer" : null;
+    if (redis && role) {
+      await redis.set(cacheKey, role, "EX", CACHE_TTL).catch(() => {});
+    }
+    return role;
   }
 
   if (String(project.userId) === String(userId)) return "owner";
@@ -45,7 +63,6 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   if (String(workspace?.createdBy) === String(userId)) return "owner";
 
   // Check team membership
-  // fetch teams linked to project where user is a member
   const teamProjects = await prisma.teamProject.findMany({
       where: { projectId },
       include: {
@@ -59,7 +76,6 @@ export async function getUserProjectRole(userId: string, projectId: string) {
       }
   });
 
-  // Collect roles from all teams linked to this project
   const roles = teamProjects
     .flatMap(tp => tp.team.members)
     .filter(m => m.userId === userId)
@@ -67,15 +83,13 @@ export async function getUserProjectRole(userId: string, projectId: string) {
   
   if (roles.length === 0) return null;
 
-  // Determine highest role
   let finalRole = "viewer";
   if (roles.includes("owner")) finalRole = "owner";
   else if (roles.includes("admin")) finalRole = "admin";
   else if (roles.includes("developer")) finalRole = "developer";
-  else if (roles.includes("viewer")) finalRole = "viewer";
   
   if (redis) {
-      redis.set(cacheKey, finalRole, "EX", 300).catch(()=>{});
+      redis.set(cacheKey, finalRole, "EX", CACHE_TTL).catch(()=>{});
   }
   
   return finalRole;
@@ -98,27 +112,31 @@ export function canRemoveMember(currentRole: string | null, targetRole: string) 
 }
 
 export async function getUserWorkspaceRole(userId: string, workspaceId: string) {
-  // Validate MongoDB ObjectID format (24 hex characters)
-  if (!workspaceId || !/^[0-9a-fA-F]{24}$/.test(workspaceId)) {
-    return null;
+  if (!workspaceId || !/^[0-9a-fA-F]{24}$/.test(workspaceId)) return null;
+
+  const cacheKey = `rbac:workspacerole:${userId}:${workspaceId}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached;
+    } catch (e) {}
   }
 
-  // Check ownership
   const workspace = await prisma.workspace.findUnique({
     where: { id: workspaceId },
     select: { createdBy: true }
   });
 
-  if (workspace && String(workspace.createdBy) === String(userId)) return "owner";
+  if (workspace && String(workspace.createdBy) === String(userId)) {
+    if (redis) redis.set(cacheKey, "owner", "EX", CACHE_TTL).catch(() => {});
+    return "owner";
+  }
 
-  // Check team membership in this workspace
   const teamUsers = await prisma.teamUser.findMany({
     where: { 
       userId,
       status: "active",
-      team: {
-        workspaceId
-      }
+      team: { workspaceId }
     },
     include: { team: true }
   });
@@ -126,42 +144,47 @@ export async function getUserWorkspaceRole(userId: string, workspaceId: string) 
   if (teamUsers.length === 0) return null;
 
   const roles = teamUsers.map(tu => tu.role);
-
-  if (roles.includes("admin")) return "admin";
-  if (roles.includes("member") || roles.includes("owner")) return "member";
+  let finalRole = "viewer";
+  if (roles.includes("admin")) finalRole = "admin";
+  else if (roles.includes("member") || roles.includes("owner")) finalRole = "member";
   
-  return "viewer"; // Default fallback
+  if (redis) {
+    redis.set(cacheKey, finalRole, "EX", CACHE_TTL).catch(() => {});
+  }
+  return finalRole;
 }
 
-// ACCESS REVIEW PERMISSIONS
 export const AccessReviewPermissions = {
   READ: "access_review.read",
   WRITE: "access_review.write",
   START_CYCLE: "access_review.start_cycle"
 };
 
-/**
- * Checks if a user has a specific permission.
- * Falls back to "admin" role check for backward compatibility.
- */
 export async function hasPermission(userId: string, permissionAction: string) {
-  // 1. Fetch user to check global role (Legacy/Fallback)
+  const cacheKey = `rbac:permission:${userId}:${permissionAction}`;
+  if (redis) {
+    try {
+      const cached = await redis.get(cacheKey);
+      if (cached) return cached === "true";
+    } catch (e) {}
+  }
+
   const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { role: true }
   });
 
-  if (user?.role === "admin") return true;
+  if (user?.role === "admin") {
+    if (redis) redis.set(cacheKey, "true", "EX", CACHE_TTL).catch(() => {});
+    return true;
+  }
 
-  // 2. RBAC Check (V2)
-  // Split permissionAction into resource/action (e.g. "access_review.read" -> res="access_review", act="read")
   const parts = permissionAction.split(".");
   if (parts.length < 2) return false;
   
   const resource = parts[0];
-  const action = parts.slice(1).join("."); // join remainder
+  const action = parts.slice(1).join(".");
 
-  // Find if user has a role that maps to this permission
   const userRoles = await prisma.userRole.findMany({
       where: { userId },
       include: {
@@ -177,22 +200,23 @@ export async function hasPermission(userId: string, permissionAction: string) {
       }
   });
 
+  let hasPerm = false;
   for (const ur of userRoles) {
       for (const rp of ur.role.permissions) {
           if (rp.permission.resource === resource && rp.permission.action === action) {
-              return true; // Found a match!
+              hasPerm = true;
+              break;
           }
-           // Handle "all" or specific constraints if needed, but for now simple match
       }
+      if (hasPerm) break;
   }
 
-  return false;
+  if (redis) {
+    redis.set(cacheKey, hasPerm ? "true" : "false", "EX", CACHE_TTL).catch(() => {});
+  }
+  return hasPerm;
 }
 
-/**
- * JIT ACCESS CHECK
- * Checks if a user has active, approved, and non-expired temporary access
- */
 export async function getUserSecretAccess(userId: string, projectId: string, secretId?: string) {
   const cacheKey = `rbac:secretaccess:${userId}:${projectId}:${secretId || 'none'}`;
   
@@ -203,24 +227,36 @@ export async function getUserSecretAccess(userId: string, projectId: string, sec
     } catch(e) {}
   }
 
-  // 1. Get standard role
   const role = await getUserProjectRole(userId, projectId);
-  
-  // Owners and Admins always have access
   if (role === "owner" || role === "admin") return { hasAccess: true, role };
   
-  // 2. Check for active JIT Access Request
   const now = new Date();
-  
-  // Find an approved request that hasn't expired yet
+
+  // 2. Check for active Break Glass session
+  const activeBreakGlass = await prisma.breakGlassSession.findFirst({
+    where: {
+      userId,
+      projectId,
+      isActive: true,
+      expiresAt: { gt: now }
+    }
+  });
+
+  if (activeBreakGlass) {
+    const result = { hasAccess: true, role: "admin", isBreakGlass: true, expiresAt: activeBreakGlass.expiresAt };
+    if (redis) redis.set(cacheKey, JSON.stringify(result), "EX", 60).catch(()=>{});
+    return result;
+  }
+
+  // 3. Check for approved JIT request
   const activeRequest = await prisma.accessRequest.findFirst({
     where: {
       userId,
       status: "approved",
       expiresAt: { gt: now },
       OR: [
-        secretId ? { secretIds: { has: secretId } } : { id: "undefined-id-bypass" }, // If secretId passed, check array inclusion
-        { projectId: projectId, secretIds: { isEmpty: true } } // Project-wide JIT (empty array implies blanket access)
+        secretId ? { secretIds: { has: secretId } } : { id: "undefined-id-bypass" },
+        { projectId: projectId, secretIds: { isEmpty: true } }
       ]
     },
     orderBy: { expiresAt: "desc" }
@@ -232,8 +268,21 @@ export async function getUserSecretAccess(userId: string, projectId: string, sec
     return result;
   }
 
-  // 3. Fallback to standard role access
   const result = { hasAccess: false, role };
   if (redis) redis.set(cacheKey, JSON.stringify(result), "EX", 60).catch(()=>{});
   return result;
+}
+
+export async function invalidateUserRbacCache(userId: string) {
+  if (!redis) return;
+  try {
+    const keys = await redis.keys(`rbac:*:${userId}:*`);
+    const permissionKeys = await redis.keys(`rbac:permission:${userId}:*`);
+    const allKeys = [...keys, ...permissionKeys];
+    if (allKeys.length > 0) {
+      await redis.del(...allKeys);
+    }
+  } catch (e) {
+    console.error("[RBAC] Cache invalidation failed:", e);
+  }
 }

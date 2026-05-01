@@ -31,8 +31,12 @@ interface DocSidebarProps {
 
 const SECTIONS = [
   { id: "quickstart", label: "Getting Started", icon: Zap },
+  { id: "management", label: "Workspace Management", icon: Layers },
+  { id: "workflow", label: "Development Workflow", icon: PlayCircle },
+  { id: "cicd", label: "CI/CD Integration", icon: Globe },
   { id: "cli", label: "CLI Reference", icon: Terminal, href: "/docs/cli" },
   { id: "vscode", label: "VS Code Extension", icon: Puzzle },
+  { id: "security", label: "Security Features", icon: Shield },
   { id: "integrations", label: "Integrations", icon: Layers, href: "/docs/integrations" },
   { id: "sdks", label: "SDKs", icon: Code2, href: "/docs/sdks" },
   { id: "tutorials", label: "Tutorials", icon: PlayCircle, href: "/tutorials", comingSoon: true },

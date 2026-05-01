@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
-import { getUserProjectRole } from "@/lib/permissions";
+import { getUserProjectRole, invalidateUserRbacCache } from "@/lib/permissions";
 
 /**
  * PATCH /api/access-requests/[id]
@@ -69,6 +69,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         expiresAt,
       },
     });
+
+    // Invalidate cache for the user who requested access
+    await invalidateUserRbacCache(request.userId);
 
     // 4. Create Audit Log
     try {

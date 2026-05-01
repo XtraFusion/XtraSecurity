@@ -2,7 +2,7 @@ import prisma from "@/lib/db";
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../../auth/[...nextauth]/route";
-import { getUserTeamRole, canRemoveMember } from "@/lib/permissions";
+import { getUserTeamRole, canRemoveMember, invalidateUserRbacCache } from "@/lib/permissions";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 
 export async function DELETE(req: Request) {
@@ -26,6 +26,11 @@ export async function DELETE(req: Request) {
     }
 
     const deleteMember = await prisma.teamUser.delete({ where: { id: memberId } });
+
+    // Invalidate cache
+    if (teamUser.userId) {
+        await invalidateUserRbacCache(teamUser.userId);
+    }
 
     // Revoke JIT Access Requests for this user in the workspace
     // This ensures that removal from a team immediately cuts off temporary access.

@@ -355,7 +355,7 @@ function getIcon(iconName: string, size: number = 24) {
       src={`https://img.icons8.com/fluency/96/${name}.png`} 
       width={size} 
       height={size}
-      alt={iconName}
+      alt={`${iconName} icon - Environment Manager feature`}
       onError={(e) => {
         (e.target as HTMLImageElement).src = `https://img.icons8.com/color/96/${name}.png`;
       }}
@@ -461,7 +461,7 @@ function Navbar() {
     >
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline">
-        <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={28} height={28} className="rounded-md" />
+        <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo - The Ultimate Environment Manager" width={28} height={28} className="rounded-md" />
         <span className="text-white">Xtra<span className="text-cyan-400">Security</span></span>
       </Link>
 
@@ -655,7 +655,7 @@ function HeroSection() {
       >
         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
           style={{ background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(45 100% 45%))" }}>✦</span>
-        Zero-Trust Secrets Management Platform
+        Ultimate Environment Manager & .env Security Tool
       </motion.div>
 
       {/* H1 */}
@@ -665,7 +665,7 @@ function HeroSection() {
         transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8"
       >
-        <span className="text-white">The Secrets Engine</span>
+        <span className="text-white">The Environment Manager</span>
         <br />
         <span style={{
           background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
@@ -673,7 +673,7 @@ function HeroSection() {
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          Built for Velocity.
+          Built for .env Security.
         </span>
       </motion.h1>
 
@@ -684,8 +684,8 @@ function HeroSection() {
         transition={{ delay: 0.2, duration: 0.6 }}
         className="relative z-10 text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed font-medium"
       >
-        Ditch the .env files. Secure your team's credentials with an encrypted, 
-        Git-like vault designed for modern engineering workflows.
+        Manage your environment variables and .env files securely. 
+        Collaborate with your team using an encrypted vault designed for modern engineering.
       </motion.p>
 
       {/* CTAs */}
@@ -811,7 +811,7 @@ function FeaturesSection() {
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-medium text-white mb-6 tracking-tight">
-            Why companies choose XtraSecurity
+            Best environment variable manager for developers
           </h2>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Built for how modern teams actually work. Where humans, pipelines, and AI agents all need secrets to operate.
@@ -832,7 +832,7 @@ function FeaturesSection() {
             <div className="absolute top-0 left-0 w-full h-[320px] overflow-hidden rounded-t-3xl">
               <img 
                 src="/landing page hero image.png" 
-                alt="XtraSecurity Dashboard" 
+                alt="XtraSecurity Environment Manager Dashboard - Securely manage .env files and API keys" 
                 className="w-full h-full object-cover object-top opacity-80 group-hover:opacity-100 group-hover:scale-[1.02] transition-all duration-700"
               />
             </div>

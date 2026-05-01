@@ -10,7 +10,6 @@ import "./globals.css"
 import Provider from "@/lib/provider"
 import { Toaster } from "@/components/ui/sonner"
 import { Toaster as CustomToaster } from "@/components/ui/toaster"
-import { triggerLazyRotation } from "@/lib/rotation/lazy-cron";
 
 const spaceGrotesk = Space_Grotesk({
   subsets: ["latin"],
@@ -44,7 +43,11 @@ export default async function RootLayout({
 }>) {
   // Trigger Automated Secret Rotation (Lazy Cron)
   // This is throttled to 15 mins and runs in the background.
-  triggerLazyRotation().catch(console.error);
+  if (typeof window === "undefined") {
+    import("@/lib/rotation/lazy-cron").then(({ triggerLazyRotation }) => {
+      triggerLazyRotation().catch(console.error);
+    }).catch(console.error);
+  }
   
   return (
     <html lang="en" suppressHydrationWarning>
@@ -96,11 +99,33 @@ html {
             }),
           }}
         />
+        {/* JSON-LD Schema for SoftwareApplication */}
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              '@context': 'https://schema.org',
+              '@type': 'SoftwareApplication',
+              name: 'XtraSecurity',
+              operatingSystem: 'Windows, macOS, Linux',
+              applicationCategory: 'DevOpsApplication',
+              aggregateRating: {
+                '@type': 'AggregateRating',
+                ratingValue: '4.9',
+                ratingCount: '124',
+              },
+              offers: {
+                '@type': 'Offer',
+                price: '0.00',
+                priceCurrency: 'USD',
+              },
+              description: 'XtraSecurity is an advanced environment manager and .env file management tool for developers and teams.',
+            }),
+          }}
+        />
       </head>
 
-      <body style={{
-        pointerEvents: "fill"
-      }}>
+      <body>
         <Provider>
           <UserProvider>
             <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>

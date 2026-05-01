@@ -63,6 +63,21 @@ const nextConfig = {
       fallback: [],
     };
   },
+  // BullMQ & Server-only dependencies
+  serverExternalPackages: ["bullmq"],
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push('bullmq');
+    }
+    
+    // Suppress "Critical dependency: the request of a dependency is an expression"
+    config.module = {
+      ...config.module,
+      exprContextCritical: false,
+    };
+
+    return config;
+  },
 }
 
 export default nextConfig

@@ -4,6 +4,7 @@ import { verifyAuth } from "@/lib/server-auth";
 import { encrypt } from "@/lib/encription";
 import { triggerWebhooks } from "@/lib/webhook";
 import { getUserProjectRole } from "@/lib/permissions";
+import { notify } from "@/lib/notification-service";
 
 /**
  * POST /api/secret/rollback
@@ -112,11 +113,10 @@ export async function POST(req: NextRequest) {
     // 5. Update the Database
     const newHistoryEntry = {
       version: newVersionNumber,
-      value: plainValue, // Store plain text in history as per existing pattern? 
-      // Actually, looking at PUT in api/secret/route.ts, it stores the plain text value in history.
+      value: encryptedValueToStore, 
       description: changeReason || `Rollback to version ${targetVersion}`,
       updatedAt: new Date().toISOString(),
-      updatedBy: auth.userId,
+      updatedBy: auth.email || auth.userId,
     };
 
     const updatedSecret = await prisma.secret.update({
@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
       data: {
         value: encryptedValueToStore,
         version: newVersionNumber,
-        updatedBy: auth.userId,
+        updatedBy: auth.email || auth.userId,
         history: [newHistoryEntry, ...history],
       },
     });
@@ -153,6 +153,28 @@ export async function POST(req: NextRequest) {
       });
     } catch (auditError) {
       console.error("[ROLLBACK API] Failed to create audit log:", auditError);
+    }
+
+    // 6.5 Notify Rule Engine / Activity Feed
+    try {
+      await notify({
+        type: "secret_rollback",
+        title: "Secret Rolled Back",
+        message: `Secret "${secret.key}" was rolled back to version ${targetVersion} by ${auth.email || auth.userId}`,
+        description: `Version restoration in "${environment}" environment`,
+        severity: "warning",
+        workspaceId: secret.project?.workspaceId || "",
+        projectId: secret.projectId,
+        metadata: { key: secret.key, id: secretId, targetVersion },
+        fields: [
+          { label: "Key", value: secret.key },
+          { label: "Restored Version", value: targetVersion },
+          { label: "New Version", value: newVersionNumber },
+          { label: "Updated By", value: auth.email || auth.userId },
+        ]
+      });
+    } catch (notifErr) {
+      console.error("[ROLLBACK API] Failed to trigger notification:", notifErr);
     }
 
     // 7. Trigger Webhooks

@@ -37,14 +37,14 @@ export default function AboutPage() {
               <span className="w-2 h-2 bg-success rounded-full animate-pulse"></span>
               <span className="text-sm font-medium text-primary">About XtraSecurity</span>
             </div>
-            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-black dark:text-white">
-              Built by Security Experts<br />
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 text-black dark:text-white leading-[1.1]">
+              The Ultimate Environment Manager<br />
               <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">
-                For Modern Teams
+                Built by Security Experts
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto mb-8">
-              We're security engineers who've worked at AWS, Google, and Azure. We built XtraSecurity to solve the secrets management problems we faced at scale.
+              We're security engineers who've worked at AWS, Google, and Azure. We built XtraSecurity to solve the environment variable and .env management problems we faced at scale.
             </p>
           </div>
         </div>

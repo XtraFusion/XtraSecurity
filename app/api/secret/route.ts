@@ -4,6 +4,7 @@ import { encrypt, decrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
 import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
 import { notify } from "@/lib/notifications/engine";
+import { queueSecretSync } from "@/lib/queue/sync-queue";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -207,6 +208,7 @@ export const POST = withSecurity(async (request, context, session) => {
 
     // Create new secret with version history
     const newSecret = await prisma.secret.create({
+      // ... data ...
       data: {
         key,
         value: [encryptedString], // Store encrypted object as JSON string in array
@@ -220,7 +222,7 @@ export const POST = withSecurity(async (request, context, session) => {
         history: [
           {
             version: "1",
-            value: value,
+            value: [encryptedString], // Store as encrypted array for consistency
             description: description || "",
             updatedAt: new Date().toISOString(),
             updatedBy: session.email,
@@ -231,6 +233,9 @@ export const POST = withSecurity(async (request, context, session) => {
         expiryDate: expiryDate ? new Date(expiryDate) : null,
       },
     });
+
+    // TRIGGER SYNC
+    await queueSecretSync(newSecret.id);
 
     // Notify Rule Engine
     try {
@@ -365,7 +370,7 @@ export const PUT = withSecurity(async (request, context, session) => {
     updateData.history = [
       {
         version: newVersion,
-        value: value || "[unchanged]",
+        value: value ? [JSON.stringify(encrypt(value))] : (existingSecret.value || "[unchanged]"),
         description: description || existingSecret.description,
         updatedAt: new Date().toISOString(),
         updatedBy: session.email,
@@ -378,6 +383,9 @@ export const PUT = withSecurity(async (request, context, session) => {
       where: { id },
       data: updateData,
     });
+
+    // TRIGGER SYNC
+    await queueSecretSync(updatedSecret.id);
 
     // Notify Rule Engine
     try {

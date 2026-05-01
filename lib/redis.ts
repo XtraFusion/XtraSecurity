@@ -10,14 +10,26 @@ let redisClient: Redis | null = null;
 
 if (redisUrl) {
   if (!global._redisGlobal) {
-    global._redisGlobal = new Redis(redisUrl, {
+    const options: any = {
       enableOfflineQueue: false,
       connectTimeout: 5000,
       maxRetriesPerRequest: 1,
-    });
+    };
+
+    if (redisUrl.startsWith('rediss://')) {
+      options.tls = {
+        rejectUnauthorized: false // Common for cloud/managed redis
+      };
+    }
+
+    global._redisGlobal = new Redis(redisUrl, options);
     
     global._redisGlobal.on('error', (err) => {
-        // Suppress generic network errors without spamming standard output
+        console.error('[Redis] Connection Error:', err.message);
+    });
+
+    global._redisGlobal.on('connect', () => {
+        console.log('[Redis] Connected successfully');
     });
   }
   redisClient = global._redisGlobal;
