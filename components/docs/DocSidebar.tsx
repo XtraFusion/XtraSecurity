@@ -14,7 +14,8 @@ import {
   LayoutDashboard,
   Zap,
   Code2,
-  PlayCircle
+  PlayCircle,
+  Globe
 } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
