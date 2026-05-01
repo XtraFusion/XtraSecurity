@@ -20,7 +20,7 @@ import {
     Blocks,
     Package,
     Github,
-    Globe,
+    Globe as GlobeIcon,
     Server,
     ShieldAlert,
     Key,
@@ -515,7 +515,7 @@ export default function DocsPage() {
                                     <div className="space-y-4 pt-2">
                                         <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
                                             <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
-                                                <Globe className="h-4 w-4 text-muted-foreground" />
+                                                <GlobeIcon className="h-4 w-4 text-muted-foreground" />
                                             </div>
                                             <div>
                                                 <h4 className="text-sm font-bold text-foreground">Creating Tokens</h4>
@@ -657,7 +657,7 @@ export default function DocsPage() {
                             <div className="relative rounded-2xl overflow-hidden border border-border bg-card p-8 lg:p-10 shadow-sm">
                                 <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center gap-7">
                                     <div className="h-16 w-16 rounded-xl bg-purple-500/10 border border-purple-500/20 flex items-center justify-center shadow-sm shrink-0">
-                                        <Globe className="h-8 w-8 text-purple-500" />
+                                        <GlobeIcon className="h-8 w-8 text-purple-500" />
                                     </div>
                                     <div className="space-y-2 flex-1">
                                         <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-purple-500/5 border border-purple-500/10 text-[10px] font-bold uppercase tracking-wider text-purple-500">
