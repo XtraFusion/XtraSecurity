@@ -4,7 +4,7 @@ import { verifyAuth } from "@/lib/server-auth";
 import { encrypt } from "@/lib/encription";
 import { triggerWebhooks } from "@/lib/webhook";
 import { getUserProjectRole } from "@/lib/permissions";
-import { notify } from "@/lib/notification-service";
+import { notify } from "@/lib/notifications/engine";
 
 /**
  * POST /api/secret/rollback
@@ -138,7 +138,7 @@ export async function POST(req: NextRequest) {
           entity: "secret",
           entityId: secretId,
           workspaceId: secret.project.workspaceId,
-          ipAddress: req.headers.get("x-forwarded-for") || req.ip || "unknown",
+          ipAddress: req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1",
           userAgent: req.headers.get("user-agent") || "unknown",
           changes: {
             projectId,

@@ -37,6 +37,7 @@ export async function GET(req: NextRequest) {
     id: key.id,
     label: key.label,
     createdAt: key.createdAt,
+    expiresAt: key.expiresAt,
     lastUsed: key.lastUsed,
     key: key.keyMask || `...${key.key.slice(-4)}`, // Only show mask or fallback to last 4 chars
   }));
@@ -50,7 +51,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { label, workspaceId } = await req.json();
+  const { label, workspaceId, expiresAt } = await req.json();
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
@@ -73,6 +74,7 @@ export async function POST(req: NextRequest) {
       label: label || "Generated Key",
       userId: user.id,
       workspaceId: workspaceId || null,
+      expiresAt: expiresAt ? new Date(expiresAt) : null,
     },
   });
 
@@ -80,6 +82,7 @@ export async function POST(req: NextRequest) {
     id: newKey.id,
     label: newKey.label,
     createdAt: newKey.createdAt,
+    expiresAt: newKey.expiresAt,
     key: fullKey, // Return full key ONLY here
   });
 }

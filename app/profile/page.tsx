@@ -25,12 +25,21 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface ApiKey {
   id: string;
   label: string;
   key: string;
   createdAt: string;
+  createdAt: string;
+  expiresAt?: string;
   lastUsed?: string;
 }
 
@@ -45,6 +54,7 @@ export default function ProfilePage() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [expirationDays, setExpirationDays] = useState("30");
 
   const { user, selectedWorkspace, loading: userLoading } = useGlobalContext();
 
@@ -93,7 +103,8 @@ export default function ProfilePage() {
     try {
       const response = await axios.post("/api/auth/api-keys", {
         label: newKeyLabel,
-        workspaceId: selectedWorkspace?.id
+        workspaceId: selectedWorkspace?.id,
+        expiresAt: expirationDays === "never" ? null : new Date(Date.now() + parseInt(expirationDays) * 24 * 60 * 60 * 1000).toISOString()
       });
       const newKey = response.data;
       setGeneratedKey(newKey.key); // Show full key
@@ -240,6 +251,25 @@ export default function ProfilePage() {
                           onChange={(e) => setNewKeyLabel(e.target.value)}
                         />
                       </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="expiration">Expiration</Label>
+                        <Select value={expirationDays} onValueChange={setExpirationDays}>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select expiration" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="7">7 Days</SelectItem>
+                            <SelectItem value="30">30 Days</SelectItem>
+                            <SelectItem value="90">90 Days</SelectItem>
+                            <SelectItem value="never">Never</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[10px] text-muted-foreground">
+                          {expirationDays === "never" 
+                            ? "This key will never expire." 
+                            : `This key will expire on ${format(new Date(Date.now() + parseInt(expirationDays) * 24 * 60 * 60 * 1000), "MMMM d, yyyy")}.`}
+                        </p>
+                      </div>
                     </div>
                   ) : (
                     <div className="space-y-4 py-4">
@@ -277,6 +307,7 @@ export default function ProfilePage() {
                   <TableRow className="bg-muted/30">
                     <TableHead className="w-[250px]">Label</TableHead>
                     <TableHead>Key Prefix</TableHead>
+                    <TableHead>Expiration</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead>Last Used</TableHead>
                     <TableHead className="text-right">Actions</TableHead>
@@ -288,6 +319,7 @@ export default function ProfilePage() {
                       <TableRow key={i}>
                         <TableCell><div className="h-4 w-32 bg-muted animate-pulse rounded" /></TableCell>
                         <TableCell><div className="h-4 w-20 bg-muted animate-pulse rounded font-mono" /></TableCell>
+                        <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
                         <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
                         <TableCell><div className="h-4 w-24 bg-muted animate-pulse rounded" /></TableCell>
                         <TableCell className="text-right"><div className="h-8 w-8 ml-auto bg-muted animate-pulse rounded" /></TableCell>
@@ -334,6 +366,18 @@ export default function ProfilePage() {
                               <Copy className="h-3 w-3" />
                             </Button>
                           </div>
+                        </TableCell>
+                        <TableCell className="text-sm">
+                          {key.expiresAt ? (
+                            <div className={`flex items-center gap-1.5 ${new Date(key.expiresAt) < new Date() ? "text-red-500" : "text-muted-foreground"}`}>
+                              <Clock className="h-3 w-3" />
+                              <span title={format(new Date(key.expiresAt), "PPPP p")}>
+                                {new Date(key.expiresAt) < new Date() ? "Expired" : format(new Date(key.expiresAt), "MMM d, yyyy")}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">Never</span>
+                          )}
                         </TableCell>
                         <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                           {format(new Date(key.createdAt), "MMM d, yyyy")}

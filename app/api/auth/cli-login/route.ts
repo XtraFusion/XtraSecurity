@@ -48,6 +48,12 @@ export async function POST(req: NextRequest) {
       
       console.log("✅ API key found!");
 
+      // Check for expiration
+      if (keyRecord.expiresAt && new Date() > keyRecord.expiresAt) {
+        console.log("❌ API key has expired.");
+        return NextResponse.json({ error: "Access Key has expired" }, { status: 401 });
+      }
+
       // Update last used
       await prisma.apiKey.update({
         where: { id: keyRecord.id },

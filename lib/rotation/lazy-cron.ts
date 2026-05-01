@@ -1,5 +1,6 @@
 import prisma from "@/lib/db";
 import { runAutomatedRotations } from "./automation";
+import { checkApiKeyExpirations } from "./api-key-expiration";
 
 // Throttling period in milliseconds (default: 15 minutes)
 const ROTATION_CHECK_THROTTLE = 15 * 60 * 1000;
@@ -43,6 +44,10 @@ export async function triggerLazyRotation() {
         .catch(err => {
            console.error("[LazyCron] Exception in background rotation task:", err);
         });
+
+      // Also check API key expirations
+      checkApiKeyExpirations()
+        .catch(err => console.error("[LazyCron] API Key expiration check failed:", err));
     }
   } catch (error) {
     // Never let lazy cron crash the main UI
