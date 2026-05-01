@@ -22,8 +22,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: 'Only Pro tier is available for online checkout' }, { status: 400 });
     }
 
-    // Pro is $9, which is roughly 750 INR. Amount is in paise, so 75000 paise.
-    let amount = 75000; 
+    // Pro is $29, which is roughly 2400 INR. Amount is in paise, so 240000 paise.
+    let amount = 240000; 
     let promoMessage = "";
 
     // Apply promo code logic
@@ -33,9 +33,9 @@ export async function POST(req: Request) {
             amount = 0;
             promoMessage = "100% discount applied! Plan is now free.";
         } else if (promoCode === "XTRA50") {
-            // 50% off of 75000 paise
-            amount = 37500;
-            promoMessage = "50% discount applied! Proceeding with discounted price ($4.50).";
+            // 50% off of 240000 paise
+            amount = 120000;
+            promoMessage = "50% discount applied! Proceeding with discounted price ($14.50).";
         } else {
              promoMessage = "Invalid promo code. Proceeding with original price.";
         }

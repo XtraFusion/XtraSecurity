@@ -308,11 +308,11 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                         const isProDowngradingToFree = tier === 'pro' && tierKey === 'free';
                         const isPlanDisabled = isCurrent || isProcessing !== null || isProDowngradingToFree;
 
-                        let currentActionLabel: React.ReactNode = `Provision ${tierKey.charAt(0).toUpperCase() + tierKey.slice(1)}`;
-                        if (isCurrent) currentActionLabel = "Active Topology";
-                        else if (isProcessing === tierKey) currentActionLabel = "Synchronizing...";
-                        else if (isEnterprise) currentActionLabel = "Connect Interface";
-                        else if (isProDowngradingToFree) currentActionLabel = "Topology Locked";
+                        let currentActionLabel: React.ReactNode = tierKey === 'free' ? "Activate Free Plan" : "Upgrade to Pro Plan";
+                        if (isCurrent) currentActionLabel = "Active Plan";
+                        else if (isProcessing === tierKey) currentActionLabel = "Processing...";
+                        else if (isEnterprise) currentActionLabel = "Contact Sales";
+                        else if (isProDowngradingToFree) currentActionLabel = "Locked";
 
                         return (
                             <PricingCard
@@ -342,15 +342,15 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                     <DialogHeader>
                         <DialogTitle className="flex items-center gap-2 text-xl font-bold">
                             <Sparkles className="h-5 w-5 text-primary" />
-                            Provision Pro Topology
+                            Upgrade to Pro Plan
                         </DialogTitle>
                         <DialogDescription className="text-sm font-medium">
-                            Upgrade to Pro configuration for unified security management ($29/mo). Apply authorization key if available.
+                            Upgrade to Pro configuration for unified security management ($29/mo). Apply authentication key if available.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="grid gap-4 py-6">
                         <div className="grid gap-2">
-                            <Label htmlFor="promo" className="text-xs uppercase font-bold text-muted-foreground">Authorization Key</Label>
+                            <Label htmlFor="promo" className="text-xs uppercase font-bold text-muted-foreground">Authentication Key</Label>
                             <Input
                                 id="promo"
                                 placeholder="E.g. SYSADMIN100"
@@ -366,13 +366,13 @@ export default function SubscriptionUI({ tier, stats, resourceUsage }: Subscript
                             onClick={() => handleProCheckout()}
                             className="sm:w-1/2 h-10 rounded-sm text-sm font-bold"
                         >
-                            Bypass & Authenticate
+                            Verify & Upgrade
                         </Button>
                         <Button
                             onClick={() => handleProCheckout()}
                             className="sm:w-1/2 h-10 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-sm"
                         >
-                            Execute Provision
+                            Upgrade Now
                         </Button>
                     </DialogFooter>
                 </DialogContent>
