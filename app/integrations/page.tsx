@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { DashboardLayout } from "@/components/dashboard-layout";
-import { useUser } from "@/hooks/useUser";
+import { useUser, useGlobalContext } from "@/hooks/useUser";
 
 import { ConnectionCard } from "@/components/integrations/IntegrationComponents";
 import { SyncSection } from "@/components/integrations/SyncSection";
