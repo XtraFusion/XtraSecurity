@@ -1,7 +1,10 @@
 # XtraSecurity Robots.txt
 # Website: https://xtrasecurity.in
+# Purpose: Secure environment variable & secrets management platform
 
-# Allow all bots
+# ═══════════════════════════════════════
+# Default: Allow all crawlers
+# ═══════════════════════════════════════
 User-agent: *
 Allow: /
 Disallow: /admin/
@@ -9,31 +12,120 @@ Disallow: /api/
 Disallow: /private/
 Disallow: /.next/
 Disallow: /node_modules/
-Disallow: *?version=
-Disallow: *?utm_source=
-Disallow: *?utm_medium=
-Disallow: *?utm_campaign=
-Disallow: *?utm_content=
-Disallow: *?utm_term=
-
-# Crawl delay (in seconds)
+Disallow: /dashboard/
+Disallow: /projects/
+Disallow: /settings/
+Disallow: /profile/
+Disallow: /teams/
 Crawl-delay: 1
 
-# Sitemap
-Sitemap: https://xtrasecurity.in/sitemap.xml
-Sitemap: https://xtrasecurity.in/sitemap-pages.xml
-
-# Google specific
+# ═══════════════════════════════════════
+# Search Engine Bots
+# ═══════════════════════════════════════
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
 
-# Bing specific
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
 
-# Block bad bots
+# ═══════════════════════════════════════
+# AI / LLM Crawler Bots — Explicitly Allowed
+# ═══════════════════════════════════════
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+Allow: /about
+Allow: /how-it-works
+Allow: /use-cases
+Allow: /developers
+Allow: /docs
+Allow: /blog
+Allow: /comparisons
+Allow: /security
+Allow: /compliance
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /projects/
+Disallow: /settings/
+Disallow: /profile/
+Disallow: /teams/
+
+# ChatGPT browsing mode
+User-agent: ChatGPT-User
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /projects/
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /projects/
+
+# Perplexity AI
+User-agent: PerplexityBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /projects/
+
+# Google Gemini / AI training
+User-agent: Google-Extended
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+Disallow: /projects/
+
+# Apple Intelligence
+User-agent: Applebot-Extended
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Common Crawl (used by many LLMs for training data)
+User-agent: CCBot
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# ByteDance AI
+User-agent: Bytespider
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# Cohere AI
+User-agent: cohere-ai
+Allow: /
+Allow: /llms.txt
+Disallow: /api/
+Disallow: /admin/
+Disallow: /dashboard/
+
+# ═══════════════════════════════════════
+# Block aggressive SEO scrapers
+# ═══════════════════════════════════════
 User-agent: MJ12bot
 Disallow: /
 
@@ -42,3 +134,8 @@ Disallow: /
 
 User-agent: SemrushBot
 Disallow: /
+
+# ═══════════════════════════════════════
+# Sitemaps
+# ═══════════════════════════════════════
+Sitemap: https://xtrasecurity.in/sitemap.xml

@@ -1,0 +1,84 @@
+# XtraSecurity
+
+> XtraSecurity is a secure environment variable and secrets management platform for developers and DevOps teams. It replaces insecure .env files with AES-256 encrypted, centralized secret storage with role-based access control, automated rotation, and full audit logging.
+
+## What is XtraSecurity?
+
+XtraSecurity is a SaaS platform that helps development teams securely manage environment variables, API keys, database credentials, and other sensitive configuration across multiple projects and environments (development, staging, production). Built with Next.js, Node.js, MongoDB, and Redis, it provides enterprise-grade security with a developer-friendly experience.
+
+## Key Features
+
+- **AES-256 Encryption**: All secrets are encrypted at rest and in transit using AES-256-GCM encryption
+- **Role-Based Access Control (RBAC)**: Granular permissions — Owner, Admin, Developer, Viewer roles
+- **Multi-Environment Support**: Manage secrets across development, staging, and production environments
+- **Git-like Branching**: Create secret branches for feature development without affecting production
+- **Automated Secret Rotation**: Schedule automatic rotation for credentials with zero downtime
+- **Just-in-Time (JIT) Access**: Time-limited access grants with automatic expiration
+- **Break-Glass Emergency Access**: Audited emergency access for critical situations
+- **Audit Logging**: Complete audit trail of every secret access, modification, and rotation
+- **CLI Tool (xtra-cli)**: Command-line interface for developers to sync secrets locally
+- **CI/CD Integration**: SDK and API for seamless integration with GitHub Actions, GitLab CI, Jenkins
+- **Redis Caching**: 40% faster variable retrieval with intelligent caching layer
+- **Team Collaboration**: Workspace-based team management with invitation system
+- **Secret Sharing**: Time-limited, encrypted secret sharing links
+- **Webhook Notifications**: Real-time alerts for secret changes via Slack, Discord, webhooks
+- **Environment Sync Status**: Detect missing secrets across environments
+
+## Performance Metrics
+
+- Manages 500+ environment variables across 50+ applications
+- Handles 5,000+ secure API requests daily
+- 40% faster variable retrieval with Redis caching
+- 60% reduction in manual configuration errors
+- 99.9% uptime SLA
+
+## Tech Stack
+
+- **Frontend**: Next.js 15, React 18, TypeScript, Tailwind CSS
+- **Backend**: Node.js, Express.js, Next.js API Routes
+- **Database**: MongoDB with Prisma ORM
+- **Cache**: Redis (Upstash)
+- **Encryption**: AES-256-GCM
+- **Authentication**: NextAuth.js with JWT
+- **Deployment**: Vercel
+
+## Pricing
+
+- **Free Plan**: Up to 3 projects, 50 secrets, 2 team members, basic audit logs
+- **Pro Plan**: Unlimited projects, unlimited secrets, unlimited team members, advanced audit logs, secret rotation, JIT access, priority support — $29/month
+
+## Competitors & Alternatives
+
+XtraSecurity is an alternative to:
+- Doppler (secrets management platform)
+- HashiCorp Vault (infrastructure secrets management)
+- AWS Secrets Manager (cloud-native secrets)
+- Infisical (open-source secrets management)
+- Azure Key Vault (Microsoft cloud secrets)
+- Google Secret Manager (GCP secrets management)
+
+XtraSecurity differentiates with its developer-first UX, git-like branching model for secrets, built-in JIT access controls, and competitive pricing.
+
+## Target Audience
+
+- Full-stack developers managing multiple projects
+- DevOps engineers automating CI/CD pipelines
+- Startup CTOs building secure infrastructure
+- Engineering teams transitioning from .env files
+- Security-conscious teams needing compliance audit trails
+
+## Links
+
+- Website: https://xtrasecurity.in
+- Documentation: https://xtrasecurity.in/docs
+- API Docs: https://xtrasecurity.in/docs/api
+- CLI Guide: https://xtrasecurity.in/docs/cli
+- Blog: https://xtrasecurity.in/blog
+- About: https://xtrasecurity.in/about
+- Security: https://xtrasecurity.in/security
+- How It Works: https://xtrasecurity.in/how-it-works
+- Use Cases: https://xtrasecurity.in/use-cases
+- Developers: https://xtrasecurity.in/developers
+- Comparisons: https://xtrasecurity.in/comparisons
+- Contact: https://xtrasecurity.in/contact
+- Register: https://xtrasecurity.in/register

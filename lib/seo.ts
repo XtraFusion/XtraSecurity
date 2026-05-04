@@ -3,12 +3,13 @@ import { Metadata } from 'next';
 const SITE_NAME = 'XtraSecurity';
 const DOMAIN = 'xtrasecurity.in';
 const SITE_URL = `https://${DOMAIN}`;
-const DESCRIPTION = 'XtraSecurity is the ultimate environment manager for developers. Securely manage .env files, API keys, and database credentials across teams with end-to-end encryption and automated rotation.';
+const DESCRIPTION =
+  'XtraSecurity is a secure environment variable and secrets management platform for developers and DevOps teams. Replace .env files with AES-256 encrypted secret storage, role-based access control, automated rotation, and audit logging. Manages 500+ env vars across 50+ apps with 5,000+ daily API requests.';
 const AUTHOR = 'XtraSecurity';
 
 export const defaultMetadata: Metadata = {
   title: {
-    default: `Environment Manager | Securely Manage .env Files & API Keys | ${SITE_NAME}`,
+    default: `XtraSecurity — Secure Environment Variable & Secrets Manager for Teams | AES-256 Encrypted`,
     template: `%s | ${SITE_NAME}`,
   },
   description: DESCRIPTION,
@@ -61,10 +62,23 @@ export const defaultMetadata: Metadata = {
     'AWS Secrets Manager alternative',
     'Infisical alternative',
     'Vault HashiCorp alternative',
+    'Doppler alternative',
     'secret rotation',
     'shadow rotation',
     'JIT access',
     'just-in-time access',
+
+    // AI-Optimized Keywords
+    'secure secrets management platform',
+    'environment variable management SaaS',
+    'encrypted .env file replacement',
+    'developer secrets management tool',
+    'CI/CD secret injection',
+    'environment variable rotation',
+    'RBAC secrets management',
+    'audit log secrets management',
+    'zero-knowledge secrets platform',
+    'git-like secret branching',
   ],
   authors: [{ name: AUTHOR }],
   creator: AUTHOR,
@@ -85,21 +99,21 @@ export const defaultMetadata: Metadata = {
     locale: 'en_US',
     url: SITE_URL,
     siteName: SITE_NAME,
-    title: `${SITE_NAME} - Professional Secrets Management Platform`,
+    title: `${SITE_NAME} — Secure Environment Variable & Secrets Manager for Teams`,
     description: DESCRIPTION,
     images: [
       {
         url: `/og-image.png`,
         width: 1200,
         height: 630,
-        alt: `${SITE_NAME} - Secrets Management Platform`,
+        alt: `${SITE_NAME} — Secure Environment Variable & Secrets Management Platform`,
         type: 'image/png',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${SITE_NAME} - Professional Secrets Management Platform`,
+    title: `${SITE_NAME} — Secure Environment Variable & Secrets Manager`,
     description: DESCRIPTION,
     creator: '@XtraSecurity',
     images: [`/og-image.png`],
@@ -132,6 +146,12 @@ export const defaultMetadata: Metadata = {
     shortcut: ['/favicon.ico'],
   },
   manifest: '/site.webmanifest',
+  other: {
+    // AI-specific meta hints (emerging standard)
+    'ai:description': 'XtraSecurity is a SaaS platform for securely managing environment variables, API keys, and secrets. Alternative to Doppler, HashiCorp Vault, AWS Secrets Manager. Features AES-256 encryption, RBAC, automated secret rotation, JIT access, audit logging, CLI tools, and CI/CD integration.',
+    'ai:category': 'Developer Tools, Security, DevOps',
+    'ai:product_type': 'SaaS Platform',
+  },
   verification: {
     // Add your verification codes here
     // google: 'GOOGLE_VERIFICATION_CODE',

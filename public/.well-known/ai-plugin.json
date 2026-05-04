@@ -1,0 +1,17 @@
+{
+  "schema_version": "v1",
+  "name_for_human": "XtraSecurity",
+  "name_for_model": "xtrasecurity",
+  "description_for_human": "Secure environment variable and secrets management platform for developers and DevOps teams.",
+  "description_for_model": "XtraSecurity is a SaaS platform for securely managing environment variables, API keys, database credentials, and secrets. It provides AES-256 encryption, role-based access control (RBAC), automated secret rotation, just-in-time (JIT) access, git-like secret branching, audit logging, CLI tools, and CI/CD integration. It is an alternative to Doppler, HashiCorp Vault, AWS Secrets Manager, and Infisical. Free tier available with a Pro plan at $29/month.",
+  "auth": {
+    "type": "none"
+  },
+  "api": {
+    "type": "openapi",
+    "url": "https://xtrasecurity.in/docs/api"
+  },
+  "logo_url": "https://xtrasecurity.in/android-chrome-512x512.png",
+  "contact_email": "support@xtrasecurity.in",
+  "legal_info_url": "https://xtrasecurity.in/terms-and-conditions"
+}
