@@ -80,6 +80,9 @@ export default function SecretRotationPage() {
   const [notification, setNotification] = useState<{ type: "success" | "error"; message: string } | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [rotatingSecrets, setRotatingSecrets] = useState<Set<string>>(new Set())
+  const [togglingSchedules, setTogglingSchedules] = useState<Set<string>>(new Set())
+  const [deletingSchedules, setDeletingSchedules] = useState<Set<string>>(new Set())
+  const [isCreatingSchedule, setIsCreatingSchedule] = useState(false)
 
   // ── Create form state ──────────────────────────
   const [showCreatePanel, setShowCreatePanel] = useState(false)
@@ -194,6 +197,7 @@ export default function SecretRotationPage() {
       setNotification({ type: "error", message: "Please select a valid secret" })
       return
     }
+    setIsCreatingSchedule(true)
     try {
       const payload = {
         secretId: selectedSecret.id,
@@ -214,18 +218,27 @@ export default function SecretRotationPage() {
       setNotification({ type: "success", message: "Rotation schedule created" })
     } catch (e) {
       setNotification({ type: "error", message: "Failed to create schedule" })
+    } finally {
+      setIsCreatingSchedule(false)
     }
   }
 
   const handleToggleSchedule = async (scheduleId: string) => {
     const schedule = schedules.find(s => s.id === scheduleId)
     if (!schedule) return
+    setTogglingSchedules(prev => new Set([...prev, scheduleId]))
     try {
       const res = await fetch("/api/rotation/schedules", { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ id: scheduleId, enabled: !schedule.enabled }) })
       if (!res.ok) throw new Error("Failed")
       setSchedules(schedules.map(s => s.id === scheduleId ? { ...s, enabled: !s.enabled } : s))
     } catch {
       setNotification({ type: "error", message: "Failed to update schedule" })
+    } finally {
+      setTogglingSchedules(prev => {
+        const next = new Set(prev)
+        next.delete(scheduleId)
+        return next
+      })
     }
   }
 
@@ -247,6 +260,7 @@ export default function SecretRotationPage() {
   }
 
   const handleDeleteSchedule = async (scheduleId: string) => {
+    setDeletingSchedules(prev => new Set([...prev, scheduleId]))
     try {
       const res = await fetch(`/api/rotation/schedules?id=${scheduleId}`, { method: "DELETE" })
       if (!res.ok) throw new Error("Failed")
@@ -254,6 +268,12 @@ export default function SecretRotationPage() {
       setNotification({ type: "success", message: "Schedule deleted" })
     } catch {
       setNotification({ type: "error", message: "Failed to delete schedule" })
+    } finally {
+      setDeletingSchedules(prev => {
+        const next = new Set(prev)
+        next.delete(scheduleId)
+        return next
+      })
     }
   }
 
@@ -453,7 +473,10 @@ export default function SecretRotationPage() {
 
               <div className="flex items-center justify-end gap-2 pt-2 border-t">
                 <Button variant="outline" size="sm" onClick={() => setShowCreatePanel(false)} className="h-8 text-xs">Cancel</Button>
-                <Button size="sm" onClick={handleCreateSchedule} disabled={!newSchedule.secretKey || !newSchedule.projectId} className="h-8 text-xs">Create Schedule</Button>
+                <Button size="sm" onClick={handleCreateSchedule} disabled={!newSchedule.secretKey || !newSchedule.projectId || isCreatingSchedule} className="h-8 text-xs">
+                  {isCreatingSchedule && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
+                  Create Schedule
+                </Button>
               </div>
             </div>
           )}
@@ -556,18 +579,18 @@ export default function SecretRotationPage() {
                                 <div className="flex items-center gap-2">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <div><Switch checked={schedule.enabled} onCheckedChange={() => handleToggleSchedule(schedule.id)} disabled={isRotating} /></div>
+                                      <div><Switch checked={schedule.enabled} onCheckedChange={() => handleToggleSchedule(schedule.id)} disabled={isRotating || togglingSchedules.has(schedule.id)} /></div>
                                     </TooltipTrigger>
                                     <TooltipContent>{schedule.enabled ? "Click to pause schedule" : "Click to activate schedule"}</TooltipContent>
                                   </Tooltip>
-                                  {isRotating && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
+                                  {(isRotating || togglingSchedules.has(schedule.id)) && <Loader2 className="h-3 w-3 animate-spin text-blue-500" />}
                                 </div>
                               </TableCell>
                               <TableCell>
                                 <div className="flex items-center gap-1">
                                   <Tooltip>
                                     <TooltipTrigger asChild>
-                                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isRotating}
+                                      <Button variant="ghost" size="icon" className="h-7 w-7" disabled={isRotating || togglingSchedules.has(schedule.id) || deletingSchedules.has(schedule.id)}
                                         onClick={() => setConfirmRotate(schedule)}>
                                         <RefreshCw className="h-3.5 w-3.5" />
                                       </Button>
@@ -577,8 +600,9 @@ export default function SecretRotationPage() {
                                   <Tooltip>
                                     <TooltipTrigger asChild>
                                       <Button variant="ghost" size="icon" className="h-7 w-7 text-red-500 hover:text-red-600"
+                                        disabled={isRotating || togglingSchedules.has(schedule.id) || deletingSchedules.has(schedule.id)}
                                         onClick={() => handleDeleteSchedule(schedule.id)}>
-                                        <Trash2 className="h-3.5 w-3.5" />
+                                        {deletingSchedules.has(schedule.id) ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                                       </Button>
                                     </TooltipTrigger>
                                     <TooltipContent>Delete this rotation schedule</TooltipContent>

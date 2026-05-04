@@ -1157,16 +1157,16 @@ const VaultManager: React.FC = () => {
                   <Settings className="h-4 w-4 mr-2" />
                   Settings
                 </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setIsBreakGlassOpen(true)}
+                  className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10 text-red-600 font-bold"
+                >
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  Break Glass
+                </Button>
               </>
             )}
-            <Button 
-              variant="outline" 
-              onClick={() => setIsBreakGlassOpen(true)}
-              className="border-red-500/30 bg-red-500/5 hover:bg-red-500/10 text-red-600 font-bold"
-            >
-              <ShieldAlert className="h-4 w-4 mr-2" />
-              Break Glass
-            </Button>
             <Button onClick={() => setIsAddSecretOpen(true)}>
               <Plus className="h-4 w-4 mr-2" />
               Add Secret
@@ -1505,7 +1505,13 @@ const VaultManager: React.FC = () => {
       {/* Add Secret Modal */}
       <Dialog
         open={isAddSecretOpen}
-        onOpenChange={(open) => !open && (setIsAddSecretOpen(false) || setEnvImportText("") || setAddSecretTab("details"))}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAddSecretOpen(false);
+            setEnvImportText("");
+            setAddSecretTab("details");
+          }
+        }}
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1722,7 +1728,12 @@ const VaultManager: React.FC = () => {
       {/* Edit Secret Modal */}
       <Dialog
         open={isEditSecretOpen}
-        onOpenChange={(open) => !open && (setIsEditSecretOpen(false) || setEditingSecret(null))}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsEditSecretOpen(false);
+            setEditingSecret(null);
+          }
+        }}
       >
         <DialogContent className="max-w-lg">
           <DialogHeader>
@@ -1934,7 +1945,11 @@ const VaultManager: React.FC = () => {
       {/* Custom Delete Confirmation Modal */}
       <Dialog
         open={!!secretToDelete}
-        onOpenChange={(open) => !open && !deletingSecretId && setSecretToDelete(null)}
+        onOpenChange={(open) => {
+          if (!open && !deletingSecretId) {
+            setSecretToDelete(null);
+          }
+        }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
@@ -2190,7 +2205,12 @@ const VaultManager: React.FC = () => {
       {/* Compare Branches Modal */}
       <Dialog
         open={isCompareModalOpen}
-        onOpenChange={(open) => !open && (setIsCompareModalOpen(false) || setCompareResults(null))}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsCompareModalOpen(false);
+            setCompareResults(null);
+          }
+        }}
       >
         <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>

@@ -170,8 +170,10 @@ const TeamsPage = () => {
     }
   };
 
+  const [isDeleting, setIsDeleting] = useState(false);
   const handleDeleteTeam = async () => {
     if (!deleteDialog.team) return;
+    setIsDeleting(true);
     try {
       await apiClient.delete("/api/team", { data: { teamId: deleteDialog.team.id } });
       setTeams(teams.filter((team) => team.id !== deleteDialog.team!.id));
@@ -179,6 +181,8 @@ const TeamsPage = () => {
       toast({ title: "Team deleted", description: `${deleteDialog.team.name} removed.` });
     } catch (error: any) {
       toast({ title: "Error", description: "Failed to delete team.", variant: "destructive" });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -386,7 +390,15 @@ const TeamsPage = () => {
             </AlertDialogHeader>
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteTeam} className="bg-destructive hover:bg-destructive/90">
+              <AlertDialogAction 
+                onClick={(e) => {
+                  e.preventDefault();
+                  handleDeleteTeam();
+                }} 
+                className="bg-destructive hover:bg-destructive/90"
+                disabled={isDeleting}
+              >
+                {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Delete Team
               </AlertDialogAction>
             </AlertDialogFooter>

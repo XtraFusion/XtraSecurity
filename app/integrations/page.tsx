@@ -34,7 +34,7 @@ import { useIntegrations } from "@/hooks/useIntegrations";
 export default function IntegrationsPage() {
   const { user, selectedWorkspace, sessionStatus } = useUser();
   const { 
-    statuses, repos, modals, loading: integrationsLoading, projects, 
+    statuses, repos, modals, loading: integrationsLoading, projects, disconnectingProviders,
     setModalOpen, disconnect, refresh, refreshStatus, setStatuses 
   } = useIntegrations();
 
@@ -183,6 +183,7 @@ export default function IntegrationsPage() {
                   onDisconnect={() => disconnect(p)}
                   onEdit={p === "aws" ? () => setModalOpen("aws", true) : undefined}
                   tokenBased={meta.tokenBased}
+                  isDisconnecting={disconnectingProviders.has(p)}
                 />
               );
             })}

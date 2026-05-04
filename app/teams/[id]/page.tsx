@@ -135,6 +135,9 @@ const TeamDetailPage = () => {
   const [currentUserRole, setCurrentUserRole] = useState<string>("viewer");
   const [isDeleting, setIsDeleting] = useState(false);
   const [isInviting, setIsInviting] = useState(false);
+  const [isRemovingMember, setIsRemovingMember] = useState(false);
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
   
   const [inviteForm, setInviteForm] = useState({
     email: "",
@@ -244,6 +247,7 @@ const TeamDetailPage = () => {
 
   const handleRoleUpdate = async () => {
     if (!confirmDialog.member || !confirmDialog.newRole) return;
+    setIsUpdatingRole(true);
     try {
       await apiClient.put("/api/team/role", { 
         memberId: confirmDialog.member.id, 
@@ -254,11 +258,14 @@ const TeamDetailPage = () => {
       toast({ title: "Role updated" });
     } catch (error: any) {
       toast({ title: "Update failed", description: "Could not modify role.", variant: "destructive" });
+    } finally {
+      setIsUpdatingRole(false);
     }
   };
 
   const handleRemoveMember = async () => {
     if (!confirmDialog.member) return;
+    setIsRemovingMember(true);
     try {
       await apiClient.delete("/api/team/remove", { data: { memberId: confirmDialog.member.id } });
       fetchTeamDetails();
@@ -266,16 +273,21 @@ const TeamDetailPage = () => {
       toast({ title: "Member removed" });
     } catch (error: any) {
       toast({ title: "Remove failed", variant: "destructive" });
+    } finally {
+      setIsRemovingMember(false);
     }
   };
 
   const handleUpdateTeam = async (data: Partial<Team>) => {
+    setIsUpdating(true);
     try {
         await apiClient.put("/api/team", { teamId, ...data });
         setTeam(prev => prev ? { ...prev, ...data } : null);
         toast({ title: "Team updated" });
     } catch (e) {
         toast({ title: "Error", variant: "destructive" });
+    } finally {
+        setIsUpdating(false);
     }
   }
 
@@ -552,14 +564,26 @@ const TeamDetailPage = () => {
                         <div className="space-y-2">
                             <Label>Team Name</Label>
                             <div className="flex gap-3">
-                                <Input defaultValue={team.name} className="max-w-md" />
-                                <Button variant="outline" onClick={() => handleUpdateTeam({ name: team.name })}>Update</Button>
+                                <Input id="team-name-input" defaultValue={team.name} className="max-w-md" />
+                                <Button variant="outline" onClick={() => {
+                                  const input = document.getElementById('team-name-input') as HTMLInputElement;
+                                  handleUpdateTeam({ name: input.value });
+                                }} disabled={isUpdating}>
+                                  {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                  Update
+                                </Button>
                             </div>
                         </div>
                         <div className="space-y-2">
                              <Label>Description</Label>
-                             <Textarea defaultValue={team.description} className="max-w-xl" />
-                             <Button variant="outline" className="mt-2" onClick={() => handleUpdateTeam({ description: team.description })}>Update</Button>
+                             <Textarea id="team-desc-input" defaultValue={team.description} className="max-w-xl" />
+                             <Button variant="outline" className="mt-2" onClick={() => {
+                               const input = document.getElementById('team-desc-input') as HTMLTextAreaElement;
+                               handleUpdateTeam({ description: input.value });
+                             }} disabled={isUpdating}>
+                                {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                                Update
+                             </Button>
                         </div>
                     </CardContent>
                 </Card>
@@ -603,7 +627,8 @@ const TeamDetailPage = () => {
             <AlertDialogFooter>
               <AlertDialogCancel>Cancel</AlertDialogCancel>
               <AlertDialogAction 
-                onClick={() => {
+                onClick={(e) => {
+                    e.preventDefault();
                     if (confirmDialog.member?.id === 'team') {
                         handleDeleteTeam();
                     } else {
@@ -611,7 +636,9 @@ const TeamDetailPage = () => {
                     }
                 }}
                 className={cn(confirmDialog.type === 'remove' ? "bg-destructive text-white" : "bg-primary")}
+                disabled={isDeleting || isRemovingMember || isUpdatingRole}
               >
+                 {(isDeleting || isRemovingMember || isUpdatingRole) && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                  Confirm Action
               </AlertDialogAction>
             </AlertDialogFooter>

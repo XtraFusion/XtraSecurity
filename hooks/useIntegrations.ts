@@ -11,6 +11,7 @@ export function useIntegrations() {
   const [repos, setRepos] = useState<Record<string, Repo[]>>({});
   const [modals, setModals] = useState<Record<string, boolean>>({});
   const [loading, setLoading] = useState(true);
+  const [disconnectingProviders, setDisconnectingProviders] = useState<Set<string>>(new Set());
   const [projects, setProjects] = useState<Project[]>([]);
 
   const fetchStatus = useCallback(async (provider: SyncProvider) => {
@@ -79,6 +80,7 @@ export function useIntegrations() {
   }, [fetchRepos]);
 
   const disconnect = useCallback(async (provider: SyncProvider) => {
+    setDisconnectingProviders(prev => new Set([...prev, provider]));
     try {
       const res = await fetch(`/api/integrations/${provider}`, { method: "DELETE" });
       if (res.ok) {
@@ -91,6 +93,12 @@ export function useIntegrations() {
       }
     } catch (e: any) {
       toast({ title: "Error", description: e.message, variant: "destructive" });
+    } finally {
+      setDisconnectingProviders(prev => {
+        const next = new Set(prev);
+        next.delete(provider);
+        return next;
+      });
     }
   }, []);
 
@@ -107,6 +115,7 @@ export function useIntegrations() {
     repos,
     modals,
     loading,
+    disconnectingProviders,
     projects,
     setStatuses,
     setRepos,

@@ -211,13 +211,14 @@ export function ComparePanel({ provider, vercelProjectId, netlifySiteId, netlify
 }
 
 // ─── Connection Card ───────────────────────────────────────────────
-export function ConnectionCard({ name, icon, iconBg, status, onConnect, onDisconnect, onEdit, tokenBased }: {
+export function ConnectionCard({ name, icon, iconBg, status, onConnect, onDisconnect, onEdit, tokenBased, isDisconnecting }: {
   name: string; icon: React.ReactNode; iconBg: string;
   status: IntegrationStatus | null;
   onConnect: () => void;
   onDisconnect: () => void;
   onEdit?: () => void;
   tokenBased?: boolean;
+  isDisconnecting?: boolean;
 }) {
   return (
     <div className={`group relative rounded-lg border bg-card p-3.5 transition-all hover:shadow-sm ${status?.connected ? "border-border" : "border-border/60 hover:border-border"
@@ -247,8 +248,8 @@ export function ConnectionCard({ name, icon, iconBg, status, onConnect, onDiscon
                   <Pencil className="h-3 w-3" />
                 </Button>
               )}
-              <Button variant="ghost" size="icon" onClick={onDisconnect} className="h-7 w-7 text-muted-foreground hover:text-destructive">
-                <Unlink className="h-3 w-3" />
+              <Button variant="ghost" size="icon" onClick={onDisconnect} className="h-7 w-7 text-muted-foreground hover:text-destructive" disabled={isDisconnecting}>
+                {isDisconnecting ? <Loader2 className="h-3 w-3 animate-spin" /> : <Unlink className="h-3 w-3" />}
               </Button>
             </div>
           ) : (
