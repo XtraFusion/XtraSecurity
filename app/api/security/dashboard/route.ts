@@ -18,19 +18,55 @@ export async function GET(req: Request) {
     else if (timeRange === "30d") startDate.setDate(startDate.getDate() - 30);
     else startDate.setDate(startDate.getDate() - 7);
 
+    const workspaceId = url.searchParams.get("workspaceId");
+
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace ID required" }, { status: 400 });
+    }
+
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const wsRole = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+    const projectWhereClause: any = { workspaceId };
+    
+    if (wsRole !== "owner" && wsRole !== "admin") {
+      projectWhereClause.OR = [
+        { userId: session.user.id },
+        { teamProjects: { some: { team: { members: { some: { userId: session.user.id, status: "active" } } } } } }
+      ];
+    }
+
+    const wsProjects = await prisma.project.findMany({
+      where: projectWhereClause,
+      select: { id: true }
+    });
+    const wsProjectIds = wsProjects.map(p => p.id);
+
+    if (wsProjectIds.length === 0 && wsRole !== "owner" && wsRole !== "admin") {
+      return NextResponse.json({
+        range: timeRange,
+        stats: { totalEvents: 0, anomalyCount: 0, rateLimitCount: 0, uniqueIps: 0 },
+        activityTrend: [],
+        topCountries: [],
+        recentAnomalies: [],
+        recentAuditLogs: [],
+      });
+    }
+
     // --- Summary Stats ---
-    // Filter by userEmail to prevent global data leak
-    const userFilter = { userEmail: session.user.email };
+    const baseFilter = (wsRole === "owner" || wsRole === "admin") 
+      ? { workspaceId } 
+      : { projectId: { in: wsProjectIds } };
 
     const [totalEvents, anomalyCount, rateLimitCount] = await Promise.all([
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate }, ...userFilter },
+        where: { timestamp: { gte: startDate }, ...baseFilter },
       }),
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate }, isAnomaly: true, ...userFilter },
+        where: { timestamp: { gte: startDate }, isAnomaly: true, ...baseFilter },
       }),
       prisma.securityEvent.count({
-        where: { timestamp: { gte: startDate }, rateLimitHit: true, ...userFilter },
+        where: { timestamp: { gte: startDate }, rateLimitHit: true, ...baseFilter },
       }),
     ]);
 
@@ -39,7 +75,13 @@ export async function GET(req: Request) {
     try {
       const ipAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, userEmail: session.user.email } },
+          { $match: { 
+              timestamp: { $gte: { $date: startDate.toISOString() } },
+              ...(wsRole === "owner" || wsRole === "admin" 
+                  ? { workspaceId: { $oid: workspaceId } } 
+                  : { projectId: { $in: wsProjectIds.map(id => ({ $oid: id })) } })
+            } 
+          },
           { $group: { _id: "$ipAddress" } },
           { $count: "total" },
         ],
@@ -54,7 +96,13 @@ export async function GET(req: Request) {
     try {
       const trendAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, userEmail: session.user.email } },
+          { $match: { 
+              timestamp: { $gte: { $date: startDate.toISOString() } },
+              ...(wsRole === "owner" || wsRole === "admin" 
+                  ? { workspaceId: { $oid: workspaceId } } 
+                  : { projectId: { $in: wsProjectIds.map(id => ({ $oid: id })) } })
+            } 
+          },
           {
             $group: {
               _id: { $dateToString: { format: "%Y-%m-%d", date: "$timestamp" } },
@@ -79,7 +127,14 @@ export async function GET(req: Request) {
     try {
       const countryAgg = await prisma.securityEvent.aggregateRaw({
         pipeline: [
-          { $match: { timestamp: { $gte: { $date: startDate.toISOString() } }, country: { $ne: null }, userEmail: session.user.email } },
+          { $match: { 
+              timestamp: { $gte: { $date: startDate.toISOString() } }, 
+              country: { $ne: null },
+              ...(wsRole === "owner" || wsRole === "admin" 
+                  ? { workspaceId: { $oid: workspaceId } } 
+                  : { projectId: { $in: wsProjectIds.map(id => ({ $oid: id })) } })
+            } 
+          },
           { $group: { _id: "$country", count: { $sum: 1 } } },
           { $sort: { count: -1 } },
           { $limit: 8 },
@@ -95,7 +150,7 @@ export async function GET(req: Request) {
 
     // --- Recent Anomalies ---
     const recentAnomalies = await prisma.securityEvent.findMany({
-      where: { isAnomaly: true, timestamp: { gte: startDate }, ...userFilter },
+      where: { isAnomaly: true, timestamp: { gte: startDate }, ...baseFilter },
       orderBy: { timestamp: "desc" },
       take: 10,
       select: {
@@ -112,9 +167,18 @@ export async function GET(req: Request) {
       },
     });
 
-    // --- Recent Audit Logs (for current user) ---
+    // --- Recent Audit Logs (for accessible projects) ---
+    const auditWhere = (wsRole === "owner" || wsRole === "admin")
+      ? { workspaceId }
+      : { 
+          OR: [
+            { userId: session.user.id },
+            { entityId: { in: wsProjectIds } }
+          ]
+        };
+
     const recentAuditLogs = await prisma.auditLog.findMany({
-      where: { userId: session.user.id },
+      where: auditWhere,
       orderBy: { timestamp: "desc" },
       take: 10,
       select: {

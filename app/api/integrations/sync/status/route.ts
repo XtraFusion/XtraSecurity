@@ -17,6 +17,13 @@ export async function GET(req: NextRequest) {
        return NextResponse.json({ error: "Workspace ID required" }, { status: 400 });
     }
 
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole((session.user as any).id, workspaceId);
+
+    if (role === "viewer") {
+       return NextResponse.json({ error: "Forbidden: Viewers cannot access Integrations." }, { status: 403 });
+    }
+
     const now = new Date();
     const last24h = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 

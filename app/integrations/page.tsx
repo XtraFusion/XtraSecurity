@@ -45,6 +45,7 @@ export default function IntegrationsPage() {
 
   const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
   const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+  const { workspaceRole } = useGlobalContext();
 
   const categories = [
     { id: "all", label: "All" },
@@ -82,7 +83,10 @@ export default function IntegrationsPage() {
 
   // Improved access check: Only show Access Denied if session is authenticated AND user is loaded AND we are NOT integrations-loading
   const isProfileLoading = sessionStatus === "loading" || (!user && sessionStatus === "authenticated");
-  const isAccessDenied = !isProfileLoading && !integrationsLoading && !(isPersonalWorkspace || isWorkspaceOwner);
+  
+  // Explicitly block "viewer" role, or fallback to owner-only check
+  const isViewer = workspaceRole === "viewer";
+  const isAccessDenied = !isProfileLoading && !integrationsLoading && (isViewer || !(isPersonalWorkspace || isWorkspaceOwner));
 
   if (isAccessDenied) {
     return (

@@ -222,6 +222,7 @@ const SecretCard = ({
   onShare,
   onGenerateJit,
   onSyncTargets,
+  isViewer,
 }: {
   secret: Secret;
   isVisible: boolean;
@@ -235,6 +236,7 @@ const SecretCard = ({
   onShare: () => void;
   onGenerateJit: () => void;
   onSyncTargets: () => void;
+  isViewer?: boolean;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
   const SecretIcon = SECRET_TYPES.find((t) => t.value === secret.type)?.icon || Key;
@@ -252,7 +254,7 @@ const SecretCard = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, scale: 0.95 }}
-      className="group relative bg-card border rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-primary/20"
+      className="group relative bg-card border rounded-xl p-5 hover:shadow-lg transition-all duration-300 hover:border-primary/20 flex flex-col h-full"
     >
       {/* Top Gradient Line */}
       <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary/0 via-primary/50 to-primary/0 opacity-0 group-hover:opacity-100 transition-opacity rounded-t-xl" />
@@ -267,7 +269,7 @@ const SecretCard = ({
         </div>
       )}
 
-      <div className="space-y-4">
+      <div className="flex flex-col flex-1 space-y-4">
         {/* Header */}
         <div className="flex items-start justify-between gap-3">
           <div className="flex items-start gap-3 min-w-0">
@@ -283,43 +285,45 @@ const SecretCard = ({
               </p>
             </div>
           </div>
-          <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
-            <DropdownMenuTrigger asChild>
-              <Button
-                variant="ghost"
-                size="sm"
-                className={`h-8 w-8 p-0 transition-opacity ${isDropdownOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
-                  }`}
-              >
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-44">
-              <DropdownMenuItem onClick={onEdit} className="gap-2">
-                <Edit2 className="h-4 w-4" /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onViewHistory} className="gap-2">
-                <History className="h-4 w-4" /> History
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-white">
-                <Share2 className="h-4 w-4" /> Share Secret
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={onSyncTargets}
-                className="gap-2 text-emerald-600 focus:text-white"
-              >
-                <Cloud className="h-4 w-4" /> Cloud Sync
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-white">
-                <Shield className="h-4 w-4" /> JIT Access
-                <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-white">
-                <Trash2 className="h-4 w-4" /> Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          {!isViewer && (
+            <DropdownMenu open={isDropdownOpen} onOpenChange={setIsDropdownOpen}>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className={`h-8 w-8 p-0 transition-opacity ${isDropdownOpen ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'
+                    }`}
+                >
+                  <MoreHorizontal className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-44">
+                <DropdownMenuItem onClick={onEdit} className="gap-2">
+                  <Edit2 className="h-4 w-4" /> Edit
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onViewHistory} className="gap-2">
+                  <History className="h-4 w-4" /> History
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-white">
+                  <Share2 className="h-4 w-4" /> Share Secret
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={onSyncTargets}
+                  className="gap-2 text-emerald-600 focus:text-white"
+                >
+                  <Cloud className="h-4 w-4" /> Cloud Sync
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-white">
+                  <Shield className="h-4 w-4" /> JIT Access
+                  <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={onDelete} className="gap-2 text-destructive focus:text-white">
+                  <Trash2 className="h-4 w-4" /> Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
 
         {/* Secret Value */}
@@ -369,7 +373,7 @@ const SecretCard = ({
         </div>
 
         {/* Metadata Row */}
-        <div className="flex items-center justify-between pt-2 border-t border-border/50">
+        <div className="flex items-center justify-between pt-2 border-t border-border/50 mt-auto">
           <div className="flex items-center gap-3">
             <EnvironmentBadge environment={secret.environmentType} />
             <StatusIndicator status={secret.status} />
@@ -1144,10 +1148,16 @@ const VaultManager: React.FC = () => {
             </Button>
             {/* Permission Check for Settings/Requests */}
             {(project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin') && (
-              <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
-                <Settings className="h-4 w-4 mr-2" />
-                Settings
-              </Button>
+              <>
+                <Button variant="outline" onClick={() => setIsAdminRequestsOpen(true)}>
+                  <ShieldAlert className="h-4 w-4 mr-2" />
+                  JIT Requests
+                </Button>
+                <Button variant="outline" onClick={() => window.location.href = `/projects/${project?.id}/settings`}>
+                  <Settings className="h-4 w-4 mr-2" />
+                  Settings
+                </Button>
+              </>
             )}
             <Button 
               variant="outline" 
@@ -1380,6 +1390,7 @@ const VaultManager: React.FC = () => {
                           setSyncTargetSecret({ id: secret.id, key: secret.key });
                           setIsSyncTargetsOpen(true);
                         }}
+                        isViewer={project?.currentUserRole === 'viewer'}
                       />
                     </div>
                   ))}
@@ -1431,31 +1442,33 @@ const VaultManager: React.FC = () => {
                               >
                                 {copiedSecret === secret.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
                               </Button>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="sm">
-                                    <MoreHorizontal className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => { setEditingSecret(secret); setIsEditSecretOpen(true); }}>
-                                    <Edit2 className="h-4 w-4 mr-2" /> Edit
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }}>
-                                    <History className="h-4 w-4 mr-2" /> History
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600">
-                                    <Shield className="h-4 w-4 mr-2" /> Generate JIT Link
-                                  </DropdownMenuItem>
-                                  <DropdownMenuSeparator />
-                                  <DropdownMenuItem
-                                    onClick={() => setSecretToDelete(secret)}
-                                    className="text-destructive cursor-pointer"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                              {project?.currentUserRole !== 'viewer' && (
+                                <DropdownMenu>
+                                  <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="sm">
+                                      <MoreHorizontal className="h-4 w-4" />
+                                    </Button>
+                                  </DropdownMenuTrigger>
+                                  <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={() => { setEditingSecret(secret); setIsEditSecretOpen(true); }}>
+                                      <Edit2 className="h-4 w-4 mr-2" /> Edit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }}>
+                                      <History className="h-4 w-4 mr-2" /> History
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600">
+                                      <Shield className="h-4 w-4 mr-2" /> Generate JIT Link
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem
+                                      onClick={() => setSecretToDelete(secret)}
+                                      className="text-destructive cursor-pointer"
+                                    >
+                                      <Trash2 className="h-4 w-4 mr-2" /> Delete
+                                    </DropdownMenuItem>
+                                  </DropdownMenuContent>
+                                </DropdownMenu>
+                              )}
                             </div>
                           </div>
                         </div>
@@ -2311,6 +2324,19 @@ const VaultManager: React.FC = () => {
         secretId={requestAccessSecret?.id}
         secretKey={requestAccessSecret?.key}
       />
+
+      {/* JIT Admin Requests Modal */}
+      <Dialog open={isAdminRequestsOpen} onOpenChange={setIsAdminRequestsOpen}>
+        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>JIT Access Requests</DialogTitle>
+            <DialogDescription>
+              Review and manage pending Just-In-Time access requests for this project.
+            </DialogDescription>
+          </DialogHeader>
+          <AccessRequestAdmin projectId={projectId} />
+        </DialogContent>
+      </Dialog>
 
       {/* Break Glass Modal */}
       <BreakGlassModal

@@ -13,25 +13,56 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
+    const workspaceId = searchParams.get("workspaceId");
 
     // Fetch schedules
-    // Strict isolation to only projects the user owns or belongs to via teams
-    const whereClause: any = projectId ? { projectId } : {
-      secret: {
-        project: {
-          OR: [
-            { userId: session.user.id },
-            {
-              teamProjects: {
-                some: {
-                  team: { members: { some: { userId: session.user.id, status: "active" } } }
+    // Strict isolation to only projects the user owns or belongs to via teams, unless workspace admin
+    let whereClause: any = {};
+    if (projectId) {
+      whereClause = { projectId };
+    } else if (workspaceId) {
+      const { getUserWorkspaceRole } = await import("@/lib/permissions");
+      const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+      if (role === "owner" || role === "admin") {
+        whereClause = { secret: { project: { workspaceId } } };
+      } else {
+        whereClause = {
+          secret: {
+            project: {
+              workspaceId,
+              OR: [
+                { userId: session.user.id },
+                {
+                  teamProjects: {
+                    some: {
+                      team: { members: { some: { userId: session.user.id, status: "active" } } }
+                    }
+                  }
+                }
+              ]
+            }
+          }
+        };
+      }
+    } else {
+      whereClause = {
+        secret: {
+          project: {
+            OR: [
+              { userId: session.user.id },
+              {
+                teamProjects: {
+                  some: {
+                    team: { members: { some: { userId: session.user.id, status: "active" } } }
+                  }
                 }
               }
-            }
-          ]
+            ]
+          }
         }
-      }
-    };
+      };
+    }
 
     const schedules = await prisma.rotationSchedule.findMany({
       where: whereClause,

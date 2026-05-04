@@ -199,7 +199,8 @@ const TeamDetailPage = () => {
 
   const filteredMembers = useMemo(() => {
     if (!team) return [];
-    return team.members.filter((m) => {
+    
+    let membersList = team.members.filter((m) => {
       const name = m.user?.name || m.name || "";
       const email = m.user?.email || m.email || "";
       return (
@@ -207,7 +208,18 @@ const TeamDetailPage = () => {
         email.toLowerCase().includes(searchTerm.toLowerCase())
       );
     });
-  }, [team, searchTerm]);
+
+    if (currentUserRole === 'viewer') {
+      const sessionUserId = session?.user?.id;
+      membersList = membersList.filter(m => 
+        m.role === 'admin' || 
+        m.role === 'owner' || 
+        (m.user?.id || (m as any).userId) === sessionUserId
+      );
+    }
+
+    return membersList;
+  }, [team, searchTerm, currentUserRole, session?.user?.id]);
 
   const handleInviteMember = async () => {
     setIsInviting(true);
@@ -339,61 +351,65 @@ const TeamDetailPage = () => {
                 </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                <DialogTrigger asChild>
-                  <Button className="h-10 px-4">
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Invite Member
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Invite to Team</DialogTitle>
-                    <DialogDescription>Add a new member and assign their initial role.</DialogDescription>
-                  </DialogHeader>
-                  <div className="space-y-4 py-4">
-                    <div className="space-y-2">
-                        <Label>Email Address</Label>
-                        <Input 
-                            placeholder="user@example.com"
-                            value={inviteForm.email}
-                            onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                        />
-                    </div>
-                    <div className="space-y-2">
-                            <Label>Team Role</Label>
-                            <Select 
-                                value={inviteForm.role} 
-                                onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="viewer">Viewer</SelectItem>
-                                    <SelectItem value="developer">Developer</SelectItem>
-                                    <SelectItem value="admin">Admin</SelectItem>
-                                </SelectContent>
-                            </Select>
-                    </div>
-                  </div>
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
-                    <Button onClick={handleInviteMember} disabled={isInviting}>
-                        {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
+            {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
+              <div className="flex items-center gap-3">
+                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Button className="h-10 px-4">
+                      <UserPlus className="mr-2 h-4 w-4" />
+                      Invite Member
                     </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
-            </div>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Invite to Team</DialogTitle>
+                      <DialogDescription>Add a new member and assign their initial role.</DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-4">
+                      <div className="space-y-2">
+                          <Label>Email Address</Label>
+                          <Input 
+                              placeholder="user@example.com"
+                              value={inviteForm.email}
+                              onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
+                          />
+                      </div>
+                      <div className="space-y-2">
+                              <Label>Team Role</Label>
+                              <Select 
+                                  value={inviteForm.role} 
+                                  onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
+                              >
+                                  <SelectTrigger>
+                                      <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                      <SelectItem value="viewer">Viewer</SelectItem>
+                                      <SelectItem value="developer">Developer</SelectItem>
+                                      <SelectItem value="admin">Admin</SelectItem>
+                                  </SelectContent>
+                              </Select>
+                      </div>
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
+                      <Button onClick={handleInviteMember} disabled={isInviting}>
+                          {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </div>
+            )}
         </div>
 
         {/* Dashboard Tabs */}
         <Tabs defaultValue="members" className="w-full">
             <TabsList className="bg-muted/50 p-1 mb-6">
                 <TabsTrigger value="members" className="px-6 rounded-md">Members</TabsTrigger>
-                <TabsTrigger value="settings" className="px-6 rounded-md">Settings</TabsTrigger>
+                {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
+                    <TabsTrigger value="settings" className="px-6 rounded-md">Settings</TabsTrigger>
+                )}
             </TabsList>
 
             <TabsContent value="members" className="space-y-6">

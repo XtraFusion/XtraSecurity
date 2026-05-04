@@ -388,6 +388,12 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
     // Check permission: Workspace Admin/Owner OR Project Creator
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
     const role = await getUserWorkspaceRole(userId, project.workspaceId);
+    
+    // Explicitly block viewer and developer
+    if (role === "viewer" || role === "developer") {
+         return NextResponse.json({ error: "Viewers and developers are not allowed to delete projects." }, { status: 403 });
+    }
+
     const isCreator = project.userId === userId;
 
     if (!isCreator && (!role || (role !== "owner" && role !== "admin"))) {

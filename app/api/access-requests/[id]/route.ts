@@ -26,7 +26,6 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     const request = await prisma.accessRequest.findUnique({
       where: { id },
       include: {
-        secret: true,
         user: { select: { name: true, email: true } }
       },
     });
@@ -85,7 +84,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
           changes: {
             requestUserId: request.userId,
             projectId: request.projectId,
-            secretId: request.secretId,
+            secretIds: request.secretIds,
             duration: request.duration,
             expiresAt: expiresAt?.toISOString(),
             reason: request.reason

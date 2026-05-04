@@ -204,7 +204,7 @@ const INTEGRATIONS = [
   { label: "Slack", logo: "https://img.icons8.com/color/48/slack-new.png" },
   { label: "Vercel", logo: "https://assets.vercel.com/image/upload/v1588805858/repositories/vercel/logo.png" },
   { label: "Google Cloud", logo: "https://img.icons8.com/color/48/google-cloud.png" },
-  { label: "Azure", logo: "https://img.icons8.com/color/48/azure-api-manager.png" },
+  { label: "Azure", logo: "/azure-logo.svg" },
   { label: "GitLab", logo: "https://img.icons8.com/color/48/gitlab.png" },
 ];
 
@@ -370,7 +370,7 @@ function getIcon(iconName: string, size: number = 24) {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <div className="inline-flex items-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-cyan-400 font-mono">
+    <div className="inline-flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-cyan-400">
       {children}
     </div>
   );
@@ -1532,7 +1532,7 @@ function IntegrationsSection() {
       <div className="max-w-6xl mx-auto">
         <SectionHeader
           label="Unified Integrations"
-          icon="folder"
+          icon="puzzle"
           title="Connect your entire cloud stack"
           sub="Official integrations for your favorite platforms, with more added weekly."
         />

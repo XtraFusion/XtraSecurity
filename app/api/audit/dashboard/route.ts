@@ -17,10 +17,46 @@ export async function GET(req: Request) {
     else if (timeRange === "30d") startDate.setDate(startDate.getDate() - 30);
     else startDate.setDate(startDate.getDate() - 7);
 
-    const whereClause: any = { timestamp: { gte: startDate } };
-    if (workspaceId) {
-        whereClause.workspaceId = workspaceId;
+    if (!workspaceId) {
+      return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
     }
+
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+    const projectWhereClause: any = { workspaceId };
+    if (role !== "owner" && role !== "admin") {
+      projectWhereClause.OR = [
+        { userId: session.user.id },
+        { teamProjects: { some: { team: { members: { some: { userId: session.user.id, status: "active" } } } } } }
+      ];
+    }
+
+    const wsProjects = await prisma.project.findMany({
+      where: projectWhereClause,
+      select: { id: true }
+    });
+    const wsProjectIds = wsProjects.map(p => p.id);
+
+    if (wsProjectIds.length === 0 && role !== "owner" && role !== "admin") {
+      return NextResponse.json({
+        period: timeRange,
+        stats: { totalEvents: 0, secretAccesses: 0, failedLogins: 0, activeUsers: 0 },
+        trend: [],
+        anomalies: []
+      });
+    }
+
+    const baseFilter = (role === "owner" || role === "admin")
+      ? { workspaceId }
+      : { 
+          OR: [
+            { userId: session.user.id },
+            { entityId: { in: wsProjectIds } }
+          ]
+        };
+
+    const whereClause: any = { timestamp: { gte: startDate }, ...baseFilter };
 
     // 1. Total events in range
     const totalEvents = await prisma.auditLog.count({
@@ -60,11 +96,14 @@ export async function GET(req: Request) {
     // For simplicity, we'll fetch recent high-level events or use raw query if MongoDB supports it (aggregate).
     // MongoDB raw aggregate:
     const pipeline: any[] = [
-      { $match: { timestamp: { $gte: startDate } } }
+      { $match: { 
+          timestamp: { $gte: startDate },
+          ...(role === "owner" || role === "admin" 
+              ? { workspaceId: { $oid: workspaceId } } 
+              : { $or: [{ userId: { $oid: session.user.id } }, { entityId: { $in: wsProjectIds.map(id => ({ $oid: id })) } }] })
+        } 
+      }
     ];
-    if (workspaceId) {
-        pipeline[0].$match.workspaceId = { $oid: workspaceId };
-    }
     
     pipeline.push(
       {

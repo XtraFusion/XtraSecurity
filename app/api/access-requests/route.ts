@@ -53,7 +53,7 @@ export async function POST(req: NextRequest) {
     const request = await prisma.accessRequest.create({
       data: {
         userId: session.user.id,
-        secretId: secretId || undefined,
+        secretIds: secretId ? [secretId] : [],
         projectId: targetProjectId,
         reason,
         duration: Number(duration),
@@ -80,29 +80,44 @@ export async function GET(req: NextRequest) {
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
+    const projectId = searchParams.get("projectId");
     const status = searchParams.get("status");
 
-    if (!workspaceId) {
-        return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
+    if (!workspaceId && !projectId) {
+        return NextResponse.json({ error: "Workspace ID or Project ID is required" }, { status: 400 });
     }
 
     // Permission Check
-    const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const { getUserWorkspaceRole, getUserProjectRole } = await import("@/lib/permissions");
+    
+    let role;
+    let targetWorkspaceId = workspaceId;
 
-    if (!role) {
+    if (projectId) {
+        const project = await prisma.project.findUnique({ where: { id: projectId }, select: { workspaceId: true } });
+        if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
+        targetWorkspaceId = project.workspaceId;
+        role = await getUserProjectRole(session.user.id, projectId);
+        if (!role) role = await getUserWorkspaceRole(session.user.id, targetWorkspaceId);
+    } else if (workspaceId) {
+        role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    }
+
+    const isGlobalAdmin = session.user.role === "admin";
+
+    if (!role && !isGlobalAdmin) {
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
-    const whereClause: any = {
-        workspaceId
-    };
+    const whereClause: any = {};
+    if (targetWorkspaceId) whereClause.workspaceId = targetWorkspaceId;
+    if (projectId) whereClause.projectId = projectId;
     
     if (status) whereClause.status = status;
 
-    // Admins/Owners see all requests for the workspace
+    // Admins/Owners see all requests for the workspace/project
     // Members/Viewers see only their own requests
-    if (role !== "admin" && role !== "owner") {
+    if (!isGlobalAdmin && role !== "admin" && role !== "owner") {
       whereClause.userId = session.user.id;
     }
 
@@ -110,13 +125,25 @@ export async function GET(req: NextRequest) {
       where: whereClause,
       include: {
         user: { select: { id: true, name: true, email: true, image: true } },
-        secret: { select: { id: true, key: true } },
         project: { select: { id: true, name: true } },
       },
       orderBy: { requestedAt: "desc" },
     });
 
-    return NextResponse.json(requests);
+    // Manually fetch secrets for these requests
+    const secretIds = Array.from(new Set(requests.flatMap(r => r.secretIds || [])));
+    const secrets = await prisma.secret.findMany({
+        where: { id: { in: secretIds } },
+        select: { id: true, key: true }
+    });
+    const secretMap = new Map(secrets.map(s => [s.id, s]));
+
+    const enrichedRequests = requests.map(r => ({
+        ...r,
+        secret: (r.secretIds && r.secretIds.length > 0) ? secretMap.get(r.secretIds[0]) : null
+    }));
+
+    return NextResponse.json(enrichedRequests);
   } catch (error) {
     console.error("Failed to list access requests:", error);
     return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });

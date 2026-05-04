@@ -66,10 +66,17 @@ function useIsDark() {
 
 // ── Main Page ────────────────────────────────────────────
 export default function SyncDashboardPage() {
-  const { selectedWorkspace } = useGlobalContext();
+  const { selectedWorkspace, workspaceRole } = useGlobalContext();
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const router = require("next/navigation").useRouter();
+
+  useEffect(() => {
+    if (workspaceRole === "viewer") {
+      router.push("/dashboard");
+    }
+  }, [workspaceRole, router]);
 
   const fetchSyncData = async (isRefresh = false) => {
     if (!selectedWorkspace?.id) return;

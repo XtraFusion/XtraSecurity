@@ -57,12 +57,24 @@ export async function GET(req: NextRequest) {
         where,
         orderBy: { requestedAt: "desc" },
         include: { 
-            user: { select: { email: true, name: true } }, 
-            secret: { select: { key: true } } 
+            user: { select: { email: true, name: true } },
+            project: { select: { name: true } }
         }
     });
 
-    return NextResponse.json(requests);
+    const secretIds = Array.from(new Set(requests.flatMap(r => r.secretIds || [])));
+    const secrets = await prisma.secret.findMany({
+        where: { id: { in: secretIds } },
+        select: { id: true, key: true }
+    });
+    const secretMap = new Map(secrets.map(s => [s.id, s]));
+
+    const enrichedRequests = requests.map(r => ({
+        ...r,
+        secret: (r.secretIds && r.secretIds.length > 0) ? secretMap.get(r.secretIds[0]) : null
+    }));
+
+    return NextResponse.json(enrichedRequests);
 
   } catch (error: any) {
     console.error("Access list error:", error);

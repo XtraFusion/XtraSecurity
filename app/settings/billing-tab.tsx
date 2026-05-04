@@ -12,6 +12,7 @@ import { toast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface UsageStats {
   workspaces: { used: number; limit: number };
@@ -109,7 +110,58 @@ export function BillingTab({ currentTier }: { currentTier: Tier }) {
     }
   };
 
-  if (loading) return <div className="flex justify-center p-12"><LoadingSpinner size="lg" /></div>;
+  if (loading) {
+    return (
+      <div className="space-y-10">
+        <div className="grid gap-10 lg:grid-cols-2">
+          {/* Plan Skeleton */}
+          <Card className="h-[500px] border-border bg-white/[0.02]/80 rounded-3xl p-8 flex flex-col">
+            <div className="space-y-2 mb-2">
+              <Skeleton className="h-3 w-32 rounded-full" />
+            </div>
+            <Skeleton className="h-9 w-48 rounded-lg mt-2 mb-4" />
+            <Skeleton className="h-4 w-64 rounded-lg mb-8" />
+            
+            <Skeleton className="h-14 w-32 rounded-lg mb-8" />
+            <div className="space-y-4">
+              {[1, 2, 3, 4, 5].map(i => (
+                 <div key={i} className="flex items-center gap-3">
+                    <Skeleton className="h-4 w-4 rounded-full shrink-0" />
+                    <Skeleton className="h-4 w-48 rounded-lg" />
+                 </div>
+              ))}
+            </div>
+            <div className="mt-auto pt-8">
+               <Skeleton className="h-14 w-full rounded-2xl" />
+            </div>
+          </Card>
+
+          {/* Usage Skeleton */}
+          <Card className="h-[500px] border-border bg-white/[0.01]/50 rounded-3xl p-8 flex flex-col">
+            <div className="space-y-2 mb-2">
+              <Skeleton className="h-3 w-36 rounded-full" />
+            </div>
+            <Skeleton className="h-8 w-56 rounded-lg mt-2 mb-8" />
+            
+            <div className="space-y-8 flex-1">
+              {[1, 2, 3, 4].map(i => (
+                <div key={i} className="space-y-3">
+                  <div className="flex justify-between items-center">
+                     <div className="flex items-center gap-4">
+                       <Skeleton className="h-10 w-10 rounded-xl" />
+                       <Skeleton className="h-4 w-24 rounded-lg" />
+                     </div>
+                     <Skeleton className="h-5 w-16 rounded-lg" />
+                  </div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   const currentLimits = DAILY_LIMITS[currentTier];
 

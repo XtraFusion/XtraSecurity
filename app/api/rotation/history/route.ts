@@ -13,31 +13,61 @@ export async function GET(req: Request) {
 
     const { searchParams } = new URL(req.url);
     const projectId = searchParams.get("projectId");
+    const workspaceId = searchParams.get("workspaceId");
 
     // Fetch history logs
     // We navigate from Log -> Schedule -> Secret -> Project to filter
-    const whereClause: any = projectId ? {
-      schedule: {
-          projectId: projectId
+    let whereClause: any = {};
+    
+    if (projectId) {
+      whereClause = { schedule: { projectId } };
+    } else if (workspaceId) {
+      const { getUserWorkspaceRole } = await import("@/lib/permissions");
+      const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+      if (role === "owner" || role === "admin") {
+        whereClause = { schedule: { secret: { project: { workspaceId } } } };
+      } else {
+        whereClause = {
+          schedule: {
+            secret: {
+              project: {
+                workspaceId,
+                OR: [
+                  { userId: session.user.id },
+                  {
+                    teamProjects: {
+                      some: {
+                        team: { members: { some: { userId: session.user.id, status: "active" } } }
+                      }
+                    }
+                  }
+                ]
+              }
+            }
+          }
+        };
       }
-    } : {
-      schedule: {
-        secret: {
-          project: {
-            OR: [
-              { userId: session.user.id },
-              {
-                teamProjects: {
-                  some: {
-                    team: { members: { some: { userId: session.user.id, status: "active" } } }
+    } else {
+      whereClause = {
+        schedule: {
+          secret: {
+            project: {
+              OR: [
+                { userId: session.user.id },
+                {
+                  teamProjects: {
+                    some: {
+                      team: { members: { some: { userId: session.user.id, status: "active" } } }
+                    }
                   }
                 }
-              }
-            ]
+              ]
+            }
           }
         }
-      }
-    };
+      };
+    }
 
     const history = await prisma.rotationLog.findMany({
       where: whereClause,

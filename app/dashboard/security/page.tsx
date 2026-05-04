@@ -13,6 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { useGlobalContext } from "@/hooks/useUser";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -136,16 +137,18 @@ function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message:
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function SecurityDashboardPage() {
+    const { selectedWorkspace } = useGlobalContext();
     const [range, setRange] = useState("7d");
     const [data, setData] = useState<DashboardData | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
     const fetchData = useCallback(async () => {
+        if (!selectedWorkspace?.id) return;
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch(`/api/security/dashboard?range=${range}`);
+            const res = await fetch(`/api/security/dashboard?workspaceId=${selectedWorkspace.id}&range=${range}`);
             if (!res.ok) throw new Error("Failed to load dashboard data");
             const json = await res.json();
             setData(json);
@@ -154,7 +157,7 @@ export default function SecurityDashboardPage() {
         } finally {
             setLoading(false);
         }
-    }, [range]);
+    }, [range, selectedWorkspace?.id]);
 
     useEffect(() => { fetchData(); }, [fetchData]);
 

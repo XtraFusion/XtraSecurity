@@ -21,12 +21,48 @@ export async function GET(req: NextRequest) {
     const now = new Date();
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
-    // 1. Find all projects in the workspace to catch events logged only with projectId
+    const { getUserWorkspaceRole } = await import("@/lib/permissions");
+    const wsRole = await getUserWorkspaceRole(session.user.id, workspaceId);
+
+    // 1. Find all projects in the workspace the user has access to
+    const projectWhereClause: any = { workspaceId };
+    
+    // If not a workspace owner/admin, restrict to accessible projects
+    if (wsRole !== "owner" && wsRole !== "admin") {
+      projectWhereClause.OR = [
+        { userId: session.user.id },
+        {
+          teamProjects: {
+            some: {
+              team: {
+                members: {
+                  some: {
+                    userId: session.user.id,
+                    status: "active",
+                  },
+                },
+              },
+            },
+          },
+        },
+      ];
+    }
+
     const wsProjects = await prisma.project.findMany({
-      where: { workspaceId },
+      where: projectWhereClause,
       select: { id: true }
     });
     const wsProjectIds = wsProjects.map(p => p.id);
+
+    // If user has no access to any projects and isn't workspace admin, return early
+    if (wsProjectIds.length === 0) {
+      return NextResponse.json({
+        summary: { totalFetches: 0, saFetches: 0, humanFetches: 0, saPercentage: 0 },
+        topProjects: [],
+        topActors: [],
+        usageTimeline: []
+      });
+    }
 
     // 2. Fetch SecurityEvents for secret fetches in this workspace
     const events = await prisma.securityEvent.findMany({

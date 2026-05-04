@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
 
+export const dynamic = 'force-dynamic';
 
 // Helper function to check authentication
 // GET /api/branch - Get all branches or filter by projectId
@@ -19,13 +20,37 @@ export async function GET(request: NextRequest) {
 
     // Access Control & Redaction Check
     let isViewer = false;
+    let allowedSecretIds = new Set<string>();
+
     if (projectId) {
         const { getUserProjectRole } = await import("@/lib/permissions");
         const role = await getUserProjectRole(auth.userId, projectId);
         if (!role) {
              return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
-        if (role === 'viewer') isViewer = true;
+        if (role === 'viewer') {
+            isViewer = true;
+            
+            // Check for active JIT access requests
+            const activeRequests = await prisma.accessRequest.findMany({
+                where: {
+                    userId: auth.userId,
+                    projectId: projectId,
+                    status: "approved",
+                    expiresAt: { gt: new Date() }
+                }
+            });
+            
+            for (const req of activeRequests) {
+                if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length > 0) {
+                    req.secretIds.forEach((id: string) => allowedSecretIds.add(id));
+                } else if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length === 0) {
+                    // Empty secretIds means full project/branch JIT access
+                    isViewer = false;
+                    break;
+                }
+            }
+        }
     }
 
     const branches = await prisma.branch.findMany({
@@ -54,8 +79,8 @@ export async function GET(request: NextRequest) {
     const branchesWithDecryptedSecrets = branchesWithUsers.map((branch) => ({
       ...branch,
       secrets: branch.secrets?.map((secret) => {
-        // Redact for Viewers
-        if (isViewer) {
+        // Redact for Viewers, UNLESS they have active JIT access to this specific secret
+        if (isViewer && !allowedSecretIds.has(secret.id)) {
             return {
                 ...secret,
                 value: "[REDACTED]",

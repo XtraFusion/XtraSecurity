@@ -33,6 +33,7 @@ import {
 } from "lucide-react"
 import { DashboardLayout } from "@/components/dashboard-layout"
 import { useSession } from "next-auth/react"
+import { useGlobalContext } from "@/hooks/useUser"
 
 interface RotationSchedule {
   id: string
@@ -70,6 +71,7 @@ interface RotationHistory {
 
 export default function SecretRotationPage() {
   const { data: session } = useSession()
+  const { selectedWorkspace } = useGlobalContext()
 
   const [schedules, setSchedules] = useState<RotationSchedule[]>([])
   const [history, setHistory] = useState<RotationHistory[]>([])
@@ -101,12 +103,13 @@ export default function SecretRotationPage() {
   const hasFetched = useRef(false)
 
   const fetchData = useCallback(async () => {
+    if (!selectedWorkspace?.id) return
     try {
       setIsLoading(true)
       const [schedRes, histRes, projRes] = await Promise.all([
-        fetch("/api/rotation/schedules"),
-        fetch("/api/rotation/history"),
-        fetch("/api/project"),
+        fetch(`/api/rotation/schedules?workspaceId=${selectedWorkspace.id}`),
+        fetch(`/api/rotation/history?workspaceId=${selectedWorkspace.id}`),
+        fetch(`/api/project?workspaceId=${selectedWorkspace.id}`),
       ])
       if (schedRes.ok) setSchedules(await schedRes.json())
       if (histRes.ok) setHistory(await histRes.json())
@@ -120,11 +123,11 @@ export default function SecretRotationPage() {
   }, [])
 
   useEffect(() => {
-    if (session && !hasFetched.current) {
+    if (session && selectedWorkspace?.id && !hasFetched.current) {
       hasFetched.current = true
       fetchData()
     }
-  }, [session, fetchData])
+  }, [session, selectedWorkspace?.id, fetchData])
 
   // ── Fetch secrets when project changes ─────────
   useEffect(() => {

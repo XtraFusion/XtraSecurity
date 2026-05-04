@@ -80,7 +80,7 @@ const NAV_GROUPS = [
 
 export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
     const pathname = usePathname();
-    const { user, selectedWorkspace } = useUser();
+    const { user, selectedWorkspace, workspaceRole } = useUser();
     const { resolvedTheme, setTheme } = useTheme();
     const [mounted, setMounted] = React.useState(false);
     const scrollAreaRef = React.useRef<HTMLDivElement>(null);
@@ -145,10 +145,14 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                             {group.items.map((item) => {
                                 const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
                                 // Filter restricted links for non-admins in shared workspaces
-                                if (!hasAdminAccess && ["Integrations", "Settings", "Notifications", "Documentation"].includes(item.name)) {
-                                    if (["Integrations", "Settings"].includes(item.name)) return null;
+                                if (!hasAdminAccess && ["Settings"].includes(item.name)) {
+                                    return null;
                                 }
 
+                                // Block viewers from Sync Dashboard and Integrations
+                                if (workspaceRole === "viewer" && ["Integrations", "Sync Dashboard"].includes(item.name)) {
+                                    return null;
+                                }
                                 return (
                                     <Link
                                         key={item.href}

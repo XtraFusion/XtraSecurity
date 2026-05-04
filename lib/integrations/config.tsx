@@ -93,7 +93,7 @@ export const INTEGRATION_METADATA: Record<SyncProvider, IntegrationMetadata> = {
     repoLabel: "GCP Project", detailText: "Pushed to Google Cloud Secret Manager", tokenBased: true 
   },
   azure: { 
-    name: "Azure", category: "cloud", icon: <img src="/Microsoft Symbol SVG.svg" alt="Azure" className="h-4 w-4 object-contain" />, iconBg: "bg-[#0089D6]", 
+    name: "Azure", category: "cloud", icon: <img src="/azure-logo.svg" alt="Azure" className="h-4 w-4 object-contain" />, iconBg: "bg-[#0089D6]", 
     repoLabel: "Azure Vault", detailText: "Azure Key Vault", tokenBased: true 
   },
   digitalocean: { 

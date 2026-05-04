@@ -21,8 +21,25 @@ export async function GET(req: Request) {
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
     const role = await getUserWorkspaceRole(session.user.id, workspaceId);
 
-    if (!role || (role !== "owner" && role !== "admin")) {
-      return NextResponse.json({ error: "Unauthorized access to audit logs" }, { status: 403 });
+    const projectWhereClause: any = { workspaceId };
+    
+    // If not a workspace owner/admin, restrict to accessible projects
+    if (role !== "owner" && role !== "admin") {
+      projectWhereClause.OR = [
+        { userId: session.user.id },
+        { teamProjects: { some: { team: { members: { some: { userId: session.user.id, status: "active" } } } } } }
+      ];
+    }
+
+    const wsProjects = await prisma.project.findMany({
+      where: projectWhereClause,
+      select: { id: true }
+    });
+    const wsProjectIds = wsProjects.map(p => p.id);
+
+    // If user has no access to any projects and isn't workspace admin, return empty early
+    if (wsProjectIds.length === 0 && role !== "owner" && role !== "admin") {
+       return NextResponse.json({ data: [], total: 0, page: 1, pageSize: parseInt(url.searchParams.get("pageSize") || "25", 10) });
     }
 
     // Get Workspace Owner Tier for Retention Limits
@@ -79,6 +96,15 @@ export async function GET(req: Request) {
     if (userId) where.userId = userId;
     if (workspaceId) where.workspaceId = workspaceId;
     if (search) where.OR = [{ action: { contains: search } }, { changes: { contains: search } }];
+
+    // Enforce RBAC filtering for non-admins
+    if (role !== "owner" && role !== "admin") {
+        where.OR = [
+            ...(where.OR || []),
+            { userId: session.user.id },
+            { entityId: { in: wsProjectIds } }
+        ];
+    }
 
     const total = await prisma.auditLog.count({ where });
     const logs = await prisma.auditLog.findMany({
