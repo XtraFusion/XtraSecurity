@@ -22,10 +22,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Missing required fields: projectId, reason" }, { status: 400 });
     }
 
-    // 1. Authorization Check: Must be at least a developer in the project
+    // 1. Authorization Check: Must be admin or owner
     const role = await getUserProjectRole(session.user.id, projectId);
-    if (!role) {
-      return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
+    if (role !== "owner" && role !== "admin") {
+      return NextResponse.json({ error: "Forbidden: Only admins or owners can activate break glass." }, { status: 403 });
     }
 
     // 2. Check for existing active session

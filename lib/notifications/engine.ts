@@ -8,7 +8,7 @@ import prisma from "@/lib/db";
 import { dispatchNotification } from "./dispatch";
 
 export interface NotificationEvent {
-  type: "secret_change" | "secret_rollback" | "rotation_failed" | "suspicious_activity" | "access_denied" | "system_error";
+  type: "secret_change" | "secret_rollback" | "rotation_failed" | "suspicious_activity" | "access_denied" | "system_error" | "security_alert";
   title: string;
   message: string;
   description?: string;

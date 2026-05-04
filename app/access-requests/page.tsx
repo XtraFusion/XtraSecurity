@@ -52,6 +52,7 @@ export default function AccessRequestsPage() {
     const [pendingRequests, setPendingRequests] = useState<AccessRequest[]>([]);
     const [historyRequests, setHistoryRequests] = useState<AccessRequest[]>([]);
     const [loading, setLoading] = useState(true);
+    const [processingId, setProcessingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState("");
     const { toast } = useToast();
     const { selectedWorkspace, workspaceRole } = useGlobalContext();
@@ -96,6 +97,7 @@ export default function AccessRequestsPage() {
     }, [selectedWorkspace, workspaceRole]);
 
     const handleDecision = async (requestId: string, decision: "approved" | "rejected" | "revoked") => {
+        setProcessingId(requestId);
         try {
             await apiClient.post("/api/access/approve", { requestId, decision });
             toast({
@@ -103,13 +105,15 @@ export default function AccessRequestsPage() {
                 description: `Successfully ${decision} the access request.`,
                 variant: decision === "approved" ? "default" : "destructive"
             });
-            fetchRequests(); // Refresh
+            fetchRequests(); // Refresh - Force Update
         } catch (error: any) {
             toast({
                 title: "Operation failed",
                 description: error.response?.data?.error || error.message,
                 variant: "destructive"
             });
+        } finally {
+            setProcessingId(null);
         }
     };
 
@@ -250,6 +254,7 @@ export default function AccessRequestsPage() {
                                     requests={filteredRequests(myRequests)} 
                                     viewType="my" 
                                     onAction={handleDecision}
+                                    processingId={processingId}
                                 />
                             </motion.div>
                         </TabsContent>
@@ -261,6 +266,7 @@ export default function AccessRequestsPage() {
                                         requests={filteredRequests(pendingRequests)} 
                                         viewType="pending"
                                         onAction={handleDecision}
+                                        processingId={processingId}
                                     />
                                 </motion.div>
                             </TabsContent>
@@ -273,6 +279,7 @@ export default function AccessRequestsPage() {
                                         requests={filteredRequests(historyRequests)} 
                                         viewType="history"
                                         onAction={handleDecision}
+                                        processingId={processingId}
                                     />
                                 </motion.div>
                             </TabsContent>
@@ -287,11 +294,13 @@ export default function AccessRequestsPage() {
 function RequestTable({ 
     requests, 
     viewType,
-    onAction 
+    onAction,
+    processingId
 }: { 
     requests: AccessRequest[], 
     viewType: "my" | "pending" | "history",
-    onAction: (id: string, decision: any) => void
+    onAction: (id: string, decision: any) => void,
+    processingId: string | null
 }) {
     if (requests.length === 0) {
         return (
@@ -394,16 +403,18 @@ function RequestTable({
                                                 variant="ghost" 
                                                 onClick={() => onAction(req.id, "approved")}
                                                 className="h-7 w-7 p-0 text-emerald-500 hover:text-emerald-400 hover:bg-emerald-500/10"
+                                                disabled={processingId === req.id}
                                             >
-                                                <Check className="h-4 w-4" />
+                                                {processingId === req.id ? <RefreshCcw className="h-3 w-3 animate-spin" /> : <Check className="h-4 w-4" />}
                                             </Button>
                                             <Button 
                                                 size="sm" 
                                                 variant="ghost" 
                                                 onClick={() => onAction(req.id, "rejected")}
                                                 className="h-7 w-7 p-0 text-rose-500 hover:text-rose-400 hover:bg-rose-500/10"
+                                                disabled={processingId === req.id}
                                             >
-                                                <X className="h-4 w-4" />
+                                                {processingId === req.id ? <RefreshCcw className="h-3 w-3 animate-spin" /> : <X className="h-4 w-4" />}
                                             </Button>
                                         </>
                                     )}
@@ -413,8 +424,9 @@ function RequestTable({
                                             variant="ghost" 
                                             onClick={() => onAction(req.id, "revoked")}
                                             className="h-7 px-2 text-xs text-rose-500 hover:text-rose-400 hover:bg-rose-500/10 gap-1.5"
+                                            disabled={processingId === req.id}
                                         >
-                                            <Ban className="h-3.5 w-3.5" />
+                                            {processingId === req.id ? <RefreshCcw className="h-3 w-3 animate-spin" /> : <Ban className="h-3.5 w-3.5" />}
                                             Revoke
                                         </Button>
                                     )}
