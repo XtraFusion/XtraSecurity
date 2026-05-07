@@ -24,13 +24,20 @@ export const GET = withSecurity(async (
   const userId = session.userId;
 
   // 2. Authorization via Policy Engine
-  const decision = await PolicyEngine.authorize({
-      userId,
-      projectId: projectId,
-      resource: "secret",
-      action: "value.read", // We assume 'value.read' for fetching
-      environment: env
-  });
+  let decision = Decision.DENY;
+
+  // FAST PATH for Service Accounts: If the token is linked directly to this project, allow.
+  if (session.isServiceAccount && session.projectId === projectId) {
+      decision = Decision.ALLOW;
+  } else {
+      decision = await PolicyEngine.authorize({
+          userId,
+          projectId: projectId,
+          resource: "secret",
+          action: "value.read", 
+          environment: env
+      });
+  }
 
   if (decision === Decision.DENY) {
       return NextResponse.json({ error: "Access Denied" }, { status: 403 });

@@ -3,6 +3,11 @@ generator client {
   output   = "../lib/generated/prisma"
 }
 
+generator diag_client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/diag_prisma"
+}
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")

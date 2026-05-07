@@ -23,7 +23,8 @@ import {
     CreditCard,
     Activity,
     ShieldCheck,
-    BarChart3
+    BarChart3,
+    Type
 } from "lucide-react";
 
 import { Button } from "./ui/button";
@@ -74,6 +75,13 @@ const NAV_GROUPS = [
             { name: "Settings", href: "/settings", icon: Settings },
             { name: "Subscription & Usages", href: "/subscription", icon: CreditCard },
             { name: "Documentation", href: "/docs", icon: BookOpen },
+        ]
+    },
+    {
+        label: "Developer Tools",
+        items: [
+            { name: "Unicode Converter", href: "/dashboard/tools/unicode", icon: Type },
+            { name: "Regex Tester", href: "/dashboard/tools/regex-tester", icon: Zap },
         ]
     }
 ];

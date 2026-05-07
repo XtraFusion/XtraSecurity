@@ -6,24 +6,24 @@ import { createTamperEvidentLog } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = await verifyAuth(req);
   if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   // Check permission: Owner or Admin
-  // We use dynamic import to avoid circular dependency issues if any, though likely safe with direct import
   const { getUserProjectRole } = await import("@/lib/permissions");
-  const role = await getUserProjectRole(auth.userId, params.id);
+  const role = await getUserProjectRole(auth.userId, id);
 
   if (!role || (role !== 'owner' && role !== 'admin')) {
        return NextResponse.json({ error: "Only project owners and admins can view team assignments" }, { status: 403 });
   }
 
   const project = await prisma.project.findUnique({
-    where: { id: params.id },
+    where: { id },
     include: {
         teamProjects: {
             include: {
@@ -42,8 +42,9 @@ export async function GET(
 
 export async function POST(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = await verifyAuth(req);
   if (!auth) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -56,14 +57,14 @@ export async function POST(
   }
 
   const { getUserProjectRole } = await import("@/lib/permissions");
-  const role = await getUserProjectRole(auth.userId, params.id);
+  const role = await getUserProjectRole(auth.userId, id);
 
   if (!role || (role !== 'owner' && role !== 'admin')) {
       return NextResponse.json({ error: "Only project owners and admins can add teams" }, { status: 403 });
   }
 
   const project = await prisma.project.findUnique({
-      where: { id: params.id }
+      where: { id }
   });
 
   // Check if already assigned
@@ -71,7 +72,7 @@ export async function POST(
       where: {
           teamId_projectId: {
               teamId,
-              projectId: params.id
+              projectId: id
           }
       }
   });
@@ -83,7 +84,7 @@ export async function POST(
   const teamProject = await prisma.teamProject.create({
       data: {
           teamId,
-          projectId: params.id
+          projectId: id
       },
       include: {
           team: true
@@ -95,7 +96,7 @@ export async function POST(
     userId: auth.userId,
     action: "project.team_assigned",
     entity: "project",
-    entityId: params.id,
+    entityId: id,
     workspaceId: project?.workspaceId || undefined,
     changes: { teamId, teamName: teamProject.team.name }
   });

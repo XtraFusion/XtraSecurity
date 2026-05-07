@@ -3,6 +3,11 @@ generator client {
   output   = "../lib/generated/prisma"
 }
 
+generator diag_client {
+  provider = "prisma-client-js"
+  output   = "../lib/generated/diag_prisma"
+}
+
 datasource db {
   provider = "mongodb"
   url      = env("DATABASE_URL")
@@ -223,6 +228,31 @@ model Secret {
   shadowValue      String[]
   rotationSchedule RotationSchedule?
   shares           SecretShare[]
+
+  // External Sync
+  syncs SecretSync[]
+}
+
+// SECRET SYNC MODEL — mapping to external providers (AWS, Vercel, etc.)
+model SecretSync {
+  id       String @id @default(auto()) @map("_id") @db.ObjectId
+  secretId String @db.ObjectId
+  secret   Secret @relation(fields: [secretId], references: [id], onDelete: Cascade)
+
+  provider    String // "aws", "vercel", "github", etc.
+  externalId  String // e.g. AWS Secret ARN or Vercel Env ID
+  externalKey String // The key name in the external system
+
+  status     String    @default("active") // "active", "error", "disabled"
+  lastSyncAt DateTime?
+  lastError  String?
+
+  config Json? // Provider-specific config (e.g. region, project ID)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([secretId, provider, externalId])
 }
 
 // SECRET SHARE MODEL — for time-limited, view-count-limited sharing

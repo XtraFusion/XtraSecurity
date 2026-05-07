@@ -35,3 +35,6 @@ next-env.d.ts
 
 # XtraSecurity config
 .xtrarc
+
+# Prisma generated clients
+/lib/generated/

@@ -28,13 +28,16 @@ export async function createTamperEvidentLog(data: AuditLogData) {
   const previousHash = lastLog?.currentHash || GENESIS_HASH;
   const timestamp = data.timestamp || new Date();
 
+  // Handle Service Account IDs (strip sa_ prefix for MongoDB ObjectId compatibility)
+  const cleanUserId = data.userId.startsWith("sa_") ? data.userId.replace("sa_", "") : data.userId;
+
   // 2. Compute New Hash
   // H = SHA256( prevHash + timestamp + action + userId + entityId + JSON(changes) )
   const payload = [
       previousHash,
       timestamp.toISOString(),
       data.action,
-      data.userId,
+      cleanUserId, // Use cleaned ID for consistent hashing
       data.entityId,
       JSON.stringify(data.changes)
   ].join("|");
@@ -44,7 +47,7 @@ export async function createTamperEvidentLog(data: AuditLogData) {
   // 3. Insert
   return await prisma.auditLog.create({
     data: {
-      userId: data.userId,
+      userId: cleanUserId,
       action: data.action,
       entity: data.entity,
       entityId: data.entityId,

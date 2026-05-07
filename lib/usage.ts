@@ -10,10 +10,13 @@ export async function incrementDailyUsage(userId: string) {
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
+      // Handle Service Account IDs (strip sa_ prefix for MongoDB ObjectId compatibility)
+      const cleanUserId = userId.startsWith("sa_") ? userId.replace("sa_", "") : userId;
+      
       await prisma.dailyUsage.upsert({
-        where: { userId_date: { userId, date: today } },
+        where: { userId_date: { userId: cleanUserId, date: today } },
         update: { count: { increment: 1 } },
-        create: { userId, date: today, count: 1 },
+        create: { userId: cleanUserId, date: today, count: 1 },
       });
       return; // success
     } catch (error: any) {

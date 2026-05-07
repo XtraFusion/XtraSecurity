@@ -49,6 +49,11 @@ export type Branch = $Result.DefaultSelection<Prisma.$BranchPayload>
  */
 export type Secret = $Result.DefaultSelection<Prisma.$SecretPayload>
 /**
+ * Model SecretSync
+ * 
+ */
+export type SecretSync = $Result.DefaultSelection<Prisma.$SecretSyncPayload>
+/**
  * Model SecretShare
  * 
  */
@@ -348,6 +353,16 @@ export class PrismaClient<
     * ```
     */
   get secret(): Prisma.SecretDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.secretSync`: Exposes CRUD operations for the **SecretSync** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more SecretSyncs
+    * const secretSyncs = await prisma.secretSync.findMany()
+    * ```
+    */
+  get secretSync(): Prisma.SecretSyncDelegate<ExtArgs, ClientOptions>;
 
   /**
    * `prisma.secretShare`: Exposes CRUD operations for the **SecretShare** model.
@@ -1085,6 +1100,7 @@ export namespace Prisma {
     Project: 'Project',
     Branch: 'Branch',
     Secret: 'Secret',
+    SecretSync: 'SecretSync',
     SecretShare: 'SecretShare',
     RotationSchedule: 'RotationSchedule',
     RotationLog: 'RotationLog',
@@ -1132,7 +1148,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "dailyUsage" | "globalState"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretSync" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "dailyUsage" | "globalState"
       txIsolationLevel: never
     }
     model: {
@@ -1651,6 +1667,80 @@ export namespace Prisma {
           count: {
             args: Prisma.SecretCountArgs<ExtArgs>
             result: $Utils.Optional<SecretCountAggregateOutputType> | number
+          }
+        }
+      }
+      SecretSync: {
+        payload: Prisma.$SecretSyncPayload<ExtArgs>
+        fields: Prisma.SecretSyncFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.SecretSyncFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.SecretSyncFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          findFirst: {
+            args: Prisma.SecretSyncFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.SecretSyncFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          findMany: {
+            args: Prisma.SecretSyncFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>[]
+          }
+          create: {
+            args: Prisma.SecretSyncCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          createMany: {
+            args: Prisma.SecretSyncCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.SecretSyncDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          update: {
+            args: Prisma.SecretSyncUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          deleteMany: {
+            args: Prisma.SecretSyncDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.SecretSyncUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.SecretSyncUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$SecretSyncPayload>
+          }
+          aggregate: {
+            args: Prisma.SecretSyncAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateSecretSync>
+          }
+          groupBy: {
+            args: Prisma.SecretSyncGroupByArgs<ExtArgs>
+            result: $Utils.Optional<SecretSyncGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.SecretSyncFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.SecretSyncAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.SecretSyncCountArgs<ExtArgs>
+            result: $Utils.Optional<SecretSyncCountAggregateOutputType> | number
           }
         }
       }
@@ -3886,6 +3976,7 @@ export namespace Prisma {
     project?: ProjectOmit
     branch?: BranchOmit
     secret?: SecretOmit
+    secretSync?: SecretSyncOmit
     secretShare?: SecretShareOmit
     rotationSchedule?: RotationScheduleOmit
     rotationLog?: RotationLogOmit
@@ -4310,11 +4401,13 @@ export namespace Prisma {
   export type SecretCountOutputType = {
     referencedBy: number
     shares: number
+    syncs: number
   }
 
   export type SecretCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     referencedBy?: boolean | SecretCountOutputTypeCountReferencedByArgs
     shares?: boolean | SecretCountOutputTypeCountSharesArgs
+    syncs?: boolean | SecretCountOutputTypeCountSyncsArgs
   }
 
   // Custom InputTypes
@@ -4340,6 +4433,13 @@ export namespace Prisma {
    */
   export type SecretCountOutputTypeCountSharesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: SecretShareWhereInput
+  }
+
+  /**
+   * SecretCountOutputType without action
+   */
+  export type SecretCountOutputTypeCountSyncsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecretSyncWhereInput
   }
 
 
@@ -12161,6 +12261,7 @@ export namespace Prisma {
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
     shares?: boolean | Secret$sharesArgs<ExtArgs>
+    syncs?: boolean | Secret$syncsArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["secret"]>
 
@@ -12195,6 +12296,7 @@ export namespace Prisma {
     referencedBy?: boolean | Secret$referencedByArgs<ExtArgs>
     rotationSchedule?: boolean | Secret$rotationScheduleArgs<ExtArgs>
     shares?: boolean | Secret$sharesArgs<ExtArgs>
+    syncs?: boolean | Secret$syncsArgs<ExtArgs>
     _count?: boolean | SecretCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -12207,6 +12309,7 @@ export namespace Prisma {
       referencedBy: Prisma.$SecretPayload<ExtArgs>[]
       rotationSchedule: Prisma.$RotationSchedulePayload<ExtArgs> | null
       shares: Prisma.$SecretSharePayload<ExtArgs>[]
+      syncs: Prisma.$SecretSyncPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -12596,6 +12699,7 @@ export namespace Prisma {
     referencedBy<T extends Secret$referencedByArgs<ExtArgs> = {}>(args?: Subset<T, Secret$referencedByArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     rotationSchedule<T extends Secret$rotationScheduleArgs<ExtArgs> = {}>(args?: Subset<T, Secret$rotationScheduleArgs<ExtArgs>>): Prisma__RotationScheduleClient<$Result.GetResult<Prisma.$RotationSchedulePayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
     shares<T extends Secret$sharesArgs<ExtArgs> = {}>(args?: Subset<T, Secret$sharesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSharePayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    syncs<T extends Secret$syncsArgs<ExtArgs> = {}>(args?: Subset<T, Secret$syncsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -13118,6 +13222,30 @@ export namespace Prisma {
   }
 
   /**
+   * Secret.syncs
+   */
+  export type Secret$syncsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    where?: SecretSyncWhereInput
+    orderBy?: SecretSyncOrderByWithRelationInput | SecretSyncOrderByWithRelationInput[]
+    cursor?: SecretSyncWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: SecretSyncScalarFieldEnum | SecretSyncScalarFieldEnum[]
+  }
+
+  /**
    * Secret without action
    */
   export type SecretDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -13133,6 +13261,1047 @@ export namespace Prisma {
      * Choose, which related nodes to fetch as well
      */
     include?: SecretInclude<ExtArgs> | null
+  }
+
+
+  /**
+   * Model SecretSync
+   */
+
+  export type AggregateSecretSync = {
+    _count: SecretSyncCountAggregateOutputType | null
+    _min: SecretSyncMinAggregateOutputType | null
+    _max: SecretSyncMaxAggregateOutputType | null
+  }
+
+  export type SecretSyncMinAggregateOutputType = {
+    id: string | null
+    secretId: string | null
+    provider: string | null
+    externalId: string | null
+    externalKey: string | null
+    status: string | null
+    lastSyncAt: Date | null
+    lastError: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SecretSyncMaxAggregateOutputType = {
+    id: string | null
+    secretId: string | null
+    provider: string | null
+    externalId: string | null
+    externalKey: string | null
+    status: string | null
+    lastSyncAt: Date | null
+    lastError: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type SecretSyncCountAggregateOutputType = {
+    id: number
+    secretId: number
+    provider: number
+    externalId: number
+    externalKey: number
+    status: number
+    lastSyncAt: number
+    lastError: number
+    config: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type SecretSyncMinAggregateInputType = {
+    id?: true
+    secretId?: true
+    provider?: true
+    externalId?: true
+    externalKey?: true
+    status?: true
+    lastSyncAt?: true
+    lastError?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SecretSyncMaxAggregateInputType = {
+    id?: true
+    secretId?: true
+    provider?: true
+    externalId?: true
+    externalKey?: true
+    status?: true
+    lastSyncAt?: true
+    lastError?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type SecretSyncCountAggregateInputType = {
+    id?: true
+    secretId?: true
+    provider?: true
+    externalId?: true
+    externalKey?: true
+    status?: true
+    lastSyncAt?: true
+    lastError?: true
+    config?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type SecretSyncAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecretSync to aggregate.
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretSyncs to fetch.
+     */
+    orderBy?: SecretSyncOrderByWithRelationInput | SecretSyncOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: SecretSyncWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretSyncs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretSyncs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned SecretSyncs
+    **/
+    _count?: true | SecretSyncCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: SecretSyncMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: SecretSyncMaxAggregateInputType
+  }
+
+  export type GetSecretSyncAggregateType<T extends SecretSyncAggregateArgs> = {
+        [P in keyof T & keyof AggregateSecretSync]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateSecretSync[P]>
+      : GetScalarType<T[P], AggregateSecretSync[P]>
+  }
+
+
+
+
+  export type SecretSyncGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: SecretSyncWhereInput
+    orderBy?: SecretSyncOrderByWithAggregationInput | SecretSyncOrderByWithAggregationInput[]
+    by: SecretSyncScalarFieldEnum[] | SecretSyncScalarFieldEnum
+    having?: SecretSyncScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: SecretSyncCountAggregateInputType | true
+    _min?: SecretSyncMinAggregateInputType
+    _max?: SecretSyncMaxAggregateInputType
+  }
+
+  export type SecretSyncGroupByOutputType = {
+    id: string
+    secretId: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status: string
+    lastSyncAt: Date | null
+    lastError: string | null
+    config: JsonValue | null
+    createdAt: Date
+    updatedAt: Date
+    _count: SecretSyncCountAggregateOutputType | null
+    _min: SecretSyncMinAggregateOutputType | null
+    _max: SecretSyncMaxAggregateOutputType | null
+  }
+
+  type GetSecretSyncGroupByPayload<T extends SecretSyncGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<SecretSyncGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof SecretSyncGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], SecretSyncGroupByOutputType[P]>
+            : GetScalarType<T[P], SecretSyncGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type SecretSyncSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    secretId?: boolean
+    provider?: boolean
+    externalId?: boolean
+    externalKey?: boolean
+    status?: boolean
+    lastSyncAt?: boolean
+    lastError?: boolean
+    config?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    secret?: boolean | SecretDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["secretSync"]>
+
+
+
+  export type SecretSyncSelectScalar = {
+    id?: boolean
+    secretId?: boolean
+    provider?: boolean
+    externalId?: boolean
+    externalKey?: boolean
+    status?: boolean
+    lastSyncAt?: boolean
+    lastError?: boolean
+    config?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type SecretSyncOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "secretId" | "provider" | "externalId" | "externalKey" | "status" | "lastSyncAt" | "lastError" | "config" | "createdAt" | "updatedAt", ExtArgs["result"]["secretSync"]>
+  export type SecretSyncInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    secret?: boolean | SecretDefaultArgs<ExtArgs>
+  }
+
+  export type $SecretSyncPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "SecretSync"
+    objects: {
+      secret: Prisma.$SecretPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      secretId: string
+      provider: string
+      externalId: string
+      externalKey: string
+      status: string
+      lastSyncAt: Date | null
+      lastError: string | null
+      config: Prisma.JsonValue | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["secretSync"]>
+    composites: {}
+  }
+
+  type SecretSyncGetPayload<S extends boolean | null | undefined | SecretSyncDefaultArgs> = $Result.GetResult<Prisma.$SecretSyncPayload, S>
+
+  type SecretSyncCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<SecretSyncFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: SecretSyncCountAggregateInputType | true
+    }
+
+  export interface SecretSyncDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['SecretSync'], meta: { name: 'SecretSync' } }
+    /**
+     * Find zero or one SecretSync that matches the filter.
+     * @param {SecretSyncFindUniqueArgs} args - Arguments to find a SecretSync
+     * @example
+     * // Get one SecretSync
+     * const secretSync = await prisma.secretSync.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends SecretSyncFindUniqueArgs>(args: SelectSubset<T, SecretSyncFindUniqueArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one SecretSync that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {SecretSyncFindUniqueOrThrowArgs} args - Arguments to find a SecretSync
+     * @example
+     * // Get one SecretSync
+     * const secretSync = await prisma.secretSync.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends SecretSyncFindUniqueOrThrowArgs>(args: SelectSubset<T, SecretSyncFindUniqueOrThrowArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecretSync that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncFindFirstArgs} args - Arguments to find a SecretSync
+     * @example
+     * // Get one SecretSync
+     * const secretSync = await prisma.secretSync.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends SecretSyncFindFirstArgs>(args?: SelectSubset<T, SecretSyncFindFirstArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first SecretSync that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncFindFirstOrThrowArgs} args - Arguments to find a SecretSync
+     * @example
+     * // Get one SecretSync
+     * const secretSync = await prisma.secretSync.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends SecretSyncFindFirstOrThrowArgs>(args?: SelectSubset<T, SecretSyncFindFirstOrThrowArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SecretSyncs that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all SecretSyncs
+     * const secretSyncs = await prisma.secretSync.findMany()
+     * 
+     * // Get first 10 SecretSyncs
+     * const secretSyncs = await prisma.secretSync.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const secretSyncWithIdOnly = await prisma.secretSync.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends SecretSyncFindManyArgs>(args?: SelectSubset<T, SecretSyncFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a SecretSync.
+     * @param {SecretSyncCreateArgs} args - Arguments to create a SecretSync.
+     * @example
+     * // Create one SecretSync
+     * const SecretSync = await prisma.secretSync.create({
+     *   data: {
+     *     // ... data to create a SecretSync
+     *   }
+     * })
+     * 
+     */
+    create<T extends SecretSyncCreateArgs>(args: SelectSubset<T, SecretSyncCreateArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many SecretSyncs.
+     * @param {SecretSyncCreateManyArgs} args - Arguments to create many SecretSyncs.
+     * @example
+     * // Create many SecretSyncs
+     * const secretSync = await prisma.secretSync.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends SecretSyncCreateManyArgs>(args?: SelectSubset<T, SecretSyncCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a SecretSync.
+     * @param {SecretSyncDeleteArgs} args - Arguments to delete one SecretSync.
+     * @example
+     * // Delete one SecretSync
+     * const SecretSync = await prisma.secretSync.delete({
+     *   where: {
+     *     // ... filter to delete one SecretSync
+     *   }
+     * })
+     * 
+     */
+    delete<T extends SecretSyncDeleteArgs>(args: SelectSubset<T, SecretSyncDeleteArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one SecretSync.
+     * @param {SecretSyncUpdateArgs} args - Arguments to update one SecretSync.
+     * @example
+     * // Update one SecretSync
+     * const secretSync = await prisma.secretSync.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends SecretSyncUpdateArgs>(args: SelectSubset<T, SecretSyncUpdateArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more SecretSyncs.
+     * @param {SecretSyncDeleteManyArgs} args - Arguments to filter SecretSyncs to delete.
+     * @example
+     * // Delete a few SecretSyncs
+     * const { count } = await prisma.secretSync.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends SecretSyncDeleteManyArgs>(args?: SelectSubset<T, SecretSyncDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more SecretSyncs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many SecretSyncs
+     * const secretSync = await prisma.secretSync.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends SecretSyncUpdateManyArgs>(args: SelectSubset<T, SecretSyncUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one SecretSync.
+     * @param {SecretSyncUpsertArgs} args - Arguments to update or create a SecretSync.
+     * @example
+     * // Update or create a SecretSync
+     * const secretSync = await prisma.secretSync.upsert({
+     *   create: {
+     *     // ... data to create a SecretSync
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the SecretSync we want to update
+     *   }
+     * })
+     */
+    upsert<T extends SecretSyncUpsertArgs>(args: SelectSubset<T, SecretSyncUpsertArgs<ExtArgs>>): Prisma__SecretSyncClient<$Result.GetResult<Prisma.$SecretSyncPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more SecretSyncs that matches the filter.
+     * @param {SecretSyncFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const secretSync = await prisma.secretSync.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: SecretSyncFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a SecretSync.
+     * @param {SecretSyncAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const secretSync = await prisma.secretSync.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: SecretSyncAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of SecretSyncs.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncCountArgs} args - Arguments to filter SecretSyncs to count.
+     * @example
+     * // Count the number of SecretSyncs
+     * const count = await prisma.secretSync.count({
+     *   where: {
+     *     // ... the filter for the SecretSyncs we want to count
+     *   }
+     * })
+    **/
+    count<T extends SecretSyncCountArgs>(
+      args?: Subset<T, SecretSyncCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], SecretSyncCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a SecretSync.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends SecretSyncAggregateArgs>(args: Subset<T, SecretSyncAggregateArgs>): Prisma.PrismaPromise<GetSecretSyncAggregateType<T>>
+
+    /**
+     * Group by SecretSync.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {SecretSyncGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends SecretSyncGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: SecretSyncGroupByArgs['orderBy'] }
+        : { orderBy?: SecretSyncGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, SecretSyncGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetSecretSyncGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the SecretSync model
+   */
+  readonly fields: SecretSyncFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for SecretSync.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__SecretSyncClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    secret<T extends SecretDefaultArgs<ExtArgs> = {}>(args?: Subset<T, SecretDefaultArgs<ExtArgs>>): Prisma__SecretClient<$Result.GetResult<Prisma.$SecretPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the SecretSync model
+   */
+  interface SecretSyncFieldRefs {
+    readonly id: FieldRef<"SecretSync", 'String'>
+    readonly secretId: FieldRef<"SecretSync", 'String'>
+    readonly provider: FieldRef<"SecretSync", 'String'>
+    readonly externalId: FieldRef<"SecretSync", 'String'>
+    readonly externalKey: FieldRef<"SecretSync", 'String'>
+    readonly status: FieldRef<"SecretSync", 'String'>
+    readonly lastSyncAt: FieldRef<"SecretSync", 'DateTime'>
+    readonly lastError: FieldRef<"SecretSync", 'String'>
+    readonly config: FieldRef<"SecretSync", 'Json'>
+    readonly createdAt: FieldRef<"SecretSync", 'DateTime'>
+    readonly updatedAt: FieldRef<"SecretSync", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * SecretSync findUnique
+   */
+  export type SecretSyncFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretSync to fetch.
+     */
+    where: SecretSyncWhereUniqueInput
+  }
+
+  /**
+   * SecretSync findUniqueOrThrow
+   */
+  export type SecretSyncFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretSync to fetch.
+     */
+    where: SecretSyncWhereUniqueInput
+  }
+
+  /**
+   * SecretSync findFirst
+   */
+  export type SecretSyncFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretSync to fetch.
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretSyncs to fetch.
+     */
+    orderBy?: SecretSyncOrderByWithRelationInput | SecretSyncOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecretSyncs.
+     */
+    cursor?: SecretSyncWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretSyncs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretSyncs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecretSyncs.
+     */
+    distinct?: SecretSyncScalarFieldEnum | SecretSyncScalarFieldEnum[]
+  }
+
+  /**
+   * SecretSync findFirstOrThrow
+   */
+  export type SecretSyncFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretSync to fetch.
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretSyncs to fetch.
+     */
+    orderBy?: SecretSyncOrderByWithRelationInput | SecretSyncOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for SecretSyncs.
+     */
+    cursor?: SecretSyncWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretSyncs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretSyncs.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of SecretSyncs.
+     */
+    distinct?: SecretSyncScalarFieldEnum | SecretSyncScalarFieldEnum[]
+  }
+
+  /**
+   * SecretSync findMany
+   */
+  export type SecretSyncFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter, which SecretSyncs to fetch.
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of SecretSyncs to fetch.
+     */
+    orderBy?: SecretSyncOrderByWithRelationInput | SecretSyncOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing SecretSyncs.
+     */
+    cursor?: SecretSyncWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` SecretSyncs from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` SecretSyncs.
+     */
+    skip?: number
+    distinct?: SecretSyncScalarFieldEnum | SecretSyncScalarFieldEnum[]
+  }
+
+  /**
+   * SecretSync create
+   */
+  export type SecretSyncCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * The data needed to create a SecretSync.
+     */
+    data: XOR<SecretSyncCreateInput, SecretSyncUncheckedCreateInput>
+  }
+
+  /**
+   * SecretSync createMany
+   */
+  export type SecretSyncCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many SecretSyncs.
+     */
+    data: SecretSyncCreateManyInput | SecretSyncCreateManyInput[]
+  }
+
+  /**
+   * SecretSync update
+   */
+  export type SecretSyncUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * The data needed to update a SecretSync.
+     */
+    data: XOR<SecretSyncUpdateInput, SecretSyncUncheckedUpdateInput>
+    /**
+     * Choose, which SecretSync to update.
+     */
+    where: SecretSyncWhereUniqueInput
+  }
+
+  /**
+   * SecretSync updateMany
+   */
+  export type SecretSyncUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update SecretSyncs.
+     */
+    data: XOR<SecretSyncUpdateManyMutationInput, SecretSyncUncheckedUpdateManyInput>
+    /**
+     * Filter which SecretSyncs to update
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * Limit how many SecretSyncs to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecretSync upsert
+   */
+  export type SecretSyncUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * The filter to search for the SecretSync to update in case it exists.
+     */
+    where: SecretSyncWhereUniqueInput
+    /**
+     * In case the SecretSync found by the `where` argument doesn't exist, create a new SecretSync with this data.
+     */
+    create: XOR<SecretSyncCreateInput, SecretSyncUncheckedCreateInput>
+    /**
+     * In case the SecretSync was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<SecretSyncUpdateInput, SecretSyncUncheckedUpdateInput>
+  }
+
+  /**
+   * SecretSync delete
+   */
+  export type SecretSyncDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
+    /**
+     * Filter which SecretSync to delete.
+     */
+    where: SecretSyncWhereUniqueInput
+  }
+
+  /**
+   * SecretSync deleteMany
+   */
+  export type SecretSyncDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which SecretSyncs to delete
+     */
+    where?: SecretSyncWhereInput
+    /**
+     * Limit how many SecretSyncs to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * SecretSync findRaw
+   */
+  export type SecretSyncFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * SecretSync aggregateRaw
+   */
+  export type SecretSyncAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * SecretSync without action
+   */
+  export type SecretSyncDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the SecretSync
+     */
+    select?: SecretSyncSelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the SecretSync
+     */
+    omit?: SecretSyncOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: SecretSyncInclude<ExtArgs> | null
   }
 
 
@@ -42827,6 +43996,23 @@ export namespace Prisma {
   export type SecretScalarFieldEnum = (typeof SecretScalarFieldEnum)[keyof typeof SecretScalarFieldEnum]
 
 
+  export const SecretSyncScalarFieldEnum: {
+    id: 'id',
+    secretId: 'secretId',
+    provider: 'provider',
+    externalId: 'externalId',
+    externalKey: 'externalKey',
+    status: 'status',
+    lastSyncAt: 'lastSyncAt',
+    lastError: 'lastError',
+    config: 'config',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type SecretSyncScalarFieldEnum = (typeof SecretSyncScalarFieldEnum)[keyof typeof SecretSyncScalarFieldEnum]
+
+
   export const SecretShareScalarFieldEnum: {
     id: 'id',
     secretId: 'secretId',
@@ -44089,6 +45275,7 @@ export namespace Prisma {
     referencedBy?: SecretListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
     shares?: SecretShareListRelationFilter
+    syncs?: SecretSyncListRelationFilter
   }
 
   export type SecretOrderByWithRelationInput = {
@@ -44116,6 +45303,7 @@ export namespace Prisma {
     referencedBy?: SecretOrderByRelationAggregateInput
     rotationSchedule?: RotationScheduleOrderByWithRelationInput
     shares?: SecretShareOrderByRelationAggregateInput
+    syncs?: SecretSyncOrderByRelationAggregateInput
   }
 
   export type SecretWhereUniqueInput = Prisma.AtLeast<{
@@ -44146,6 +45334,7 @@ export namespace Prisma {
     referencedBy?: SecretListRelationFilter
     rotationSchedule?: XOR<RotationScheduleNullableScalarRelationFilter, RotationScheduleWhereInput> | null
     shares?: SecretShareListRelationFilter
+    syncs?: SecretSyncListRelationFilter
   }, "id">
 
   export type SecretOrderByWithAggregationInput = {
@@ -44194,6 +45383,92 @@ export namespace Prisma {
     isReference?: BoolWithAggregatesFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableWithAggregatesFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
+  }
+
+  export type SecretSyncWhereInput = {
+    AND?: SecretSyncWhereInput | SecretSyncWhereInput[]
+    OR?: SecretSyncWhereInput[]
+    NOT?: SecretSyncWhereInput | SecretSyncWhereInput[]
+    id?: StringFilter<"SecretSync"> | string
+    secretId?: StringFilter<"SecretSync"> | string
+    provider?: StringFilter<"SecretSync"> | string
+    externalId?: StringFilter<"SecretSync"> | string
+    externalKey?: StringFilter<"SecretSync"> | string
+    status?: StringFilter<"SecretSync"> | string
+    lastSyncAt?: DateTimeNullableFilter<"SecretSync"> | Date | string | null
+    lastError?: StringNullableFilter<"SecretSync"> | string | null
+    config?: JsonNullableFilter<"SecretSync">
+    createdAt?: DateTimeFilter<"SecretSync"> | Date | string
+    updatedAt?: DateTimeFilter<"SecretSync"> | Date | string
+    secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
+  }
+
+  export type SecretSyncOrderByWithRelationInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    provider?: SortOrder
+    externalId?: SortOrder
+    externalKey?: SortOrder
+    status?: SortOrder
+    lastSyncAt?: SortOrder
+    lastError?: SortOrder
+    config?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    secret?: SecretOrderByWithRelationInput
+  }
+
+  export type SecretSyncWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    secretId_provider_externalId?: SecretSyncSecretIdProviderExternalIdCompoundUniqueInput
+    AND?: SecretSyncWhereInput | SecretSyncWhereInput[]
+    OR?: SecretSyncWhereInput[]
+    NOT?: SecretSyncWhereInput | SecretSyncWhereInput[]
+    secretId?: StringFilter<"SecretSync"> | string
+    provider?: StringFilter<"SecretSync"> | string
+    externalId?: StringFilter<"SecretSync"> | string
+    externalKey?: StringFilter<"SecretSync"> | string
+    status?: StringFilter<"SecretSync"> | string
+    lastSyncAt?: DateTimeNullableFilter<"SecretSync"> | Date | string | null
+    lastError?: StringNullableFilter<"SecretSync"> | string | null
+    config?: JsonNullableFilter<"SecretSync">
+    createdAt?: DateTimeFilter<"SecretSync"> | Date | string
+    updatedAt?: DateTimeFilter<"SecretSync"> | Date | string
+    secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
+  }, "id" | "secretId_provider_externalId">
+
+  export type SecretSyncOrderByWithAggregationInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    provider?: SortOrder
+    externalId?: SortOrder
+    externalKey?: SortOrder
+    status?: SortOrder
+    lastSyncAt?: SortOrder
+    lastError?: SortOrder
+    config?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: SecretSyncCountOrderByAggregateInput
+    _max?: SecretSyncMaxOrderByAggregateInput
+    _min?: SecretSyncMinOrderByAggregateInput
+  }
+
+  export type SecretSyncScalarWhereWithAggregatesInput = {
+    AND?: SecretSyncScalarWhereWithAggregatesInput | SecretSyncScalarWhereWithAggregatesInput[]
+    OR?: SecretSyncScalarWhereWithAggregatesInput[]
+    NOT?: SecretSyncScalarWhereWithAggregatesInput | SecretSyncScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"SecretSync"> | string
+    secretId?: StringWithAggregatesFilter<"SecretSync"> | string
+    provider?: StringWithAggregatesFilter<"SecretSync"> | string
+    externalId?: StringWithAggregatesFilter<"SecretSync"> | string
+    externalKey?: StringWithAggregatesFilter<"SecretSync"> | string
+    status?: StringWithAggregatesFilter<"SecretSync"> | string
+    lastSyncAt?: DateTimeNullableWithAggregatesFilter<"SecretSync"> | Date | string | null
+    lastError?: StringNullableWithAggregatesFilter<"SecretSync"> | string | null
+    config?: JsonNullableWithAggregatesFilter<"SecretSync">
+    createdAt?: DateTimeWithAggregatesFilter<"SecretSync"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"SecretSync"> | Date | string
   }
 
   export type SecretShareWhereInput = {
@@ -47136,6 +48411,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateInput = {
@@ -47160,6 +48436,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUpdateInput = {
@@ -47183,6 +48460,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateInput = {
@@ -47206,6 +48484,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretCreateManyInput = {
@@ -47264,6 +48543,99 @@ export namespace Prisma {
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
+  }
+
+  export type SecretSyncCreateInput = {
+    id?: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    secret: SecretCreateNestedOneWithoutSyncsInput
+  }
+
+  export type SecretSyncUncheckedCreateInput = {
+    id?: string
+    secretId: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SecretSyncUpdateInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    secret?: SecretUpdateOneRequiredWithoutSyncsNestedInput
+  }
+
+  export type SecretSyncUncheckedUpdateInput = {
+    secretId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecretSyncCreateManyInput = {
+    id?: string
+    secretId: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SecretSyncUpdateManyMutationInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecretSyncUncheckedUpdateManyInput = {
+    secretId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SecretShareCreateInput = {
@@ -50220,7 +51592,17 @@ export namespace Prisma {
     none?: SecretShareWhereInput
   }
 
+  export type SecretSyncListRelationFilter = {
+    every?: SecretSyncWhereInput
+    some?: SecretSyncWhereInput
+    none?: SecretSyncWhereInput
+  }
+
   export type SecretShareOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type SecretSyncOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -50296,6 +51678,52 @@ export namespace Prisma {
   export type SecretScalarRelationFilter = {
     is?: SecretWhereInput
     isNot?: SecretWhereInput
+  }
+
+  export type SecretSyncSecretIdProviderExternalIdCompoundUniqueInput = {
+    secretId: string
+    provider: string
+    externalId: string
+  }
+
+  export type SecretSyncCountOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    provider?: SortOrder
+    externalId?: SortOrder
+    externalKey?: SortOrder
+    status?: SortOrder
+    lastSyncAt?: SortOrder
+    lastError?: SortOrder
+    config?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SecretSyncMaxOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    provider?: SortOrder
+    externalId?: SortOrder
+    externalKey?: SortOrder
+    status?: SortOrder
+    lastSyncAt?: SortOrder
+    lastError?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type SecretSyncMinOrderByAggregateInput = {
+    id?: SortOrder
+    secretId?: SortOrder
+    provider?: SortOrder
+    externalId?: SortOrder
+    externalKey?: SortOrder
+    status?: SortOrder
+    lastSyncAt?: SortOrder
+    lastError?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
   }
 
   export type SecretShareCountOrderByAggregateInput = {
@@ -52668,6 +54096,13 @@ export namespace Prisma {
     connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
   }
 
+  export type SecretSyncCreateNestedManyWithoutSecretInput = {
+    create?: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput> | SecretSyncCreateWithoutSecretInput[] | SecretSyncUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretSyncCreateOrConnectWithoutSecretInput | SecretSyncCreateOrConnectWithoutSecretInput[]
+    createMany?: SecretSyncCreateManySecretInputEnvelope
+    connect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+  }
+
   export type SecretUncheckedCreateNestedManyWithoutSourceSecretInput = {
     create?: XOR<SecretCreateWithoutSourceSecretInput, SecretUncheckedCreateWithoutSourceSecretInput> | SecretCreateWithoutSourceSecretInput[] | SecretUncheckedCreateWithoutSourceSecretInput[]
     connectOrCreate?: SecretCreateOrConnectWithoutSourceSecretInput | SecretCreateOrConnectWithoutSourceSecretInput[]
@@ -52686,6 +54121,13 @@ export namespace Prisma {
     connectOrCreate?: SecretShareCreateOrConnectWithoutSecretInput | SecretShareCreateOrConnectWithoutSecretInput[]
     createMany?: SecretShareCreateManySecretInputEnvelope
     connect?: SecretShareWhereUniqueInput | SecretShareWhereUniqueInput[]
+  }
+
+  export type SecretSyncUncheckedCreateNestedManyWithoutSecretInput = {
+    create?: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput> | SecretSyncCreateWithoutSecretInput[] | SecretSyncUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretSyncCreateOrConnectWithoutSecretInput | SecretSyncCreateOrConnectWithoutSecretInput[]
+    createMany?: SecretSyncCreateManySecretInputEnvelope
+    connect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
   }
 
   export type SecretUpdatevalueInput = {
@@ -52769,6 +54211,20 @@ export namespace Prisma {
     deleteMany?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
   }
 
+  export type SecretSyncUpdateManyWithoutSecretNestedInput = {
+    create?: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput> | SecretSyncCreateWithoutSecretInput[] | SecretSyncUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretSyncCreateOrConnectWithoutSecretInput | SecretSyncCreateOrConnectWithoutSecretInput[]
+    upsert?: SecretSyncUpsertWithWhereUniqueWithoutSecretInput | SecretSyncUpsertWithWhereUniqueWithoutSecretInput[]
+    createMany?: SecretSyncCreateManySecretInputEnvelope
+    set?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    disconnect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    delete?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    connect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    update?: SecretSyncUpdateWithWhereUniqueWithoutSecretInput | SecretSyncUpdateWithWhereUniqueWithoutSecretInput[]
+    updateMany?: SecretSyncUpdateManyWithWhereWithoutSecretInput | SecretSyncUpdateManyWithWhereWithoutSecretInput[]
+    deleteMany?: SecretSyncScalarWhereInput | SecretSyncScalarWhereInput[]
+  }
+
   export type SecretUncheckedUpdateManyWithoutSourceSecretNestedInput = {
     create?: XOR<SecretCreateWithoutSourceSecretInput, SecretUncheckedCreateWithoutSourceSecretInput> | SecretCreateWithoutSourceSecretInput[] | SecretUncheckedCreateWithoutSourceSecretInput[]
     connectOrCreate?: SecretCreateOrConnectWithoutSourceSecretInput | SecretCreateOrConnectWithoutSourceSecretInput[]
@@ -52805,6 +54261,34 @@ export namespace Prisma {
     update?: SecretShareUpdateWithWhereUniqueWithoutSecretInput | SecretShareUpdateWithWhereUniqueWithoutSecretInput[]
     updateMany?: SecretShareUpdateManyWithWhereWithoutSecretInput | SecretShareUpdateManyWithWhereWithoutSecretInput[]
     deleteMany?: SecretShareScalarWhereInput | SecretShareScalarWhereInput[]
+  }
+
+  export type SecretSyncUncheckedUpdateManyWithoutSecretNestedInput = {
+    create?: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput> | SecretSyncCreateWithoutSecretInput[] | SecretSyncUncheckedCreateWithoutSecretInput[]
+    connectOrCreate?: SecretSyncCreateOrConnectWithoutSecretInput | SecretSyncCreateOrConnectWithoutSecretInput[]
+    upsert?: SecretSyncUpsertWithWhereUniqueWithoutSecretInput | SecretSyncUpsertWithWhereUniqueWithoutSecretInput[]
+    createMany?: SecretSyncCreateManySecretInputEnvelope
+    set?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    disconnect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    delete?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    connect?: SecretSyncWhereUniqueInput | SecretSyncWhereUniqueInput[]
+    update?: SecretSyncUpdateWithWhereUniqueWithoutSecretInput | SecretSyncUpdateWithWhereUniqueWithoutSecretInput[]
+    updateMany?: SecretSyncUpdateManyWithWhereWithoutSecretInput | SecretSyncUpdateManyWithWhereWithoutSecretInput[]
+    deleteMany?: SecretSyncScalarWhereInput | SecretSyncScalarWhereInput[]
+  }
+
+  export type SecretCreateNestedOneWithoutSyncsInput = {
+    create?: XOR<SecretCreateWithoutSyncsInput, SecretUncheckedCreateWithoutSyncsInput>
+    connectOrCreate?: SecretCreateOrConnectWithoutSyncsInput
+    connect?: SecretWhereUniqueInput
+  }
+
+  export type SecretUpdateOneRequiredWithoutSyncsNestedInput = {
+    create?: XOR<SecretCreateWithoutSyncsInput, SecretUncheckedCreateWithoutSyncsInput>
+    connectOrCreate?: SecretCreateOrConnectWithoutSyncsInput
+    upsert?: SecretUpsertWithoutSyncsInput
+    connect?: SecretWhereUniqueInput
+    update?: XOR<XOR<SecretUpdateToOneWithWhereWithoutSyncsInput, SecretUpdateWithoutSyncsInput>, SecretUncheckedUpdateWithoutSyncsInput>
   }
 
   export type SecretCreateNestedOneWithoutSharesInput = {
@@ -55405,6 +56889,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutProjectInput = {
@@ -55428,6 +56913,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutProjectInput = {
@@ -56013,6 +57499,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutBranchInput = {
@@ -56036,6 +57523,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutBranchInput = {
@@ -56241,6 +57729,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutReferencedByInput = {
@@ -56264,6 +57753,7 @@ export namespace Prisma {
     shadowValue?: SecretCreateshadowValueInput | string[]
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutReferencedByInput = {
@@ -56292,6 +57782,7 @@ export namespace Prisma {
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutSourceSecretInput = {
@@ -56315,6 +57806,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutSourceSecretInput = {
@@ -56394,6 +57886,41 @@ export namespace Prisma {
 
   export type SecretShareCreateManySecretInputEnvelope = {
     data: SecretShareCreateManySecretInput | SecretShareCreateManySecretInput[]
+  }
+
+  export type SecretSyncCreateWithoutSecretInput = {
+    id?: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SecretSyncUncheckedCreateWithoutSecretInput = {
+    id?: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type SecretSyncCreateOrConnectWithoutSecretInput = {
+    where: SecretSyncWhereUniqueInput
+    create: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput>
+  }
+
+  export type SecretSyncCreateManySecretInputEnvelope = {
+    data: SecretSyncCreateManySecretInput | SecretSyncCreateManySecretInput[]
   }
 
   export type ProjectUpsertWithoutSecretsInput = {
@@ -56525,6 +58052,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutReferencedByInput = {
@@ -56547,6 +58075,7 @@ export namespace Prisma {
     shadowValue?: SecretUpdateshadowValueInput | string[]
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUpsertWithWhereUniqueWithoutSourceSecretInput = {
@@ -56638,6 +58167,149 @@ export namespace Prisma {
     label?: StringNullableFilter<"SecretShare"> | string | null
   }
 
+  export type SecretSyncUpsertWithWhereUniqueWithoutSecretInput = {
+    where: SecretSyncWhereUniqueInput
+    update: XOR<SecretSyncUpdateWithoutSecretInput, SecretSyncUncheckedUpdateWithoutSecretInput>
+    create: XOR<SecretSyncCreateWithoutSecretInput, SecretSyncUncheckedCreateWithoutSecretInput>
+  }
+
+  export type SecretSyncUpdateWithWhereUniqueWithoutSecretInput = {
+    where: SecretSyncWhereUniqueInput
+    data: XOR<SecretSyncUpdateWithoutSecretInput, SecretSyncUncheckedUpdateWithoutSecretInput>
+  }
+
+  export type SecretSyncUpdateManyWithWhereWithoutSecretInput = {
+    where: SecretSyncScalarWhereInput
+    data: XOR<SecretSyncUpdateManyMutationInput, SecretSyncUncheckedUpdateManyWithoutSecretInput>
+  }
+
+  export type SecretSyncScalarWhereInput = {
+    AND?: SecretSyncScalarWhereInput | SecretSyncScalarWhereInput[]
+    OR?: SecretSyncScalarWhereInput[]
+    NOT?: SecretSyncScalarWhereInput | SecretSyncScalarWhereInput[]
+    id?: StringFilter<"SecretSync"> | string
+    secretId?: StringFilter<"SecretSync"> | string
+    provider?: StringFilter<"SecretSync"> | string
+    externalId?: StringFilter<"SecretSync"> | string
+    externalKey?: StringFilter<"SecretSync"> | string
+    status?: StringFilter<"SecretSync"> | string
+    lastSyncAt?: DateTimeNullableFilter<"SecretSync"> | Date | string | null
+    lastError?: StringNullableFilter<"SecretSync"> | string | null
+    config?: JsonNullableFilter<"SecretSync">
+    createdAt?: DateTimeFilter<"SecretSync"> | Date | string
+    updatedAt?: DateTimeFilter<"SecretSync"> | Date | string
+  }
+
+  export type SecretCreateWithoutSyncsInput = {
+    id?: string
+    key: string
+    value?: SecretCreatevalueInput | string[]
+    description: string
+    environmentType: string
+    version: string
+    type: string
+    history: InputJsonValue
+    lastUpdated?: Date | string
+    updatedBy: string
+    permission?: SecretCreatepermissionInput | string[]
+    expiryDate?: Date | string | null
+    rotationPolicy: string
+    isReference?: boolean
+    shadowValue?: SecretCreateshadowValueInput | string[]
+    project: ProjectCreateNestedOneWithoutSecretsInput
+    branch?: BranchCreateNestedOneWithoutSecretsInput
+    sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
+    referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
+    rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    shares?: SecretShareCreateNestedManyWithoutSecretInput
+  }
+
+  export type SecretUncheckedCreateWithoutSyncsInput = {
+    id?: string
+    key: string
+    value?: SecretCreatevalueInput | string[]
+    description: string
+    environmentType: string
+    version: string
+    projectId: string
+    branchId?: string | null
+    type: string
+    history: InputJsonValue
+    lastUpdated?: Date | string
+    updatedBy: string
+    permission?: SecretCreatepermissionInput | string[]
+    expiryDate?: Date | string | null
+    rotationPolicy: string
+    isReference?: boolean
+    sourceSecretId?: string | null
+    shadowValue?: SecretCreateshadowValueInput | string[]
+    referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
+    rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+  }
+
+  export type SecretCreateOrConnectWithoutSyncsInput = {
+    where: SecretWhereUniqueInput
+    create: XOR<SecretCreateWithoutSyncsInput, SecretUncheckedCreateWithoutSyncsInput>
+  }
+
+  export type SecretUpsertWithoutSyncsInput = {
+    update: XOR<SecretUpdateWithoutSyncsInput, SecretUncheckedUpdateWithoutSyncsInput>
+    create: XOR<SecretCreateWithoutSyncsInput, SecretUncheckedCreateWithoutSyncsInput>
+    where?: SecretWhereInput
+  }
+
+  export type SecretUpdateToOneWithWhereWithoutSyncsInput = {
+    where?: SecretWhereInput
+    data: XOR<SecretUpdateWithoutSyncsInput, SecretUncheckedUpdateWithoutSyncsInput>
+  }
+
+  export type SecretUpdateWithoutSyncsInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: SecretUpdatevalueInput | string[]
+    description?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    type?: StringFieldUpdateOperationsInput | string
+    history?: InputJsonValue | InputJsonValue
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedBy?: StringFieldUpdateOperationsInput | string
+    permission?: SecretUpdatepermissionInput | string[]
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotationPolicy?: StringFieldUpdateOperationsInput | string
+    isReference?: BoolFieldUpdateOperationsInput | boolean
+    shadowValue?: SecretUpdateshadowValueInput | string[]
+    project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
+    branch?: BranchUpdateOneWithoutSecretsNestedInput
+    sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
+    referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
+    rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUpdateManyWithoutSecretNestedInput
+  }
+
+  export type SecretUncheckedUpdateWithoutSyncsInput = {
+    key?: StringFieldUpdateOperationsInput | string
+    value?: SecretUpdatevalueInput | string[]
+    description?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    version?: StringFieldUpdateOperationsInput | string
+    projectId?: StringFieldUpdateOperationsInput | string
+    branchId?: NullableStringFieldUpdateOperationsInput | string | null
+    type?: StringFieldUpdateOperationsInput | string
+    history?: InputJsonValue | InputJsonValue
+    lastUpdated?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedBy?: StringFieldUpdateOperationsInput | string
+    permission?: SecretUpdatepermissionInput | string[]
+    expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    rotationPolicy?: StringFieldUpdateOperationsInput | string
+    isReference?: BoolFieldUpdateOperationsInput | boolean
+    sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
+    shadowValue?: SecretUpdateshadowValueInput | string[]
+    referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
+    rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+  }
+
   export type SecretCreateWithoutSharesInput = {
     id?: string
     key: string
@@ -56659,6 +58331,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleCreateNestedOneWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutSharesInput = {
@@ -56682,6 +58355,7 @@ export namespace Prisma {
     shadowValue?: SecretCreateshadowValueInput | string[]
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     rotationSchedule?: RotationScheduleUncheckedCreateNestedOneWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutSharesInput = {
@@ -56720,6 +58394,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutSharesInput = {
@@ -56742,6 +58417,7 @@ export namespace Prisma {
     shadowValue?: SecretUpdateshadowValueInput | string[]
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretCreateWithoutRotationScheduleInput = {
@@ -56765,6 +58441,7 @@ export namespace Prisma {
     sourceSecret?: SecretCreateNestedOneWithoutReferencedByInput
     referencedBy?: SecretCreateNestedManyWithoutSourceSecretInput
     shares?: SecretShareCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncCreateNestedManyWithoutSecretInput
   }
 
   export type SecretUncheckedCreateWithoutRotationScheduleInput = {
@@ -56788,6 +58465,7 @@ export namespace Prisma {
     shadowValue?: SecretCreateshadowValueInput | string[]
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
     shares?: SecretShareUncheckedCreateNestedManyWithoutSecretInput
+    syncs?: SecretSyncUncheckedCreateNestedManyWithoutSecretInput
   }
 
   export type SecretCreateOrConnectWithoutRotationScheduleInput = {
@@ -56851,6 +58529,7 @@ export namespace Prisma {
     sourceSecret?: SecretUpdateOneWithoutReferencedByNestedInput
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutRotationScheduleInput = {
@@ -56873,6 +58552,7 @@ export namespace Prisma {
     shadowValue?: SecretUpdateshadowValueInput | string[]
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type RotationLogUpsertWithWhereUniqueWithoutScheduleInput = {
@@ -61330,6 +63010,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutProjectInput = {
@@ -61352,6 +63033,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutProjectInput = {
@@ -61568,6 +63250,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutBranchInput = {
@@ -61590,6 +63273,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutBranchInput = {
@@ -61643,6 +63327,19 @@ export namespace Prisma {
     label?: string | null
   }
 
+  export type SecretSyncCreateManySecretInput = {
+    id?: string
+    provider: string
+    externalId: string
+    externalKey: string
+    status?: string
+    lastSyncAt?: Date | string | null
+    lastError?: string | null
+    config?: InputJsonValue | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
   export type SecretUpdateWithoutSourceSecretInput = {
     key?: StringFieldUpdateOperationsInput | string
     value?: SecretUpdatevalueInput | string[]
@@ -61663,6 +63360,7 @@ export namespace Prisma {
     referencedBy?: SecretUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateWithoutSourceSecretInput = {
@@ -61685,6 +63383,7 @@ export namespace Prisma {
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
     rotationSchedule?: RotationScheduleUncheckedUpdateOneWithoutSecretNestedInput
     shares?: SecretShareUncheckedUpdateManyWithoutSecretNestedInput
+    syncs?: SecretSyncUncheckedUpdateManyWithoutSecretNestedInput
   }
 
   export type SecretUncheckedUpdateManyWithoutSourceSecretInput = {
@@ -61737,6 +63436,42 @@ export namespace Prisma {
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     label?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type SecretSyncUpdateWithoutSecretInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecretSyncUncheckedUpdateWithoutSecretInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type SecretSyncUncheckedUpdateManyWithoutSecretInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    externalId?: StringFieldUpdateOperationsInput | string
+    externalKey?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    lastSyncAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    lastError?: NullableStringFieldUpdateOperationsInput | string | null
+    config?: InputJsonValue | InputJsonValue | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type RotationLogCreateManyScheduleInput = {

@@ -36,12 +36,15 @@ export async function logSecurityEvent(data: SecurityEventLog) {
     // If using Vercel, use `waitUntil`. But standard Node.js, we can fire and forget if process stays alive.
     // Safest is to await. Optimizing DB write is better.
 
+    // Handle Service Account IDs (strip sa_ prefix for MongoDB ObjectId compatibility)
+    const cleanUserId = data.userId?.startsWith("sa_") ? data.userId.replace("sa_", "") : data.userId;
+
     await prisma.securityEvent.create({
       data: {
         eventId: randomUUID(),
         timestamp: new Date(),
         
-        userId: data.userId,
+        userId: cleanUserId,
         userEmail: data.userEmail,
         tier: data.tier,
         apiKeyId: data.apiKeyId,
