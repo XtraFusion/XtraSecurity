@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { verifyAuth } from "@/lib/server-auth";
+import { withSecurity } from "@/lib/api-middleware";
 
 export const dynamic = 'force-dynamic';
 
 // GET /api/access/list
-export async function GET(req: NextRequest) {
-  try {
-    const auth = await verifyAuth(req);
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+export const GET = withSecurity(async (req: NextRequest, _context: any, auth: any) => {
     const url = new URL(req.url);
     const mode = url.searchParams.get("mode") || "my"; // "my" requests or "pending" approvals
     const workspaceId = url.searchParams.get("workspaceId");
@@ -75,9 +69,4 @@ export async function GET(req: NextRequest) {
     }));
 
     return NextResponse.json(enrichedRequests);
-
-  } catch (error: any) {
-    console.error("Access list error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});

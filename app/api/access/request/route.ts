@@ -1,15 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { verifyAuth } from "@/lib/server-auth";
+import { withSecurity } from "@/lib/api-middleware";
 
 // POST /api/access/request
-export async function POST(req: NextRequest) {
-  try {
-    const auth = await verifyAuth(req);
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+export const POST = withSecurity(async (req: NextRequest, _context: any, auth: any) => {
     const { secretId, secretIds, projectId, reason, duration, workspaceId } = await req.json();
 
     if (!reason || !duration) {
@@ -103,7 +97,6 @@ export async function POST(req: NextRequest) {
             }
         } catch (notifErr) {
             console.error("Failed to create notifications for access request:", notifErr);
-            // Don't fail the request if notifications fail
         }
     }
 
@@ -113,50 +106,29 @@ export async function POST(req: NextRequest) {
         requestId: request.id,
         status: request.status
     });
-
-  } catch (error: any) {
-    console.error("Access request error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});
 
 // GET /api/access/request?id=...
-export async function GET(req: NextRequest) {
-    try {
-        const auth = await verifyAuth(req);
-        if (!auth) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const id = req.nextUrl.searchParams.get("id");
-        if (!id) {
-            return NextResponse.json({ error: "Request ID is required" }, { status: 400 });
-        }
-
-        const request = await prisma.accessRequest.findUnique({
-            where: { id },
-            select: {
-                id: true,
-                status: true,
-                expiresAt: true,
-                projectId: true,
-                secretIds: true
-            }
-        });
-
-        if (!request) {
-            return NextResponse.json({ error: "Access request not found" }, { status: 404 });
-        }
-
-        // Verify ownership (only the user or an admin can see the status)
-        // For simplicity, allowed for the requester
-        // TODO: check admin permissions if needed
-        if (request.status !== "pending" && !request.projectId) {
-            // ...
-        }
-
-        return NextResponse.json(request);
-    } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+export const GET = withSecurity(async (req: NextRequest, _context: any, _auth: any) => {
+    const id = req.nextUrl.searchParams.get("id");
+    if (!id) {
+        return NextResponse.json({ error: "Request ID is required" }, { status: 400 });
     }
-}
+
+    const request = await prisma.accessRequest.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            status: true,
+            expiresAt: true,
+            projectId: true,
+            secretIds: true
+        }
+    });
+
+    if (!request) {
+        return NextResponse.json({ error: "Access request not found" }, { status: 404 });
+    }
+
+    return NextResponse.json(request);
+});

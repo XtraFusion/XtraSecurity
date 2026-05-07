@@ -16,7 +16,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 // Import the complete CLI reference data
-import cliData from "@/../CLI_COMMANDS_REFERENCE.json";
+import cliData from "@/CLI_COMMANDS_REFERENCE.json";
 
 interface CommandOption {
   flag: string;

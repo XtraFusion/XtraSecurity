@@ -1,19 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { verifyAuth } from "@/lib/server-auth";
+import { withSecurity } from "@/lib/api-middleware";
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(req: NextRequest) {
-  // 1. Authentication
-  const auth = await verifyAuth(req);
-  if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withSecurity(async (req: NextRequest, _context: any, auth: any) => {
   // Resolve a real MongoDB ObjectId userId.
-  // Service accounts have userId = "sa_<serviceAccountId>" which is not a valid ObjectId.
-  // In that case, resolve the owning user of the project instead.
   let userId = auth.userId;
   if (auth.isServiceAccount && auth.projectId) {
     try {
@@ -43,8 +35,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid format. Expected 'logs' array." }, { status: 400 });
   }
 
-  let count = 0;
-
   // 3. Chain & Insert Logs (Tamper-Evident)
   const { createHash } = require("crypto");
   
@@ -72,7 +62,7 @@ export async function POST(req: NextRequest) {
             workspaceId = project.workspaceId;
           }
         } catch (e) {
-          // Ignore error, workspaceId will remain undefined
+          // Ignore error
         }
       }
       
@@ -105,15 +95,9 @@ export async function POST(req: NextRequest) {
       previousHash = currentHash;
   }
 
-  try {
-      await prisma.auditLog.createMany({
-          data: auditEntries
-      });
-      count = auditEntries.length;
-  } catch (error: any) {
-      console.error("Failed to insert audit logs:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
-  }
+  await prisma.auditLog.createMany({
+      data: auditEntries
+  });
 
-  return NextResponse.json({ success: true, count });
-}
+  return NextResponse.json({ success: true, count: auditEntries.length });
+});

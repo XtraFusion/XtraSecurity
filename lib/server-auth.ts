@@ -4,7 +4,6 @@ import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import jwt from "jsonwebtoken";
 import { hashApiKey } from "@/lib/auth/service-account";
-import { incrementDailyUsage } from "@/lib/usage";
 import { redis } from "@/lib/redis";
 
 export interface AuthSession {
@@ -61,7 +60,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
             const cached = await redis.get(cacheKey);
             if (cached) {
                 const parsedSession = JSON.parse(cached) as AuthSession;
-                incrementDailyUsage(parsedSession.userId);
                 return parsedSession;
             }
         } catch (err) {
@@ -120,7 +118,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
       }
 
       if (sessionData) {
-          incrementDailyUsage(sessionData.userId);
           
           if (redis) {
               // Cache for 5 minutes
@@ -141,7 +138,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
             const decoded = jwt.verify(apiKey, secret) as any;
             if (decoded && decoded.type === "cli-token") {
                 const userId = decoded.userId || decoded.id;
-                incrementDailyUsage(userId);
                 return {
                     userId,
                     email: decoded.email,
@@ -164,7 +160,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
                     where: { id: decoded.serviceAccountId }
                 });
                 if (sa) {
-                    incrementDailyUsage(`sa_${sa.id}`);
                     return {
                         userId: decoded.userId || `sa_${sa.id}`,
                         email: decoded.email || `sa_${sa.name}@bot`,
@@ -190,7 +185,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
 
                 if (user) {
                     const resolvedRole = await resolveUserRole(user.id, user.role);
-                    incrementDailyUsage(user.id);
                     return {
                         userId: user.id,
                         email: user.email,
@@ -208,7 +202,6 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
   // 2. Check Session Cookie (NextAuth)
   const session = await getServerSession(authOptions);
   if (session && session.user && session.user.id) {
-    incrementDailyUsage(session.user.id);
     return {
       userId: session.user.id,
       email: session.user.email,

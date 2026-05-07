@@ -1,18 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { verifyAuth } from "@/lib/server-auth";
+import { withSecurity } from "@/lib/api-middleware";
 
 // POST /api/access/approve
-export async function POST(req: NextRequest) {
-  try {
-    const auth = await verifyAuth(req);
-    if (!auth) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
+export const POST = withSecurity(async (req: NextRequest, _context: any, auth: any) => {
     // Role check: Only admin or high privileged user can approve
-    // For MVP, we assume any authenticated user with "admin" role
-    // Or anyone for demo purposes? Let's stick to "admin" strictly if role exists.
     const { requestId, decision } = await req.json(); // decision: "approved" | "rejected"
     
     if (!requestId || !decision) {
@@ -25,10 +17,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Enforce Workspace RBAC
-    // The request has a workspaceId. The approver must be Admin/Owner of THAT workspace.
-    // If workspaceId is missing (legacy?), fallback to global admin check or deny.
     if (!request.workspaceId) {
-         // Fallback or stricter check
          return NextResponse.json({ error: "Invalid request (missing workspaceId)" }, { status: 400 });
     }
 
@@ -36,7 +25,6 @@ export async function POST(req: NextRequest) {
     const role = await getUserWorkspaceRole(auth.userId, request.workspaceId);
 
     if (!role || (role !== "owner" && role !== "admin")) {
-         await import("@/lib/permissions"); // Ensure import? (already done)
          return NextResponse.json({ error: "Forbidden: Only workspace admins can approve requests" }, { status: 403 });
     }
 
@@ -74,9 +62,4 @@ export async function POST(req: NextRequest) {
         status: updated.status,
         expiresAt: updated.expiresAt
     });
-
-  } catch (error: any) {
-    console.error("Access approval error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
-  }
-}
+});
