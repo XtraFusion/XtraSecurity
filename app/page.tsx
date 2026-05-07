@@ -343,6 +343,7 @@ function getIcon(iconName: string, size: number = 24) {
     history: "past",
     "shield-check": "verified-badge",
     "git-branch": "git-branch",
+    container: "docker",
     settings: "settings"
   };
 
