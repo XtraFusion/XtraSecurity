@@ -452,9 +452,9 @@ function Navbar() {
 
   return (
     <motion.nav
-      initial={{ y: -80, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+      initial={{ y: -20 }}
+      animate={{ y: 0 }}
+      transition={{ duration: 0.3 }}
       className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 transition-all duration-300 ${scrolled
         ? "bg-[#0a0f1e]/90 backdrop-blur-xl border-b border-white/[0.06] shadow-2xl"
         : "bg-transparent"
@@ -462,7 +462,7 @@ function Navbar() {
     >
       {/* Logo */}
       <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline">
-        <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo - The Ultimate Environment Manager" width={28} height={28} className="rounded-md" />
+        <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo - Best Free Environment Manager" width={28} height={28} className="rounded-md" priority />
         <span className="text-white">Xtra<span className="text-cyan-400">Security</span></span>
       </Link>
 
@@ -649,9 +649,9 @@ function HeroSection() {
 
       {/* Badge */}
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6 }}
+        initial={{ y: 12 }}
+        animate={{ y: 0 }}
+        transition={{ duration: 0.4 }}
         className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur text-xs font-semibold text-slate-400 mb-8"
       >
         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
@@ -661,9 +661,9 @@ function HeroSection() {
 
       {/* H1 */}
       <motion.h1
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+        initial={{ y: 16 }}
+        animate={{ y: 0 }}
+        transition={{ delay: 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8"
       >
         <span className="text-white">Best Free Env Manager</span>
