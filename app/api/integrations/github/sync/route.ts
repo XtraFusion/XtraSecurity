@@ -284,6 +284,19 @@ export async function DELETE(req: NextRequest) {
     );
 
     if (deleteRes.status === 204 || deleteRes.ok) {
+      try {
+        await prisma.auditLog.create({
+          data: {
+            userId: auth.userId,
+            action: "github_secret_delete",
+            entity: "project",
+            entityId: "integration", // Project ID isn't directly passed here
+            changes: { repo: `${repoOwner}/${repoName}`, secretName }
+          }
+        });
+      } catch (e) {
+        console.error("Audit log failed:", e);
+      }
       return NextResponse.json({ success: true, deleted: secretName });
     }
 

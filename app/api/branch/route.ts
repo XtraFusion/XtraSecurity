@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { decrypt } from "@/lib/encription";
+import { logAudit } from "@/lib/audit";
 
 export const dynamic = 'force-dynamic';
 
@@ -166,6 +167,18 @@ export async function POST(request: NextRequest) {
       await prisma.secret.deleteMany({
         where: { branchId }
       });
+
+      try {
+        await logAudit(
+          "BRANCH_CLEARED",
+          auth.userId,
+          branchToClear.projectId,
+          { branchId, branchName: branchToClear.name }
+        );
+      } catch (e) {
+        console.error("Audit log failed:", e);
+      }
+
       return NextResponse.json({ message: "Branch cleared successfully" });
     }
 
@@ -238,6 +251,17 @@ export async function POST(request: NextRequest) {
       }
     });
 
+    try {
+      await logAudit(
+        "BRANCH_CREATED",
+        auth.userId,
+        projectId,
+        { branchId: branch.id, branchName: name }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
+
     return NextResponse.json(branch, { status: 201 });
   } catch (error) {
     console.error("Error creating branch:", error);
@@ -297,6 +321,17 @@ export async function DELETE(request: NextRequest) {
     const branch = await prisma.branch.delete({
       where: { id }
     });
+
+    try {
+      await logAudit(
+        "BRANCH_DELETED",
+        auth.userId,
+        existingBranch.projectId,
+        { branchId: id, branchName: existingBranch.name }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json(
       { message: "Branch deleted successfully", branch },
@@ -371,6 +406,17 @@ export async function PUT(request: NextRequest) {
         project: true
       }
     });
+
+    try {
+      await logAudit(
+        "BRANCH_UPDATED",
+        auth.userId,
+        existingBranch.projectId,
+        { branchId: id, branchName: branch.name, updates: { name, description, versionNo, permissions } }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json(branch);
   } catch (error) {

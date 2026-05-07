@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const url = new URL(req.url);
     const timeRange = url.searchParams.get("range") || "7d"; // 24h, 7d, 30d
@@ -22,13 +21,13 @@ export async function GET(req: Request) {
     }
 
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId);
 
     const projectWhereClause: any = { workspaceId };
     if (role !== "owner" && role !== "admin") {
       projectWhereClause.OR = [
-        { userId: session.user.id },
-        { teamProjects: { some: { team: { members: { some: { userId: session.user.id, status: "active" } } } } } }
+        { userId: auth.userId },
+        { teamProjects: { some: { team: { members: { some: { userId: auth.userId, status: "active" } } } } } }
       ];
     }
 
@@ -51,7 +50,7 @@ export async function GET(req: Request) {
       ? { workspaceId }
       : { 
           OR: [
-            { userId: session.user.id },
+            { userId: auth.userId },
             { entityId: { in: wsProjectIds } }
           ]
         };
@@ -100,7 +99,7 @@ export async function GET(req: Request) {
           timestamp: { $gte: startDate },
           ...(role === "owner" || role === "admin" 
               ? { workspaceId: { $oid: workspaceId } } 
-              : { $or: [{ userId: { $oid: session.user.id } }, { entityId: { $in: wsProjectIds.map(id => ({ $oid: id })) } }] })
+              : { $or: [{ userId: { $oid: auth.userId } }, { entityId: { $in: wsProjectIds.map(id => ({ $oid: id })) } }] })
         } 
       }
     ];

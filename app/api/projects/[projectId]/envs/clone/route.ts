@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { triggerWebhooks } from "@/lib/webhook";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: NextRequest,
@@ -40,6 +41,10 @@ export async function POST(
     const branch = await prisma.branch.findFirst({
         where: { projectId, name: branchName }
     });
+ 
+    if (!branch) {
+        return NextResponse.json({ error: `Branch '${branchName}' not found` }, { status: 404 });
+    }
 
     console.log("DEBUG: Clone Request", { fromEnv, toEnv, branchName, branchId: branch.id });
     console.log("DEBUG: Total Project Secrets:", project.secrets.length);
@@ -130,6 +135,17 @@ export async function POST(
         skipped: skippedCount,
         updatedBy: userId
     });
+
+    try {
+      await logAudit(
+        "ENVIRONMENT_CLONED",
+        userId,
+        projectId,
+        { fromEnv, toEnv, branchName, copiedCount, updatedCount }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json({ 
         success: true, 

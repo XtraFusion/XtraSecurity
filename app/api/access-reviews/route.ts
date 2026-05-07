@@ -1,14 +1,13 @@
 import { NextResponse, NextRequest } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getUserWorkspaceRole } from "@/lib/permissions";
+import { verifyAuth } from "@/lib/server-auth";
 
 // GET /api/access-reviews?workspaceId=xxx - List users in the workspace for review
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const workspaceId = searchParams.get("workspaceId");
@@ -18,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Only workspace owners/admins can perform access reviews
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId);
     if (role !== "owner" && role !== "admin") {
       return NextResponse.json({ error: "Forbidden: Only workspace owners and admins can conduct access reviews." }, { status: 403 });
     }
@@ -54,7 +53,7 @@ export async function GET(req: NextRequest) {
         ...teamMemberships.map(m => m.userId),
         ...projectsInWorkspace.map(p => p.userId)
       ])
-    ].filter(id => id !== session.user.id);
+    ].filter(id => id !== auth.userId);
 
     if (allUserIds.length === 0) {
       return NextResponse.json([]);
@@ -121,20 +120,20 @@ export async function GET(req: NextRequest) {
 // POST /api/access-reviews - Start a new review cycle for a workspace
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { workspaceId } = await req.json();
     if (!workspaceId) return NextResponse.json({ error: "workspaceId is required" }, { status: 400 });
 
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId);
     if (role !== "owner" && role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
     await prisma.auditLog.create({
       data: {
-        userId: session.user.id,
+        userId: auth.userId,
         action: "access_review_start",
         entity: "workspace",
         entityId: workspaceId,
@@ -152,8 +151,8 @@ export async function POST(req: Request) {
 // PUT /api/access-reviews - Approve or revoke a user's access within a workspace
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
     const { userId, decision, workspaceId } = body;
@@ -162,7 +161,7 @@ export async function PUT(req: Request) {
       return NextResponse.json({ error: "Invalid request: userId, workspaceId, and decision are required." }, { status: 400 });
     }
 
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId);
     if (role !== "owner" && role !== "admin") {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -171,9 +170,9 @@ export async function PUT(req: Request) {
     const review = await prisma.accessReview.create({
       data: {
         userId,
-        reviewerId: session.user.id,
+        reviewerId: auth.userId,
         status: decision === "approve" ? "approved" : "revoked",
-        notes: `${decision === "approve" ? "Access approved" : "Access revoked"} by ${session.user.name} in workspace ${workspaceId}`
+        notes: `${decision === "approve" ? "Access approved" : "Access revoked"} by ${auth.name} in workspace ${workspaceId}`
       }
     });
 
@@ -211,7 +210,7 @@ export async function PUT(req: Request) {
       // 5. Audit log
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId: auth.userId,
           action: "access_revoked",
           entity: "user",
           entityId: userId,
@@ -227,7 +226,7 @@ export async function PUT(req: Request) {
       // Audit approval
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId: auth.userId,
           action: "access_approved",
           entity: "user",
           entityId: userId,

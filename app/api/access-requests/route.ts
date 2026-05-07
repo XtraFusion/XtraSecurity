@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 // POST /api/access-requests -> Create a new request
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -44,7 +43,7 @@ export async function POST(req: NextRequest) {
     if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const roleInWorkspace = await getUserWorkspaceRole(session.user.id, project.workspaceId);
+    const roleInWorkspace = await getUserWorkspaceRole(auth.userId, project.workspaceId);
 
     if (!roleInWorkspace) {
         return NextResponse.json({ error: "You do not have access to this workspace" }, { status: 403 });
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest) {
 
     const request = await prisma.accessRequest.create({
       data: {
-        userId: session.user.id,
+        userId: auth.userId,
         secretIds: secretId ? [secretId] : [],
         projectId: targetProjectId,
         reason,
@@ -73,8 +72,8 @@ export async function POST(req: NextRequest) {
 // GET /api/access-requests -> List requests
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -97,13 +96,13 @@ export async function GET(req: NextRequest) {
         const project = await prisma.project.findUnique({ where: { id: projectId }, select: { workspaceId: true } });
         if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
         targetWorkspaceId = project.workspaceId;
-        role = await getUserProjectRole(session.user.id, projectId);
-        if (!role) role = await getUserWorkspaceRole(session.user.id, targetWorkspaceId);
+        role = await getUserProjectRole(auth.userId, projectId);
+        if (!role) role = await getUserWorkspaceRole(auth.userId, targetWorkspaceId);
     } else if (workspaceId) {
-        role = await getUserWorkspaceRole(session.user.id, workspaceId);
+        role = await getUserWorkspaceRole(auth.userId, workspaceId);
     }
 
-    const isGlobalAdmin = session.user.role === "admin";
+    const isGlobalAdmin = auth.role === "admin";
 
     if (!role && !isGlobalAdmin) {
          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
@@ -118,7 +117,7 @@ export async function GET(req: NextRequest) {
     // Admins/Owners see all requests for the workspace/project
     // Members/Viewers see only their own requests
     if (!isGlobalAdmin && role !== "admin" && role !== "owner") {
-      whereClause.userId = session.user.id;
+      whereClause.userId = auth.userId;
     }
 
     const requests = await prisma.accessRequest.findMany({

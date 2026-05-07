@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { createNotification } from "@/lib/notifications";
+import { logAudit } from "@/lib/audit";
 
 // POST /api/jit/claim — Consume a JIT link and create an access request
 export async function POST(req: NextRequest) {
@@ -88,6 +89,17 @@ export async function POST(req: NextRequest) {
       where: { id: jitLink.id },
       data: { usedCount: { increment: 1 } },
     });
+
+    try {
+      await logAudit(
+        "JIT_LINK_CLAIMED",
+        auth.userId,
+        jitLink.projectId,
+        { tokenId: jitLink.id, requestId: accessRequest.id }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     // Notify workspace admins
     const project = await prisma.project.findUnique({

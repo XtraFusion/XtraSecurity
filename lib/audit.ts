@@ -1,7 +1,31 @@
 import { createHash } from "crypto";
-import prisma from "@/lib/db"; // Assuming default export based on cli-logs route
+import prisma from "@/lib/db";
+import { headers } from "next/headers";
 
 const GENESIS_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
+
+export async function logAudit(action: string, userId: string, entityId: string, changes: any = {}) {
+  let ipAddress: string | undefined;
+  let userAgent: string | undefined;
+
+  try {
+    const headersList = await headers();
+    ipAddress = headersList.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1";
+    userAgent = headersList.get("user-agent") || undefined;
+  } catch (e) {
+    // Fallback if headers() is called outside request scope
+  }
+
+  return await createTamperEvidentLog({
+    action,
+    userId,
+    entity: "project", // Most entities mapped here use projectId as entityId
+    entityId,
+    changes,
+    ipAddress,
+    userAgent
+  });
+}
 
 interface AuditLogData {
   userId: string;
@@ -11,6 +35,8 @@ interface AuditLogData {
   changes: any;
   workspaceId?: string;
   timestamp?: Date;
+  ipAddress?: string;
+  userAgent?: string;
 }
 
 /**
@@ -55,7 +81,9 @@ export async function createTamperEvidentLog(data: AuditLogData) {
       workspaceId: data.workspaceId,
       timestamp: timestamp,
       previousHash: previousHash,
-      currentHash: currentHash
+      currentHash: currentHash,
+      ipAddress: data.ipAddress,
+      userAgent: data.userAgent
     }
   });
 }

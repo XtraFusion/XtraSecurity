@@ -1,16 +1,20 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/server-auth";
 import prisma from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(
-  req: Request,
+  req: NextRequest,
   { params }: { params: { projectId: string; saId: string } }
 ) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    if (auth.isServiceAccount) {
+      return NextResponse.json({ error: "Service accounts cannot manage other service accounts" }, { status: 403 });
     }
 
     const { projectId, saId } = params;
@@ -20,14 +24,14 @@ export async function DELETE(
       where: {
         id: projectId,
         OR: [
-            { userId: session.user.id },
+            { userId: auth.userId },
             {
               teamProjects: {
                 some: {
                   team: {
                     members: {
                       some: {
-                        userId: session.user.id,
+                        userId: auth.userId,
                         status: "active"
                       }
                     }
@@ -61,6 +65,17 @@ export async function DELETE(
       where: { id: saId }
     });
 
+    try {
+      await logAudit(
+        "SERVICE_ACCOUNT_DELETED",
+        auth.userId,
+        projectId,
+        { saId, saName: sa.name }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
+
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("DELETE service-account error:", error);
@@ -69,13 +84,17 @@ export async function DELETE(
 }
 
 export async function PATCH(
-    req: Request,
+    req: NextRequest,
     { params }: { params: { projectId: string; saId: string } }
   ) {
     try {
-      const session = await getServerSession(authOptions);
-      if (!session?.user?.id) {
+      const auth = await verifyAuth(req);
+      if (!auth) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      }
+
+      if (auth.isServiceAccount) {
+        return NextResponse.json({ error: "Service accounts cannot manage other service accounts" }, { status: 403 });
       }
   
       const { projectId, saId } = params;
@@ -87,14 +106,14 @@ export async function PATCH(
         where: {
           id: projectId,
           OR: [
-              { userId: session.user.id },
+              { userId: auth.userId },
               {
                 teamProjects: {
                   some: {
                     team: {
                       members: {
                         some: {
-                          userId: session.user.id,
+                          userId: auth.userId,
                           status: "active"
                         }
                       }
@@ -117,6 +136,17 @@ export async function PATCH(
             permissions
         }
       });
+
+      try {
+        await logAudit(
+          "SERVICE_ACCOUNT_UPDATED",
+          auth.userId,
+          projectId,
+          { saId, name, permissions }
+        );
+      } catch (e) {
+        console.error("Audit log failed:", e);
+      }
   
       return NextResponse.json(updated);
     } catch (error) {

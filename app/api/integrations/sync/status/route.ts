@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,7 +17,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const role = await getUserWorkspaceRole((session.user as any).id, workspaceId);
+    const role = await getUserWorkspaceRole((auth as any).id, workspaceId);
 
     if (role === "viewer") {
        return NextResponse.json({ error: "Forbidden: Viewers cannot access Integrations." }, { status: 403 });
@@ -30,7 +29,7 @@ export async function GET(req: NextRequest) {
     // 0. Fetch connected integrations for the user
     const integrations = await prisma.integration.findMany({
       where: { 
-        userId: (session.user as any).id
+        userId: (auth as any).id
       }
     });
 

@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -22,7 +21,7 @@ export async function GET(req: NextRequest) {
     const startDate = new Date(now.getTime() - days * 24 * 60 * 60 * 1000);
 
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const wsRole = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const wsRole = await getUserWorkspaceRole(auth.userId, workspaceId);
 
     // 1. Find all projects in the workspace the user has access to
     const projectWhereClause: any = { workspaceId };
@@ -30,14 +29,14 @@ export async function GET(req: NextRequest) {
     // If not a workspace owner/admin, restrict to accessible projects
     if (wsRole !== "owner" && wsRole !== "admin") {
       projectWhereClause.OR = [
-        { userId: session.user.id },
+        { userId: auth.userId },
         {
           teamProjects: {
             some: {
               team: {
                 members: {
                   some: {
-                    userId: session.user.id,
+                    userId: auth.userId,
                     status: "active",
                   },
                 },

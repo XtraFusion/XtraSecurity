@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const integrations = await prisma.integration.findMany({ where: { createdBy: session.user.email } });
+    const integrations = await prisma.integration.findMany({ where: { createdBy: auth.email } });
     return NextResponse.json({ integrations }, { status: 200 });
   } catch (error) {
     console.error(error);
@@ -18,20 +17,19 @@ export async function GET(req: Request) {
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const body = await req.json();
-    const { name, type, config } = body;
+    const { provider, config } = body;
 
     const created = await prisma.integration.create({
       data: {
-        name,
-        type,
+        provider,
         enabled: true,
         status: "connected",
         config: config as any,
-        createdBy: session.user.email || "",
+        createdBy: auth.email || "",
       },
     });
 
@@ -44,8 +42,8 @@ export async function POST(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
     const { searchParams } = new URL(req.url);
     const id = searchParams.get("id");
@@ -54,7 +52,7 @@ export async function DELETE(req: Request) {
     const count = await prisma.integration.deleteMany({ 
         where: { 
             id, 
-            createdBy: session.user.email || "" 
+            createdBy: auth.email || "" 
         } 
     });
 

@@ -105,7 +105,7 @@ export async function POST(req: Request) {
 
     // 5. Send OTP via email
     await sendEmail({
-      to: user.email,
+      to: user.email!,
       subject: "🔒 Your XtraSecurity Login Code",
       text: `Your login code is: ${otp}\nThis code will expire in 10 minutes.`,
       html: `

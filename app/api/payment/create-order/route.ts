@@ -1,7 +1,6 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from "next/server";
 import Razorpay from 'razorpay';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { verifyAuth } from "@/lib/server-auth";
 
 const razorpay = new Razorpay({
   key_id: process.env.RAZORRPAY_ID!,
@@ -10,8 +9,8 @@ const razorpay = new Razorpay({
 
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user?.email) {
+    const auth = await verifyAuth(req);
+    if (!auth || !auth.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 

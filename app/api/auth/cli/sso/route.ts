@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import jwt from "jsonwebtoken";
+import { verifyAuth } from "@/lib/server-auth";
 
 const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback_secret";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
+  const auth = await verifyAuth(req);
   const callbackUrl = req.nextUrl.searchParams.get("callbackUrl");
 
   if (!callbackUrl) {
@@ -19,7 +18,7 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Invalid callbackUrl. Must be localhost." }, { status: 400 });
   }
 
-  if (!session || !session.user) {
+  if (!auth) {
     // Redirect to login page with return URL
     // We encode the current URL as the callback for the login page
     const ssoUrl =  encodeURIComponent(`${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/auth/cli/sso?callbackUrl=${encodeURIComponent(callbackUrl)}`);

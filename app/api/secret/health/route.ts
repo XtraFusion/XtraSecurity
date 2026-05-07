@@ -1,13 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import { getUserWorkspaceRole } from "@/lib/permissions";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -19,7 +18,7 @@ export async function GET(req: NextRequest) {
     }
 
     // Permission Check
-    const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+    const role = await getUserWorkspaceRole(auth.userId, workspaceId);
     if (!role) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -59,14 +58,14 @@ export async function GET(req: NextRequest) {
 
     secrets.forEach(secret => {
       // Stale
-      if (new Date(secret.updatedAt) < staleThreshold) {
+      if (new Date(secret.lastUpdated) < staleThreshold) {
         staleCount++;
         criticalFixes.push({
           type: "stale",
           key: secret.key,
           projectId: secret.projectId,
           projectName: secret.project.name,
-          daysOld: Math.floor((now.getTime() - new Date(secret.updatedAt).getTime()) / (1000 * 60 * 60 * 24))
+          daysOld: Math.floor((now.getTime() - new Date(secret.lastUpdated).getTime()) / (1000 * 60 * 60 * 24))
         });
       }
 

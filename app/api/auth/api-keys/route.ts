@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import crypto from "crypto";
 import { hashApiKey } from "@/lib/auth/service-account";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.email) {
+  const auth = await verifyAuth(req);
+  if (!auth || !auth.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { email: auth.email },
     include: { apiKeys: true },
   });
 
@@ -46,15 +45,15 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session || !session.user?.email) {
+  const auth = await verifyAuth(req);
+  if (!auth || !auth.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const { label, workspaceId, expiresAt } = await req.json();
 
   const user = await prisma.user.findUnique({
-    where: { email: session.user.email },
+    where: { email: auth.email },
   });
 
   if (!user) {

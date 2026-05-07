@@ -1,14 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { sendSlackNotification } from "@/lib/notifications/slack";
 import { sendTeamsNotification } from "@/lib/notifications/teams";
 import { sendWebhookNotification } from "@/lib/notifications/webhook";
+import { verifyAuth } from "@/lib/server-auth";
 
 // POST /api/notification-channels/test - Send a test message to a webhook
 export async function POST(req: NextRequest) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest) {
     description: "You will now receive alerts here for security events, team updates, and more.",
     type: "success" as const,
     fields: [
-      { label: "Connected by", value: session.user.email || "Unknown" },
+      { label: "Connected by", value: auth.email || "Unknown" },
       { label: "Platform", value: "XtraSecurity" },
     ],
     timestamp: new Date().toISOString(),

@@ -1,18 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { getRateLimitStats, Tier } from "@/lib/rate-limit";
 import { getDailyUsageCount } from "@/lib/usage";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const userId = session.user.id;
+    const userId = auth.userId;
 
     // 1. Fetch user tier
     const user = await prisma.user.findUnique({

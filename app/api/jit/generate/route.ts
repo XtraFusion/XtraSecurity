@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import crypto from "crypto";
+import { logAudit } from "@/lib/audit";
 
 
 // POST /api/jit/generate — Create a JIT link
@@ -94,6 +95,17 @@ export async function POST(req: NextRequest) {
     const protocol = baseUrl.startsWith("http") ? "" : "https://";
     const url = `${protocol}${baseUrl}/jit/${token}`;
     const cliCommand = `xtra access jit ${token}`;
+
+    try {
+      await logAudit(
+        "JIT_LINK_GENERATED",
+        auth.userId,
+        projectId,
+        { tokenId: jitLink.id, branchId, environment, duration, maxUses }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json({
       token: jitLink.token,

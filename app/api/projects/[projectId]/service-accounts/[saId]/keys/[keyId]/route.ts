@@ -1,58 +1,79 @@
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { NextRequest, NextResponse } from "next/server";
+import { verifyAuth } from "@/lib/server-auth";
 import prisma from "@/lib/db";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(
-    req: Request,
-    { params }: { params: { projectId: string; saId: string; keyId: string } }
+  req: NextRequest,
+  { params }: { params: Promise<{ projectId: string; saId: string; keyId: string }> }
 ) {
-    try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const { projectId, saId, keyId } = params;
-
-        // Verify project access check
-        const project = await prisma.project.findFirst({
-            where: {
-                id: projectId,
-                OR: [
-                    { userId: session.user.id },
-                    {
-                        teamProjects: {
-                            some: {
-                                team: {
-                                    members: {
-                                        some: {
-                                            userId: session.user.id,
-                                            status: "active",
-                                            role: { in: ["owner", "admin"] } // Only admins/owners can revoke keys
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                ]
-            }
-        });
-
-        if (!project) {
-            return NextResponse.json({ error: "Project not found or access denied" }, { status: 404 });
-        }
-
-        // Delete the Key
-        await prisma.apiKey.delete({
-            where: {
-                id: keyId,
-                serviceAccountId: saId
-            }
-        });
-
-        return NextResponse.json({ success: true });
-    } catch (error) {
-        console.error("DELETE key error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+  try {
+    const auth = await verifyAuth(req);
+    if (!auth) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    if (auth.isServiceAccount) {
+      return NextResponse.json({ error: "Service accounts cannot manage other service accounts" }, { status: 403 });
+    }
+
+    const { projectId, saId, keyId } = await params;
+
+    const project = await prisma.project.findFirst({
+        where: {
+          id: projectId,
+          OR: [
+            { userId: auth.userId },
+            {
+              teamProjects: {
+                some: {
+                  team: {
+                    members: {
+                      some: {
+                        userId: auth.userId,
+                        status: "active"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          ]
+        }
+    });
+
+    if (!project) {
+        return NextResponse.json({ error: "Project not found" }, { status: 404 });
+    }
+
+    // Verify key exists and belongs to this SA
+    const apiKey = await prisma.apiKey.findFirst({
+        where: { id: keyId, serviceAccountId: saId }
+    });
+
+    if (!apiKey) {
+        return NextResponse.json({ error: "API Key not found" }, { status: 404 });
+    }
+
+    await prisma.apiKey.delete({
+        where: { id: keyId }
+    });
+
+    try {
+      await logAudit(
+        "SERVICE_ACCOUNT_KEY_DELETED",
+        auth.userId,
+        projectId,
+        { saId, keyId, label: apiKey.label }
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
+
+    return NextResponse.json({ success: true });
+
+  } catch (error: any) {
+    console.error("DELETE api-key error:", error);
+    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+  }
 }

@@ -18,29 +18,30 @@ export async function GET(req: NextRequest) {
           lt: now,
         },
       },
-      include: {
-        secret: true,
-      },
     });
-
+ 
     let revokedCount = 0;
-
+ 
     for (const request of expiredRequests) {
-      if (request.secretId && request.secret) {
-        // Remove user ID from secret permissions
-        const currentPermissions = request.secret.permission || [];
-        const newPermissions = currentPermissions.filter((id) => id !== request.userId);
-
-        if (currentPermissions.length !== newPermissions.length) {
-          await prisma.secret.update({
-            where: { id: request.secretId },
-            data: {
-              permission: newPermissions,
-            },
-          });
+      if (request.secretIds && request.secretIds.length > 0) {
+        for (const secretId of request.secretIds) {
+          const secret = await prisma.secret.findUnique({ where: { id: secretId } });
+          if (secret) {
+            const currentPermissions = secret.permission || [];
+            const newPermissions = currentPermissions.filter((uid) => uid !== request.userId);
+ 
+            if (currentPermissions.length !== newPermissions.length) {
+              await prisma.secret.update({
+                where: { id: secretId },
+                data: {
+                  permission: newPermissions,
+                },
+              });
+            }
+          }
         }
       }
-
+ 
       // Update request status to expired
       await prisma.accessRequest.update({
         where: { id: request.id },
@@ -48,7 +49,7 @@ export async function GET(req: NextRequest) {
           status: "expired",
         },
       });
-
+ 
       revokedCount++;
     }
 

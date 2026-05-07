@@ -1,17 +1,16 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { hash } from "bcryptjs";
+import { verifyAuth } from "@/lib/server-auth";
 
 // GET /api/user/settings - Fetch current user settings
 export async function GET(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const auth = await verifyAuth(req);
+        if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const user = await prisma.user.findUnique({
-            where: { id: session.user.id },
+            where: { id: auth.userId },
             select: {
                 name: true,
                 email: true,
@@ -41,8 +40,8 @@ export async function GET(req: Request) {
 // PATCH /api/user/settings - Update settings
 export async function PATCH(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+        const auth = await verifyAuth(req);
+        if (!auth?.userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
         const body = await req.json();
         const { type, data } = body;
@@ -52,7 +51,7 @@ export async function PATCH(req: Request) {
         if (type === "profile") {
             const { name } = data;
             const updatedUser = await prisma.user.update({
-                where: { id: session.user.id },
+                where: { id: auth.userId },
                 data: { name } // ONLY update name, never email
             });
             return NextResponse.json({ success: true, user: updatedUser });
@@ -64,7 +63,7 @@ export async function PATCH(req: Request) {
             // Handle MFA Toggle
             if (typeof mfaEnabled === 'boolean') {
                  await prisma.user.update({
-                    where: { id: session.user.id },
+                    where: { id: auth.userId },
                     data: { mfaEnabled }
                 });
             }

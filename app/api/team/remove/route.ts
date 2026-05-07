@@ -1,14 +1,13 @@
 import prisma from "@/lib/db";
-import { NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
+import { NextRequest, NextResponse } from "next/server";
 import { getUserTeamRole, canRemoveMember, invalidateUserRbacCache } from "@/lib/permissions";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -20,7 +19,7 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ error: "Member not found" }, { status: 404 });
     }
 
-    const currentUserRole = await getUserTeamRole(session.user.id, teamUser.teamId);
+    const currentUserRole = await getUserTeamRole(auth.userId, teamUser.teamId);
     if (!canRemoveMember(currentUserRole, teamUser.role)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -61,7 +60,7 @@ export async function DELETE(req: Request) {
     try {
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId: auth.userId,
           action: "member_removed",
           entity: "team_user",
           entityId: memberId,
@@ -85,7 +84,7 @@ export async function DELETE(req: Request) {
             userId: targetUser.id,
             userEmail: targetUser.email || "",
             taskTitle: "Removed from team",
-            description: `You have been removed from the team by ${session.user.email}`,
+            description: `You have been removed from the team by ${auth.email}`,
             message: `Your access to projects in this team (including active JIT windows) has been revoked.`,
             status: "unread",
             read: false,
@@ -96,7 +95,7 @@ export async function DELETE(req: Request) {
           message: `${targetUser.email} was removed from the team`,
           type: "error",
           fields: [
-              { label: "Removed by", value: session.user.email || "" },
+              { label: "Removed by", value: auth.email || "" },
               { label: "Revoked Access", value: "JIT Sessions were invalidated" }
           ],
         });

@@ -1,17 +1,16 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { getUserTeamRole, canManageMembers } from "@/lib/permissions";
 import { sendEmail } from "@/lib/email";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function POST(req: Request) {
   try {
     const { member } = await req.json();
     const { teamId, email, role } = member;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const auth = await verifyAuth(req);
+    if (!auth?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -25,7 +24,7 @@ export async function POST(req: Request) {
     const inviteToken = Math.random().toString(36).slice(2, 12);
 
     // Check inviter permissions
-    const inviterRole = await getUserTeamRole(session.user.id, teamId);
+    const inviterRole = await getUserTeamRole(auth.userId, teamId);
     if (!canManageMembers(inviterRole)) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
@@ -38,7 +37,7 @@ export async function POST(req: Request) {
         userId: user.id,
         role,
         status: "pending",
-        invitedBy: session.user.id,
+        invitedBy: auth.userId,
       },
     });
 
@@ -54,7 +53,7 @@ export async function POST(req: Request) {
         <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e5e7eb; border-radius: 8px;">
           <h2 style="color: #4f46e5;">XtraSecurity Team Invitation</h2>
           <p>Hi there,</p>
-          <p>You have been invited by <strong>${session.user.name || session.user.email}</strong> to join the team <strong>${team?.name || 'XtraSecurity'}</strong> with the role of <strong>${role}</strong>.</p>
+          <p>You have been invited by <strong>${auth.name || auth.email}</strong> to join the team <strong>${team?.name || 'XtraSecurity'}</strong> with the role of <strong>${role}</strong>.</p>
           <div style="margin: 30px 0;">
             <a href="${acceptLink}" style="background-color: #6366f1; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: bold; display: inline-block;">View Invites Dashboard</a>
           </div>
@@ -109,21 +108,19 @@ export async function POST(req: Request) {
   }
 }
 
-
-export async function  GET(){
-
-  const session = await getServerSession(authOptions);
-  if(!session?.user.id){
-    return NextResponse.json({error:"Unauthorized"},{status:401});
+export async function GET(req: NextRequest) {
+  const auth = await verifyAuth(req);
+  if (!auth || !auth.userId) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const invites = await prisma.teamUser.findMany({
-    where:{userId:session.user.id,status:"pending"},
-    include:{
-      team:true,
-      user:true
+    where: { userId: auth.userId, status: "pending" },
+    include: {
+      team: true,
+      user: true
     }
   });
 
-  return NextResponse.json({invites},{status:200});
+  return NextResponse.json({ invites }, { status: 200 });
 }

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import { getUserProjectRole, invalidateUserRbacCache } from "@/lib/permissions";
+import { verifyAuth } from "@/lib/server-auth";
 
 /**
  * PATCH /api/access-requests/[id]
@@ -10,8 +9,8 @@ import { getUserProjectRole, invalidateUserRbacCache } from "@/lib/permissions";
  */
 export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -40,9 +39,9 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
         return NextResponse.json({ error: "Missing project context" }, { status: 500 });
     }
 
-    const role = await getUserProjectRole(session.user.id, projectId);
+    const role = await getUserProjectRole(auth.userId, projectId);
     const isProjectAdmin = role === "owner" || role === "admin";
-    const isGlobalAdmin = session.user.role === "admin";
+    const isGlobalAdmin = auth.role === "admin";
 
     // You can only approve/reject if you are an admin for the project or global admin
     if (!isProjectAdmin && !isGlobalAdmin) {
@@ -56,14 +55,14 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
       // Calculate expiry based on requested duration (minutes)
       expiresAt = new Date(Date.now() + request.duration * 60 * 1000);
       
-      console.log(`[JIT] Request ${id} approved by ${session.user.email} for user ${request.user.email}. Expires at: ${expiresAt.toISOString()}`);
+      console.log(`[JIT] Request ${id} approved by ${auth.email} for user ${request.user.email}. Expires at: ${expiresAt.toISOString()}`);
     }
 
     const updatedRequest = await prisma.accessRequest.update({
       where: { id },
       data: {
         status,
-        approvedBy: status === "approved" ? session.user.id : undefined,
+        approvedBy: status === "approved" ? auth.userId : undefined,
         approvedAt: status === "approved" ? new Date() : undefined,
         expiresAt,
       },
@@ -76,7 +75,7 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     try {
       await prisma.auditLog.create({
         data: {
-          userId: session.user.id,
+          userId: auth.userId,
           action: `jit_request_${status}`,
           entity: "access_request",
           entityId: id,

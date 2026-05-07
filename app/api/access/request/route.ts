@@ -81,7 +81,7 @@ export async function POST(req: NextRequest) {
             for (const adminId of Array.from(adminIds)) {
                 // Find email (workspace owner or team admin)
                 let email = "";
-                if (adminId === workspace?.createdBy) email = workspace.user.email;
+                if (adminId === workspace?.createdBy) email = workspace.user.email || "";
                 else email = teamAdmins.find(ta => ta.userId === adminId)?.user.email || "";
 
                 if (email) {

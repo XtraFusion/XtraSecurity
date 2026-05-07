@@ -1,9 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import prisma from "@/lib/db";
 import { getUserProjectRole, invalidateUserRbacCache } from "@/lib/permissions";
 import { notify } from "@/lib/notifications/engine";
+import { verifyAuth } from "@/lib/server-auth";
 
 /**
  * POST /api/access/break-glass
@@ -11,8 +10,8 @@ import { notify } from "@/lib/notifications/engine";
  */
 export async function POST(req: NextRequest) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session || !session.user) {
+    const auth = await verifyAuth(req);
+    if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function POST(req: NextRequest) {
     }
 
     // 1. Authorization Check: Must be admin or owner
-    const role = await getUserProjectRole(session.user.id, projectId);
+    const role = await getUserProjectRole(auth.userId, projectId);
     if (role !== "owner" && role !== "admin") {
       return NextResponse.json({ error: "Forbidden: Only admins or owners can activate break glass." }, { status: 403 });
     }
@@ -31,7 +30,7 @@ export async function POST(req: NextRequest) {
     // 2. Check for existing active session
     const existingSession = await prisma.breakGlassSession.findFirst({
       where: {
-        userId: session.user.id,
+        userId: auth.userId,
         projectId,
         isActive: true,
         expiresAt: { gt: new Date() }
@@ -49,7 +48,7 @@ export async function POST(req: NextRequest) {
     const expiresAt = new Date(Date.now() + 15 * 60 * 1000);
     const breakGlass = await prisma.breakGlassSession.create({
       data: {
-        userId: session.user.id,
+        userId: auth.userId,
         projectId,
         reason,
         incidentId: incidentId || `INC-${Date.now()}`,
@@ -62,25 +61,25 @@ export async function POST(req: NextRequest) {
     });
 
     // 4. Invalidate Cache so the new permission takes effect immediately
-    await invalidateUserRbacCache(session.user.id);
+    await invalidateUserRbacCache(auth.userId);
 
     // 5. Trigger High-Severity Notification to Admins
     try {
       await notify({
         type: "security_alert",
         title: "🚨 BREAK GLASS ACTIVATED",
-        message: `${session.user.email} activated emergency access for project "${breakGlass.project?.name}"`,
+        message: `${auth.email} activated emergency access for project "${breakGlass.project?.name}"`,
         description: `Reason: ${reason}`,
         severity: "critical",
         workspaceId: breakGlass.project?.workspaceId || "",
         projectId: projectId,
         metadata: { 
-            userId: session.user.id, 
+            userId: auth.userId, 
             expiresAt: expiresAt.toISOString(),
             incidentId: breakGlass.incidentId
         },
         fields: [
-          { label: "User", value: session.user.email },
+          { label: "User", value: auth.email },
           { label: "Project", value: breakGlass.project?.name || "Unknown" },
           { label: "Reason", value: reason },
           { label: "Expires At", value: expiresAt.toLocaleString() }
@@ -94,7 +93,7 @@ export async function POST(req: NextRequest) {
     try {
         await prisma.auditLog.create({
             data: {
-                userId: session.user.id,
+                userId: auth.userId,
                 action: "break_glass_activated",
                 entity: "project",
                 entityId: projectId,
@@ -128,8 +127,8 @@ export async function POST(req: NextRequest) {
  */
 export async function PATCH(req: NextRequest) {
     try {
-      const session = await getServerSession(authOptions);
-      if (!session || !session.user) {
+      const auth = await verifyAuth(req);
+      if (!auth) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
       }
   
@@ -137,7 +136,7 @@ export async function PATCH(req: NextRequest) {
   
       const breakGlass = await prisma.breakGlassSession.updateMany({
         where: {
-          userId: session.user.id,
+          userId: auth.userId,
           projectId,
           isActive: true
         },
@@ -147,7 +146,7 @@ export async function PATCH(req: NextRequest) {
         }
       });
   
-      await invalidateUserRbacCache(session.user.id);
+      await invalidateUserRbacCache(auth.userId);
   
       return NextResponse.json({ success: true, message: "Break Glass session ended." });
     } catch (error: any) {
@@ -161,8 +160,8 @@ export async function PATCH(req: NextRequest) {
  */
 export async function PUT(req: NextRequest) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session || !session.user) {
+        const auth = await verifyAuth(req);
+        if (!auth) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
     
@@ -171,7 +170,7 @@ export async function PUT(req: NextRequest) {
         // Check if there's an active session
         const activeSession = await prisma.breakGlassSession.findFirst({
             where: {
-                userId: session.user.id,
+                userId: auth.userId,
                 projectId,
                 isActive: true,
                 expiresAt: { gt: new Date() }
@@ -186,8 +185,8 @@ export async function PUT(req: NextRequest) {
         await prisma.securityEvent.create({
             data: {
                 eventId: `LOG-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-                userId: session.user.id,
-                userEmail: session.user.email,
+                userId: auth.userId,
+                userEmail: auth.email,
                 projectId,
                 method: "COMMAND",
                 endpoint: "CLI",

@@ -1,18 +1,17 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   const url = new URL(req.url);
   const workspaceId = url.searchParams.get("workspaceId");
 
-  const whereClause: any = { userId: session.user.id };
+  const whereClause: any = { userId: auth.userId };
   if (workspaceId) {
       whereClause.workspaceId = workspaceId;
   }
@@ -27,8 +26,8 @@ export async function GET(req: Request) {
 
 export async function PATCH(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -39,7 +38,7 @@ export async function PATCH(req: Request) {
     const notification = await prisma.notification.findUnique({ where: { id } });
     if (!notification) return NextResponse.json({ error: "Notification not found" }, { status: 404 });
     
-    if (notification.userId !== session.user.id) {
+    if (notification.userId !== auth.userId) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 
@@ -57,8 +56,8 @@ export async function PATCH(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -70,7 +69,7 @@ export async function DELETE(req: Request) {
     const notification = await prisma.notification.findUnique({ where: { id } });
     if (!notification) return NextResponse.json({ error: "Notification not found" }, { status: 404 });
 
-    if (notification.userId !== session.user.id) {
+    if (notification.userId !== auth.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
     }
 

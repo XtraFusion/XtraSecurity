@@ -142,7 +142,6 @@ export async function POST(req: NextRequest) {
       auth.userId,
       "DigitalOcean Sync Complete",
       `Successfully synced ${results.length} secrets to DigitalOcean App Platform.`,
-      `Successfully synced ${results.length} secrets to DigitalOcean App Platform.`,
       `App: ${appId} | Environment: ${environment}`,
       project.workspaceId
     ).catch(e => console.error("Notify Error:", e));

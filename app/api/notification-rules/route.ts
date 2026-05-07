@@ -1,11 +1,10 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -18,7 +17,7 @@ export async function GET(req: Request) {
 
   // RBAC: Check if user has access to workspace
   const { getUserWorkspaceRole } = await import("@/lib/permissions");
-  const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+  const role = await getUserWorkspaceRole(auth.userId, workspaceId);
   if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
 
   const filter: any = { workspaceId };
@@ -41,8 +40,8 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -55,7 +54,7 @@ export async function POST(req: Request) {
 
   // RBAC: Only Admin/Owner
   const { getUserWorkspaceRole } = await import("@/lib/permissions");
-  const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+  const role = await getUserWorkspaceRole(auth.userId, workspaceId);
   if (!role || (role !== "owner" && role !== "admin")) {
       return NextResponse.json({ error: "Forbidden: Only admins can manage rules" }, { status: 403 });
   }
@@ -67,7 +66,7 @@ export async function POST(req: Request) {
     triggers,
     channels: channels || [],
     conditions: conditions || {},
-    createdBy: session.user.email || session.user.id,
+    createdBy: auth.email || auth.userId,
     workspaceId,
     enabled: true,
     createdAt: { $date: now },
@@ -84,8 +83,8 @@ export async function POST(req: Request) {
 }
 
 export async function PATCH(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -105,7 +104,7 @@ export async function PATCH(req: Request) {
 
   // RBAC
   const { getUserWorkspaceRole } = await import("@/lib/permissions");
-  const role = await getUserWorkspaceRole(session.user.id, rule.workspaceId);
+  const role = await getUserWorkspaceRole(auth.userId, rule.workspaceId);
   if (!role || (role !== "owner" && role !== "admin")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
@@ -125,8 +124,8 @@ export async function PATCH(req: Request) {
 }
 
 export async function DELETE(req: Request) {
-  const session = await getServerSession(authOptions);
-  if (!session?.user?.id) {
+  const auth = await verifyAuth(req);
+  if (!auth?.userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -145,7 +144,7 @@ export async function DELETE(req: Request) {
   if (!rule) return NextResponse.json({ error: "Rule not found" }, { status: 404 });
 
   const { getUserWorkspaceRole } = await import("@/lib/permissions");
-  const role = await getUserWorkspaceRole(session.user.id, rule.workspaceId);
+  const role = await getUserWorkspaceRole(auth.userId, rule.workspaceId);
   if (!role || (role !== "owner" && role !== "admin")) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

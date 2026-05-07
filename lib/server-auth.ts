@@ -10,6 +10,7 @@ import { redis } from "@/lib/redis";
 export interface AuthSession {
   userId: string;
   email?: string | null;
+  name?: string | null;
   role?: string;
   tier?: string;
   isServiceAccount?: boolean;
@@ -43,7 +44,7 @@ async function resolveUserRole(userId: string, legacyRole?: string | null): Prom
   return legacyRole || "user";
 }
 
-export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> {
+export async function verifyAuth(req: NextRequest | Request): Promise<AuthSession | null> {
   // 1. Check API Key (Header: X-API-Key or Authorization: Bearer)
   let apiKey = req.headers.get("x-api-key");
   if (!apiKey && req.headers.get("authorization")?.startsWith("Bearer ")) {
@@ -99,6 +100,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
         sessionData = {
             userId: keyRecord.user.id,
             email: keyRecord.user.email,
+            name: keyRecord.user.name,
             role: resolvedRole,
             tier: keyRecord.user.tier || 'free',
             apiKeyId: keyRecord.id
@@ -143,6 +145,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                 return {
                     userId,
                     email: decoded.email,
+                    name: decoded.name,
                     role: decoded.role,
                     tier: decoded.tier || 'free',
                     isServiceAccount: decoded.isServiceAccount,
@@ -165,6 +168,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                     return {
                         userId: decoded.userId || `sa_${sa.id}`,
                         email: decoded.email || `sa_${sa.name}@bot`,
+                        name: sa.name,
                         role: "service_account",
                         tier: "enterprise",
                         isServiceAccount: true,
@@ -181,7 +185,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                             decoded.email ? { email: decoded.email } : undefined,
                         ].filter(Boolean) as any,
                     },
-                    select: { id: true, email: true, role: true, tier: true }
+                    select: { id: true, email: true, name: true, role: true, tier: true }
                 });
 
                 if (user) {
@@ -190,6 +194,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
                     return {
                         userId: user.id,
                         email: user.email,
+                        name: user.name,
                         role: resolvedRole,
                         tier: user.tier || 'free'
                     };
@@ -207,6 +212,7 @@ export async function verifyAuth(req: NextRequest): Promise<AuthSession | null> 
     return {
       userId: session.user.id,
       email: session.user.email,
+      name: session.user.name,
       role: (session.user as any).role || "user",
       tier: (session.user as any).tier || "free"
     };

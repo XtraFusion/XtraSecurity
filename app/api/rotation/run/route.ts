@@ -1,14 +1,13 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { RotationService } from "@/lib/rotation-service";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 // POST /api/rotation/run
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -30,13 +29,13 @@ export async function POST(req: Request) {
     }
 
     const { getUserProjectRole } = await import("@/lib/permissions");
-    const role = await getUserProjectRole(session.user.id, schedule.secret.projectId);
+    const role = await getUserProjectRole(auth.userId, schedule.secret.projectId);
 
     if (!role || (role !== "owner" && role !== "admin" && role !== "developer")) {
          return NextResponse.json({ error: "Forbidden: Insufficient permissions to rotate secrets" }, { status: 403 });
     }
 
-    const result = await RotationService.rotateSecret(scheduleId, session.user.email || "user");
+    const result = await RotationService.rotateSecret(scheduleId, auth.email || "user");
 
     return NextResponse.json(result);
   } catch (error: any) {

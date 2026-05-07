@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { 
     Terminal, 
     Shield, 
@@ -915,7 +916,7 @@ RUN xtra run -e staging -- npm run build`, filename: "Dockerfile" },
 
                             <DocNavButtons 
                                 prev={{ label: "VS Code Extension", section: "vscode" }}
-                                next={{ label: "CLI Reference", section: "cli" }}
+                                next={{ label: "CLI Reference", section: "cli", href: "/docs/cli" }}
                                 setActiveSection={setActiveSection}
                             />
                         </div>
@@ -1092,10 +1093,11 @@ function DocNavButtons({
     prev,
     setActiveSection
 }: { 
-    next?: { label: string; section: string }, 
-    prev?: { label: string; section: string },
+    next?: { label: string; section: string; href?: string }, 
+    prev?: { label: string; section: string; href?: string },
     setActiveSection: (s: string) => void
 }) {
+    const router = useRouter();
     const scrollToTop = () => {
         document.getElementById('docs-content-top')?.scrollIntoView({ behavior: 'smooth' });
     };
@@ -1104,7 +1106,14 @@ function DocNavButtons({
         <div className="flex items-center justify-between gap-6 pt-12 border-t border-border">
             {prev ? (
                 <button 
-                    onClick={() => { setActiveSection(prev.section); scrollToTop(); }}
+                    onClick={() => { 
+                        if (prev.href) {
+                            router.push(prev.href);
+                        } else {
+                            setActiveSection(prev.section); 
+                            scrollToTop(); 
+                        }
+                    }}
                     className="flex flex-col items-start text-left group"
                 >
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Previous</span>
@@ -1117,7 +1126,14 @@ function DocNavButtons({
             
             {next ? (
                 <button 
-                    onClick={() => { setActiveSection(next.section); scrollToTop(); }}
+                    onClick={() => { 
+                        if (next.href) {
+                            router.push(next.href);
+                        } else {
+                            setActiveSection(next.section); 
+                            scrollToTop(); 
+                        }
+                    }}
                     className="flex flex-col items-end text-right group"
                 >
                     <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Next</span>

@@ -1,13 +1,12 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 
 // GET /api/rotation/history
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -23,7 +22,7 @@ export async function GET(req: Request) {
       whereClause = { schedule: { projectId } };
     } else if (workspaceId) {
       const { getUserWorkspaceRole } = await import("@/lib/permissions");
-      const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+      const role = await getUserWorkspaceRole(auth.userId, workspaceId);
 
       if (role === "owner" || role === "admin") {
         whereClause = { schedule: { secret: { project: { workspaceId } } } };
@@ -34,11 +33,11 @@ export async function GET(req: Request) {
               project: {
                 workspaceId,
                 OR: [
-                  { userId: session.user.id },
+                  { userId: auth.userId },
                   {
                     teamProjects: {
                       some: {
-                        team: { members: { some: { userId: session.user.id, status: "active" } } }
+                        team: { members: { some: { userId: auth.userId, status: "active" } } }
                       }
                     }
                   }
@@ -54,11 +53,11 @@ export async function GET(req: Request) {
           secret: {
             project: {
               OR: [
-                { userId: session.user.id },
+                { userId: auth.userId },
                 {
                   teamProjects: {
                     some: {
-                      team: { members: { some: { userId: session.user.id, status: "active" } } }
+                      team: { members: { some: { userId: auth.userId, status: "active" } } }
                     }
                   }
                 }

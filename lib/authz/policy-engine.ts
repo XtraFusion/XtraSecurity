@@ -133,8 +133,8 @@ export class PolicyEngine {
                 status: "approved",
                 expiresAt: { gt: now },
                 OR: [
-                    { projectId },
-                    { secretId: req.context?.secretId }
+                    ...(projectId ? [{ projectId }] : []),
+                    ...(req.context?.secretId ? [{ secretIds: { has: req.context.secretId } }] : [])
                 ]
             }
         });

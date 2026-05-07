@@ -1,12 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function GET(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -16,7 +15,7 @@ export async function GET(req: Request) {
     // Enforce WS Access check
     if (workspaceId) {
         const { getUserWorkspaceRole } = await import("@/lib/permissions");
-        const role = await getUserWorkspaceRole(session.user.id, workspaceId);
+        const role = await getUserWorkspaceRole(auth.userId, workspaceId);
         if (!role) {
              return NextResponse.json({ error: "Forbidden: No access to workspace" }, { status: 403 });
         }
@@ -24,7 +23,7 @@ export async function GET(req: Request) {
 
     // Fetch user for MFA status
     const userMfa = await prisma.user.findUnique({
-      where: { id: session.user.id },
+      where: { id: auth.userId },
       select: { mfaEnabled: true }
     });
     const generatedByMfaEnabled = userMfa?.mfaEnabled || false;
@@ -33,12 +32,12 @@ export async function GET(req: Request) {
 
     // ── 1. Workspaces the user owns ──────────────────────────────────────────
     const workspaces = await prisma.workspace.findMany({
-      where: { createdBy: session.user.id },
+      where: { createdBy: auth.userId },
       select: { id: true, name: true, subscriptionPlan: true, createdAt: true },
     });
 
     // ── 2. Projects in scope ─────────────────────────────────────────────────
-    const projectWhere: any = { userId: session.user.id };
+    const projectWhere: any = { userId: auth.userId };
     if (workspaceId) projectWhere.workspaceId = workspaceId;
 
     const projects = await prisma.project.findMany({
@@ -147,7 +146,7 @@ export async function GET(req: Request) {
 
     return NextResponse.json({
       generatedAt,
-      generatedBy: session.user.email || session.user.id,
+      generatedBy: auth.email || auth.userId,
       generatedByMfaEnabled, // New
       workspaces,
       summary: {

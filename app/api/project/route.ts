@@ -2,8 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { getCurrentUser } from "@/lib/auth";
 import type { User } from "@/lib/auth";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../auth/[...nextauth]/route";
 import { createNotification } from "@/lib/notifications";
 import { verifyAuth } from "@/lib/server-auth";
 import { withSecurity } from "@/lib/api-middleware";
@@ -210,7 +208,7 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     const authUser = await prisma.user.findFirst({
       where: {
         OR: [
-          { id: session.userId },
+          { id: session?.userId },
           { email: session.email ?? undefined },
         ].filter(Boolean) as any,
       },
@@ -360,7 +358,7 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const userId = session.userId;
+    const userId = session?.userId;
     const userEmail = session.email;
 
     const { searchParams } = new URL(request.url);
@@ -451,7 +449,7 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
     if (!session?.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
-    const userId = session.userId;
+    const userId = session?.userId;
     const userEmail = session.email;
 
     const { searchParams } = new URL(request.url);

@@ -1,15 +1,13 @@
-import { getServerSession } from "next-auth";
 import { NextResponse, NextRequest } from "next/server";
-import { authOptions } from "../auth/[...nextauth]/route";
 import { verifyAuth } from "@/lib/server-auth";
 import prisma from "@/lib/db";
 
 export async function GET(req: NextRequest) {
     // Try NextAuth session first (for web UI)
-    let session = await getServerSession(authOptions);
+    let auth = await verifyAuth(req);
     
     // If no NextAuth session, try API token (for CLI/extension)
-    if (!session) {
+    if (!auth) {
         const authSession = await verifyAuth(req);
         if (!authSession?.email) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -36,13 +34,13 @@ export async function GET(req: NextRequest) {
     }
 
     // Handle NextAuth session (original logic)
-    if (!session || !session.user?.email) {
+    if (!auth || !auth.email) {
         return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     // Fetch fresh user data from DB
     const user = await prisma.user.findUnique({
-        where: { email: session.user.email },
+        where: { email: auth.email },
         select: {
             id: true,
             name: true,

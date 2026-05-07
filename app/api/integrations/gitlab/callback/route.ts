@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { encrypt } from "@/lib/encription";
+import { verifyAuth } from "@/lib/server-auth";
 
 const GITLAB_CLIENT_ID = process.env.GITLAB_CLIENT_ID;
 const GITLAB_SECRET = process.env.GITLAB_SECRET;
@@ -51,9 +52,9 @@ export async function GET(req: NextRequest) {
     // Get session from cookies to identify user
     const { getServerSession } = await import("next-auth");
     const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
-    const session = await getServerSession(authOptions);
+    const auth = await verifyAuth(req);
 
-    if (!session?.user?.id) {
+    if (!auth?.userId) {
       return NextResponse.redirect(new URL("/integrations?error=not_authenticated", req.url));
     }
 
@@ -63,12 +64,12 @@ export async function GET(req: NextRequest) {
     await prisma.integration.upsert({
       where: {
         userId_provider: {
-          userId: session.user.id,
+          userId: auth.userId,
           provider: "gitlab"
         }
       },
       create: {
-        userId: session.user.id,
+        userId: auth.userId,
         provider: "gitlab",
         accessToken: JSON.stringify(encryptedToken),
         username: userData.username,

@@ -1,15 +1,14 @@
-import { getServerSession } from "next-auth";
-import { authOptions } from "../../auth/[...nextauth]/route";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
+import { verifyAuth } from "@/lib/server-auth";
 export async function GET(
   req: Request,
   { params }: { params: { id: string } }
 ) {
   try {
 const {id} = await params;
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const auth = await verifyAuth(req);
+    if (!auth?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     const data = await prisma.team.findUnique({
@@ -28,7 +27,7 @@ const {id} = await params;
     if (data) {
       // Check current user's role in the team
       const myMembership = data.members.find(
-        (m) => m.user.id === session.user.id
+        (m) => m.user.id === auth.userId
       );
 
       // If they are only a viewer, restrict visibility of other members
@@ -37,7 +36,7 @@ const {id} = await params;
           (m) =>
             m.role === "owner" ||
             m.role === "admin" ||
-            m.user.id === session.user.id
+            m.user.id === auth.userId
         );
       }
     }

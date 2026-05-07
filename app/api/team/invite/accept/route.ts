@@ -1,15 +1,14 @@
-import { authOptions } from "@/app/api/auth/[...nextauth]/route";
-import { getServerSession } from "next-auth";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function POST(req: Request) {
   try {
     const { teamId, status = "active" } = await req.json();
 
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.email) {
+    const auth = await verifyAuth(req);
+    if (!auth?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
@@ -18,7 +17,7 @@ export async function POST(req: Request) {
         where: { 
           teamId_userId: { 
             teamId, 
-            userId: session.user.id 
+            userId: auth.userId 
           } 
         },
         data: { status },
@@ -28,7 +27,7 @@ export async function POST(req: Request) {
       try {
         await prisma.auditLog.create({
           data: {
-            userId: session.user.id,
+            userId: auth.userId,
             action: "invite_accepted",
             entity: "team_user",
             entityId: teamId,
@@ -49,15 +48,15 @@ export async function POST(req: Request) {
                 userId: inviter.id,
                 userEmail: inviter.email || "",
                 taskTitle: "Invite accepted",
-                description: `${session.user.email} accepted your team invite`,
-                message: `${session.user.email} joined the team`,
+                description: `${auth.email} accepted your team invite`,
+                message: `${auth.email} joined the team`,
                 status: "unread",
                 read: false,
               },
             });
             await dispatchNotification({
               title: "Invite Accepted",
-              message: `${session.user.email} accepted a team invite`,
+              message: `${auth.email} accepted a team invite`,
               type: "success",
             });
           }
@@ -71,14 +70,14 @@ export async function POST(req: Request) {
 
     if (status === "decline") {
       const deleteTeamUser = await prisma.teamUser.delete({
-        where: { teamId_userId: { teamId, userId: session.user.id } },
+        where: { teamId_userId: { teamId, userId: auth.userId } },
       });
 
       // audit log
       try {
         await prisma.auditLog.create({
           data: {
-            userId: session.user.id,
+            userId: auth.userId,
             action: "invite_declined",
             entity: "team_user",
             entityId: teamId,

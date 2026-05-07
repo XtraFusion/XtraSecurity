@@ -1,14 +1,13 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { getServerSession } from "next-auth";
 import { getUserTeamRole, canEditRole, invalidateUserRbacCache } from "@/lib/permissions";
-import { authOptions } from "../../auth/[...nextauth]/route";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
+import { verifyAuth } from "@/lib/server-auth";
 
 export async function PUT(req: Request) {
     try {
-        const session = await getServerSession(authOptions);
-        if (!session?.user?.id) {
+        const auth = await verifyAuth(req);
+        if (!auth?.userId) {
             return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
         }
 
@@ -20,7 +19,7 @@ export async function PUT(req: Request) {
                     return NextResponse.json({ error: "Team member not found" }, { status: 404 });
                 }
 
-                const currentUserRole = await getUserTeamRole(session.user.id, targetTeamUser.teamId);
+                const currentUserRole = await getUserTeamRole(auth.userId, targetTeamUser.teamId);
                 if (!canEditRole(currentUserRole, targetTeamUser.role)) {
                     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
                 }
@@ -55,7 +54,7 @@ export async function PUT(req: Request) {
         try {
             await prisma.auditLog.create({
                 data: {
-                    userId: session.user.id,
+                    userId: auth.userId,
                     action: "role_change",
                     entity: "team_user",
                     entityId: memberId,
@@ -78,7 +77,7 @@ export async function PUT(req: Request) {
                             userEmail: targetUser.email || "",
                             taskTitle: "Role changed",
                             description: `Your role was changed to ${newRole}`,
-                            message: `Your team role has been updated to ${newRole} by ${session.user.email}`,
+                            message: `Your team role has been updated to ${newRole} by ${auth.email}`,
                             status: "unread",
                             read: false,
                         },
@@ -90,7 +89,7 @@ export async function PUT(req: Request) {
                       fields: [
                         { label: "User", value: targetUser.email || "" },
                         { label: "New Role", value: newRole },
-                        { label: "Changed by", value: session.user.email || "" },
+                        { label: "Changed by", value: auth.email || "" },
                       ],
                     });
                 }

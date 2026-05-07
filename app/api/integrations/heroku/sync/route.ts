@@ -121,7 +121,6 @@ export async function POST(req: NextRequest) {
       auth.userId,
       "Heroku Sync Complete",
       `Successfully synced ${results.length} secrets to Heroku.`,
-      `Successfully synced ${results.length} secrets to Heroku.`,
       `App: ${appId} | Environment: ${environment}`,
       project.workspaceId
     ).catch(e => console.error("Notify Error:", e));
