@@ -9,7 +9,7 @@ const projectCache = new Map<string, { data: any; expiry: number }>();
 const clearCache = () => projectCache.clear();
 
 export const ProjectController = {
-  createProject: async function (projectData: Project | PrismaProject) {
+  createProject: async function (projectData: Partial<Project> | any) {
     try {
       const response = await axios.post("/api/project", projectData);
       if (response.status === 201) {
@@ -115,7 +115,7 @@ export const ProjectController = {
   },
 
   //update project
-  updateProject: async function (id: string, data: Project | PrismaProject) {
+  updateProject: async function (id: string, data: Partial<Project> | any) {
     try {
       const response = await axios.put(`/api/project?id=${id}`, data);
       if (response.status === 200) {
