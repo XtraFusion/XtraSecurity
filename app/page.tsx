@@ -655,7 +655,7 @@ function HeroSection() {
       >
         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
           style={{ background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(45 100% 45%))" }}>✦</span>
-        Ultimate Environment Manager & .env Security Tool
+        Best Free Environment Manager & .env Security Tool
       </motion.div>
 
       {/* H1 */}
@@ -665,7 +665,7 @@ function HeroSection() {
         transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
         className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8"
       >
-        <span className="text-white">The Environment Manager</span>
+        <span className="text-white">Best Free Env Manager</span>
         <br />
         <span style={{
           background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",

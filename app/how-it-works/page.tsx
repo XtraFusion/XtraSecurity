@@ -3,8 +3,8 @@ import { generateHowToSchema, generateBreadcrumbSchema, generateWebPageSchema } 
 import Link from "next/link";
 
 export const metadata = generatePageMetadata(
-  "How XtraSecurity Works — Secure Environment Variable Management in 4 Steps",
-  "Learn how XtraSecurity replaces insecure .env files with AES-256 encrypted, centralized secret storage. Set up secure environment variable management in under 10 minutes with our CLI, dashboard, and CI/CD integrations.",
+  "Best Free Env Manager — How XtraSecurity Works in 4 Simple Steps",
+  "Discover the best free env manager. Learn how XtraSecurity replaces insecure .env files with AES-256 encrypted storage. Set up secure environment variable management in under 10 minutes.",
   "/how-it-works"
 );
 
@@ -15,8 +15,8 @@ export default function HowItWorksPage() {
     { name: "How It Works", url: "https://xtrasecurity.in/how-it-works" },
   ]);
   const webPageSchema = generateWebPageSchema(
-    "How XtraSecurity Works",
-    "Step-by-step guide to secure environment variable management with XtraSecurity",
+    "How XtraSecurity Works | Best Free Env Manager",
+    "Step-by-step guide to using the best free env manager for your engineering team",
     "https://xtrasecurity.in/how-it-works"
   );
 
@@ -40,6 +40,7 @@ export default function HowItWorksPage() {
               How <span className="bg-gradient-to-r from-primary to-blue-600 bg-clip-text text-transparent">XtraSecurity</span> Works
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
+              Discover why XtraSecurity is the best free env manager. 
               Replace insecure .env files with AES-256 encrypted, centralized secret storage. 
               XtraSecurity provides role-based access control, automated rotation, and complete audit logging 
               for your environment variables — all in a developer-friendly platform.

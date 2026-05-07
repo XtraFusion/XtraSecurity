@@ -33,6 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       type: "article",
       url: `https://xtrasecurity.in/blog/${post.slug}`,
       publishedTime: post.date,
+      modifiedTime: post.dateModified || post.date,
       authors: [post.author],
     },
     alternates: {
@@ -40,6 +41,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     },
     article: {
       publishedTime: post.date,
+      modifiedTime: post.dateModified || post.date,
       authors: [post.author],
     },
   }
@@ -64,6 +66,38 @@ export default function BlogPostPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-background">
+      {/* Article JSON-LD Schema */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify({
+          '@context': 'https://schema.org',
+          '@type': 'TechArticle',
+          headline: post.title,
+          description: post.description,
+          url: `https://xtrasecurity.in/blog/${post.slug}`,
+          datePublished: post.date,
+          dateModified: post.dateModified || post.date,
+          author: {
+            '@type': 'Person',
+            name: post.author,
+            description: post.authorBio || 'Security engineer and technical writer at XtraSecurity.',
+            url: 'https://xtrasecurity.in/about',
+          },
+          publisher: {
+            '@type': 'Organization',
+            name: 'XtraSecurity',
+            logo: { '@type': 'ImageObject', url: 'https://xtrasecurity.in/android-chrome-512x512.png' },
+          },
+          mainEntityOfPage: {
+            '@type': 'WebPage',
+            '@id': `https://xtrasecurity.in/blog/${post.slug}`,
+          },
+          keywords: post.keywords.join(', '),
+          articleSection: post.category,
+          wordCount: post.content.split(/\s+/).length,
+          timeRequired: `PT${post.readTime}M`,
+        }) }}
+      />
       {/* Navigation */}
       <div className="border-b sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
@@ -101,6 +135,13 @@ export default function BlogPostPage({ params }: Props) {
                 <Calendar className="w-5 h-5" />
                 <span>{new Date(post.date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
               </div>
+              {post.dateModified && post.dateModified !== post.date && (
+                <div className="flex items-center gap-2 text-primary">
+                  <span className="text-xs font-semibold uppercase bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+                    Updated {new Date(post.dateModified).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+                  </span>
+                </div>
+              )}
               <div className="flex items-center gap-2">
                 <Clock className="w-5 h-5" />
                 <span>{post.readTime} min read</span>
@@ -170,8 +211,7 @@ export default function BlogPostPage({ params }: Props) {
             <Card>
               <CardContent className="p-6">
                 <p className="text-lg text-muted-foreground">
-                  <strong>{post.author}</strong> is a security engineer with expertise in DevOps, cloud infrastructure, and secrets management. 
-                  He has helped enterprise teams secure their infrastructure on AWS, Google Cloud, and Azure.
+                  <strong>{post.author}</strong> — {post.authorBio || 'Security engineer with expertise in DevOps, cloud infrastructure, and secrets management. He has helped enterprise teams secure their infrastructure on AWS, Google Cloud, and Azure.'}
                 </p>
               </CardContent>
             </Card>

@@ -45,7 +45,7 @@ export default function ComparisonPage() {
               </span>
             </h1>
             <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              Honest comparison with industry leaders. We win on simplicity, you'll see.
+              Honest comparison with industry leaders. Discover why XtraSecurity is the best free environment manager for modern teams.
             </p>
           </div>
         </div>

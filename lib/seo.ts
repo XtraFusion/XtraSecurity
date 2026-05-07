@@ -4,7 +4,7 @@ const SITE_NAME = 'XtraSecurity';
 const DOMAIN = 'xtrasecurity.in';
 const SITE_URL = `https://${DOMAIN}`;
 const DESCRIPTION =
-  'XtraSecurity is a secure environment variable and secrets management platform for developers and DevOps teams. Replace .env files with AES-256 encrypted secret storage, role-based access control, automated rotation, and audit logging. Manages 500+ env vars across 50+ apps with 5,000+ daily API requests.';
+  'XtraSecurity is the best free environment variable and secrets management platform for developers and DevOps teams. Replace .env files with AES-256 encrypted secret storage, role-based access control, automated rotation, and audit logging. Manage env vars across apps with 5,000+ daily API requests securely.';
 const AUTHOR = 'XtraSecurity';
 
 export const defaultMetadata: Metadata = {
@@ -16,6 +16,8 @@ export const defaultMetadata: Metadata = {
   keywords: [
     // Primary Keywords (High Intent)
     'environment manager',
+    'best env manager',
+    'best env manager free',
     'env variable manager',
     'environment configuration tool',
     '.env file manager',

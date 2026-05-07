@@ -15,7 +15,7 @@ export const blogPosts: BlogPost[] = [
     ],
     content: `# How to Secure API Keys: Complete Guide for Developers
 
-API keys are the crown jewels of your application. They provide access to critical services like payment processors, cloud platforms, and third-party APIs. Yet many developers store them carelessly—in code repositories, environment files, or worse, hardcoded in production builds.
+To secure API keys, never commit them to version control, store them in environment variables or a secrets manager like XtraSecurity, rotate them every 30 days, restrict permissions to the minimum required, and monitor all usage with audit logs. Here is the complete guide for Node.js, Python, and Go developers.
 
 ## The Problem with Unsecured API Keys
 
@@ -127,7 +127,9 @@ func main() {
 
 Securing API keys isn't optional—it's critical infrastructure security.`,
     author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
     date: '2026-03-01',
+    dateModified: '2026-05-07',
     category: 'Security',
     readTime: 8,
     featured: true,
@@ -147,7 +149,7 @@ Securing API keys isn't optional—it's critical infrastructure security.`,
     ],
     content: `# .env File Security Best Practices: Keep Your Secrets Safe
 
-The .env file is where developers store sensitive configuration. Database passwords, API keys, OAuth tokens—they all live there. Yet it's one of the most frequently leaked files in web applications.
+Never commit .env files to version control. Instead, use a secrets manager like XtraSecurity, add .env to your .gitignore, use .env.example for templates, and rotate all secrets every 30 days. .env files stored in plaintext are the #1 source of leaked credentials in web applications.
 
 ## Should You Commit .env Files?
 
@@ -268,7 +270,9 @@ chmod 600 .env  # Only user can read
 
 .env files are critical infrastructure. Treat them with the same security as production databases.`,
     author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
     date: '2026-02-28',
+    dateModified: '2026-05-07',
     category: 'DevOps',
     readTime: 7,
     featured: true,
@@ -288,7 +292,7 @@ chmod 600 .env  # Only user can read
     ],
     content: `# CI/CD Secrets Management: Securing GitHub Actions & GitLab CI
 
-Your CI/CD pipeline is the nervous system of your application. If secrets leak here, your entire infrastructure is compromised.
+To secure secrets in CI/CD pipelines, use built-in secret stores (GitHub Secrets, GitLab CI Variables), never echo secrets in logs, rotate credentials every 30 days, and consider integrating a dedicated secrets manager like XtraSecurity for enterprise-grade control. Here is how to do it for GitHub Actions, GitLab CI, and Jenkins.
 
 Yet many teams handle secrets carelessly in GitHub Actions, GitLab CI, and Jenkins.
 
@@ -432,7 +436,9 @@ jobs:
 
 CI/CD pipelines should never expose secrets in logs, artifacts, or environment variables.`,
     author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
     date: '2026-02-25',
+    dateModified: '2026-05-07',
     category: 'DevOps',
     readTime: 9,
     featured: true,
@@ -452,7 +458,7 @@ CI/CD pipelines should never expose secrets in logs, artifacts, or environment v
     ],
     content: `# Kubernetes Secrets Management: Secure Your Container Secrets
 
-Kubernetes is where modern applications run. It's also where many teams struggle with secrets management.
+Kubernetes secrets are base64-encoded by default, not encrypted — making them vulnerable in production. To secure them, enable etcd encryption at rest, implement RBAC to restrict secret access, use External Secrets Operator with a vault like XtraSecurity, and rotate credentials regularly. Here is the complete guide.
 
 By default, Kubernetes stores secrets in etcd—unencrypted. That's a disaster waiting to happen.
 
@@ -615,11 +621,105 @@ kubectl patch secret db-credentials -p \\
 
 Kubernetes secrets require encryption, RBAC, and regular rotation.`,
     author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
     date: '2026-02-20',
+    dateModified: '2026-05-07',
     category: 'DevOps',
     readTime: 10,
     featured: true,
     canonical: 'https://xtrasecurity.in/blog/kubernetes-secrets-management-guide'
+  },
+  {
+    id: '6',
+    slug: 'best-free-environment-manager-2026',
+    title: 'Best Free Environment Manager in 2026: Why XtraSecurity Wins',
+    description: 'Looking for the best free env manager? Compare top tools for environment variable management and discover why XtraSecurity is the #1 choice for developers in 2026.',
+    keywords: [
+      'best free environment manager',
+      'best free env manager',
+      'environment manager free',
+      'free secrets manager',
+      'manage environment variables free'
+    ],
+    content: `# Best Free Environment Manager in 2026: Why XtraSecurity Wins
+
+Managing environment variables shouldn't be a security risk or a financial burden. In 2026, developers need a tool that is both powerful and accessible. 
+
+If you are looking for the **best free environment manager**, you've likely come across various options. In this guide, we'll explore why XtraSecurity has emerged as the top choice for engineering teams.
+
+## Why Use an Environment Manager?
+
+Before we dive into the tools, let's recap why you shouldn't just use \`.env\` files:
+- **Security:** Plaintext files are easily leaked.
+- **Collaboration:** Sharing \`.env\` files over Slack or email is a security nightmare.
+- **Syncing:** Keeping team members on the same version is nearly impossible manually.
+
+## Top Free Environment Managers in 2026
+
+### 1. XtraSecurity (The Overall Winner)
+XtraSecurity offers the most generous free tier in the industry without compromising on security.
+
+**Why it's the best:**
+- **Generous Limits:** 1,000 API requests per day on the free plan.
+- **Native Security:** AES-256-GCM encryption by default.
+- **Developer Experience:** A purpose-built CLI that injects secrets directly into memory.
+- **Team Friendly:** Built-in RBAC and audit logs even for free users.
+
+### 2. Doppler (Good for Small Projects)
+Doppler has a great UI and is very easy to set up.
+
+**Pros:**
+- Excellent user interface.
+- Fast onboarding.
+**Cons:**
+- Stricter limits on the free tier.
+- No self-hosted option.
+
+### 3. HashiCorp Vault (The Enterprise Giant)
+Vault is the industry standard for large enterprises, but it might be overkill for smaller teams.
+
+**Pros:**
+- Ultimate control and flexibility.
+**Cons:**
+- Very complex to set up.
+- The "free" version requires you to manage your own infrastructure.
+
+## Why XtraSecurity is the Best Free Env Manager
+
+XtraSecurity was built with a "security-first, developer-always" mindset. Here is what makes our free plan stand out:
+
+### 1. Direct Secret Injection
+Stop creating \`.env\` files entirely. With \`xtra run\`, your secrets are injected directly into your application's process memory. They never touch the disk in plaintext.
+
+### 2. Git-like Versioning
+Ever messed up a secret and needed to roll back? XtraSecurity provides a full history of your environment variables. You can branch, diff, and merge secrets just like code.
+
+### 3. Real-Time Audit Logs
+Even on our free plan, we believe in transparency. See exactly who accessed which secret and when. This is critical for meeting basic compliance requirements early on.
+
+### 4. Seamless Integration
+Whether you use GitHub Actions, Vercel, or AWS, XtraSecurity integrates with your existing stack in minutes.
+
+## How to Get Started for Free
+
+1. **Sign up:** Create your account at [xtrasecurity.in/register](https://xtrasecurity.in/register).
+2. **Create a Project:** Name your project and add your first environment variable.
+3. **Install CLI:** \`npm install -g xtra-cli\`
+4. **Login & Run:** \`xtra login\` and then \`xtra run -- npm start\`
+
+## Conclusion
+
+In 2026, you don't have to choose between "free" and "secure". XtraSecurity provides the enterprise-grade features you need at a price point every developer can afford: **zero dollars**.
+
+Stop leaking secrets in \`.env\` files. Join 500+ teams who have already switched to the best free env manager on the market.`,
+    author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
+    date: '2026-05-01',
+    dateModified: '2026-05-07',
+    category: 'Guides',
+    readTime: 6,
+    featured: true,
+    canonical: 'https://xtrasecurity.in/blog/best-free-environment-manager-2026'
   },
   {
     id: '5',
@@ -802,7 +902,9 @@ Choose XtraSecurity if:
 
 The best secrets manager depends on your architecture. But for modern DevOps teams, the trend is clear: simplicity + flexibility wins.`,
     author: 'OM Salunke',
+    authorBio: 'Full-stack developer and founder of XtraSecurity. Building secure infrastructure tools for modern engineering teams.',
     date: '2026-02-15',
+    dateModified: '2026-05-07',
     category: 'Comparison',
     readTime: 11,
     featured: true,

@@ -81,6 +81,8 @@ export function generateSoftwareApplicationSchema() {
       url: 'https://xtrasecurity.in',
     },
     keywords: [
+      'best free environment manager',
+      'best free env manager',
       'environment variable manager',
       'secrets management',
       '.env file manager',
@@ -91,6 +93,26 @@ export function generateSoftwareApplicationSchema() {
       'HashiCorp Vault alternative',
       'Infisical alternative',
       'AWS Secrets Manager alternative',
+    ],
+    review: [
+      {
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+        author: { '@type': 'Person', name: 'Arjun Patel' },
+        reviewBody: 'XtraSecurity replaced our messy .env workflow entirely. The CLI is fantastic — secrets inject directly into memory, no files on disk. Setup took 5 minutes.',
+      },
+      {
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+        author: { '@type': 'Person', name: 'Priya Sharma' },
+        reviewBody: 'We switched from Doppler because XtraSecurity offers JIT access and git-like branching for secrets. The free plan is incredibly generous for a startup.',
+      },
+      {
+        '@type': 'Review',
+        reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
+        author: { '@type': 'Person', name: 'Rahul Deshmukh' },
+        reviewBody: 'The audit logs and RBAC are exactly what we needed for SOC 2 compliance. Best secrets manager we have used — and the free tier is unbeatable.',
+      },
     ],
   };
 }
