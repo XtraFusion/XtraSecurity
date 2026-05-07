@@ -77,13 +77,6 @@ const NAV_GROUPS = [
             { name: "Documentation", href: "/docs", icon: BookOpen },
         ]
     },
-    {
-        label: "Developer Tools",
-        items: [
-            { name: "Unicode Converter", href: "/dashboard/tools/unicode", icon: Type },
-            { name: "Regex Tester", href: "/dashboard/tools/regex-tester", icon: Zap },
-        ]
-    }
 ];
 
 export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
