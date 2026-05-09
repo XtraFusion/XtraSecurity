@@ -53,6 +53,14 @@ export default function LoginPage() {
       if (data.requireOtp) {
         if (data.isNewUser) setIsNewUser(true)
         setStep(2)
+      } else {
+        // MFA disabled, sign in directly
+        const result = await signIn("credentials", { email, password, otp: "SKIPPED", redirect: false })
+        if (result?.error) {
+           setError("Authentication failed")
+        } else if (result?.ok) {
+           window.location.href = "/dashboard"
+        }
       }
     } catch (err: any) {
       setError(err.message || "An error occurred. Please try again.")
@@ -67,7 +75,7 @@ export default function LoginPage() {
     setIsLoading(true)
     if (!otp) { setError("Please enter the verification code"); setIsLoading(false); return }
     try {
-      const result = await signIn("credentials", { email, otp, redirect: false })
+      const result = await signIn("credentials", { email, password, otp, redirect: false })
       if (result?.error) {
         setError("Invalid or expired verification code")
       } else if (result?.ok) {

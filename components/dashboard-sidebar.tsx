@@ -69,7 +69,7 @@ const NAV_GROUPS = [
     {
         label: "Configuration",
         items: [
-            { name: "Sync Dashboard", href: "/integrations/sync", icon: Activity },
+            // { name: "Sync Dashboard", href: "/integrations/sync", icon: Activity },
             { name: "Integrations", href: "/integrations", icon: Zap },
             { name: "Notifications", href: "/notifications", icon: Bell },
             { name: "Settings", href: "/settings", icon: Settings },

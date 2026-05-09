@@ -58,17 +58,8 @@ export async function PATCH(req: Request) {
         }
 
         if (type === "security") {
-            const { mfaEnabled } = data; // password change disabled for now
-
-            // Handle MFA Toggle
-            if (typeof mfaEnabled === 'boolean') {
-                 await prisma.user.update({
-                    where: { id: auth.userId },
-                    data: { mfaEnabled }
-                });
-            }
-            
-            return NextResponse.json({ success: true });
+            // Direct update disabled. MFA status must be updated via /api/user/security/verify-otp
+            return NextResponse.json({ error: "Direct security update not allowed. Use OTP verification." }, { status: 403 });
         }
 
         return NextResponse.json({ error: "Invalid setting type" }, { status: 400 });

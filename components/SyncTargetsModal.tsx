@@ -195,7 +195,7 @@ export function SyncTargetsModal({ open, onClose, secretId, secretKey }: SyncTar
                   <SelectTrigger className="h-10">
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="z-[110]">
                     {["aws", "vercel", "github", "gitlab", "netlify", "railway", "fly", "doppler"].map((p) => {
                       const meta = INTEGRATION_METADATA[p as SyncProvider];
                       return (

@@ -6,7 +6,9 @@ export interface BlogPost {
   keywords: string[];
   content: string;
   author: string;
+  authorBio?: string;
   date: string;
+  dateModified?: string;
   category: string;
   readTime: number;
   featured: boolean;
@@ -19,7 +21,9 @@ export interface BlogMetadata {
   description: string;
   keywords: string[];
   date: string;
+  dateModified?: string;
   author: string;
+  authorBio?: string;
   category: string;
   readTime: number;
   featured?: boolean;

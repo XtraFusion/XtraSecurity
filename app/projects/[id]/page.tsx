@@ -307,12 +307,14 @@ const SecretCard = ({
                 <DropdownMenuItem onClick={onShare} className="gap-2 text-primary focus:text-white">
                   <Share2 className="h-4 w-4" /> Share Secret
                 </DropdownMenuItem>
+                {/* 
                 <DropdownMenuItem 
                   onClick={onSyncTargets}
                   className="gap-2 text-emerald-600 focus:text-white"
                 >
                   <Cloud className="h-4 w-4" /> Cloud Sync
                 </DropdownMenuItem>
+                */}
                 <DropdownMenuItem onClick={onGenerateJit} className="gap-2 text-amber-500 focus:text-white">
                   <Shield className="h-4 w-4" /> JIT Access
                   <Badge variant="outline" className="ml-auto text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>

@@ -88,13 +88,23 @@ export async function POST(req: Request) {
       }
     }
 
-    // 3. Generate 6-digit OTP
+    // 3. Check if MFA is required
+    const requireOtp = user.mfaEnabled || isNewUser;
+
+    if (!requireOtp) {
+      return NextResponse.json(
+        { message: "Login successful", requireOtp: false },
+        { status: 200 }
+      );
+    }
+
+    // 4. Generate 6-digit OTP
     const otp = crypto.randomInt(100000, 999999).toString();
     
     // OTP expires in 10 minutes
     const otpExpiry = new Date(Date.now() + 10 * 60 * 1000); 
 
-    // 4. Save OTP to user record
+    // 5. Save OTP to user record
     await prisma.user.update({
       where: { id: user.id },
       data: {
@@ -103,7 +113,7 @@ export async function POST(req: Request) {
       }
     });
 
-    // 5. Send OTP via email
+    // 6. Send OTP via email
     await sendEmail({
       to: user.email!,
       subject: "🔒 Your XtraSecurity Login Code",

@@ -58,6 +58,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/axios";
 import { logout } from "@/lib/auth";
+import { OtpVerificationModal } from "@/components/settings/OtpVerificationModal";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,23 +124,28 @@ export default function SettingsPage() {
         }
     };
 
+    const [isOtpModalOpen, setIsOtpModalOpen] = useState(false);
+    const [pendingMfaStatus, setPendingMfaStatus] = useState(false);
+
     const handleSecurityUpdate = async (newMfaStatus: boolean) => {
+        setPendingMfaStatus(newMfaStatus);
         setIsUpdatingSecurity(true);
         try {
-            await apiClient.patch("/api/user/settings", {
-                type: "security",
-                data: { mfaEnabled: newMfaStatus }
-            });
-            setMfaEnabled(newMfaStatus);
+            await apiClient.post("/api/user/security/send-otp");
+            setIsOtpModalOpen(true);
             toast({
-                title: newMfaStatus ? "MFA Enabled" : "MFA Disabled",
-                description: `Two-factor authentication is now ${newMfaStatus ? "active" : "inactive"}.`
+                title: "Verification Required",
+                description: "Please enter the code sent to your email to confirm."
             });
         } catch (error: any) {
-            toast({ title: "Error", description: "Failed to update security settings.", variant: "destructive" });
+            toast({ title: "Error", description: "Failed to send verification code.", variant: "destructive" });
         } finally {
             setIsUpdatingSecurity(false);
         }
+    };
+
+    const handleOtpSuccess = () => {
+        setMfaEnabled(pendingMfaStatus);
     };
 
     const handleWorkspaceUpdate = async (e?: React.FormEvent) => {
@@ -438,6 +444,13 @@ export default function SettingsPage() {
                     </AnimatePresence>
                 </div>
             </div>
+
+            <OtpVerificationModal 
+                isOpen={isOtpModalOpen}
+                onClose={() => setIsOtpModalOpen(false)}
+                onSuccess={handleOtpSuccess}
+                mfaEnabled={pendingMfaStatus}
+            />
         </DashboardLayout>
     );
 }

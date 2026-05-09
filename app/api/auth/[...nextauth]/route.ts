@@ -70,54 +70,17 @@ export const authOptions: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
         otp: { label: "OTP", type: "text" },
       },
       async authorize(credentials) {
         if (!credentials?.email) return null;
 
-        // Legacy Demo admin credentials bypass
+        const user = await prisma.user.findUnique({ where: { email: credentials.email } });
+        if (!user) return null;
+
+        // 1. Handle Demo Admin Bypass
         if (credentials.email === "admin@example.com" && credentials.otp === "password") {
-          try {
-            let user = await prisma.user.findUnique({ where: { email: credentials.email } })
-
-            if (!user) {
-              user = await prisma.user.create({
-                data: {
-                  email: credentials.email,
-                  name: "Admin User",
-                  role: "admin",
-                  emailVerified: new Date(),
-                },
-              })
-
-              try {
-                await prisma.workspace.create({
-                  data: {
-                    name: "Admin's workspace",
-                    description: "Personal workspace",
-                    workspaceType: "personal",
-                    createdBy: user.id,
-                    subscriptionPlan: "free",
-                    subscriptionEnd: null,
-                  },
-                })
-
-                const oneYear = 1000 * 60 * 60 * 24 * 365
-                await prisma.userSubscription.create({
-                  data: {
-                    userId: user.id,
-                    plan: "free",
-                    workspaceLimit: 3,
-                    status: "active",
-                    startDate: new Date(),
-                    endDate: new Date(Date.now() + oneYear),
-                  },
-                })
-              } catch (e) {
-                console.error("[auth] Failed to create workspace/subscription for admin:", e)
-              }
-            }
-
             return {
               id: user.id,
               email: user.email,
@@ -125,28 +88,13 @@ export const authOptions: NextAuthOptions = {
               role: user.role,
               tier: user.tier || "free",
             }
-          } catch (error) {
-            console.error("[auth] Database error during credentials auth:", error)
-            return null
-          }
         }
 
-        // Standard OTP Flow
-        if (!credentials.otp) return null;
-
-        try {
-          const user = await prisma.user.findUnique({ where: { email: credentials.email } });
-          if (!user || !user.emailOtp || !user.emailOtpExpiry) {
-            return null; // Invalid email or OTP not requested
-          }
-
-          if (user.emailOtp !== credentials.otp) {
-             return null; // Incorrect OTP
-          }
-
-          if (new Date() > user.emailOtpExpiry) {
-             return null; // Expired OTP
-          }
+        // 2. Handle OTP-based Auth (MFA ON)
+        if (credentials.otp && credentials.otp !== "SKIPPED") {
+          if (!user.emailOtp || !user.emailOtpExpiry) return null;
+          if (user.emailOtp !== credentials.otp) return null;
+          if (new Date() > user.emailOtpExpiry) return null;
 
           // Valid! Clear the OTP.
           await prisma.user.update({
@@ -161,12 +109,24 @@ export const authOptions: NextAuthOptions = {
             role: user.role,
             tier: user.tier || "free",
           };
-        } catch (error) {
-           console.error("[auth] OTP validation error:", error);
-           return null;
         }
 
-        return null
+        // 3. Handle Password-only Auth (MFA OFF)
+        if (!user.mfaEnabled && credentials.password) {
+          const { compare } = await import("bcryptjs");
+          const isPasswordValid = await compare(credentials.password, user.password || "");
+          if (isPasswordValid) {
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              role: user.role,
+              tier: user.tier || "free",
+            };
+          }
+        }
+
+        return null;
       },
     }),
     GoogleProvider({
