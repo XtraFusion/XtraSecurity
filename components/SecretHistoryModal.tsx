@@ -8,13 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
+import { Dialog as CustomDialog } from "@/components/ui/dialog-custom";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -281,24 +275,29 @@ export function SecretHistoryModal({
     const historyEntries = data?.history ?? [];
 
     return (
-        <Dialog open={open} onOpenChange={onOpenChange}>
-            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-                <DialogHeader className="p-6 border-b">
+        <CustomDialog 
+            isOpen={open} 
+            onClose={() => onOpenChange(false)}
+            noPadding
+            className="max-w-2xl"
+        >
+            <div className="max-h-[85vh] flex flex-col overflow-hidden">
+                <div className="p-6 border-b">
                     <div className="flex items-center gap-3">
                         <div className="p-2 bg-primary/10 rounded-lg">
                             <History className="h-5 w-5 text-primary" />
                         </div>
                         <div className="flex-1 text-left">
-                            <DialogTitle className="text-lg font-semibold font-mono leading-none tracking-tight">
+                            <h2 className="text-lg font-semibold font-mono leading-none tracking-tight">
                                 {secretKey}
-                            </DialogTitle>
-                            <DialogDescription className="text-sm text-muted-foreground mt-1">
+                            </h2>
+                            <p className="text-sm text-muted-foreground mt-1">
                                 Version history · {env} environment
                                 {data && ` · Current: v${data.currentVersion}`}
-                            </DialogDescription>
+                            </p>
                         </div>
                     </div>
-                </DialogHeader>
+                </div>
 
                 {/* Confirm rollback banner */}
                 {confirmVersion && (
@@ -344,7 +343,8 @@ export function SecretHistoryModal({
                         ))
                     )}
                 </div>
-            </DialogContent>
-        </Dialog>
+            </div>
+        </CustomDialog>
+
     );
 }

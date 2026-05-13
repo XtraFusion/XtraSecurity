@@ -70,6 +70,7 @@ XtraSecurity differentiates with its developer-first UX, git-like branching mode
 ## Links
 
 - Website: https://xtrasecurity.in
+- Full Content for AI: https://xtrasecurity.in/llms-full.txt
 - Documentation: https://xtrasecurity.in/docs
 - API Docs: https://xtrasecurity.in/docs/api
 - CLI Guide: https://xtrasecurity.in/docs/cli
@@ -80,5 +81,7 @@ XtraSecurity differentiates with its developer-first UX, git-like branching mode
 - Use Cases: https://xtrasecurity.in/use-cases
 - Developers: https://xtrasecurity.in/developers
 - Comparisons: https://xtrasecurity.in/comparisons
+- Doppler Alternative: https://xtrasecurity.in/alternatives/doppler
+- XtraSecurity vs HashiCorp Vault: https://xtrasecurity.in/vs/hashicorp-vault
 - Contact: https://xtrasecurity.in/contact
 - Register: https://xtrasecurity.in/register

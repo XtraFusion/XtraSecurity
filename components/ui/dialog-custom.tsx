@@ -10,10 +10,11 @@ interface DialogProps {
     title?: string
     description?: string
     className?: string
+    noPadding?: boolean
     children: React.ReactNode
 }
 
-export function Dialog({ isOpen, onClose, title, description, className, children }: DialogProps) {
+export function Dialog({ isOpen, onClose, title, description, className, noPadding, children }: DialogProps) {
     // Close on escape key
     React.useEffect(() => {
         const handleEscape = (e: KeyboardEvent) => {
@@ -67,7 +68,11 @@ export function Dialog({ isOpen, onClose, title, description, className, childre
                 </button>
 
                 {/* Content */}
-                <div className="p-6 overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
+                <div className={cn(
+                    "overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+                    !noPadding && "p-6",
+                    noPadding && "p-0"
+                )}>
                     {title && (
                         <h2 id="dialog-title" className="text-lg font-semibold leading-none tracking-tight">
                             {title}

@@ -15,15 +15,7 @@ import {
   CommandList,
   CommandSeparator,
 } from "@/components/ui/command";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog as CustomDialog } from "@/components/ui/dialog-custom";
 import {
   Popover,
   PopoverContent,
@@ -109,7 +101,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
   };
 
   return (
-    <Dialog open={showNewWorkspaceDialog} onOpenChange={setShowNewWorkspaceDialog}>
+    <>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
@@ -200,13 +192,13 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
           </Command>
         </PopoverContent>
       </Popover>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Create workspace</DialogTitle>
-          <DialogDescription>
-            Add a new workspace to manage products and customers.
-          </DialogDescription>
-        </DialogHeader>
+
+      <CustomDialog 
+        isOpen={showNewWorkspaceDialog} 
+        onClose={() => setShowNewWorkspaceDialog(false)}
+        title="Create workspace"
+        description="Add a new workspace to manage products and customers."
+      >
         <div className="space-y-4 py-2 pb-4">
           <div className="space-y-2">
             <Label htmlFor="name">Workspace name</Label>
@@ -218,15 +210,15 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
             />
           </div>
         </div>
-        <DialogFooter>
+        <div className="flex justify-end gap-3 pt-4">
           <Button variant="outline" onClick={() => setShowNewWorkspaceDialog(false)}>
             Cancel
           </Button>
           <Button type="submit" onClick={createWorkspace} disabled={isLoading}>
             {isLoading ? "Creating..." : "Continue"}
           </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </div>
+      </CustomDialog>
+    </>
   );
 }

@@ -76,14 +76,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle, 
-  DialogDescription, 
-  DialogFooter 
-} from "@/components/ui/dialog";
+import { Dialog as CustomDialog } from "@/components/ui/dialog-custom";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -774,7 +767,6 @@ const VaultManager: React.FC = () => {
       });
       setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, changeReason: "" } : s)));
       setIsEditSecretOpen(false);
-      setEditingSecret(null);
       setNotification({ type: "default", message: "✓ Secret updated successfully" });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update secret";
@@ -971,6 +963,8 @@ const VaultManager: React.FC = () => {
       const branch = res.data;
       setBranches((prev) => [...prev, branch]);
       setSelectedBranch(branch);
+      setSecrets(branch.secrets || []);
+      updateUrl("branch", branch.id);
       setIsAddBranchOpen(false);
       setNewBranch({ name: "", description: "" });
       setNotification({ type: "default", message: "✓ Branch created successfully" });
@@ -1505,23 +1499,17 @@ const VaultManager: React.FC = () => {
       </div>
 
       {/* Add Secret Modal */}
-      <Dialog
-        open={isAddSecretOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsAddSecretOpen(false);
-            setEnvImportText("");
-            setAddSecretTab("details");
-          }
+      <CustomDialog
+        isOpen={isAddSecretOpen}
+        onClose={() => {
+          setIsAddSecretOpen(false);
+          setEnvImportText("");
+          setAddSecretTab("details");
         }}
+        title="Add New Secret"
+        description={`Add a secret to ${selectedBranch?.name || "current branch"}`}
+        className="max-w-lg"
       >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Add New Secret</DialogTitle>
-            <DialogDescription>
-              Add a secret to {selectedBranch?.name || "current branch"}
-            </DialogDescription>
-          </DialogHeader>
         <Tabs value={addSecretTab} onValueChange={setAddSecretTab} className="w-full">
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="details">Details</TabsTrigger>
@@ -1535,68 +1523,55 @@ const VaultManager: React.FC = () => {
               <Input
                 placeholder="DATABASE_URL"
                 value={newSecret.key}
-                onChange={(e) => setNewSecret({ ...newSecret, key: e.target.value })}
+                onChange={(e) => setNewSecret({ ...newSecret, key: e.target.value.toUpperCase().replace(/\s+/g, '_') })}
               />
             </div>
 
             <div className="space-y-2">
-              <Label>Value</Label>
-              <Textarea
-                placeholder="Enter secret value..."
-                value={newSecret.value}
-                onChange={(e) => setNewSecret({ ...newSecret, value: e.target.value })}
-                className="font-mono"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Type</Label>
-                <Select
-                  value={newSecret.type}
-                  onValueChange={(v) => setNewSecret({ ...newSecret, type: v })}
+              <Label>Secret Value</Label>
+              <div className="relative">
+                <Textarea
+                  placeholder="Enter secret value..."
+                  value={newSecret.value}
+                  onChange={(e) => setNewSecret({ ...newSecret, value: e.target.value })}
+                  className="font-mono min-h-[100px] pr-10"
+                />
+                <Button
+                  size="icon"
+                  variant="ghost"
+                  className="absolute bottom-2 right-2 h-8 w-8"
+                  onClick={() => setNewSecret({ ...newSecret, value: Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) })}
+                  title="Generate Random Value"
                 >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {SECRET_TYPES.map((type) => (
-                      <SelectItem key={type.value} value={type.value}>
-                        <div className="flex items-center gap-2">
-                          <type.icon className={`h-4 w-4 ${type.color}`} />
-                          {type.value}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Environment</Label>
-                <Select
-                  value={newSecret.environmentType}
-                  onValueChange={(v) => setNewSecret({ ...newSecret, environmentType: v as any })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="development">Development</SelectItem>
-                    <SelectItem value="staging">Staging</SelectItem>
-                    <SelectItem value="production">Production</SelectItem>
-                  </SelectContent>
-                </Select>
+                  <RefreshCw className="h-4 w-4" />
+                </Button>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Description</Label>
+              <Label>Description (Optional)</Label>
               <Input
-                placeholder="Brief description..."
+                placeholder="e.g. Production API key for Stripe"
                 value={newSecret.description}
                 onChange={(e) => setNewSecret({ ...newSecret, description: e.target.value })}
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Environment</Label>
+              <Select
+                value={newSecret.environmentType}
+                onValueChange={(v) => setNewSecret({ ...newSecret, environmentType: v as any })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="development">Development</SelectItem>
+                  <SelectItem value="staging">Staging</SelectItem>
+                  <SelectItem value="production">Production</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </TabsContent>
 
@@ -1724,23 +1699,18 @@ const VaultManager: React.FC = () => {
             </Button>
           )}
         </div>
-        </DialogContent>
-      </Dialog>
+      </CustomDialog>
 
       {/* Edit Secret Modal */}
-      <Dialog
-        open={isEditSecretOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsEditSecretOpen(false);
-            setEditingSecret(null);
-          }
+      <CustomDialog
+        isOpen={isEditSecretOpen}
+        onClose={() => {
+          setIsEditSecretOpen(false);
+          setEditingSecret(null);
         }}
+        title="Edit Secret"
+        className="max-w-lg"
       >
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Secret</DialogTitle>
-          </DialogHeader>
         {editingSecret && (
           <div className="space-y-4">
             <div className="space-y-2">
@@ -1778,19 +1748,17 @@ const VaultManager: React.FC = () => {
             </div>
           </div>
         )}
-        </DialogContent>
-      </Dialog>
+      </CustomDialog>
+
 
 
       {/* CLI Setup Docs Modal */}
-      <Dialog
-        open={isDocsOpen}
-        onOpenChange={setIsDocsOpen}
+      <CustomDialog
+        isOpen={isDocsOpen}
+        onClose={() => setIsDocsOpen(false)}
+        title="CLI Setup Instructions"
+        className="max-w-2xl"
       >
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>CLI Setup Instructions</DialogTitle>
-          </DialogHeader>
         <div className="space-y-4 flex flex-col max-h-[70vh] pr-2 overflow-y-auto mt-4">
           <p className="text-sm text-muted-foreground">
             Use the Xtra CLI to sync secrets directly to your local development environment. These commands are tailored to your currently selected branch and environment.
@@ -1902,18 +1870,16 @@ const VaultManager: React.FC = () => {
             <Button onClick={() => setIsDocsOpen(false)}>Done</Button>
           </div>
         </div>
-        </DialogContent>
-      </Dialog>
+      </CustomDialog>
+
 
       {/* Add Branch Modal */}
-      <Dialog
-        open={isAddBranchOpen}
-        onOpenChange={setIsAddBranchOpen}
+      <CustomDialog
+        isOpen={isAddBranchOpen}
+        onClose={() => setIsAddBranchOpen(false)}
+        title="Create New Branch"
+        className="max-w-md"
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Create New Branch</DialogTitle>
-          </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Branch Name</Label>
@@ -1941,29 +1907,29 @@ const VaultManager: React.FC = () => {
             </Button>
           </div>
         </div>
-        </DialogContent>
-      </Dialog>
+      </CustomDialog>
+
 
       {/* Custom Delete Confirmation Modal */}
-      <Dialog
-        open={!!secretToDelete}
-        onOpenChange={(open) => {
-          if (!open && !deletingSecretId) {
+      <CustomDialog
+        isOpen={!!secretToDelete}
+        onClose={() => {
+          if (!deletingSecretId) {
             setSecretToDelete(null);
           }
         }}
+        title="Delete Secret"
+        className="max-w-md"
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2 text-destructive">
-              <Trash2 className="h-6 w-6" />
-              <DialogTitle className="text-lg font-semibold">Delete Secret</DialogTitle>
-            </div>
-            <DialogDescription>
-              Are you sure you want to delete the secret <strong>{secretToDelete?.key}</strong>? This action cannot be undone and will permanently remove all of its version history.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter className="flex justify-end gap-3 mt-4">
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 text-destructive mb-2">
+            <Trash2 className="h-6 w-6" />
+            <p className="font-semibold">Confirm Deletion</p>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Are you sure you want to delete the secret <strong>{secretToDelete?.key}</strong>? This action cannot be undone and will permanently remove all of its version history.
+          </p>
+          <div className="flex justify-end gap-3 mt-6">
             <Button variant="outline" onClick={() => setSecretToDelete(null)} disabled={!!deletingSecretId}>
               Cancel
             </Button>
@@ -1971,14 +1937,17 @@ const VaultManager: React.FC = () => {
               {deletingSecretId ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Delete
             </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          </div>
+        </div>
+      </CustomDialog>
+
 
       {/* Env Sync Modal */}
-      <Dialog
-        open={isEnvSyncOpen}
-        onOpenChange={setIsEnvSyncOpen}
+      <CustomDialog
+        isOpen={isEnvSyncOpen}
+        onClose={() => setIsEnvSyncOpen(false)}
+        noPadding
+        className="max-w-2xl"
       >
         {isEnvSyncOpen && (() => {
           const envs = ["development", "staging", "production"] as const;
@@ -2000,17 +1969,17 @@ const VaultManager: React.FC = () => {
             production: "bg-red-500/10 text-red-600 border-red-200 dark:border-red-800",
           };
           return (
-            <DialogContent className="max-w-2xl max-h-[85vh] flex flex-col p-0 overflow-hidden">
-              <DialogHeader className="px-6 py-4 border-b">
+            <div className="flex flex-col max-h-[85vh] overflow-hidden">
+              <div className="px-6 py-4 border-b">
                 <div className="flex items-center justify-between">
                   <div>
-                    <DialogTitle className="text-lg font-semibold flex items-center gap-2">
+                    <h3 className="text-lg font-semibold flex items-center gap-2">
                       <GitBranch className="h-5 w-5 text-primary" /> Environment Sync Status
-                    </DialogTitle>
-                    <DialogDescription className="text-sm text-muted-foreground mt-0.5">Keys that exist in some environments but are missing in others</DialogDescription>
+                    </h3>
+                    <p className="text-sm text-muted-foreground mt-0.5">Keys that exist in some environments but are missing in others</p>
                   </div>
                 </div>
-              </DialogHeader>
+              </div>
 
               {/* Summary badges */}
               <div className="flex items-center gap-3 px-6 py-3 border-b bg-muted/30">
@@ -2065,53 +2034,55 @@ const VaultManager: React.FC = () => {
                 </p>
                 <Button onClick={() => setIsEnvSyncOpen(false)}>Close</Button>
               </div>
-            </DialogContent>
+            </div>
           );
         })()}
-      </Dialog>
+      </CustomDialog>
+
 
       {/* Bulk Delete Confirmation */}
-      <Dialog
-        open={isBulkDeleteConfirmOpen}
-        onOpenChange={setIsBulkDeleteConfirmOpen}
+      <CustomDialog
+        isOpen={isBulkDeleteConfirmOpen}
+        onClose={() => setIsBulkDeleteConfirmOpen(false)}
+        title={`Delete ${selectedSecretIds.size} Secret${selectedSecretIds.size > 1 ? "s" : ""}?`}
+        className="max-w-md"
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2 text-destructive">
-              <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
-                <Trash2 className="h-5 w-5 text-destructive" />
-              </div>
-              <div className="text-left">
-                <DialogTitle className="text-lg font-semibold text-foreground">Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}?</DialogTitle>
-                <DialogDescription className="text-sm text-muted-foreground">This action cannot be undone.</DialogDescription>
-              </div>
+        <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-2 text-destructive">
+            <div className="h-10 w-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+              <Trash2 className="h-5 w-5 text-destructive" />
             </div>
-          </DialogHeader>
-
-            <div className="my-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg max-h-40 overflow-y-auto">
-              {Array.from(selectedSecretIds).map(id => {
-                const s = secrets.find(sec => sec.id === id);
-                return s ? (
-                  <div key={id} className="flex items-center gap-2 py-1 text-sm">
-                    <Key className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <code className="font-mono text-foreground">{s.key}</code>
-                    <span className="text-xs text-muted-foreground ml-auto">{s.environmentType}</span>
-                  </div>
-                ) : null;
-              })}
+            <div className="text-left">
+              <p className="text-sm font-medium text-foreground">Confirm Bulk Deletion</p>
+              <p className="text-xs text-muted-foreground">This action cannot be undone.</p>
             </div>
+          </div>
 
-            <DialogFooter className="flex justify-end gap-3 mt-2">
-              <Button variant="outline" onClick={() => setIsBulkDeleteConfirmOpen(false)}>
-                Cancel
-              </Button>
-              <Button variant="destructive" onClick={doHandleBulkDelete} disabled={isBulkDeleting}>
-                {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
-                Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}
-              </Button>
-            </DialogFooter>
-        </DialogContent>
-      </Dialog>
+          <div className="my-4 p-3 bg-destructive/5 border border-destructive/20 rounded-lg max-h-40 overflow-y-auto">
+            {Array.from(selectedSecretIds).map(id => {
+              const s = secrets.find(sec => sec.id === id);
+              return s ? (
+                <div key={id} className="flex items-center gap-2 py-1 text-sm">
+                  <Key className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <code className="font-mono text-foreground">{s.key}</code>
+                  <span className="text-xs text-muted-foreground ml-auto">{s.environmentType}</span>
+                </div>
+              ) : null;
+            })}
+          </div>
+
+          <div className="flex justify-end gap-3 mt-6">
+            <Button variant="outline" onClick={() => setIsBulkDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={doHandleBulkDelete} disabled={isBulkDeleting}>
+              {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Delete {selectedSecretIds.size} Secret{selectedSecretIds.size > 1 ? "s" : ""}
+            </Button>
+          </div>
+        </div>
+      </CustomDialog>
+
 
       {/* Share Secret Modal */}
       <ShareSecretModal
@@ -2123,17 +2094,13 @@ const VaultManager: React.FC = () => {
       />
 
       {/* Copy Secrets Modal */}
-      <Dialog
-        open={isCopyModalOpen}
-        onOpenChange={setIsCopyModalOpen}
+      <CustomDialog
+        isOpen={isCopyModalOpen}
+        onClose={() => setIsCopyModalOpen(false)}
+        title="Copy Secrets"
+        description="Duplicate secrets from the current branch to another branch or environment."
+        className="max-w-md"
       >
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Copy Secrets</DialogTitle>
-            <DialogDescription>
-              Duplicate secrets from the current branch to another branch or environment.
-            </DialogDescription>
-          </DialogHeader>
         <div className="space-y-4 mt-4">
           <div className="flex items-center justify-between text-sm font-medium text-muted-foreground mb-2">
             <span>Source ({selectedBranch?.name})</span>
@@ -2200,28 +2167,22 @@ const VaultManager: React.FC = () => {
               Copy Secrets
             </Button>
           </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </CustomDialog>
+
 
       {/* Compare Branches Modal */}
-      <Dialog
-        open={isCompareModalOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIsCompareModalOpen(false);
-            setCompareResults(null);
-          }
+      <CustomDialog
+        isOpen={isCompareModalOpen}
+        onClose={() => {
+          setIsCompareModalOpen(false);
+          setCompareResults(null);
         }}
+        title="Compare Branches"
+        description="See what secrets have changed between your current branch and another."
+        className="max-w-3xl"
       >
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Compare Branches</DialogTitle>
-            <DialogDescription>
-              See what secrets have changed between your current branch and another.
-            </DialogDescription>
-          </DialogHeader>
-        <div className="space-y-4 mt-4">
+        <div className="space-y-4 mt-4 max-h-[75vh] overflow-y-auto pr-2">
           <div className="flex items-center gap-4 bg-muted/30 p-3 rounded-lg border">
             <div className="flex-1 space-y-1">
               <Label className="text-xs text-muted-foreground uppercase tracking-wider">Base Branch</Label>
@@ -2323,9 +2284,9 @@ const VaultManager: React.FC = () => {
               )}
             </div>
           )}
-          </div>
-        </DialogContent>
-      </Dialog>
+        </div>
+      </CustomDialog>
+
 
       {/* JIT Generate Modal */}
       <JitGenerateModal
@@ -2348,17 +2309,16 @@ const VaultManager: React.FC = () => {
       />
 
       {/* JIT Admin Requests Modal */}
-      <Dialog open={isAdminRequestsOpen} onOpenChange={setIsAdminRequestsOpen}>
-        <DialogContent className="max-w-4xl max-h-[85vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>JIT Access Requests</DialogTitle>
-            <DialogDescription>
-              Review and manage pending Just-In-Time access requests for this project.
-            </DialogDescription>
-          </DialogHeader>
-          <AccessRequestAdmin projectId={projectId} />
-        </DialogContent>
-      </Dialog>
+      <CustomDialog
+        isOpen={isAdminRequestsOpen}
+        onClose={() => setIsAdminRequestsOpen(false)}
+        title="JIT Access Requests"
+        description="Review and manage pending Just-In-Time access requests for this project."
+        className="max-w-4xl"
+      >
+        <AccessRequestAdmin projectId={projectId} />
+      </CustomDialog>
+
 
       {/* Break Glass Modal */}
       <BreakGlassModal

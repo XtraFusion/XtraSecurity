@@ -47,6 +47,7 @@ Allow: /comparisons
 Allow: /security
 Allow: /compliance
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -59,6 +60,7 @@ Disallow: /teams/
 User-agent: ChatGPT-User
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -68,6 +70,7 @@ Disallow: /projects/
 User-agent: ClaudeBot
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -77,6 +80,7 @@ Disallow: /projects/
 User-agent: PerplexityBot
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -86,6 +90,7 @@ Disallow: /projects/
 User-agent: Google-Extended
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -95,6 +100,7 @@ Disallow: /projects/
 User-agent: Applebot-Extended
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -103,6 +109,7 @@ Disallow: /dashboard/
 User-agent: CCBot
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -111,6 +118,7 @@ Disallow: /dashboard/
 User-agent: Bytespider
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
@@ -119,6 +127,7 @@ Disallow: /dashboard/
 User-agent: cohere-ai
 Allow: /
 Allow: /llms.txt
+Allow: /llms-full.txt
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/

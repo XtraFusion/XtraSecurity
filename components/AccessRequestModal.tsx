@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from "@/components/ui/dialog";
+import { Dialog as CustomDialog } from "@/components/ui/dialog-custom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -81,61 +74,59 @@ export function AccessRequestModal({
     const displayName = secretKey || resourceName || "Restricted Resource";
 
     return (
-        <Dialog open={open} onOpenChange={onClose}>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <div className="flex items-center gap-2 text-amber-500 mb-2">
-                        <ShieldAlert className="h-5 w-5" />
-                        <span className="font-semibold text-sm uppercase tracking-wider">Restricted Access</span>
-                    </div>
-                    <DialogTitle>Request Access to {displayName}</DialogTitle>
-                    <DialogDescription>
-                        You currently do not have permission to view or use this resource.
-                        Submit a request for temporary access elevation.
-                    </DialogDescription>
-                </DialogHeader>
+        <CustomDialog 
+            isOpen={open} 
+            onClose={onClose}
+            title={`Request Access to ${displayName}`}
+            description="You currently do not have permission to view or use this resource. Submit a request for temporary access elevation."
+            className="sm:max-w-md"
+        >
+            <div className="flex items-center gap-2 text-amber-500 mb-4">
+                <ShieldAlert className="h-5 w-5" />
+                <span className="font-semibold text-sm uppercase tracking-wider">Restricted Access</span>
+            </div>
 
-                <form onSubmit={handleSubmit} className="space-y-4 py-2">
-                    <div className="space-y-2">
-                        <Label htmlFor="duration">Duration</Label>
-                        <Select value={duration} onValueChange={setDuration}>
-                            <SelectTrigger id="duration">
-                                <SelectValue placeholder="Select duration" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="30">30 Minutes</SelectItem>
-                                <SelectItem value="60">1 Hour</SelectItem>
-                                <SelectItem value="240">4 Hours</SelectItem>
-                                <SelectItem value="1440">24 Hours</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <p className="text-xs text-muted-foreground">
-                            Access will automatically expire after this duration.
-                        </p>
-                    </div>
+            <form onSubmit={handleSubmit} className="space-y-4 py-2">
+                <div className="space-y-2">
+                    <Label htmlFor="duration">Duration</Label>
+                    <Select value={duration} onValueChange={setDuration}>
+                        <SelectTrigger id="duration">
+                            <SelectValue placeholder="Select duration" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="30">30 Minutes</SelectItem>
+                            <SelectItem value="60">1 Hour</SelectItem>
+                            <SelectItem value="240">4 Hours</SelectItem>
+                            <SelectItem value="1440">24 Hours</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <p className="text-xs text-muted-foreground">
+                        Access will automatically expire after this duration.
+                    </p>
+                </div>
 
-                    <div className="space-y-2">
-                        <Label htmlFor="reason">Reason for Access</Label>
-                        <Textarea
-                            id="reason"
-                            placeholder="I need to debug a production issue..."
-                            value={reason}
-                            onChange={(e) => setReason(e.target.value)}
-                            rows={3}
-                        />
-                    </div>
+                <div className="space-y-2">
+                    <Label htmlFor="reason">Reason for Access</Label>
+                    <Textarea
+                        id="reason"
+                        placeholder="I need to debug a production issue..."
+                        value={reason}
+                        onChange={(e) => setReason(e.target.value)}
+                        rows={3}
+                    />
+                </div>
 
-                    <DialogFooter className="gap-2 sm:gap-0">
-                        <Button type="button" variant="outline" onClick={onClose}>
-                            Cancel
-                        </Button>
-                        <Button type="submit" disabled={loading}>
-                            {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                            Submit Request
-                        </Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
+                <div className="flex justify-end gap-2 mt-6">
+                    <Button type="button" variant="outline" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button type="submit" disabled={loading}>
+                        {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                        Submit Request
+                    </Button>
+                </div>
+            </form>
+        </CustomDialog>
+
     );
 }

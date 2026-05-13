@@ -6,6 +6,11 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Target modern browsers only — skip polyfills for ES2020+ features
+  compiler: {
+    // Remove console.log in production for smaller bundles
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
+  },
   images: {
     unoptimized: true,
     remotePatterns: [
