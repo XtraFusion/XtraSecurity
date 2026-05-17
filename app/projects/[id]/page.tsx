@@ -1163,10 +1163,12 @@ const VaultManager: React.FC = () => {
                 </Button>
               </>
             )}
-            <Button onClick={() => setIsAddSecretOpen(true)}>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Secret
-            </Button>
+            {project?.currentUserRole !== 'viewer' && (
+              <Button onClick={() => setIsAddSecretOpen(true)}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add Secret
+              </Button>
+            )}
           </div>
         </div>
 
@@ -1309,33 +1311,47 @@ const VaultManager: React.FC = () => {
                 </>
               ) : (
                 <>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnv}>
-                    <Download className="h-4 w-4 mr-2 text-muted-foreground" /> Export .env
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnvExample}>
-                    <FileText className="h-4 w-4 mr-2 text-muted-foreground" /> .env.example
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsEnvSyncOpen(true)}>
-                    <Activity className="h-4 w-4 mr-2 text-muted-foreground" /> Env Sync
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCopyModalOpen(true)}>
-                    <Copy className="h-4 w-4 mr-2 text-muted-foreground" /> Copy
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCompareModalOpen(true)}>
-                    <GitCompare className="h-4 w-4 mr-2 text-muted-foreground" /> Compare
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={toggleBulkSelect}>
-                    <CheckSquare className="h-4 w-4 mr-2 text-muted-foreground" /> Select
-                  </Button>
-                  <Button variant="outline" size="sm" className="h-9 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 font-medium" onClick={() => setIsJitModalOpen(true)}>
-                    <Shield className="h-4 w-4 mr-2" /> JIT Link
-                    <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
-                  </Button>
+                  {project?.currentUserRole !== 'viewer' && (
+                    <>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnv}>
+                        <Download className="h-4 w-4 mr-2 text-muted-foreground" /> Export .env
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnvExample}>
+                        <FileText className="h-4 w-4 mr-2 text-muted-foreground" /> .env.example
+                      </Button>
+                    </>
+                  )}
+                  {project?.currentUserRole !== 'viewer' && (
+                    <>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsEnvSyncOpen(true)}>
+                        <Activity className="h-4 w-4 mr-2 text-muted-foreground" /> Env Sync
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCopyModalOpen(true)}>
+                        <Copy className="h-4 w-4 mr-2 text-muted-foreground" /> Copy
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={toggleBulkSelect}>
+                        <CheckSquare className="h-4 w-4 mr-2 text-muted-foreground" /> Select
+                      </Button>
+                    </>
+                  )}
+                  {project?.currentUserRole !== 'viewer' && (
+                    <>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCompareModalOpen(true)}>
+                        <GitCompare className="h-4 w-4 mr-2 text-muted-foreground" /> Compare
+                      </Button>
+                      <Button variant="outline" size="sm" className="h-9 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 font-medium" onClick={() => setIsJitModalOpen(true)}>
+                        <Shield className="h-4 w-4 mr-2" /> JIT Link
+                        <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
+                      </Button>
+                    </>
+                  )}
 
                   <div className="ml-auto">
-                    <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsAddBranchOpen(true)}>
-                      <GitBranch className="h-4 w-4 mr-2 text-muted-foreground" /> New Branch
-                    </Button>
+                    {project?.currentUserRole !== 'viewer' && (
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsAddBranchOpen(true)}>
+                        <GitBranch className="h-4 w-4 mr-2 text-muted-foreground" /> New Branch
+                      </Button>
+                    )}
                   </div>
                 </>
               )}

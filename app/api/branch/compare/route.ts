@@ -19,6 +19,27 @@ export const GET = withSecurity(async (req: NextRequest, context: any, session: 
             return NextResponse.json({ error: "Base and Compare Branch IDs are required" }, { status: 400 });
         }
 
+        // Fetch secrets for both branches and verify permissions
+        const [baseBranch, compareBranch] = await Promise.all([
+            prisma.branch.findUnique({ where: { id: baseBranchId }, select: { projectId: true } }),
+            prisma.branch.findUnique({ where: { id: compareBranchId }, select: { projectId: true } })
+        ]);
+
+        if (!baseBranch || !compareBranch) {
+            return NextResponse.json({ error: "Branch not found" }, { status: 404 });
+        }
+
+        if (baseBranch.projectId !== compareBranch.projectId) {
+            return NextResponse.json({ error: "Branches must belong to the same project" }, { status: 400 });
+        }
+
+        const { getUserProjectRole } = await import("@/lib/permissions");
+        const role = await getUserProjectRole(session.userId, baseBranch.projectId);
+        
+        if (!role || role === 'viewer') {
+            return NextResponse.json({ error: "Forbidden: Viewers cannot compare branches." }, { status: 403 });
+        }
+
         // Fetch secrets for both branches
         const [baseSecrets, compareSecrets] = await Promise.all([
             prisma.secret.findMany({ where: { branchId: baseBranchId } }),

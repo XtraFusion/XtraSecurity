@@ -37,6 +37,34 @@ export async function GET(
 
     if (!secret) return NextResponse.json({ error: "Secret not found" }, { status: 404 });
 
+    if (role === "viewer") {
+      // Check for active JIT access requests
+      const activeRequests = await prisma.accessRequest.findMany({
+        where: {
+          userId: auth.userId,
+          projectId: projectId,
+          status: "approved",
+          expiresAt: { gt: new Date() }
+        }
+      });
+
+      let hasAccess = false;
+      for (const req of activeRequests) {
+        if (!req.secretIds || (Array.isArray(req.secretIds) && req.secretIds.length === 0)) {
+          // Empty secretIds means full project/branch JIT access
+          hasAccess = true;
+          break;
+        } else if (Array.isArray(req.secretIds) && req.secretIds.includes(secret.id)) {
+          hasAccess = true;
+          break;
+        }
+      }
+
+      if (!hasAccess) {
+        return NextResponse.json({ error: "Forbidden: Viewers cannot view secret history without active JIT access" }, { status: 403 });
+      }
+    }
+
     // Return history
     // We should decrypt values or keep them encrypted? 
     // Usually history should be viewable, so let's decrypt if the user has access.

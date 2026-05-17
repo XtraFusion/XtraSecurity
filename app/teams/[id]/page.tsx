@@ -516,21 +516,19 @@ const TeamDetailPage = () => {
                                                               style={{ top: dropdownPos.top, right: dropdownPos.right }}
                                                             >
                                                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Manage Role</div>
-                                                                <button 
-                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'admin' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
-                                                                    disabled={member.role === 'admin'}
-                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'admin' }); setActiveDropdown(null); }}
-                                                                >Admin</button>
-                                                                <button 
-                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'developer' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
-                                                                    disabled={member.role === 'developer'}
-                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'developer' }); setActiveDropdown(null); }}
-                                                                >Developer</button>
-                                                                <button 
-                                                                    className={cn("w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors", member.role === 'viewer' ? "opacity-50 cursor-not-allowed" : "hover:bg-accent hover:text-accent-foreground")}
-                                                                    disabled={member.role === 'viewer'}
-                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: 'viewer' }); setActiveDropdown(null); }}
-                                                                >Viewer</button>
+                                                                {['admin', 'developer', 'viewer'].map(role => (
+                                                                    <button 
+                                                                        key={role}
+                                                                        className={cn(
+                                                                            "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors capitalize", 
+                                                                            member.role === role ? "opacity-50 cursor-not-allowed bg-accent/50 text-accent-foreground font-medium" : "hover:bg-accent hover:text-accent-foreground"
+                                                                        )}
+                                                                        disabled={member.role === role}
+                                                                        onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: role as any }); setActiveDropdown(null); }}
+                                                                    >
+                                                                        {role}
+                                                                    </button>
+                                                                ))}
                                                                 <div className="h-px bg-border my-1" />
                                                                 <button 
                                                                     className="w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors text-destructive hover:bg-destructive/10"
