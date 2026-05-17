@@ -500,7 +500,7 @@ const TeamDetailPage = () => {
                                                             } else {
                                                               const rect = e.currentTarget.getBoundingClientRect();
                                                               setDropdownPos({
-                                                                top: rect.bottom + 4,
+                                                                top: (window.innerHeight - rect.bottom < 190 && rect.top > 190) ? rect.top - 184 : rect.bottom + 4,
                                                                 right: window.innerWidth - rect.right
                                                               });
                                                               setActiveDropdown(member.id);
@@ -508,34 +508,42 @@ const TeamDetailPage = () => {
                                                           }}
                                                         >
                                                             <MoreVertical className="h-4 w-4 pointer-events-none" />
-                                                        </Button>
-                                                        
-                                                        {activeDropdown === member.id && (
-                                                            <div 
-                                                              className="fixed w-48 rounded-md border border-border bg-popover shadow-xl z-[9999] overflow-hidden text-left p-1 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
-                                                              style={{ top: dropdownPos.top, right: dropdownPos.right }}
-                                                            >
-                                                                <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Manage Role</div>
-                                                                {['admin', 'developer', 'viewer'].map(role => (
-                                                                    <button 
-                                                                        key={role}
-                                                                        className={cn(
-                                                                            "w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors capitalize", 
-                                                                            member.role === role ? "opacity-50 cursor-not-allowed bg-accent/50 text-accent-foreground font-medium" : "hover:bg-accent hover:text-accent-foreground"
-                                                                        )}
-                                                                        disabled={member.role === role}
-                                                                        onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: role as any }); setActiveDropdown(null); }}
-                                                                    >
-                                                                        {role}
-                                                                    </button>
-                                                                ))}
-                                                                <div className="h-px bg-border my-1" />
-                                                                <button 
-                                                                    className="w-full text-left px-2 py-1.5 text-sm rounded-sm transition-colors text-destructive hover:bg-destructive/10"
-                                                                    onClick={() => { setConfirmDialog({ open: true, type: 'remove', member }); setActiveDropdown(null); }}
-                                                                >Remove from Team</button>
-                                                            </div>
-                                                        )}
+                                                        </Button>                                                         {activeDropdown === member.id && (
+                                                             <div 
+                                                               className="fixed w-48 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-xl z-[9999] overflow-hidden text-left p-1.5 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
+                                                               style={{ top: dropdownPos.top, right: dropdownPos.right }}
+                                                             >
+                                                                 <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500">Manage Role</div>
+                                                                 <div className="space-y-0.5">
+                                                                     {['admin', 'developer', 'viewer'].map(role => (
+                                                                         <button 
+                                                                             key={role}
+                                                                             className={cn(
+                                                                                 "w-full text-left px-2 py-1.5 text-xs rounded transition-all capitalize font-medium cursor-pointer flex items-center justify-between", 
+                                                                                 member.role === role 
+                                                                                     ? "bg-blue-600/20 text-blue-400 font-semibold" 
+                                                                                     : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                                                                             )}
+                                                                             disabled={member.role === role}
+                                                                             onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: role as any }); setActiveDropdown(null); }}
+                                                                         >
+                                                                             <span>{role}</span>
+                                                                             {member.role === role && (
+                                                                                 <span className="h-1.5 w-1.5 rounded-full bg-blue-400 shadow-[0_0_6px_rgba(96,165,250,0.6)]" />
+                                                                             )}
+                                                                         </button>
+                                                                     ))}
+                                                                 </div>
+                                                                 <div className="h-px bg-zinc-800 my-1.5" />
+                                                                 <button 
+                                                                     className="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-red-400 hover:bg-red-950/30 hover:text-red-300 font-medium flex items-center gap-1.5 cursor-pointer"
+                                                                     onClick={() => { setConfirmDialog({ open: true, type: 'remove', member }); setActiveDropdown(null); }}
+                                                                 >
+                                                                     <UserX className="h-3.5 w-3.5" />
+                                                                     Remove from Team
+                                                                 </button>
+                                                             </div>
+                                                         )}
                                                     </div>
                                                 )}
                                             </td>
