@@ -5,6 +5,7 @@ import { withSecurity } from "@/lib/api-middleware";
 import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
 import { notify } from "@/lib/notifications/engine";
 import { queueSecretSync } from "@/lib/queue/sync-queue";
+import { logAudit } from "@/lib/audit";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -237,6 +238,19 @@ export const POST = withSecurity(async (request, context, session) => {
     // TRIGGER SYNC
     await queueSecretSync(newSecret.id);
 
+    // Audit Log
+    try {
+      await logAudit(
+        "SECRET_CREATED",
+        session.userId,
+        projectId,
+        { secretId: newSecret.id, key: newSecret.key, environment: environmentType, branchId },
+        projectRecord.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
+
     // Notify Rule Engine
     try {
       await notify({
@@ -387,6 +401,19 @@ export const PUT = withSecurity(async (request, context, session) => {
     // TRIGGER SYNC
     await queueSecretSync(updatedSecret.id);
 
+    // Audit Log
+    try {
+      await logAudit(
+        "SECRET_UPDATED",
+        session.userId,
+        projectId,
+        { secretId: updatedSecret.id, key: updatedSecret.key, environment: updatedSecret.environmentType, branchId: updatedSecret.branchId, version: updatedSecret.version },
+        existingSecret.project?.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
+
     // Notify Rule Engine
     try {
       await notify({
@@ -479,6 +506,19 @@ export const DELETE = withSecurity(async (request, context, session) => {
     await prisma.secret.delete({
       where: { id },
     });
+
+    // Audit Log
+    try {
+      await logAudit(
+        "SECRET_DELETED",
+        session.userId,
+        projectId,
+        { secretId: existingSecret.id, key: existingSecret.key, environment: existingSecret.environmentType, branchId: existingSecret.branchId },
+        existingSecret.project?.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     // Notify Rule Engine
     try {

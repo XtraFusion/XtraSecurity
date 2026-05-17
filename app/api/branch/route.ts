@@ -153,7 +153,10 @@ export async function POST(request: NextRequest) {
     // Operations might need permissions too
     if (operation === "clear" && branchId) {
       // Fetch branch to check project
-      const branchToClear = await prisma.branch.findUnique({ where: { id: branchId } });
+      const branchToClear = await prisma.branch.findUnique({ 
+        where: { id: branchId },
+        include: { project: true }
+      });
       if (!branchToClear) return NextResponse.json({ error: "Branch not found" }, { status: 404 });
 
       // RBAC
@@ -173,7 +176,8 @@ export async function POST(request: NextRequest) {
           "BRANCH_CLEARED",
           auth.userId,
           branchToClear.projectId,
-          { branchId, branchName: branchToClear.name }
+          { branchId, branchName: branchToClear.name },
+          branchToClear.project?.workspaceId
         );
       } catch (e) {
         console.error("Audit log failed:", e);
@@ -208,7 +212,7 @@ export async function POST(request: NextRequest) {
     // Branch limit per project based on project owner's tier
     const projectRecord = await prisma.project.findUnique({
       where: { id: projectId },
-      select: { userId: true, user: { select: { tier: true } } },
+      select: { userId: true, workspaceId: true, user: { select: { tier: true } } },
     });
     if (projectRecord) {
       const ownerTier = (projectRecord.user?.tier || "free");
@@ -256,7 +260,8 @@ export async function POST(request: NextRequest) {
         "BRANCH_CREATED",
         auth.userId,
         projectId,
-        { branchId: branch.id, branchName: name }
+        { branchId: branch.id, branchName: name },
+        projectRecord?.workspaceId
       );
     } catch (e) {
       console.error("Audit log failed:", e);
@@ -292,7 +297,8 @@ export async function DELETE(request: NextRequest) {
 
     // Check if branch exists
     const existingBranch = await prisma.branch.findUnique({
-      where: { id }
+      where: { id },
+      include: { project: true }
     });
 
     if (!existingBranch) {
@@ -327,7 +333,8 @@ export async function DELETE(request: NextRequest) {
         "BRANCH_DELETED",
         auth.userId,
         existingBranch.projectId,
-        { branchId: id, branchName: existingBranch.name }
+        { branchId: id, branchName: existingBranch.name },
+        existingBranch.project?.workspaceId
       );
     } catch (e) {
       console.error("Audit log failed:", e);
@@ -366,7 +373,8 @@ export async function PUT(request: NextRequest) {
 
     // Check if branch exists
     const existingBranch = await prisma.branch.findUnique({
-      where: { id }
+      where: { id },
+      include: { project: true }
     });
 
     if (!existingBranch) {
@@ -412,7 +420,8 @@ export async function PUT(request: NextRequest) {
         "BRANCH_UPDATED",
         auth.userId,
         existingBranch.projectId,
-        { branchId: id, branchName: branch.name, updates: { name, description, versionNo, permissions } }
+        { branchId: id, branchName: branch.name, updates: { name, description, versionNo, permissions } },
+        existingBranch.project?.workspaceId
       );
     } catch (e) {
       console.error("Audit log failed:", e);

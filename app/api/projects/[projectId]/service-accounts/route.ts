@@ -60,7 +60,7 @@ export async function GET(
     return NextResponse.json(serviceAccounts);
   } catch (error: any) {
     console.error("GET service-accounts error:", error);
-    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -118,6 +118,6 @@ export async function POST(
     return NextResponse.json(serviceAccount, { status: 201 });
   } catch (error: any) {
     console.error("POST service-accounts error:", error);
-    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

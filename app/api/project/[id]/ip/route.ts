@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 // GET /api/project/[id]/ip - Get project IP restrictions
 export async function GET(
@@ -62,7 +63,7 @@ export async function POST(
         id: projectId,
         userId: auth.userId
       },
-      select: { ipRestrictions: true }
+      select: { ipRestrictions: true, workspaceId: true }
     });
 
     if (!project) {
@@ -85,7 +86,7 @@ export async function POST(
     });
 
     // Audit log
-    await prisma.auditLog.create({
+    await logAudit("PROJECT_IP_ADDED", auth.userId, projectId, { ip, description }, project.workspaceId || undefined); if (false) { await prisma.auditLog.create({
       data: {
         userId: auth.userId,
         action: "project_ip_add",
@@ -93,7 +94,7 @@ export async function POST(
         entityId: projectId,
         changes: { ip, description }
       }
-    });
+    }); }
 
     return NextResponse.json({
       success: true,
@@ -130,7 +131,7 @@ export async function DELETE(
         id: projectId,
         userId: auth.userId
       },
-      select: { ipRestrictions: true }
+      select: { ipRestrictions: true, workspaceId: true }
     });
 
     if (!project) {
@@ -147,7 +148,7 @@ export async function DELETE(
     });
 
     // Audit log
-    await prisma.auditLog.create({
+    await logAudit("PROJECT_IP_REMOVED", auth.userId, projectId, { ip }, project.workspaceId || undefined); if (false) { await prisma.auditLog.create({
       data: {
         userId: auth.userId,
         action: "project_ip_remove",
@@ -155,7 +156,7 @@ export async function DELETE(
         entityId: projectId,
         changes: { ip }
       }
-    });
+    }); }
 
     return NextResponse.json({
       success: true,

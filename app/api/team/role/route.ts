@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { getUserTeamRole, canEditRole, invalidateUserRbacCache } from "@/lib/permissions";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function PUT(req: Request) {
     try {
@@ -14,7 +15,10 @@ export async function PUT(req: Request) {
                 const { memberId, newRole } = await req.json();
 
                 // load teamUser to get teamId and target role
-                const targetTeamUser = await prisma.teamUser.findUnique({ where: { id: memberId } });
+                const targetTeamUser = await prisma.teamUser.findUnique({ 
+                    where: { id: memberId },
+                    include: { team: true }
+                });
                 if (!targetTeamUser) {
                     return NextResponse.json({ error: "Team member not found" }, { status: 404 });
                 }
@@ -52,7 +56,7 @@ export async function PUT(req: Request) {
 
         // Create audit log
         try {
-            await prisma.auditLog.create({
+            await logAudit("MEMBER_ROLE_UPDATED", auth.userId, targetTeamUser.teamId, { memberId, previousRole: targetTeamUser.role, newRole }, targetTeamUser.team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
                 data: {
                     userId: auth.userId,
                     action: "role_change",
@@ -60,7 +64,7 @@ export async function PUT(req: Request) {
                     entityId: memberId,
                     changes: { newRole },
                 },
-            });
+            }); }
         } catch (auditErr) {
             console.error("Failed to write audit log for role change:", auditErr);
         }

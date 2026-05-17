@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -11,6 +12,11 @@ export async function POST(req: Request) {
     if (!auth?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    const team = await prisma.team.findUnique({
+      where: { id: teamId },
+      select: { workspaceId: true }
+    });
 
     if (status === "active") {
       const acceptInvite = await prisma.teamUser.update({
@@ -25,7 +31,7 @@ export async function POST(req: Request) {
 
       // audit log
       try {
-        await prisma.auditLog.create({
+        await logAudit("MEMBER_INVITE_ACCEPTED", auth.userId, teamId, { status }, team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
           data: {
             userId: auth.userId,
             action: "invite_accepted",
@@ -33,7 +39,7 @@ export async function POST(req: Request) {
             entityId: teamId,
             changes: { status },
           },
-        });
+        }); }
       } catch (auditErr) {
         console.error("Failed to write audit log for invite acceptance:", auditErr);
       }
@@ -75,7 +81,7 @@ export async function POST(req: Request) {
 
       // audit log
       try {
-        await prisma.auditLog.create({
+        await logAudit("MEMBER_INVITE_DECLINED", auth.userId, teamId, { status }, team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
           data: {
             userId: auth.userId,
             action: "invite_declined",
@@ -83,7 +89,7 @@ export async function POST(req: Request) {
             entityId: teamId,
             changes: { status },
           },
-        });
+        }); }
       } catch (auditErr) {
         console.error("Failed to write audit log for invite decline:", auditErr);
       }

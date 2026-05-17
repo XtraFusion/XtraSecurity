@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/lib/db';
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: Request,
@@ -33,7 +34,7 @@ export async function POST(
       },
     });
 
-    return NextResponse.json(updatedProject);
+    try { await logAudit(updatedProject.status === 'blocked' ? 'PROJECT_BLOCKED' : 'PROJECT_UNBLOCKED', auth.userId, params.id, { status: updatedProject.status }, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json(updatedProject);
   } catch (error) {
     console.error("[PROJECT_TOGGLE_BLOCK]", error);
     return new NextResponse("Internal Error", { status: 500 });

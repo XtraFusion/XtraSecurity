@@ -2,6 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(
   req: NextRequest,
@@ -22,7 +23,8 @@ export async function DELETE(
 
   // Verify the assignment belongs to this project
   const assignment = await prisma.teamProject.findUnique({
-      where: { id: params.teamProjectId }
+      where: { id: params.teamProjectId },
+      include: { project: true, team: true }
   });
 
   if (!assignment || assignment.projectId !== params.id) {
@@ -33,5 +35,5 @@ export async function DELETE(
       where: { id: params.teamProjectId }
   });
 
-  return NextResponse.json({ success: true });
+  try { await logAudit("PROJECT_TEAM_REMOVED", auth.userId, params.id, { teamId: assignment.teamId, teamName: assignment.team.name }, assignment.project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json({ success: true });
 }

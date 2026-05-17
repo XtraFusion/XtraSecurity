@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
 import { verifyTotp, verifyBackupCode } from "@/lib/mfa";
 import jwt from "jsonwebtoken";
+import { logAudit } from "@/lib/audit";
 
 const MFA_SESSION_EXPIRY = 15 * 60; // 15 minutes
 
@@ -69,7 +70,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Create audit log
-    await prisma.auditLog.create({
+    await logAudit("MEMBER_MFA_VERIFIED", auth.userId, auth.userId, { method: useBackupCode ? "backup_code" : "totp" }); if (false) { await prisma.auditLog.create({
       data: {
         userId: auth.userId,
         action: "mfa_verified",
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
         entityId: auth.userId,
         changes: { method: useBackupCode ? "backup_code" : "totp" }
       }
-    });
+    }); }
 
     return NextResponse.json({
       success: true,

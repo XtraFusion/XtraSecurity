@@ -4,6 +4,7 @@ import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { getUserTeamRole, canManageMembers } from "@/lib/permissions";
 import { sendEmail } from "@/lib/email";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(req: Request) {
   try {
@@ -29,7 +30,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const team = await prisma.team.findUnique({ where: { id: teamId } });
+    const team = await prisma.team.findUnique({ 
+      where: { id: teamId },
+      select: { name: true, workspaceId: true }
+    });
 
     const invite = await prisma.teamUser.create({
       data: {
@@ -40,6 +44,19 @@ export async function POST(req: Request) {
         invitedBy: auth.userId,
       },
     });
+
+    // Audit Log
+    try {
+      await logAudit(
+        "MEMBER_INVITED",
+        auth.userId,
+        teamId,
+        { invitedUserId: user.id, invitedEmail: user.email, role },
+        team?.workspaceId || undefined
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     // Send email with invite link
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";

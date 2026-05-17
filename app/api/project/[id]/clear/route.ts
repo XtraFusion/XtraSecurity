@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from '@/lib/db';
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: Request,
@@ -35,7 +36,7 @@ export async function POST(
       }),
     ]);
 
-    return NextResponse.json({ message: "Project cleared successfully" });
+    try { await logAudit("PROJECT_CLEARED", auth.userId, params.id, {}, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json({ message: "Project cleared successfully" });
   } catch (error) {
     console.error("[PROJECT_CLEAR]", error);
     return new NextResponse("Internal Error", { status: 500 });

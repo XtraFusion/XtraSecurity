@@ -5,7 +5,7 @@ import type { User } from "@/lib/auth";
 import { createNotification } from "@/lib/notifications";
 import { verifyAuth } from "@/lib/server-auth";
 import { withSecurity } from "@/lib/api-middleware";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 
 // GET /api/project - Get all projects or a specific project by ID
 export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
@@ -333,14 +333,17 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     );
     
     // Audit Log
-    await createTamperEvidentLog({
-      userId: authUser.id,
-      action: "project.create",
-      entity: "project",
-      entityId: project.id,
-      workspaceId: newProject.workspaceId,
-      changes: { name: project.name }
-    });
+    try {
+      await logAudit(
+        "PROJECT_CREATED",
+        authUser.id,
+        project.id,
+        { name: project.name },
+        newProject.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json(project, { status: 201 });
   } catch (error) {
@@ -429,6 +432,19 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
        "warning",
        project.workspaceId
     );
+
+    // Audit Log
+    try {
+      await logAudit(
+        "PROJECT_DELETED",
+        userId,
+        id,
+        { name: project.name },
+        project.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json(
       { message: "Project deleted successfully" },
@@ -579,6 +595,19 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
        "info",
        existingProject.workspaceId
     );
+
+    // Audit Log
+    try {
+      await logAudit(
+        newOwnerEmail ? "PROJECT_TRANSFERRED" : targetWorkspaceId ? "PROJECT_MOVED" : "PROJECT_UPDATED",
+        userId,
+        id,
+        { name: project.name, updates: { name, description, teamIds, newOwnerEmail, targetWorkspaceId } },
+        existingProject.workspaceId
+      );
+    } catch (e) {
+      console.error("Audit log failed:", e);
+    }
 
     return NextResponse.json(project);
   } catch (error) {

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getUserTeamRole, canRemoveMember, invalidateUserRbacCache } from "@/lib/permissions";
 import { dispatchNotification } from "@/lib/notifications/dispatch";
 import { verifyAuth } from "@/lib/server-auth";
+import { logAudit } from "@/lib/audit";
 
 export async function DELETE(req: Request) {
   try {
@@ -58,7 +59,7 @@ export async function DELETE(req: Request) {
 
     // Audit log
     try {
-      await prisma.auditLog.create({
+      await logAudit("MEMBER_REMOVED", auth.userId, teamUser.teamId, { removedMemberId: memberId, removedUserId: teamUser.userId, teamId: teamUser.teamId }, workspace?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
         data: {
           userId: auth.userId,
           action: "member_removed",
@@ -70,7 +71,7 @@ export async function DELETE(req: Request) {
               teamId: teamUser.teamId
           },
         },
-      });
+      }); }
     } catch (auditErr) {
       console.error("Failed to write audit log for member removal:", auditErr);
     }

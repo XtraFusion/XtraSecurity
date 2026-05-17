@@ -2,7 +2,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
@@ -92,14 +92,14 @@ export async function POST(
   });
 
   // Audit Log
-  await createTamperEvidentLog({
+  await logAudit("PROJECT_TEAM_ASSIGNED", auth.userId, id, { teamId, teamName: teamProject.team.name }, project?.workspaceId || undefined); if (false) { await createTamperEvidentLog({
     userId: auth.userId,
     action: "project.team_assigned",
     entity: "project",
     entityId: id,
     workspaceId: project?.workspaceId || undefined,
     changes: { teamId, teamName: teamProject.team.name }
-  });
+  }); }
 
   return NextResponse.json(teamProject);
 }

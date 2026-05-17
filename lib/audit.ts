@@ -4,7 +4,7 @@ import { headers } from "next/headers";
 
 const GENESIS_HASH = "0000000000000000000000000000000000000000000000000000000000000000";
 
-export async function logAudit(action: string, userId: string, entityId: string, changes: any = {}) {
+export async function logAudit(action: string, userId: string, entityId: string, changes: any = {}, workspaceId?: string) {
   let ipAddress: string | undefined;
   let userAgent: string | undefined;
 
@@ -23,7 +23,8 @@ export async function logAudit(action: string, userId: string, entityId: string,
     entityId,
     changes,
     ipAddress,
-    userAgent
+    userAgent,
+    workspaceId
   });
 }
 
