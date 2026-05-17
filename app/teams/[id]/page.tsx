@@ -330,6 +330,33 @@ const TeamDetailPage = () => {
   }
   if (!team) return <DashboardLayout><div className="p-8">Team not found.</div></DashboardLayout>;
 
+  // Modern color configurations for glowing spot effects
+  const colorMap: Record<string, string> = {
+      "bg-blue-500": "#3b82f6",
+      "bg-purple-500": "#a855f7",
+      "bg-emerald-500": "#10b981",
+      "bg-amber-500": "#f59e0b",
+      "bg-rose-500": "#f43f5e",
+      "bg-indigo-500": "#6366f1",
+      "bg-cyan-500": "#06b6d4",
+      "bg-zinc-500": "#71717a",
+  };
+  
+  // Rich 3D gradient maps for badges
+  const gradientMap: Record<string, string> = {
+      "bg-blue-500": "from-blue-500 to-indigo-600",
+      "bg-purple-500": "from-purple-500 to-fuchsia-600",
+      "bg-emerald-500": "from-emerald-500 to-teal-600",
+      "bg-amber-500": "from-amber-500 to-orange-600",
+      "bg-rose-500": "from-rose-500 to-red-600",
+      "bg-indigo-500": "from-indigo-500 to-violet-600",
+      "bg-cyan-500": "from-cyan-500 to-teal-600",
+      "bg-zinc-500": "from-zinc-500 to-slate-600",
+  };
+
+  const baseHex = colorMap[team.teamColor] || "#3b82f6";
+  const badgeGradient = gradientMap[team.teamColor] || "from-blue-500 to-indigo-600";
+
   return (
     <DashboardLayout>
       <div className="p-6 md:p-10 max-w-6xl mx-auto space-y-8">
@@ -341,78 +368,91 @@ const TeamDetailPage = () => {
             <span className="text-foreground font-medium">{team.name}</span>
         </div>
 
-        {/* Hero Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-            <div className="flex items-center gap-5">
-                <div className={cn(
-                    "h-16 w-16 rounded-xl flex items-center justify-center text-white text-2xl font-bold shadow-sm",
-                    team.teamColor || "bg-blue-600"
-                )}>
-                    {team.name.substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                    <h1 className="text-3xl font-bold tracking-tight">{team.name}</h1>
-                    <div className="flex items-center gap-3 mt-1.5 text-sm">
-                        {team.isPrivate ? (
-                            <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200 gap-1 rounded-full"><Lock className="h-3 w-3" /> Private Team</Badge>
-                        ) : (
-                            <Badge variant="outline" className="bg-emerald-50 text-emerald-700 border-emerald-200 gap-1 rounded-full"><Globe className="h-3 w-3" /> Public Team</Badge>
-                        )}
-                        <span className="text-muted-foreground flex items-center gap-1.5"><Users className="h-3.5 w-3.5" /> {team.members.length} members</span>
+        {/* Team Profile Card with dynamic border and brand background glow */}
+        <div 
+          className="relative overflow-hidden rounded-[2rem] border backdrop-blur-3xl p-8 transition-all duration-500 shadow-2xl animate-in fade-in slide-in-from-top-4 duration-300"
+          style={{
+              borderColor: `${baseHex}20`,
+              backgroundColor: "rgba(10, 10, 10, 0.35)",
+              background: `radial-gradient(1000px circle at 50% 0px, ${baseHex}10, transparent 50%)`
+          }}
+        >
+            <div className="absolute -inset-px rounded-[2rem] bg-gradient-to-br from-white/[0.02] to-white/0 pointer-events-none z-0" />
+            
+            <div className="relative z-10 flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="flex items-center gap-5">
+                    {/* Team Identifier Badge with custom 3D gradient */}
+                    <div className={cn(
+                        "h-16 w-16 rounded-xl flex items-center justify-center text-white text-2xl font-black shadow-2xl bg-gradient-to-br ring-1 ring-white/20",
+                        badgeGradient
+                    )}>
+                        {team.name.substring(0, 2).toUpperCase()}
+                    </div>
+                    <div>
+                        <h1 className="text-3xl font-black text-white tracking-wide uppercase transition-colors duration-300 hover:text-blue-400">{team.name}</h1>
+                        <div className="flex items-center gap-3 mt-1.5 text-sm">
+                            {team.isPrivate ? (
+                                <Badge variant="outline" className="bg-rose-950/20 text-rose-400 border-rose-900/50 gap-1 rounded-full"><Lock className="h-3 w-3" /> Private Team</Badge>
+                            ) : (
+                                <Badge variant="outline" className="bg-emerald-950/20 text-emerald-400 border-emerald-900/50 gap-1 rounded-full"><Globe className="h-3 w-3" /> Public Team</Badge>
+                            )}
+                            <span className="text-zinc-400 flex items-center gap-1.5"><Users className="h-3.5 w-3.5 text-zinc-500" /> {team.members.length} members</span>
+                        </div>
                     </div>
                 </div>
-            </div>
 
-            {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
-              <div className="flex items-center gap-3">
-                <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
-                  <DialogTrigger asChild>
-                    <Button className="h-10 px-4">
-                      <UserPlus className="mr-2 h-4 w-4" />
-                      Invite Member
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                      <DialogTitle>Invite to Team</DialogTitle>
-                      <DialogDescription>Add a new member and assign their initial role.</DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4 py-4">
-                      <div className="space-y-2">
-                          <Label>Email Address</Label>
-                          <Input 
-                              placeholder="user@example.com"
-                              value={inviteForm.email}
-                              onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                          />
-                      </div>
-                      <div className="space-y-2">
-                              <Label>Team Role</Label>
-                              <Select 
-                                  value={inviteForm.role} 
-                                  onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
-                              >
-                                  <SelectTrigger>
-                                      <SelectValue />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                      <SelectItem value="viewer">Viewer</SelectItem>
-                                      <SelectItem value="developer">Developer</SelectItem>
-                                      <SelectItem value="admin">Admin</SelectItem>
-                                  </SelectContent>
-                              </Select>
-                      </div>
-                    </div>
-                    <DialogFooter>
-                      <Button variant="outline" onClick={() => setInviteDialogOpen(false)}>Cancel</Button>
-                      <Button onClick={handleInviteMember} disabled={isInviting}>
-                          {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
-                      </Button>
-                    </DialogFooter>
-                  </DialogContent>
-                </Dialog>
-              </div>
-            )}
+                {(currentUserRole === 'owner' || currentUserRole === 'admin') && (
+                  <div className="flex items-center gap-3">
+                    <Dialog open={inviteDialogOpen} onOpenChange={setInviteDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button className="h-10 px-4">
+                          <UserPlus className="mr-2 h-4 w-4" />
+                          Invite Member
+                        </Button>
+                      </DialogTrigger>
+                      <DialogContent className="bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-2xl">
+                        <DialogHeader>
+                          <DialogTitle>Invite to Team</DialogTitle>
+                          <DialogDescription className="text-zinc-400">Add a new member and assign their initial role.</DialogDescription>
+                        </DialogHeader>
+                        <div className="space-y-4 py-4">
+                          <div className="space-y-2">
+                              <Label className="text-zinc-300">Email Address</Label>
+                              <Input 
+                                  placeholder="user@example.com"
+                                  value={inviteForm.email}
+                                  onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
+                                  className="bg-zinc-900 border-zinc-800 focus-visible:ring-blue-500"
+                              />
+                          </div>
+                          <div className="space-y-2">
+                                  <Label className="text-zinc-300">Team Role</Label>
+                                  <Select 
+                                      value={inviteForm.role} 
+                                      onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
+                                  >
+                                      <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                                          <SelectValue />
+                                      </SelectTrigger>
+                                      <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+                                          <SelectItem value="viewer">Viewer</SelectItem>
+                                          <SelectItem value="developer">Developer</SelectItem>
+                                          <SelectItem value="admin">Admin</SelectItem>
+                                      </SelectContent>
+                                  </Select>
+                          </div>
+                        </div>
+                        <DialogFooter>
+                          <Button variant="outline" onClick={() => setInviteDialogOpen(false)} className="border-zinc-800 hover:bg-zinc-900 hover:text-white">Cancel</Button>
+                          <Button onClick={handleInviteMember} disabled={isInviting} className="bg-blue-600 hover:bg-blue-700 text-white">
+                              {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
+                          </Button>
+                        </DialogFooter>
+                      </DialogContent>
+                    </Dialog>
+                  </div>
+                )}
+            </div>
         </div>
 
         {/* Dashboard Tabs */}
@@ -508,7 +548,8 @@ const TeamDetailPage = () => {
                                                           }}
                                                         >
                                                             <MoreVertical className="h-4 w-4 pointer-events-none" />
-                                                        </Button>                                                         {activeDropdown === member.id && (
+                                                        </Button>
+                                                         {activeDropdown === member.id && (
                                                              <div 
                                                                className="fixed w-48 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-xl z-[9999] overflow-hidden text-left p-1.5 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
                                                                style={{ top: dropdownPos.top, right: dropdownPos.right }}

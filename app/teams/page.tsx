@@ -322,19 +322,23 @@ const TeamsPage = () => {
         {/* Overview Stats */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           {stats.map((stat, idx) => (
-            <Card key={idx} className="border bg-card">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div className="space-y-1">
-                    <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{stat.label}</p>
-                    <h3 className="text-2xl font-bold">{stat.value}</h3>
-                  </div>
-                  <div className="p-2.5 rounded-lg bg-muted/40">
-                    <stat.icon className="h-5 w-5 text-muted-foreground" />
-                  </div>
+            <div 
+              key={idx} 
+              className="relative overflow-hidden rounded-2xl border border-zinc-900 bg-zinc-950/40 p-6 backdrop-blur-xl transition-all duration-300 hover:border-zinc-800/80 hover:bg-zinc-950/60 group/stat"
+            >
+              {/* Soft Inner Accent Gradient */}
+              <div className="absolute inset-0 bg-gradient-to-br from-white/[0.01] via-transparent to-transparent pointer-events-none" />
+              
+              <div className="flex items-center justify-between">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{stat.label}</p>
+                  <h3 className="text-2xl font-black text-white group-hover/stat:text-blue-400 transition-colors duration-300">{stat.value}</h3>
                 </div>
-              </CardContent>
-            </Card>
+                <div className="p-3 rounded-xl bg-zinc-900/50 border border-zinc-800/60 group-hover/stat:border-zinc-700/80 group-hover/stat:bg-zinc-800/40 transition-all duration-300">
+                  <stat.icon className="h-5 w-5 text-zinc-400 group-hover/stat:text-blue-400 transition-colors duration-300" />
+                </div>
+              </div>
+            </div>
           ))}
         </div>
 
