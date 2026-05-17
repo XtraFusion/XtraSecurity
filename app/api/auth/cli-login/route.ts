@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import bcrypt from "bcrypt";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 import { validateApiKey, hashApiKey } from "@/lib/auth/service-account";
 // import { sign } from "jsonwebtoken"; // If separate JWT needed, but for now we might simple return a session token or basic mimic
 
@@ -101,15 +101,14 @@ export async function POST(req: NextRequest) {
 
       // Audit Log
       // NOTE: We only log for valid User records because AuditLog.userId requires an ObjectId.
-      if (keyRecord.userId && keyRecord.user?.id) {
-        createTamperEvidentLog({
-          userId: keyRecord.user.id,
-          action: "user.login_cli",
-          entity: "apiKey",
-          entityId: keyRecord.id,
-          workspaceId: (keyRecord.user as any)?.workspaces?.[0]?.id || undefined,
-          changes: { method: "api_key" }
-        }).catch(err => console.error("Login audit failed:", err));
+      if (keyRecord && keyRecord.userId && keyRecord.user?.id) {
+        await logAudit(
+          "USER_LOGIN_CLI",
+          keyRecord.user.id,
+          keyRecord.id,
+          { method: "api_key" },
+          (keyRecord.user as any)?.workspaces?.[0]?.id || undefined
+        );
       }
 
       return NextResponse.json({
@@ -167,16 +166,13 @@ export async function POST(req: NextRequest) {
       const token = jwt.sign(payload, secret);
 
       // Audit Log
-      createTamperEvidentLog({
-        userId: user.id,
-        action: "user.login_cli",
-        entity: "user",
-        entityId: user.id,
-        // For email login, we'd need to fetch their default workspace if we want to log it to a specific WS
-        // but user.login is often global. If we have a workspace in user record, use it.
-        workspaceId: (user as any).workspaces?.[0]?.id || undefined, 
-        changes: { method: "email" }
-      }).catch(err => console.error("Login audit failed:", err));
+      await logAudit(
+        "USER_LOGIN_CLI",
+        user.id,
+        user.id,
+        { method: "email" },
+        (user as any).workspaces?.[0]?.id || undefined
+      );
 
       return NextResponse.json({
         token: token,

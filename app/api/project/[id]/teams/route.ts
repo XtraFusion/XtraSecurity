@@ -92,14 +92,13 @@ export async function POST(
   });
 
   // Audit Log
-  await logAudit("PROJECT_TEAM_ASSIGNED", auth.userId, id, { teamId, teamName: teamProject.team.name }, project?.workspaceId || undefined); if (false) { await createTamperEvidentLog({
-    userId: auth.userId,
-    action: "project.team_assigned",
-    entity: "project",
-    entityId: id,
-    workspaceId: project?.workspaceId || undefined,
-    changes: { teamId, teamName: teamProject.team.name }
-  }); }
+  await logAudit(
+    "PROJECT_TEAM_ASSIGNED",
+    auth.userId,
+    id,
+    { teamId, teamName: teamProject.team.name },
+    project?.workspaceId || undefined
+  );
 
   return NextResponse.json(teamProject);
 }

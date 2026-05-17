@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 import { verifyAuth } from "@/lib/server-auth";
 
 const SECRET_KEY = process.env.NEXTAUTH_SECRET;
@@ -32,7 +32,6 @@ export async function POST(req: NextRequest) {
     email: auth.email,
     role: (auth as any).role,
     type: "cli-token",
-    // We can embed workspaceId if we switch to scoped keys, but for now we just pass it back
   };
 
   const token = jwt.sign(payload, SECRET_KEY!, { expiresIn: "24h" });
@@ -41,14 +40,13 @@ export async function POST(req: NextRequest) {
   const redirectTarget = `${callbackUrl}?token=${token}&email=${auth.email}&workspaceId=${workspaceId}&workspaceName=${encodeURIComponent(reqBody.workspaceName || "Unknown Workspace")}`;
 
   // Audit Log
-  createTamperEvidentLog({
-    userId: auth.userId,
-    action: "user.login_cli_sso",
-    entity: "user",
-    entityId: auth.userId,
-    workspaceId: workspaceId,
-    changes: { method: "sso" }
-  }).catch(err => console.error("SSO audit failed:", err));
+  await logAudit(
+    "USER_LOGIN_CLI_SSO",
+    auth.userId,
+    auth.userId,
+    { method: "sso" },
+    workspaceId || undefined
+  );
 
   return NextResponse.json({ redirectUrl: redirectTarget });
 }

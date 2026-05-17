@@ -4,7 +4,7 @@ import { verifyAuth } from "@/lib/server-auth";
 import { triggerWebhooks } from "@/lib/webhook";
 import { PolicyEngine } from "@/lib/authz/policy-engine";
 import { Decision } from "@/lib/authz/types";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
@@ -78,14 +78,13 @@ export async function GET(
     }
      
     const logTasks = Array.from(auditWorkspaces).map(wsId => 
-      createTamperEvidentLog({
+      logAudit(
+          "SECRET_READ",
           userId,
-          action: "secret.read",
-          entity: "secret",
-          entityId: secret.id,
-          workspaceId: wsId,
-          changes: { key: params.key, env: params.env }
-      })
+          secret.id,
+          { key: params.key, env: params.env },
+          wsId
+      )
     );
     await Promise.all(logTasks);
   } catch(err) {
@@ -156,14 +155,13 @@ export async function DELETE(
         if (userRecord?.workspaces?.[0]?.id) auditWorkspaces.add(userRecord.workspaces[0].id);
 
         const logTasks = Array.from(auditWorkspaces).map(wsId => 
-            createTamperEvidentLog({
+            logAudit(
+                "SECRET_DELETED",
                 userId,
-                action: "secret.delete",
-                entity: "secret",
-                entityId: secret.id,
-                workspaceId: wsId,
-                changes: { key, env }
-            })
+                secret.id,
+                { key, env },
+                wsId
+            )
         );
         await Promise.all(logTasks);
     } catch (err) {

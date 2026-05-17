@@ -5,7 +5,7 @@ import { PolicyEngine } from "@/lib/authz/policy-engine";
 import { Decision } from "@/lib/authz/types";
 import { encrypt, decrypt } from "@/lib/encription";
 import { triggerWebhooks } from "@/lib/webhook";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 
 export const dynamic = 'force-dynamic';
 
@@ -214,14 +214,13 @@ export const GET = withSecurity(async (
     }
      
     const logTasks = Array.from(auditWorkspaces).map(wsId => 
-      createTamperEvidentLog({
+      logAudit(
+          "SECRET_BULK_READ",
           userId,
-          action: "secret.bulk_read",
-          entity: "project",
-          entityId: projectId,
-          workspaceId: wsId,
-          changes: { environment: env, branch: branchName, count: envSecrets.length }
-      })
+          projectId,
+          { environment: env, branch: branchName, count: envSecrets.length },
+          wsId
+      )
     );
     await Promise.all(logTasks);
   } catch(err) {
@@ -398,14 +397,13 @@ export const POST = withSecurity(async (
         });
 
         // Audit Log
-        await createTamperEvidentLog({
-          userId: userId,
-          action: "secret.update",
-          entity: "secret",
-          entityId: updated.id,
-          workspaceId: project.workspaceId,
-          changes: { key: existing.key, environment: environmentType, branch: branchName }
-        }).catch(err => console.error("Audit log failed:", err));
+        await logAudit(
+          "SECRET_UPDATED",
+          userId,
+          updated.id,
+          { key: existing.key, environment: environmentType, branch: branchName },
+          project.workspaceId || undefined
+        ).catch(err => console.error("Audit log failed:", err));
 
         results.push(updated);
       } catch (err: any) {
@@ -448,14 +446,13 @@ export const POST = withSecurity(async (
       });
 
       // Audit Log
-      await createTamperEvidentLog({
-        userId: userId,
-        action: "secret.create",
-        entity: "secret",
-        entityId: created.id,
-        workspaceId: project.workspaceId,
-        changes: { key: key, environment: environmentType, branch: branchName }
-      }).catch(err => console.error("Audit log failed:", err));
+      await logAudit(
+        "SECRET_CREATED",
+        userId,
+        created.id,
+        { key: key, environment: environmentType, branch: branchName },
+        project.workspaceId || undefined
+      ).catch(err => console.error("Audit log failed:", err));
 
       results.push(created);
     }

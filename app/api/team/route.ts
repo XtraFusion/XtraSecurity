@@ -3,7 +3,7 @@ import prisma from "@/lib/db";
 import { withSecurity } from "@/lib/api-middleware";
 import { createNotification } from "@/lib/notifications";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
-import { createTamperEvidentLog } from "@/lib/audit";
+import { logAudit } from "@/lib/audit";
 
 export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
@@ -110,14 +110,13 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     }
 
     // Audit Log
-    await createTamperEvidentLog({
-      userId: userId,
-      action: "team.create",
-      entity: "team",
-      entityId: team.id,
-      workspaceId: workspaceId,
-      changes: { name: team.name }
-    });
+    await logAudit(
+      "TEAM_CREATED",
+      userId,
+      team.id,
+      { name: team.name },
+      workspaceId
+    );
 
     return NextResponse.json(team, { status: 201 });
   } catch (error: any) {
@@ -220,6 +219,15 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
       where: { id: teamId },
     });
 
+    // Audit Log
+    await logAudit(
+      "TEAM_DELETED",
+      userId,
+      teamId,
+      { workspaceId: team.workspaceId },
+      team.workspaceId
+    );
+
     // Notify user
     await createNotification(
       userId,
@@ -272,6 +280,15 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
       where: { id: teamId },
       data: { name, description },
     });
+
+    // Audit Log
+    await logAudit(
+      "TEAM_UPDATED",
+      userId,
+      teamId,
+      { name, description },
+      team.workspaceId
+    );
 
     return NextResponse.json(updateTeam, { status: 200 });
   } catch (error: any) {
