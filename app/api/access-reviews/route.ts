@@ -113,7 +113,7 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Error fetching reviews:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -144,7 +144,7 @@ export async function POST(req: Request) {
 
     return NextResponse.json({ success: true, message: "Access review cycle started" });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -240,6 +240,6 @@ export async function PUT(req: Request) {
 
   } catch (error: any) {
     console.error("Error submitting review:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

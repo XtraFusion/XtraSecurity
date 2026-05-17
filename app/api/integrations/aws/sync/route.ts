@@ -98,7 +98,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ repos: awsSecrets });
   } catch (error: any) {
     console.error("AWS list secrets error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -227,7 +227,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("AWS sync error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -270,6 +270,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, deleted: secretName });
   } catch (error: any) {
     console.error("AWS delete secret error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

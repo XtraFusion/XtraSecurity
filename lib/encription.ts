@@ -3,18 +3,15 @@ import crypto from "crypto"
 const ALGORITHM = 'aes-256-gcm';
 
 // AES-256 key must be 32 bytes (64 hex characters)
-// Use environment variable or generate a persistent key
 const getEncryptionKey = () => {
   const envKey = process.env.ENCRYPTION_KEY;
   
-  if (envKey) {
-    // Convert hex string to buffer
-    return Buffer.from(envKey, 'hex');
+  if (!envKey) {
+    throw new Error("FATAL: ENCRYPTION_KEY environment variable is required. Generate one with: node -e \"console.log(require('crypto').randomBytes(32).toString('hex'))\"");
   }
   
-  // Fallback: generate a key (NOT RECOMMENDED for production)
-  console.warn('WARNING: ENCRYPTION_KEY not set in .env file. Using temporary key. Add ENCRYPTION_KEY to .env for production!');
-  return crypto.randomBytes(32);
+  // Convert hex string to buffer
+  return Buffer.from(envKey, 'hex');
 };
 
 const KEY = getEncryptionKey();

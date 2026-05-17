@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
     if (!integration) return NextResponse.json({ connected: false });
     return NextResponse.json({ connected: true, username: integration.username, connectedAt: integration.createdAt });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -51,7 +51,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid Opsgenie API Key" }, { status: 401 });
     }
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -63,6 +63,6 @@ export async function DELETE(req: NextRequest) {
     await prisma.integration.deleteMany({ where: { userId: auth.userId, provider: "opsgenie" } });
     return NextResponse.json({ success: true });
   } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

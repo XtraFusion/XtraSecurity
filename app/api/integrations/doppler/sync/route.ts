@@ -131,7 +131,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ repos });
   } catch (error: any) {
     console.error("Doppler GET error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -260,7 +260,7 @@ export async function POST(req: NextRequest) {
     });
   } catch (error: any) {
     console.error("Doppler sync error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -304,6 +304,6 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, deleted: secretName });
   } catch (error: any) {
     console.error("Doppler delete error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

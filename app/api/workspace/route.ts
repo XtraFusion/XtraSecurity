@@ -107,7 +107,8 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     }
 
     const body = await request.json();
-    const { name, description = "", workspaceType = "personal", subscriptionPlan = "free", projectLimit = 5, subscriptionEnd = null } = body;
+    const { name, description = "", workspaceType = "personal" } = body;
+    // subscriptionPlan, projectLimit, subscriptionEnd are NOT user-settable
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
@@ -119,9 +120,8 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
         description,
         workspaceType,
         createdBy: userId,
-        subscriptionPlan,
-        projectLimit,
-        subscriptionEnd: subscriptionEnd ? new Date(subscriptionEnd) : undefined,
+        subscriptionPlan: "free",
+        projectLimit: 5,
       },
     });
 
@@ -141,7 +141,9 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
     const userId = session.userId;
 
     const body = await request.json();
-    const { id, name, description, workspaceType, subscriptionPlan, projectLimit, subscriptionEnd, icon } = body;
+    const { id, name, description, workspaceType, icon } = body;
+    // NOTE: subscriptionPlan, projectLimit, subscriptionEnd are NOT user-editable.
+    // They must be set by the payment/billing system only.
 
     if (!id) {
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
@@ -167,9 +169,6 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
         icon: icon !== undefined ? icon : existing.icon,
         description: description ?? existing.description,
         workspaceType: workspaceType ?? existing.workspaceType,
-        subscriptionPlan: subscriptionPlan ?? existing.subscriptionPlan,
-        projectLimit: projectLimit ?? existing.projectLimit,
-        subscriptionEnd: subscriptionEnd ? new Date(subscriptionEnd) : existing.subscriptionEnd,
       },
     });
 

@@ -117,7 +117,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Break Glass activation failed:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -150,7 +150,7 @@ export async function PATCH(req: NextRequest) {
   
       return NextResponse.json({ success: true, message: "Break Glass session ended." });
     } catch (error: any) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
@@ -205,6 +205,6 @@ export async function PUT(req: NextRequest) {
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

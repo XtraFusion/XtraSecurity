@@ -206,7 +206,7 @@ export async function GET(req: Request) {
   } catch (error: any) {
     console.error("[security/dashboard]", error);
     return NextResponse.json(
-      { error: error.message || "Failed to fetch security dashboard data" },
+      { error: "Failed to fetch security dashboard data" },
       { status: 500 }
     );
   }

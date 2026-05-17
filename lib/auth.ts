@@ -11,14 +11,6 @@ export interface User {
   tier: "free" | "pro" | "enterprise";
 }
 
-export const mockUser: User = {
-  email: "admin@example.com",
-  name: "Admin User",
-  userId: "user-123",
-  role: "admin",
-  tier: "pro",
-};
-
 
 
 

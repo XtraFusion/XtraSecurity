@@ -45,7 +45,7 @@ const {id} = await params;
   } catch (error: any) {
     console.error("GET /team error:", error);
     return NextResponse.json(
-      { error: error.message || "Server error" },
+      { error: "Server error" },
       { status: 500 }
     );
   }

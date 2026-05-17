@@ -34,8 +34,22 @@ export function withSecurity(handler: SecureHandler) {
             } catch (e) {}
         }
         
-        let projectIdToCheck: string | null = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id") || contextParams.projectId || contextParams.id || null;
-        let workspaceIdToCheck: string | null = req.nextUrl.searchParams.get("workspaceId") || contextParams.workspaceId || null;
+        let projectIdToCheck: string | null = null;
+        let workspaceIdToCheck: string | null = null;
+
+        if (req.nextUrl) {
+            projectIdToCheck = req.nextUrl.searchParams.get("projectId") || req.nextUrl.searchParams.get("id");
+            workspaceIdToCheck = req.nextUrl.searchParams.get("workspaceId");
+        } else if (req.url) {
+            try {
+                const parsedUrl = new URL(req.url, "http://localhost");
+                projectIdToCheck = parsedUrl.searchParams.get("projectId") || parsedUrl.searchParams.get("id");
+                workspaceIdToCheck = parsedUrl.searchParams.get("workspaceId");
+            } catch (e) {}
+        }
+        
+        projectIdToCheck = projectIdToCheck || contextParams.projectId || contextParams.id || null;
+        workspaceIdToCheck = workspaceIdToCheck || contextParams.workspaceId || null;
         
         if (!projectIdToCheck && !workspaceIdToCheck && ["POST", "PUT", "PATCH", "DELETE"].includes(req.method)) {
             try {
@@ -104,7 +118,8 @@ export function withSecurity(handler: SecureHandler) {
         }
 
         const userAgent = req.headers.get("user-agent") || undefined;
-        
+        const pathname = req.nextUrl?.pathname || (req.url ? new URL(req.url, "http://localhost").pathname : "/");
+
         const baseLogData: Partial<SecurityEventLog> = {
             userId: session?.userId,
             userEmail: session?.email || undefined,
@@ -115,7 +130,7 @@ export function withSecurity(handler: SecureHandler) {
             country: geo?.country,
             city: geo?.city,
             method: req.method,
-            endpoint: req.nextUrl.pathname,
+            endpoint: pathname,
             projectId: projectIdToCheck || undefined,
             workspaceId: workspaceIdToCheck || undefined,
         };
@@ -149,14 +164,14 @@ export function withSecurity(handler: SecureHandler) {
                             type: "suspicious_activity",
                             title: "IP Access Denied",
                             message: `Unauthorized access attempt from blocked IP: ${ip}`,
-                            description: `Request to ${req.method} ${req.nextUrl.pathname} was rejected due to IP restrictions.`,
+                            description: `Request to ${req.method} ${pathname} was rejected due to IP restrictions.`,
                             severity: "warning",
                             workspaceId: workspaceIdToCheck || "",
                             projectId: projectIdToCheck || undefined,
-                            metadata: { ip, method: req.method, endpoint: req.nextUrl.pathname },
+                            metadata: { ip, method: req.method, endpoint: pathname },
                             fields: [
                                 { label: "IP Address", value: ip },
-                                { label: "Endpoint", value: req.nextUrl.pathname },
+                                { label: "Endpoint", value: pathname },
                                 { label: "Action", value: "Blocked" },
                             ]
                         });
@@ -228,10 +243,10 @@ export function withSecurity(handler: SecureHandler) {
                     severity: "warning",
                     workspaceId: workspaceIdToCheck || "",
                     projectId: projectIdToCheck || undefined,
-                    metadata: { ip, endpoint: req.nextUrl.pathname },
+                    metadata: { ip, endpoint: pathname },
                     fields: [
                         { label: "IP Source", value: ip },
-                        { label: "Violated Endpoint", value: req.nextUrl.pathname }
+                        { label: "Violated Endpoint", value: pathname }
                     ]
                 }).catch(()=>{}); // Fire and forget
             }
@@ -285,14 +300,14 @@ export function withSecurity(handler: SecureHandler) {
                 notify({
                     type: "system_error",
                     title: "Fatal System Exception (500)",
-                    message: `The server crashed attempting to process ${req.method} ${req.nextUrl.pathname}`,
+                    message: `The server crashed attempting to process ${req.method} ${pathname}`,
                     description: `An unhandled exception broke the API execution loop. Reason: ${error.message || "Unknown Core Panic"}`,
                     severity: "error",
                     workspaceId: workspaceIdToCheck || "",
                     projectId: projectIdToCheck || undefined,
                     metadata: { error: error.message, stack: error.stack },
                     fields: [
-                        { label: "Endpoint", value: req.nextUrl.pathname },
+                        { label: "Endpoint", value: pathname },
                         { label: "Exception Logic", value: error.message }
                     ]
                 }).catch(()=>{});

@@ -84,7 +84,7 @@ export async function POST(
 
   } catch (error: any) {
     console.error("POST api-keys error:", error);
-    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 
@@ -113,7 +113,7 @@ export async function GET(
 
     return NextResponse.json(keys);
   } catch (error: any) {
-    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
 

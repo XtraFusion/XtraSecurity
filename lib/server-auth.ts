@@ -131,13 +131,35 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
 
     // B. Try as CLI JWT (Stateless Verification)
     try {
-        const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+        const secret = process.env.NEXTAUTH_SECRET;
+        if (!secret) {
+            console.error("FATAL: NEXTAUTH_SECRET is not set. Cannot verify JWT tokens.");
+            return null;
+        }
         
-        // 1. Try strict verification
-        try {
-            const decoded = jwt.verify(apiKey, secret) as any;
-            if (decoded && decoded.type === "cli-token") {
-                const userId = decoded.userId || decoded.id;
+        const decoded = jwt.verify(apiKey, secret) as any;
+        if (decoded && decoded.type === "cli-token") {
+            const userId = decoded.userId || decoded.id;
+            
+            // For service accounts, verify they still exist in DB
+            if (decoded.isServiceAccount && decoded.serviceAccountId) {
+                const sa = await prisma.serviceAccount.findUnique({
+                    where: { id: decoded.serviceAccountId }
+                });
+                if (sa) {
+                    return {
+                        userId: userId || `sa_${sa.id}`,
+                        email: decoded.email || `sa_${sa.name}@bot`,
+                        name: sa.name,
+                        role: "service_account",
+                        tier: "enterprise",
+                        isServiceAccount: true,
+                        serviceAccountId: sa.id,
+                        projectId: sa.projectId,
+                        permissions: sa.permissions
+                    };
+                }
+            } else {
                 return {
                     userId,
                     email: decoded.email,
@@ -150,52 +172,8 @@ export async function verifyAuth(req: NextRequest | Request): Promise<AuthSessio
                     permissions: decoded.permissions
                 };
             }
-        } catch (localVerifyErr) { /* fallback to decode below */ }
-
-        // 2. Fallback: decode WITHOUT verification for cross-environment cli-tokens
-        const decoded = jwt.decode(apiKey) as any;
-        if (decoded && decoded.type === "cli-token") {
-            if (decoded.isServiceAccount && decoded.serviceAccountId) {
-                const sa = await prisma.serviceAccount.findUnique({
-                    where: { id: decoded.serviceAccountId }
-                });
-                if (sa) {
-                    return {
-                        userId: decoded.userId || `sa_${sa.id}`,
-                        email: decoded.email || `sa_${sa.name}@bot`,
-                        name: sa.name,
-                        role: "service_account",
-                        tier: "enterprise",
-                        isServiceAccount: true,
-                        serviceAccountId: sa.id,
-                        projectId: sa.projectId,
-                        permissions: sa.permissions
-                    };
-                }
-            } else if (decoded.id || decoded.email) {
-                const user = await prisma.user.findFirst({
-                    where: {
-                        OR: [
-                            decoded.id ? { id: decoded.id } : undefined,
-                            decoded.email ? { email: decoded.email } : undefined,
-                        ].filter(Boolean) as any,
-                    },
-                    select: { id: true, email: true, name: true, role: true, tier: true }
-                });
-
-                if (user) {
-                    const resolvedRole = await resolveUserRole(user.id, user.role);
-                    return {
-                        userId: user.id,
-                        email: user.email,
-                        name: user.name,
-                        role: resolvedRole,
-                        tier: user.tier || 'free'
-                    };
-                }
-            }
         }
-    } catch (e) { /* ignore */ }
+    } catch (e) { /* JWT verification failed — token is invalid */ }
     return null;
   }
 

@@ -182,7 +182,7 @@ export async function POST(req: NextRequest) {
 
   } catch (error: any) {
     console.error("GitHub sync error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -239,7 +239,7 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error("GitHub repos error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -305,7 +305,7 @@ export async function DELETE(req: NextRequest) {
 
   } catch (error: any) {
     console.error("GitHub delete secret error:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 

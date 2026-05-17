@@ -17,13 +17,11 @@ export async function POST(req: NextRequest) {
 
 async function handleRotation(req: NextRequest) {
   try {
-    // 1. Authorization
+    // 1. Authorization — CRON_SECRET is mandatory
     const authHeader = req.headers.get("authorization");
     const cronSecret = process.env.CRON_SECRET;
     
-    // In dev, we might allow it without secret if explicitly requested, 
-    // but in production, we MUST check.
-    if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+    if (!cronSecret || authHeader !== `Bearer ${cronSecret}`) {
       console.warn("[Cron] Unauthorized rotation attempt blocked.");
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -45,6 +43,6 @@ async function handleRotation(req: NextRequest) {
     return NextResponse.json(result);
   } catch (error: any) {
     console.error("[Cron] Error in selection rotation route:", error);
-    return NextResponse.json({ error: error.message || "Internal Server Error" }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

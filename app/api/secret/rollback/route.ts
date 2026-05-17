@@ -208,7 +208,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("[ROLLBACK API] Critical error during rollback:", error);
     return NextResponse.json(
-      { error: "Internal server error during rollback", details: error.message },
+      { error: "Internal server error during rollback" },
       { status: 500 }
     );
   }

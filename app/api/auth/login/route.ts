@@ -65,26 +65,18 @@ export async function POST(req: Request) {
       }
     } else {
       // 2. User exists, verify password
-      // Special logic for "admin@example.com" if no password exists for testing.
-      // In production, we'd remove this.
-      if (user.email === "admin@example.com" && password === "password" && !user.password) {
-        // Continue to OTP generation
-      } 
-      // Otherwise, standard password check
-      else if (!user.password) {
+      if (!user.password) {
          return NextResponse.json(
           { message: "Invalid email or password" },
           { status: 401 }
         );
       }
-      else {
-        const isPasswordValid = await compare(password, user.password);
-        if (!isPasswordValid) {
-          return NextResponse.json(
-            { message: "Invalid email or password" },
-            { status: 401 }
-          );
-        }
+      const isPasswordValid = await compare(password, user.password);
+      if (!isPasswordValid) {
+        return NextResponse.json(
+          { message: "Invalid email or password" },
+          { status: 401 }
+        );
       }
     }
 
@@ -127,7 +119,7 @@ export async function POST(req: Request) {
         </div>
       `,
     });
-    console.log(`[AUTH] Dispatched OTP email to ${user.email} (Code: ${otp})`);
+    console.log(`[AUTH] Dispatched OTP email to ${user.email}`);
 
     return NextResponse.json(
       { message: "OTP sent to your email", requireOtp: true, isNewUser },

@@ -112,7 +112,7 @@ export const POST = withSecurity(async (request, context, session) => {
   } catch (error: any) {
     console.error("Error creating bulk secrets:", error);
     return NextResponse.json(
-      { message: error.message || "Failed to create bulk secrets" },
+      { message: "Failed to create bulk secrets" },
       { status: 500 }
     );
   }

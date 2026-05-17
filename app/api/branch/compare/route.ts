@@ -107,6 +107,6 @@ export const GET = withSecurity(async (req: NextRequest, context: any, session: 
 
     } catch (error: any) {
         console.error("Compare branch error:", error);
-        return NextResponse.json({ error: error.message || "Failed to compare branches" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to compare branches" }, { status: 500 });
     }
 });

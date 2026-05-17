@@ -126,6 +126,6 @@ export async function PUT(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Error updating user role:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

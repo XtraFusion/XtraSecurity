@@ -107,7 +107,7 @@ export async function POST(req: Request) {
     }
 
     return NextResponse.json(
-      { error: error.message || "Server error" },
+      { error: "Server error" },
       { status: 500 }
     );
   }

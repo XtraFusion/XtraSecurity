@@ -3,7 +3,8 @@ import jwt from "jsonwebtoken";
 import { createTamperEvidentLog } from "@/lib/audit";
 import { verifyAuth } from "@/lib/server-auth";
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback_secret";
+const SECRET_KEY = process.env.NEXTAUTH_SECRET;
+if (!SECRET_KEY) throw new Error("FATAL: NEXTAUTH_SECRET environment variable is required");
 
 export async function POST(req: NextRequest) {
   const auth = await verifyAuth(req);
@@ -34,7 +35,7 @@ export async function POST(req: NextRequest) {
     // We can embed workspaceId if we switch to scoped keys, but for now we just pass it back
   };
 
-  const token = jwt.sign(payload, SECRET_KEY, { expiresIn: "30d" });
+  const token = jwt.sign(payload, SECRET_KEY!, { expiresIn: "24h" });
 
   // Construct Redirect URL with Token AND Workspace
   const redirectTarget = `${callbackUrl}?token=${token}&email=${auth.email}&workspaceId=${workspaceId}&workspaceName=${encodeURIComponent(reqBody.workspaceName || "Unknown Workspace")}`;

@@ -157,6 +157,6 @@ export async function GET(req: NextRequest) {
 
   } catch (error: any) {
     console.error("Usage Analytics API Error:", error);
-    return NextResponse.json({ error: "Internal Server Error", details: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }

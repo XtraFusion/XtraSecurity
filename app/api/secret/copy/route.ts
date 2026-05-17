@@ -157,6 +157,6 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
 
     } catch (error: any) {
         console.error("Copy secrets error:", error);
-        return NextResponse.json({ error: error.message || "Failed to copy secrets" }, { status: 500 });
+        return NextResponse.json({ error: "Failed to copy secrets" }, { status: 500 });
     }
 });

@@ -122,7 +122,7 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     return NextResponse.json(team, { status: 201 });
   } catch (error: any) {
     console.error("POST /team error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 });
 
@@ -177,7 +177,7 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
     return NextResponse.json(getTeamData, { status: 200 });
   } catch (error: any) {
     console.error("GET /team error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 });
 
@@ -234,7 +234,7 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
     return NextResponse.json({ message: "Team deleted successfully" }, { status: 200 });
   } catch (error: any) {
     console.error("DELETE /team error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 });
 
@@ -276,6 +276,6 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
     return NextResponse.json(updateTeam, { status: 200 });
   } catch (error: any) {
     console.error("PUT /team error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 });

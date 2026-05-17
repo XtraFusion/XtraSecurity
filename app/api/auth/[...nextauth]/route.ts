@@ -79,18 +79,7 @@ export const authOptions: NextAuthOptions = {
         const user = await prisma.user.findUnique({ where: { email: credentials.email } });
         if (!user) return null;
 
-        // 1. Handle Demo Admin Bypass
-        if (credentials.email === "admin@example.com" && credentials.otp === "password") {
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              role: user.role,
-              tier: user.tier || "free",
-            }
-        }
-
-        // 2. Handle OTP-based Auth (MFA ON)
+        // 1. Handle OTP-based Auth (MFA ON)
         if (credentials.otp && credentials.otp !== "SKIPPED") {
           if (!user.emailOtp || !user.emailOtpExpiry) return null;
           if (user.emailOtp !== credentials.otp) return null;

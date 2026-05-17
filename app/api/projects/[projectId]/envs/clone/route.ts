@@ -29,9 +29,15 @@ export async function POST(
         return NextResponse.json({ error: "Cannot clone to same environment" }, { status: 400 });
     }
 
-    // Verify Project Access
-    const project = await prisma.project.findFirst({
-        where: { id: projectId, userId: auth.userId },
+    // Verify Project Access via RBAC
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(auth.userId, projectId);
+    if (!role || role === "viewer") {
+      return NextResponse.json({ error: "Insufficient permissions to clone environments" }, { status: 403 });
+    }
+
+    const project = await prisma.project.findUnique({
+        where: { id: projectId },
         include: { secrets: true }
     });
 
@@ -46,8 +52,7 @@ export async function POST(
         return NextResponse.json({ error: `Branch '${branchName}' not found` }, { status: 404 });
     }
 
-    console.log("DEBUG: Clone Request", { fromEnv, toEnv, branchName, branchId: branch.id });
-    console.log("DEBUG: Total Project Secrets:", project.secrets.length);
+
     
     const sourceSecrets = project.secrets.filter(
         (s) => s.environmentType.toLowerCase() === fromEnv && s.branchId === branch.id
@@ -154,6 +159,6 @@ export async function POST(
 
   } catch (error: any) {
     console.error("CLONE ERROR:", error);
-    return NextResponse.json({ error: error.message, stack: error.stack }, { status: 500 });
+    return NextResponse.json({ error: "Failed to clone environment" }, { status: 500 });
   }
 }

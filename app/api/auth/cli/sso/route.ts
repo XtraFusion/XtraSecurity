@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { verifyAuth } from "@/lib/server-auth";
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback_secret";
+const SECRET_KEY = process.env.NEXTAUTH_SECRET;
 
 export async function GET(req: NextRequest) {
   const auth = await verifyAuth(req);

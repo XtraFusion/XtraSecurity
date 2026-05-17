@@ -98,7 +98,7 @@ export async function GET(req: Request) {
     return NextResponse.json(formattedSchedules);
   } catch (error: any) {
     console.error("GET /rotation/schedules error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -215,7 +215,7 @@ export async function POST(req: Request) {
     return NextResponse.json(formattedSchedule, { status: 201 });
   } catch (error: any) {
     console.error("POST /rotation/schedules error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -246,7 +246,7 @@ export async function PATCH(req: Request) {
     return NextResponse.json(schedule);
   } catch (error: any) {
     console.error("PATCH /rotation/schedules error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }
 
@@ -273,6 +273,6 @@ export async function DELETE(req: Request) {
     return NextResponse.json({ message: "Schedule deleted successfully" });
   } catch (error: any) {
     console.error("DELETE /rotation/schedules error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

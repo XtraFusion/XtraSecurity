@@ -17,7 +17,7 @@ export const GET = withSecurity(async (request, context, session) => {
     const projectId = searchParams.get("projectId");
     const branchId = searchParams.get("branchId");
 
-    console.log(`[/api/secret GET] Fetching secrets for projectId: ${projectId}, branchId: ${branchId}, user: ${session.email}`);
+
 
     if (!projectId) {
          return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
@@ -26,13 +26,13 @@ export const GET = withSecurity(async (request, context, session) => {
     // Access Control
     let isViewer = false;
     if (session.isServiceAccount) {
-        console.log(`[/api/secret GET] Service account detected, checking projectId match`);
+
         if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
         if (!session.permissions?.includes("read:secrets")) return NextResponse.json({ error: "Forbidden: Missing read:secrets scope" }, { status: 403 });
     } else {
-        console.log(`[/api/secret GET] Regular user, fetching role from DB`);
+
         const role = await getUserProjectRole(session.userId, projectId);
-        console.log(`[/api/secret GET] User role: ${role}`);
+
         if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         if (role === 'viewer') isViewer = true;
     }
@@ -40,14 +40,14 @@ export const GET = withSecurity(async (request, context, session) => {
     const query: any = { projectId };
     if (branchId) query.branchId = branchId;
 
-    console.log(`[/api/secret GET] Running query with:`, query);
+
     const secrets = await prisma.secret.findMany({
       where: query,
       include: {
         project: true,
       },
     });
-    console.log(`[/api/secret GET] Found ${secrets.length} secrets`);
+
 
     // Decrypted secret values and history before sending to frontend
     const decryptedSecrets = await Promise.all(secrets.map(async (secret) => {
@@ -119,7 +119,7 @@ export const GET = withSecurity(async (request, context, session) => {
     console.error("Error fetching secrets:", errorMessage);
     console.error("Full error details:", error);
     return NextResponse.json(
-      { error: "Failed to fetch secrets", details: errorMessage },
+      { error: "Failed to fetch secrets" },
       { status: 500 }
     );
   }
@@ -133,7 +133,7 @@ export const POST = withSecurity(async (request, context, session) => {
     }
 
     const body = await request.json();
-    console.log("Creating secret with data:", body);
+
     const {
       key,
       value,
@@ -263,7 +263,7 @@ export const POST = withSecurity(async (request, context, session) => {
     return NextResponse.json(
       {
         ...newSecret,
-        value: value, // Return plain text value, not encrypted array
+        value: "[encrypted]", // Never return plaintext in response
       },
       { status: 201 }
     );
@@ -271,7 +271,7 @@ export const POST = withSecurity(async (request, context, session) => {
     console.error("Error creating secret:", error);
     console.error("Error details:", error.message);
     return NextResponse.json(
-      { message: error.message || "Failed to create secret" },
+      { message: "Failed to create secret" },
       { status: 500 }
     );
   }
@@ -295,7 +295,7 @@ export const PUT = withSecurity(async (request, context, session) => {
     }
 
     const body = await request.json();
-    console.log("Updating secret with data:", body);
+
     const {
       key,
       value,
@@ -414,7 +414,7 @@ export const PUT = withSecurity(async (request, context, session) => {
     console.error("Error updating secret:", error);
     console.error("Error details:", error.message);
     return NextResponse.json(
-      { message: error.message || "Failed to update secret" },
+      { message: "Failed to update secret" },
       { status: 500 }
     );
   }
@@ -510,7 +510,7 @@ export const DELETE = withSecurity(async (request, context, session) => {
     console.error("Error deleting secret:", error);
     console.error("Error details:", error.message);
     return NextResponse.json(
-      { message: error.message || "Failed to delete secret" },
+      { message: "Failed to delete secret" },
       { status: 500 }
     );
   }

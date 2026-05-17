@@ -108,6 +108,6 @@ export async function GET(req: Request) {
     return NextResponse.json(formattedHistory);
   } catch (error: any) {
     console.error("GET /rotation/history error:", error);
-    return NextResponse.json({ error: error.message || "Server error" }, { status: 500 });
+    return NextResponse.json({ error: "Server error" }, { status: 500 });
   }
 }

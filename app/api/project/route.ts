@@ -77,7 +77,7 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
           },
         },
       });
-      console.log("Fetched projects:", projects.length);
+
       // Ensure dates and optional fields serialize cleanly for NextResponse
       const safe = projects.map((p: any) => ({
         ...p,
@@ -229,7 +229,7 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
         }
     }
 
-    console.log("Received project data:", newProject);
+
 
     if (!newProject.name) {
       console.error("Project name is missing");
@@ -412,11 +412,11 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
       await prisma.teamProject.deleteMany({
         where: { projectId: id },
       });
-    });
 
-    // Delete project
-    await prisma.project.delete({
-      where: { id },
+      // Delete project itself (inside transaction to prevent orphaned data)
+      await prisma.project.delete({
+        where: { id },
+      });
     });
 
     // Notify user

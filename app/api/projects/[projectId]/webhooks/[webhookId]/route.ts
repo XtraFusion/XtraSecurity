@@ -47,7 +47,7 @@ export async function DELETE(
 
   } catch (error: any) {
     console.error("Error deleting webhook:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
 
@@ -109,6 +109,6 @@ export async function POST(
 
   } catch (error: any) {
     console.error("Error testing webhook:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }

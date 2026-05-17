@@ -10,9 +10,17 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Check if user is admin — verifyAuth already resolves the effective role
-    // (legacy User.role + RBAC UserRole table) and attaches it to the session.
-    const isAdmin = auth.role === "admin" || auth.role === "owner";
+    // Re-verify role from database — do NOT trust JWT claim which may be stale
+    const dbUser = await prisma.user.findUnique({
+      where: { id: auth.userId },
+      select: { role: true }
+    });
+    
+    if (!dbUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const isAdmin = dbUser.role === "admin" || dbUser.role === "owner";
 
     if (!isAdmin) {
       return NextResponse.json({ error: "Forbidden: Admin access required" }, { status: 403 });
@@ -62,6 +70,6 @@ export async function GET(req: NextRequest) {
     return NextResponse.json(users);
   } catch (error: any) {
     console.error("Error fetching users:", error);
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch users" }, { status: 500 });
   }
 }

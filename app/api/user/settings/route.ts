@@ -33,7 +33,7 @@ export async function GET(req: Request) {
 
         return NextResponse.json(user);
     } catch (error: any) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }
 
@@ -66,6 +66,6 @@ export async function PATCH(req: Request) {
 
     } catch (error: any) {
         console.error("Settings update error:", error);
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
     }
 }

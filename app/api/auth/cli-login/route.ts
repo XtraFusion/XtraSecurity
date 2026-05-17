@@ -5,7 +5,7 @@ import { createTamperEvidentLog } from "@/lib/audit";
 import { validateApiKey, hashApiKey } from "@/lib/auth/service-account";
 // import { sign } from "jsonwebtoken"; // If separate JWT needed, but for now we might simple return a session token or basic mimic
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET || "fallback-secret-key-change-me";
+const SECRET_KEY = process.env.NEXTAUTH_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
@@ -62,7 +62,8 @@ export async function POST(req: NextRequest) {
 
       // Return a signed JWT acting as the session token
       const jwt = await import("jsonwebtoken");
-      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+      const secret = process.env.NEXTAUTH_SECRET;
+      if (!secret) return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
       
       // Build payload based on whether this is a user API key or service account API key
       let payload;
@@ -139,23 +140,19 @@ export async function POST(req: NextRequest) {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
       }
 
-      // Check admin hardcoded bypass (legacy)
-      if (email === "admin@example.com" && password === "password") {
-          // Success
-      } else {
-          // Verify hash
-          if (!user.password) {
-             return NextResponse.json({ error: "Password not set for this user" }, { status: 400 });
-          }
-          const valid = await bcrypt.compare(password, user.password);
-          if (!valid) {
-            return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
-          }
+      // Verify password hash
+      if (!user.password) {
+         return NextResponse.json({ error: "Password not set for this user" }, { status: 400 });
+      }
+      const valid = await bcrypt.compare(password, user.password);
+      if (!valid) {
+        return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
       }
 
       // Issue true JWT instead of base64 placeholder
       const jwt = await import("jsonwebtoken");
-      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+      const secret = process.env.NEXTAUTH_SECRET;
+      if (!secret) return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
       
       const payload = {
           id: user.id,

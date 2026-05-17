@@ -74,6 +74,6 @@ export async function DELETE(
 
   } catch (error: any) {
     console.error("DELETE api-key error:", error);
-    return NextResponse.json({ error: "Internal Server Error", detail: error.message }, { status: 500 });
+    return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
   }
 }
