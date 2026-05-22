@@ -202,6 +202,62 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
          return NextResponse.json({ error: "Only the workspace owner can delete the workspace" }, { status: 403 });
     }
 
+    // Cascade delete manually
+    const projects = await prisma.project.findMany({ where: { workspaceId: id }, select: { id: true } });
+    const projectIds = projects.map(p => p.id);
+
+    if (projectIds.length > 0) {
+      const secrets = await prisma.secret.findMany({ where: { projectId: { in: projectIds } }, select: { id: true } });
+      const secretIds = secrets.map(s => s.id);
+      
+      if (secretIds.length > 0) {
+        await prisma.secretSync.deleteMany({ where: { secretId: { in: secretIds } } });
+        await prisma.secretShare.deleteMany({ where: { secretId: { in: secretIds } } });
+        
+        const schedules = await prisma.rotationSchedule.findMany({ where: { secretId: { in: secretIds } }, select: { id: true } });
+        const scheduleIds = schedules.map(s => s.id);
+        if (scheduleIds.length > 0) {
+           await prisma.rotationLog.deleteMany({ where: { scheduleId: { in: scheduleIds } } });
+           await prisma.rotationSchedule.deleteMany({ where: { id: { in: scheduleIds } } });
+        }
+        
+        // Remove sourceSecretId references first to avoid foreign key issues
+        await prisma.secret.updateMany({
+            where: { projectId: { in: projectIds } },
+            data: { sourceSecretId: null }
+        });
+        await prisma.secret.deleteMany({ where: { projectId: { in: projectIds } } });
+      }
+
+      await prisma.branch.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.teamProject.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.serviceAccount.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.webhook.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.accessRequest.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.userRole.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.breakGlassSession.deleteMany({ where: { projectId: { in: projectIds } } });
+      await prisma.jitLink.deleteMany({ where: { projectId: { in: projectIds } } });
+      
+      await prisma.project.deleteMany({ where: { workspaceId: id } });
+    }
+
+    const teams = await prisma.team.findMany({ where: { workspaceId: id }, select: { id: true } });
+    const teamIds = teams.map(t => t.id);
+    if (teamIds.length > 0) {
+      await prisma.teamUser.deleteMany({ where: { teamId: { in: teamIds } } });
+      await prisma.teamSSO.deleteMany({ where: { teamId: { in: teamIds } } });
+      await prisma.team.deleteMany({ where: { workspaceId: id } });
+    }
+
+    await prisma.apiKey.deleteMany({ where: { workspaceId: id } });
+    await prisma.auditLog.deleteMany({ where: { workspaceId: id } });
+    await prisma.notification.deleteMany({ where: { workspaceId: id } });
+    await prisma.notificationRule.deleteMany({ where: { workspaceId: id } });
+    await prisma.notificationChannel.deleteMany({ where: { workspaceId: id } });
+    await prisma.securityEvent.deleteMany({ where: { workspaceId: id } });
+    await prisma.jitLink.deleteMany({ where: { workspaceId: id } });
+    await prisma.accessRequest.deleteMany({ where: { workspaceId: id } });
+
     await prisma.workspace.delete({ where: { id } });
 
     return NextResponse.json({ message: "Workspace deleted" });

@@ -79,128 +79,133 @@ export function PremiumTeamCard({
     return (
         <Card
             className={cn(
-                "group transition-all duration-300 border cursor-pointer overflow-hidden relative bg-card",
+                "group transition-all duration-300 border-border/60 hover:border-primary/50 cursor-pointer overflow-hidden relative bg-card/50",
                 isList 
-                    ? "flex flex-row items-center justify-between p-6" 
+                    ? "flex flex-row items-center justify-between p-4 px-6" 
                     : "flex flex-col hover:-translate-y-1 hover:shadow-xl h-[230px]"
             )}
-            style={{
-                borderColor: isHovered ? `${baseHex}60` : "rgba(255, 255, 255, 0.08)",
-            }}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
             onClick={onNavigate}
         >
-            {/* Hover top border accent matching team's color */}
+            {/* Left border accent */}
             {!isList && (
                 <div 
-                    className="absolute top-0 left-0 w-full h-[3px] opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                    style={{
-                        background: `linear-gradient(to right, transparent, ${baseHex}, transparent)`
-                    }}
+                    className="absolute top-0 left-0 w-1 h-full bg-primary/0 group-hover:bg-primary transition-all duration-300"
                 />
             )}
 
-            <CardHeader className={isList ? "flex-1 pb-6 p-0" : "pb-4"}>
-                <div className="flex justify-between items-start">
-                    <div className="space-y-1.5 min-w-0 flex-1">
-                        <div className="flex items-center gap-2 min-w-0">
-                            <CardTitle className="text-lg font-semibold truncate min-w-0 text-white group-hover:text-white transition-colors">
-                                {team.name}
-                            </CardTitle>
+            <CardHeader className={isList ? "flex-1 p-0 min-w-0" : "pb-3 px-5 pt-5"}>
+                <div className="flex justify-between items-start gap-4">
+                    <div className="space-y-1.5 overflow-hidden flex-1">
+                        <div className="flex items-center gap-2">
                             {team.isPrivate ? (
-                                <Badge variant="outline" className="text-[10px] shrink-0 bg-rose-950/20 text-rose-400 border-rose-900/40 gap-1 rounded-full py-0.5"><Lock className="h-3 w-3" /> Private</Badge>
+                                <Badge variant="secondary" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-sm shrink-0">
+                                    Private
+                                </Badge>
                             ) : (
-                                <Badge variant="outline" className="text-[10px] shrink-0 bg-emerald-950/20 text-emerald-400 border-emerald-900/40 gap-1 rounded-full py-0.5"><Globe className="h-3 w-3" /> Public</Badge>
+                                <Badge variant="default" className="px-2 py-0.5 text-[10px] uppercase font-bold tracking-wider rounded-sm shrink-0">
+                                    Public
+                                </Badge>
                             )}
                         </div>
-                        <CardDescription className="line-clamp-2 min-h-[40px] text-sm text-zinc-400">
-                            {team.description || "No description provided for this team."}
+                        <h3 className="text-lg font-semibold overflow-hidden text-ellipsis whitespace-nowrap group-hover:text-primary transition-colors" title={team.name}>
+                            {team.name}
+                        </h3>
+                        <CardDescription className="line-clamp-2 text-xs mt-1 leading-relaxed">
+                            {team.description || "No description provided."}
                         </CardDescription>
                     </div>
 
-                    {/* Circular Initial Badge replacing Folder Icon footprint */}
-                    {!isList && (
-                        <div 
-                            className="h-10 w-10 rounded-full flex items-center justify-center text-xs font-black uppercase shrink-0 transition-all duration-300 group-hover:scale-105 border shadow-inner"
-                            style={{
-                                backgroundColor: `${baseHex}15`,
-                                color: baseHex,
-                                borderColor: `${baseHex}30`
-                            }}
-                        >
-                            {team.name.substring(0, 2).toUpperCase()}
+                    {/* Management Trigger in Flex Layout (Grid View) */}
+                    {!isList && canManage && (
+                        <div className="-mt-1 -mr-2 shrink-0" onClick={e => e.stopPropagation()}>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-md transition-all">
+                                        <MoreVertical className="h-4 w-4" />
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                    <DropdownMenuItem onClick={onNavigate} className="cursor-pointer">
+                                        <Edit3 className="mr-2 h-4 w-4 text-muted-foreground" /> Edit Unit
+                                    </DropdownMenuItem>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                        <Trash2 className="mr-2 h-4 w-4" /> Terminate Team
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
                     )}
                 </div>
             </CardHeader>
 
-            <CardContent className={isList ? "flex items-center gap-8 py-0 p-0" : "pb-4"}>
-                <div className="flex items-center gap-4 text-sm text-zinc-400">
-                    <div className="flex items-center gap-1.5" title="Team Members">
-                        <Users className="h-3.5 w-3.5 text-zinc-500" />
-                        <span>{team.members?.length || 0} Members</span>
-                    </div>
-                    <div className="flex -space-x-1.5">
-                        {team.members?.slice(0, 3).map((m, i) => (
-                            <div 
-                                key={i} 
-                                className={cn(
-                                    "h-6 w-6 rounded-full border border-zinc-950 bg-gradient-to-br flex items-center justify-center text-[8px] font-bold text-white uppercase shadow-sm",
-                                    getAvatarGradient(m.name || 'U')
-                                )}
-                                title={m.name}
-                            >
-                                {m.name?.[0] || 'U'}
-                            </div>
-                        ))}
-                        {team.members?.length > 3 && (
-                            <div className="h-6 w-6 rounded-full border border-zinc-950 bg-zinc-900 flex items-center justify-center text-[8px] font-bold text-zinc-500 shadow-sm">
-                                +{team.members.length - 3}
-                            </div>
-                        )}
+            <CardContent className={isList ? "flex items-center gap-6 py-0 px-6 shrink-0" : "px-5 pb-5 pt-2 mt-auto"}>
+                <div className={cn(
+                    "flex items-center gap-3 w-full text-xs text-muted-foreground",
+                    !isList && "justify-between pt-4 border-t border-border/50"
+                )}>
+                    <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-1.5 bg-muted/40 hover:bg-muted/80 transition-colors px-2 py-1.5 rounded-md" title="Team Members">
+                            <Users className="h-3.5 w-3.5 text-muted-foreground/70" />
+                            <span className="font-medium">{team.members?.length || 0} Members</span>
+                        </div>
+                        <div className="flex -space-x-1.5">
+                            {team.members?.slice(0, 3).map((m, i) => (
+                                <div 
+                                    key={i} 
+                                    className="h-6 w-6 rounded-full border border-background bg-primary/10 flex items-center justify-center text-[10px] font-bold text-primary uppercase shadow-sm"
+                                    title={m.name}
+                                >
+                                    {m.name?.[0] || 'U'}
+                                </div>
+                            ))}
+                            {team.members?.length > 3 && (
+                                <div className="h-6 w-6 rounded-full border border-background bg-muted flex items-center justify-center text-[10px] font-bold text-muted-foreground shadow-sm">
+                                    +{team.members.length - 3}
+                                </div>
+                            )}
+                        </div>
                     </div>
                 </div>
             </CardContent>
 
-            <CardFooter className={isList ? "py-0 justify-end p-0" : "pt-0 border-t border-white/5 bg-zinc-900/10 py-3 mt-auto"}>
-                <div className="flex items-center justify-between w-full">
-                    <span className="text-xs text-zinc-500 flex items-center gap-1">
+            <CardFooter className={isList ? "py-0 p-0 flex items-center shrink-0 gap-6" : "pt-0 border-t border-border/50 bg-muted/5 py-3 mt-auto"}>
+                <div className={cn("flex items-center w-full", !isList && "justify-between")}>
+                    <span className="text-xs text-muted-foreground flex items-center gap-1 shrink-0">
                         <Clock className="h-3 w-3" /> Updated {new Date().toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" })}
                     </span>
 
                     {!isList && (
-                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 group/btn ml-auto text-zinc-400 hover:text-white transition-colors">
+                        <Button variant="ghost" size="sm" className="h-7 text-xs gap-1 group/btn ml-auto text-muted-foreground hover:text-foreground">
                             Manage <ChevronRight className="h-3 w-3 transition-transform group-hover/btn:translate-x-0.5" />
                         </Button>
                     )}
                 </div>
-            </CardFooter>
 
-            {/* Management Trigger */}
-            {canManage && (
-                <div className={cn(
-                    "absolute top-6 right-6 z-20",
-                    isList ? "relative top-0 right-0 ml-4 p-0" : ""
-                )} onClick={e => e.stopPropagation()}>
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-zinc-500 hover:text-white hover:bg-zinc-800/60 rounded-xl transition-all">
-                                <MoreVertical className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="bg-zinc-950 border border-zinc-800 rounded-xl p-1.5 min-w-[160px] backdrop-blur-xl shadow-2xl z-[99999]">
-                            <DropdownMenuItem onClick={onNavigate} className="rounded-lg text-[10px] font-bold uppercase tracking-widest text-zinc-400 focus:bg-zinc-800 focus:text-white py-3 px-4 transition-all cursor-pointer">
-                                <Edit3 className="mr-3 h-3.5 w-3.5 text-zinc-400" /> Edit Unit
-                            </DropdownMenuItem>
-                            <DropdownMenuSeparator className="bg-zinc-800/80" />
-                            <DropdownMenuItem onClick={onDelete} className="rounded-lg text-[10px] font-bold uppercase tracking-widest text-red-500 focus:bg-red-950/40 focus:text-red-400 py-3 px-4 transition-all cursor-pointer">
-                                <Trash2 className="mr-3 h-3.5 w-3.5 text-red-400" /> Terminate Team
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </div>
-            )}
+                {/* Management Trigger in Flex Layout (List View) */}
+                {isList && canManage && (
+                    <div className="shrink-0" onClick={e => e.stopPropagation()}>
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground rounded-md transition-all">
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuItem onClick={onNavigate} className="cursor-pointer">
+                                    <Edit3 className="mr-2 h-4 w-4 text-muted-foreground" /> Edit Unit
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                <DropdownMenuItem onClick={onDelete} className="cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Terminate Team
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
+                )}
+            </CardFooter>
         </Card>
     )
 }

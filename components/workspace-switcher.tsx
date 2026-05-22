@@ -83,7 +83,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
         return;
       }
       const w = await res.json();
-      const mapped: Workspace = { id: w.id, label: w.name, value: w.id };
+      const mapped: Workspace & { icon?: string } = { id: w.id, label: w.name, value: w.id, icon: w.icon };
 
       // Refetch workspaces from database to ensure consistency
       await refreshWorkspaces();
@@ -146,7 +146,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
                       setOpen(false);
                       window.location.reload();
                     }}
-                    className="text-sm"
+                    className="text-sm cursor-pointer"
                   >
                     {workspace.icon && !workspace.icon.startsWith("http") ? (
                       <div className="mr-2 h-5 w-5 flex items-center justify-center text-sm">
@@ -183,6 +183,7 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
                     setOpen(false);
                     setShowNewWorkspaceDialog(true);
                   }}
+                  className="cursor-pointer"
                 >
                   <PlusCircle className="mr-2 h-5 w-5" />
                   Create Workspace

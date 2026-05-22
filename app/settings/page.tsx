@@ -91,6 +91,25 @@ export default function SettingsPage() {
         }
     }, [selectedWorkspace]);
 
+    const [isDeletingWorkspace, setIsDeletingWorkspace] = useState(false);
+
+    const handleDeleteWorkspace = async () => {
+        if (!selectedWorkspace?.id) return;
+        if (!confirm("Are you sure you want to permanently delete this workspace? This action cannot be undone.")) return;
+        
+        setIsDeletingWorkspace(true);
+        try {
+            await apiClient.delete(`/api/workspace?id=${selectedWorkspace.id}`);
+            toast({ title: "Workspace Deleted", description: "The workspace has been permanently deleted." });
+            localStorage.removeItem("selectedWorkspace");
+            setTimeout(() => window.location.href = "/dashboard", 1000);
+        } catch (error: any) {
+            toast({ title: "Error", description: error.response?.data?.error || "Failed to delete workspace.", variant: "destructive" });
+        } finally {
+            setIsDeletingWorkspace(false);
+        }
+    };
+
     const fetchSettings = async () => {
         try {
             const res = await apiClient.get("/api/user/settings");
@@ -232,7 +251,7 @@ export default function SettingsPage() {
                 {/* ── Stats Row (Optional) ── */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <StatusCard icon={Shield} label="Security Score" value={mfaEnabled ? "95%" : "40%"} color={mfaEnabled ? "text-teal-500" : "text-rose-500"} />
-                    <StatusCard icon={Laptop} label="Active Sessions" value={(user?.sessions?.length || 2).toString()} color="text-blue-500" />
+                    <StatusCard icon={Laptop} label="Active Sessions" value={(user?.sessions?.length || 1).toString()} color="text-blue-500" />
                     <StatusCard icon={Key} label="Workspace" value={selectedWorkspace?.name || "Personal"} color="text-amber-500" />
                     <StatusCard icon={Zap} label="Current Tier" value={(user?.tier || "Free").toUpperCase()} color="text-purple-500" />
                 </div>
@@ -265,7 +284,7 @@ export default function SettingsPage() {
                 </div>
 
                 {/* ── Content Area ── */}
-                <div className="rounded-xl border border-border/40 bg-card/30 overflow-hidden min-h-[400px]">
+                <div className="min-h-[400px] pt-2">
                     <AnimatePresence mode="wait">
                         <motion.div
                             key={activeTab}
@@ -273,172 +292,222 @@ export default function SettingsPage() {
                             animate={{ opacity: 1, y: 0 }}
                             exit={{ opacity: 0, y: -4 }}
                             transition={{ duration: 0.15 }}
-                            className="p-8 space-y-8"
+                            className="space-y-6"
                         >
                             {activeTab === "general" && (
-                                <div className="space-y-8">
-                                    <div className="flex flex-col md:flex-row gap-12">
-                                        <div className="flex flex-col items-center gap-4">
-                                            <div className="relative">
-                                                <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-teal-500/20 to-teal-500/5 border border-teal-500/20 flex items-center justify-center text-3xl font-bold text-teal-500/60 shadow-xl">
-                                                    {name.charAt(0) || "U"}
+                                <>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Profile Information</CardTitle>
+                                            <CardDescription>Update your personal information and avatar.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="flex flex-col md:flex-row gap-8 items-start">
+                                                {/* Avatar */}
+                                                <div className="flex flex-col items-center gap-4 pt-2">
+                                                    <div className="relative">
+                                                        <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/20 flex items-center justify-center text-3xl font-bold text-primary/60 shadow-xl">
+                                                            {name.charAt(0) || "U"}
+                                                        </div>
+                                                        <button className="absolute -bottom-2 -right-2 p-2 bg-background border rounded-lg shadow-sm hover:bg-muted transition-all">
+                                                            <Camera className="w-4 h-4 text-muted-foreground" />
+                                                        </button>
+                                                    </div>
                                                 </div>
-                                                <button className="absolute -bottom-2 -right-2 p-2 bg-background border border-border/60 rounded-lg shadow-lg hover:bg-muted transition-all">
-                                                    <Camera className="w-4 h-4" />
-                                                </button>
-                                            </div>
-                                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Avatar</p>
-                                        </div>
 
-                                        <div className="flex-1 space-y-6 max-w-2xl">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs font-bold text-muted-foreground">Full Name</Label>
-                                                    <Input
-                                                        value={name}
-                                                        onChange={(e) => setName(e.target.value)}
-                                                        className="bg-muted/10 border-border/40 rounded-lg"
-                                                    />
-                                                </div>
-                                                <div className="space-y-2">
-                                                    <Label className="text-xs font-bold text-muted-foreground">Email Address</Label>
-                                                    <Input
-                                                        value={email}
-                                                        disabled
-                                                        className="bg-muted/5 border-border/40 rounded-lg opacity-60"
-                                                    />
+                                                {/* Form */}
+                                                <div className="flex-1 space-y-4 w-full">
+                                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                                        <div className="space-y-2">
+                                                            <Label>Full Name</Label>
+                                                            <Input
+                                                                value={name}
+                                                                onChange={(e) => setName(e.target.value)}
+                                                            />
+                                                        </div>
+                                                        <div className="space-y-2">
+                                                            <Label>Email Address</Label>
+                                                            <Input
+                                                                value={email}
+                                                                disabled
+                                                                className="bg-muted/50"
+                                                            />
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
-                                            <div className="pt-4 flex justify-end border-t border-border/40">
-                                                <Button
-                                                    onClick={() => handleProfileUpdate()}
-                                                    disabled={isUpdatingProfile}
-                                                    className="bg-teal-500 hover:bg-teal-600 text-black font-bold h-9 px-6 rounded-lg"
-                                                >
-                                                    {isUpdatingProfile ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update Profile"}
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
+                                        </CardContent>
+                                        <CardFooter className="border-t px-6 py-4 flex justify-end">
+                                            <Button
+                                                onClick={() => handleProfileUpdate()}
+                                                disabled={isUpdatingProfile}
+                                                className="font-semibold"
+                                            >
+                                                {isUpdatingProfile && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                                                Save Changes
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
 
-                                    <div className="pt-8 border-t border-border/40">
-                                        <Button variant="outline" className="rounded-lg border-rose-500/20 text-rose-500 hover:bg-rose-500/5 h-10 px-6 font-bold" onClick={() => logout()}>
-                                            <LogOut className="w-4 h-4 mr-2" /> Log out from all devices
-                                        </Button>
-                                    </div>
-                                </div>
+                                    <Card className="border-destructive/20 shadow-sm">
+                                        <CardHeader>
+                                            <CardTitle className="text-destructive">Danger Zone</CardTitle>
+                                            <CardDescription>Log out from your account across all devices.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <Button variant="destructive" className="font-semibold" onClick={() => logout()}>
+                                                <LogOut className="w-4 h-4 mr-2" /> Log Out
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </>
                             )}
 
                             {activeTab === "security" && (
-                                <div className="space-y-6">
-                                    <div className="flex items-center justify-between p-6 rounded-xl border border-border/40 bg-muted/5">
-                                        <div className="space-y-1">
-                                            <h4 className="font-bold">Two-Factor Authentication</h4>
-                                            <p className="text-sm text-muted-foreground font-medium">Add an extra layer of security to your account.</p>
-                                        </div>
-                                        <div className="flex items-center gap-4">
-                                            <Badge variant="outline" className={cn("px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest", mfaEnabled ? "bg-teal-500/10 text-teal-500 border-teal-500/20" : "bg-muted text-muted-foreground")}>
-                                                {mfaEnabled ? "Active" : "Disabled"}
-                                            </Badge>
-                                            <Switch checked={mfaEnabled} onCheckedChange={handleSecurityUpdate} disabled={isUpdatingSecurity} className="data-[state=checked]:bg-teal-500" />
-                                        </div>
-                                    </div>
+                                <>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Two-Factor Authentication</CardTitle>
+                                            <CardDescription>Add an extra layer of security to your account.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="flex items-center justify-between border-t p-6">
+                                            <div className="flex items-center gap-4">
+                                                <Badge variant={mfaEnabled ? "default" : "secondary"}>
+                                                    {mfaEnabled ? "Active" : "Disabled"}
+                                                </Badge>
+                                                <p className="text-sm font-medium text-muted-foreground hidden sm:block">
+                                                    {mfaEnabled ? "MFA is currently active on your account." : "MFA is disabled. We highly recommend enabling it."}
+                                                </p>
+                                            </div>
+                                            <Switch checked={mfaEnabled} onCheckedChange={handleSecurityUpdate} disabled={isUpdatingSecurity} />
+                                        </CardContent>
+                                    </Card>
 
-                                    <div className="pt-8">
-                                        <div className="flex items-center justify-between mb-6">
-                                            <h4 className="font-bold text-lg">Active Hardware Sessions</h4>
-                                            <Button variant="ghost" className="text-xs font-bold text-rose-500 h-8">Revoke All</Button>
-                                        </div>
-                                        <div className="divide-y divide-border/40 border-t border-border/40">
-                                            {(user?.sessions || [1, 2]).map((s: any, i: number) => (
-                                                <div key={i} className="flex items-center justify-between py-6 group transition-all">
-                                                    <div className="flex items-center gap-4">
-                                                        <div className="h-10 w-10 rounded-lg bg-muted/20 border border-border/40 flex items-center justify-center">
-                                                            <Laptop className="h-5 w-5 text-muted-foreground" />
-                                                        </div>
-                                                        <div className="space-y-0.5">
-                                                            <div className="flex items-center gap-2">
-                                                                <span className="font-bold">{i === 0 ? "Current Windows PC" : "MacBook Pro"}</span>
-                                                                {i === 0 && <Badge className="bg-teal-500/10 text-teal-500 border-none text-[8px] font-black tracking-widest px-1.5 h-4">CURRENT</Badge>}
+                                    <Card>
+                                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+                                            <div className="space-y-1">
+                                                <CardTitle>Active Hardware Sessions</CardTitle>
+                                                <CardDescription>Manage devices currently logged into your account.</CardDescription>
+                                            </div>
+                                            <Button variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/5 hidden sm:flex" onClick={() => logout()}>Revoke All</Button>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div className="divide-y divide-border border rounded-md">
+                                                {(user?.sessions?.length ? user.sessions : [1]).map((s: any, i: number) => (
+                                                    <div key={i} className="flex items-center justify-between p-4 group transition-all">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="h-10 w-10 rounded-md bg-muted flex items-center justify-center">
+                                                                <Laptop className="h-5 w-5 text-muted-foreground" />
                                                             </div>
-                                                            <p className="text-xs text-muted-foreground font-medium">192.168.1.{100 + i} • London, UK • 2 mins ago</p>
+                                                            <div className="space-y-0.5">
+                                                                <div className="flex items-center gap-2">
+                                                                    <span className="font-semibold text-sm">{i === 0 ? "Current Windows PC" : "MacBook Pro"}</span>
+                                                                    {i === 0 && <Badge variant="secondary" className="text-[10px] uppercase font-bold tracking-wider px-1.5 h-4">Current</Badge>}
+                                                                </div>
+                                                                <p className="text-xs text-muted-foreground">Local Session • Active now</p>
+                                                            </div>
                                                         </div>
+                                                        <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={() => {
+                                                            if (i === 0) toast({ title: "Cannot Revoke", description: "You cannot revoke your current active session. Use 'Revoke All' to log out.", variant: "destructive" });
+                                                        }}>Revoke</Button>
                                                     </div>
-                                                    <Button variant="outline" className="h-8 text-[10px] font-bold border-rose-500/20 text-rose-500 hover:bg-rose-500/5">Revoke</Button>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    </div>
-                                </div>
+                                                ))}
+                                            </div>
+                                            <Button variant="outline" className="text-destructive border-destructive/20 hover:bg-destructive/5 w-full mt-4 sm:hidden" onClick={() => logout()}>Revoke All</Button>
+                                        </CardContent>
+                                    </Card>
+                                </>
                             )}
 
                             {activeTab === "notifications" && (
-                                <div className="space-y-4">
-                                    <SettingsPill label="Critical Alerts" desc="Security breaches, rotation failures, and auth errors." checked />
-                                    <SettingsPill label="Usage Snapshots" desc="Weekly crystalline reports of your resource consumption." />
-                                    <SettingsPill label="Product Updates" desc="New features, CLI versions, and registry changes." checked />
-                                </div>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Notification Preferences</CardTitle>
+                                        <CardDescription>Choose what updates you want to receive.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <SettingsPill label="Critical Alerts" desc="Security breaches, rotation failures, and auth errors." checked />
+                                        <SettingsPill label="Usage Snapshots" desc="Weekly crystalline reports of your resource consumption." />
+                                        <SettingsPill label="Product Updates" desc="New features, CLI versions, and registry changes." checked />
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {activeTab === "billing" && (
-                                <div className="pt-4">
-                                    <BillingTab currentTier={(user?.tier || "free") as Tier} />
-                                </div>
+                                <Card>
+                                    <CardHeader>
+                                        <CardTitle>Billing & Plan</CardTitle>
+                                        <CardDescription>Manage your subscription and view usage.</CardDescription>
+                                    </CardHeader>
+                                    <CardContent>
+                                        <BillingTab currentTier={(user?.tier || "free") as Tier} />
+                                    </CardContent>
+                                </Card>
                             )}
 
                             {activeTab === "workspace" && (
-                                <div className="space-y-8">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                                        <div className="space-y-6">
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-bold text-muted-foreground">Workspace ID</Label>
-                                                <div className="flex items-center gap-2">
-                                                    <code className="flex-1 bg-muted/20 border border-border/40 px-3 py-2 rounded-lg text-sm font-mono truncate">{selectedWorkspace?.id}</code>
-                                                    <Button variant="ghost" size="icon" onClick={copyWorkspaceId} className="h-9 w-9 border border-border/40 bg-muted/10">
-                                                        <Copy className="h-4 w-4" />
-                                                    </Button>
+                                <>
+                                    <Card>
+                                        <CardHeader>
+                                            <CardTitle>Workspace Settings</CardTitle>
+                                            <CardDescription>Manage your workspace details and branding.</CardDescription>
+                                        </CardHeader>
+                                        <CardContent className="space-y-6">
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="space-y-2">
+                                                    <Label>Workspace ID</Label>
+                                                    <div className="flex items-center gap-2">
+                                                        <code className="flex-1 bg-muted border px-3 py-2 rounded-md text-sm font-mono truncate">{selectedWorkspace?.id}</code>
+                                                        <Button variant="outline" size="icon" onClick={copyWorkspaceId}>
+                                                            <Copy className="h-4 w-4" />
+                                                        </Button>
+                                                    </div>
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Designation Name</Label>
+                                                    <Input
+                                                        value={workspaceName}
+                                                        onChange={(e) => setWorkspaceName(e.target.value)}
+                                                    />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <Label>Visual Branding (Emoji/URL)</Label>
+                                                    <Input
+                                                        value={workspaceIcon}
+                                                        onChange={(e) => setWorkspaceIcon(e.target.value)}
+                                                    />
                                                 </div>
                                             </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-bold text-muted-foreground">Designation Name</Label>
-                                                <Input
-                                                    value={workspaceName}
-                                                    onChange={(e) => setWorkspaceName(e.target.value)}
-                                                    className="bg-muted/10 border-border/40 rounded-lg"
-                                                />
-                                            </div>
-                                            <div className="space-y-2">
-                                                <Label className="text-xs font-bold text-muted-foreground">Visual Branding (Emoji/URL)</Label>
-                                                <Input
-                                                    value={workspaceIcon}
-                                                    onChange={(e) => setWorkspaceIcon(e.target.value)}
-                                                    className="bg-muted/10 border-border/40 rounded-lg"
-                                                />
-                                            </div>
-                                        </div>
+                                        </CardContent>
+                                        <CardFooter className="border-t px-6 py-4 flex justify-end">
+                                            <Button
+                                                onClick={() => handleWorkspaceUpdate()}
+                                                disabled={isUpdatingWorkspace}
+                                                className="font-semibold"
+                                            >
+                                                {isUpdatingWorkspace && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
+                                                Save Workspace
+                                            </Button>
+                                        </CardFooter>
+                                    </Card>
 
-                                        <div className="p-8 rounded-xl bg-rose-500/5 border border-rose-500/20 space-y-4 flex flex-col justify-between">
-                                            <div className="space-y-2">
-                                                <div className="flex items-center gap-2 text-rose-500">
-                                                    <Shield className="w-5 h-5" />
-                                                    <h4 className="font-bold">Danger Zone</h4>
-                                                </div>
-                                                <p className="text-sm text-muted-foreground leading-relaxed">Destroying this workspace will permanently vaporize all secrets and audit logs. This action is irreversible.</p>
-                                            </div>
-                                            <Button variant="destructive" className="w-full h-11 font-bold rounded-lg bg-rose-600 hover:bg-rose-700">Delete Workspace</Button>
-                                        </div>
-                                    </div>
-
-                                    <div className="pt-8 flex justify-end border-t border-border/40">
-                                        <Button
-                                            onClick={() => handleWorkspaceUpdate()}
-                                            disabled={isUpdatingWorkspace}
-                                            className="bg-teal-500 hover:bg-teal-600 text-black font-bold h-9 px-6 rounded-lg"
-                                        >
-                                            {isUpdatingWorkspace ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save Workspace"}
-                                        </Button>
-                                    </div>
-                                </div>
+                                    <Card className="border-destructive/20 shadow-sm">
+                                        <CardHeader>
+                                            <CardTitle className="text-destructive flex items-center gap-2">
+                                                <Shield className="w-5 h-5" /> Danger Zone
+                                            </CardTitle>
+                                            <CardDescription>
+                                                Destroying this workspace will permanently vaporize all secrets and audit logs. This action is irreversible.
+                                            </CardDescription>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <Button variant="destructive" onClick={handleDeleteWorkspace} disabled={isDeletingWorkspace} className="font-semibold">
+                                                {isDeletingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin mr-2" />}
+                                                Delete Workspace
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                </>
                             )}
                         </motion.div>
                     </AnimatePresence>

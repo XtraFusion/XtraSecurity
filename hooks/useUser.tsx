@@ -76,10 +76,25 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
   // Save workspace and update role on change
   useEffect(() => {
     if (selectedWorkspace) {
+      // Validate if selected workspace still exists in fetched workspaces
+      if (workspaces.length > 0) {
+        const exists = workspaces.find(w => w.id === selectedWorkspace.id || w.value === selectedWorkspace.value || w.id === selectedWorkspace.value);
+        if (!exists) {
+          setSelectedWorkspace(workspaces[0]);
+          return; // The effect will re-run with the valid workspace
+        }
+
+        // Keep selected workspace in sync with latest db data (e.g. icon updates)
+        if (exists.icon !== selectedWorkspace.icon || exists.name !== selectedWorkspace.label) {
+          setSelectedWorkspace({ ...exists, label: exists.name, value: exists.id });
+          return; // The effect will re-run with synced data
+        }
+      }
+
       localStorage.setItem("selectedWorkspace", JSON.stringify(selectedWorkspace));
       
       // Update role from the workspaces list
-      const ws = workspaces.find(w => w.id === selectedWorkspace.id);
+      const ws = workspaces.find(w => w.id === selectedWorkspace.id || w.id === selectedWorkspace.value);
       if (ws?.role) {
         setWorkspaceRole(ws.role);
       } else {

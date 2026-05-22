@@ -98,7 +98,7 @@ export class XtraClient {
             }
             return data;
         } catch (error: any) {
-            throw new XtraError(`Failed to fetch secrets: ${error.message}`);
+            throw new XtraError(`Failed to fetch secrets: ${(error as any)?.response?.data?.error || "An unexpected error occurred"}`);
         }
     }
 

@@ -106,7 +106,7 @@ export default function DashboardPage() {
     if (selectedWorkspace) {
       loadData();
     }
-  }, [selectedWorkspace, isCreateModalOpen]); // Removed router from deps to avoid loop
+  }, [selectedWorkspace]); // Removed router and isCreateModalOpen from deps to avoid loop
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -145,8 +145,8 @@ export default function DashboardPage() {
       setNewProject({ name: "", description: "" });
       setIsCreateModalOpen(false);
       toast.success("Project created successfully");
-      // Refetch handled by dependency on isCreateModalOpen? No, actually loadData depends on it, but let's be explicit if needed. 
-      // Actually loadData depends on isCreateModalOpen, so it will refetch.
+      const projectsList = await ProjectController.fetchProjects(undefined, selectedWorkspace.id);
+      setProjects(projectsList || []);
     } catch (error: any) {
       console.error("Failed to create project:", error);
       const errorMessage = error.response?.data?.message || "Failed to create project. Please try again.";
