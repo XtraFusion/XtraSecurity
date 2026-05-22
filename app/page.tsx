@@ -567,13 +567,21 @@ function Navbar() {
 // ─────────────────────────────────────────────
 
 function Terminal() {
-  const [lines, setLines] = useState(0);
+  const container = {
+    hidden: { opacity: 0 },
+    show: {
+      opacity: 1,
+      transition: {
+        delayChildren: 0.8,
+        staggerChildren: 0.38,
+      },
+    },
+  };
 
-  useEffect(() => {
-    TERMINAL_LINES.forEach((_, i) => {
-      setTimeout(() => setLines(i + 1), 500 + i * 380);
-    });
-  }, []);
+  const item = {
+    hidden: { opacity: 0, x: -8 },
+    show: { opacity: 1, x: 0, transition: { duration: 0.3 } },
+  };
 
   return (
     <motion.div
@@ -591,42 +599,46 @@ function Terminal() {
         <span className="flex-1 text-center text-xs text-slate-500 font-mono">xtra — terminal</span>
       </div>
       {/* Body */}
-      <div className="bg-[#0d1117] p-6 min-h-[200px] font-mono text-sm leading-8">
-        <AnimatePresence>
-          {TERMINAL_LINES.slice(0, lines).map((line, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, x: -8 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.3 }}
-            >
-              {line.type === "cmd" ? (
-                <div className="flex gap-3">
-                  <span className="text-cyan-400">$</span>
-                  <span className="text-slate-200">
-                    <span className="text-cyan-400">xtra</span>
-                    <span className="text-slate-200"> run </span>
-                    <span className="text-amber-400">--env production</span>
-                    <span className="text-slate-500"> -- npm start</span>
-                  </span>
-                </div>
-              ) : (
-                <div className={`pl-5 ${line.type === "success" ? "text-emerald-400" :
-                  line.type === "warn" ? "text-amber-400" : "text-slate-500"
-                  }`}>
-                  {line.text}
-                </div>
-              )}
-            </motion.div>
-          ))}
-        </AnimatePresence>
-        {lines <= TERMINAL_LINES.length && (
-          <div className="flex items-center gap-3 mt-1">
-            <span className="text-slate-600 font-mono text-sm">$</span>
-            <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse" />
-          </div>
-        )}
-      </div>
+      <motion.div 
+        variants={container}
+        initial="hidden"
+        animate="show"
+        className="bg-[#0d1117] p-6 min-h-[200px] font-mono text-sm leading-8"
+      >
+        {TERMINAL_LINES.map((line, i) => (
+          <motion.div
+            key={i}
+            variants={item}
+          >
+            {line.type === "cmd" ? (
+              <div className="flex gap-3">
+                <span className="text-cyan-400">$</span>
+                <span className="text-slate-200">
+                  <span className="text-cyan-400">xtra</span>
+                  <span className="text-slate-200"> run </span>
+                  <span className="text-amber-400">--env production</span>
+                  <span className="text-slate-500"> -- npm start</span>
+                </span>
+              </div>
+            ) : (
+              <div className={`pl-5 ${line.type === "success" ? "text-emerald-400" :
+                line.type === "warn" ? "text-amber-400" : "text-slate-500"
+                }`}>
+                {line.text}
+              </div>
+            )}
+          </motion.div>
+        ))}
+        <motion.div 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.8 + TERMINAL_LINES.length * 0.38 }}
+          className="flex items-center gap-3 mt-1"
+        >
+          <span className="text-slate-600 font-mono text-sm">$</span>
+          <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse" />
+        </motion.div>
+      </motion.div>
     </motion.div>
   );
 }
