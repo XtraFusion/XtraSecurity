@@ -191,7 +191,6 @@ export default function IntegrationsPage() {
         )}
 
         {/* ── Sync Section ────────────────────────────────────────── */}
-        {/* 
         {Object.values(statuses).some(s => s.connected) && (
           <div className="pt-4 border-t space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
@@ -222,7 +221,6 @@ export default function IntegrationsPage() {
             />
           </div>
         )}
-        */}
       </div>
 
       {/* ── Modals ────────────────────────────────────────── */}
