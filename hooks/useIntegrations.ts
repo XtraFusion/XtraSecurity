@@ -13,6 +13,43 @@ export function useIntegrations() {
   const [loading, setLoading] = useState(true);
   const [disconnectingProviders, setDisconnectingProviders] = useState<Set<string>>(new Set());
   const [projects, setProjects] = useState<Project[]>([]);
+  const [refreshingProjects, setRefreshingProjects] = useState(false);
+  const [refreshingRepos, setRefreshingRepos] = useState<Record<string, boolean>>({});
+
+  const refreshProjects = useCallback(async () => {
+    setRefreshingProjects(true);
+    try {
+      const res = await ProjectController.fetchProjects();
+      if (Array.isArray(res)) {
+        setProjects(res);
+        toast({ title: "Projects refreshed", description: "Your project list has been updated." });
+      }
+    } catch (e) {
+      toast({ title: "Refresh failed", description: "Failed to update project list.", variant: "destructive" });
+    } finally {
+      setRefreshingProjects(false);
+    }
+  }, []);
+
+  const refreshRepos = useCallback(async (provider: SyncProvider) => {
+    setRefreshingRepos(prev => ({ ...prev, [provider]: true }));
+    try {
+      const res = await fetch(`/api/integrations/${provider}/sync`);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.repos) {
+          setRepos(prev => ({ ...prev, [provider]: data.repos }));
+          toast({ title: "Targets refreshed", description: `Successfully reloaded list from ${provider}.` });
+        }
+      } else {
+        throw new Error();
+      }
+    } catch (e) {
+      toast({ title: "Refresh failed", description: `Failed to reload targets for ${provider}.`, variant: "destructive" });
+    } finally {
+      setRefreshingRepos(prev => ({ ...prev, [provider]: false }));
+    }
+  }, []);
 
   const fetchStatus = useCallback(async (provider: SyncProvider) => {
     try {
@@ -117,11 +154,15 @@ export function useIntegrations() {
     loading,
     disconnectingProviders,
     projects,
+    refreshingProjects,
+    refreshingRepos,
     setStatuses,
     setRepos,
     setModalOpen,
     disconnect,
     refresh: fetchAll,
-    refreshStatus: fetchStatus
+    refreshStatus: fetchStatus,
+    refreshProjects,
+    refreshRepos
   };
 }

@@ -17,17 +17,58 @@ interface SyncSectionProps {
   repos: Repo[];
   syncProvider: SyncProvider;
   onSyncSuccess: (data: any) => void;
+  onRefreshProjects: () => void;
+  onRefreshRepos: () => void;
+  refreshingProjects: boolean;
+  refreshingRepos: boolean;
 }
 
-export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: SyncSectionProps) {
+export function SyncSection({
+  projects,
+  repos,
+  syncProvider,
+  onSyncSuccess,
+  onRefreshProjects,
+  onRefreshRepos,
+  refreshingProjects,
+  refreshingRepos
+}: SyncSectionProps) {
   const [selectedProject, setSelectedProject] = useState("");
   const [selectedEnv, setSelectedEnv] = useState("development");
   const [selectedRepo, setSelectedRepo] = useState("");
   const [secretPrefix, setSecretPrefix] = useState("");
   const [awsPathPrefix, setAwsPathPrefix] = useState("");
   const [syncing, setSyncing] = useState(false);
+  const [redeploying, setRedeploying] = useState(false);
   const [syncResults, setSyncResults] = useState<any>(null);
   const [showCompare, setShowCompare] = useState(false);
+
+  const handleRedeploy = async () => {
+    if (!selectedRepo) return;
+    setRedeploying(true);
+    try {
+      const res = await fetch("/api/integrations/vercel/deploy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ vercelProjectId: selectedRepo })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Redeploy failed");
+
+      toast({ title: "Redeploy Triggered ✓", description: "Vercel is now building your latest deployment." });
+
+      if (data.url) {
+        setSyncResults((p: any) => ({
+          ...p,
+          latestDeployment: { url: data.url }
+        }));
+      }
+    } catch (e: any) {
+      toast({ title: "Redeploy Failed", description: e.message, variant: "destructive" });
+    } finally {
+      setRedeploying(false);
+    }
+  };
 
   const handleSync = async () => {
     if (!selectedProject || !selectedRepo) {
@@ -73,7 +114,7 @@ export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: Sy
   const handleDelete = async (key: string) => {
     try {
       const repo = repos.find(r => r.id.toString() === selectedRepo)!;
-      const params = new URLSearchParams({
+      const rawParams: Record<string, any> = {
         secretName: key,
         ...(syncProvider === "github" ? { repoOwner: repo.owner, repoName: repo.name } : {}),
         ...(syncProvider === "gitlab" ? { gitlabProjectId: repo.id, variableKey: key } : {}),
@@ -86,12 +127,21 @@ export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: Sy
         ...(syncProvider === "render" ? { targetId: repo.id } : {}),
         ...(syncProvider === "digitalocean" ? { appId: repo.id } : {}),
         ...(syncProvider === "heroku" ? { appId: repo.id } : {}),
+      };
+
+      const record: Record<string, string> = {};
+      Object.entries(rawParams).forEach(([k, v]) => {
+        if (v !== undefined && v !== null) {
+          record[k] = v.toString();
+        }
       });
+
+      const params = new URLSearchParams(record);
 
       const res = await fetch(`/api/integrations/${syncProvider}/sync?${params.toString()}`, { method: "DELETE" });
       const d = await res.json();
       if (!res.ok) throw new Error(d.error);
-      
+
       setSyncResults((p: any) => ({
         ...p,
         results: p.results.filter((r: any) => r.key !== key),
@@ -119,15 +169,39 @@ export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: Sy
               <p className="text-[11px] text-muted-foreground">{metadata.detailText}</p>
             </div>
           </div>
-          <Button onClick={handleSync} disabled={syncing || !selectedProject || !selectedRepo} size="sm" className="gap-2 h-8 px-4">
-            {syncing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
-            {syncing ? "Syncing..." : "Run Sync Now"}
-          </Button>
+          <div className="flex gap-2">
+            {syncProvider === "vercel" && syncResults && (
+              <Button
+                onClick={handleRedeploy}
+                disabled={redeploying || !selectedRepo}
+                size="sm"
+                variant="outline"
+                className="gap-2 h-8 px-4 border-primary/30 text-primary hover:bg-primary/5"
+              >
+                {redeploying ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <Activity className="h-3.5 w-3.5" />}
+                {redeploying ? "Redeploying..." : "Redeploy Vercel"}
+              </Button>
+            )}
+            <Button onClick={handleSync} disabled={syncing || !selectedProject || !selectedRepo} size="sm" className="gap-2 h-8 px-4">
+              {syncing ? <RefreshCw className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
+              {syncing ? "Syncing..." : "Run Sync Now"}
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x border-b">
           <div className="p-5 space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">1. Source Project</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">1. Source Project</Label>
+              <button
+                onClick={onRefreshProjects}
+                disabled={refreshingProjects}
+                className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                title="Refresh Projects"
+              >
+                <RefreshCw className={`h-3 w-3 ${refreshingProjects ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <Select value={selectedProject} onValueChange={setSelectedProject}>
               <SelectTrigger className="h-10 bg-background/50">
                 <SelectValue placeholder="Select XtraSecurity Project" />
@@ -139,7 +213,17 @@ export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: Sy
           </div>
 
           <div className="p-5 space-y-2">
-            <Label className="text-xs font-medium text-muted-foreground">2. Target {metadata.repoLabel}</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-medium text-muted-foreground">2. Target {metadata.repoLabel}</Label>
+              <button
+                onClick={onRefreshRepos}
+                disabled={refreshingRepos}
+                className="text-muted-foreground hover:text-primary transition-colors disabled:opacity-50"
+                title={`Refresh ${metadata.repoLabel}s`}
+              >
+                <RefreshCw className={`h-3 w-3 ${refreshingRepos ? 'animate-spin' : ''}`} />
+              </button>
+            </div>
             <Select value={selectedRepo} onValueChange={setSelectedRepo}>
               <SelectTrigger className="h-10 bg-background/50">
                 <SelectValue placeholder={`Select ${metadata.repoLabel}`} />
@@ -193,8 +277,8 @@ export function SyncSection({ projects, repos, syncProvider, onSyncSuccess }: Sy
           </div>
 
           {showCompare && (syncProvider === "vercel" || syncProvider === "netlify") ? (
-            <ComparePanel 
-              provider={syncProvider as "vercel" | "netlify"} 
+            <ComparePanel
+              provider={syncProvider as "vercel" | "netlify"}
               vercelProjectId={syncProvider === "vercel" ? selectedRepo : undefined}
               netlifySiteId={syncProvider === "netlify" ? selectedRepo : undefined}
               netlifyAccountId={syncProvider === "netlify" ? repos.find(r => r.id.toString() === selectedRepo)?.accountId : undefined}

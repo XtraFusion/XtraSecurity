@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -35,12 +35,25 @@ export default function IntegrationsPage() {
   const { user, selectedWorkspace, sessionStatus } = useUser();
   const { 
     statuses, repos, modals, loading: integrationsLoading, projects, disconnectingProviders,
-    setModalOpen, disconnect, refresh, refreshStatus, setStatuses 
+    refreshingProjects, refreshingRepos,
+    setModalOpen, disconnect, refresh, refreshStatus, setStatuses, refreshProjects, refreshRepos
   } = useIntegrations();
 
   const [searchQuery, setSearchQuery] = useState("");
   const [activeCategory, setActiveCategory] = useState<"all" | "source" | "deployment" | "cloud" | "notifications">("all");
-  const [syncProvider, setSyncProvider] = useState<SyncProvider>("github");
+  const [syncProvider, setSyncProvider] = useState<SyncProvider | "">("");
+
+  const connectedProviders = useMemo(() => {
+    return (Object.keys(statuses) as SyncProvider[]).filter(
+      p => statuses[p]?.connected && INTEGRATION_METADATA[p].category !== "notifications"
+    );
+  }, [statuses]);
+
+  useEffect(() => {
+    if (connectedProviders.length > 0 && (!syncProvider || !connectedProviders.includes(syncProvider))) {
+      setSyncProvider(connectedProviders[0]);
+    }
+  }, [connectedProviders, syncProvider]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
   const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
@@ -191,23 +204,20 @@ export default function IntegrationsPage() {
         )}
 
         {/* ── Sync Section ────────────────────────────────────────── */}
-        {Object.values(statuses).some(s => s.connected) && (
+        {connectedProviders.length > 0 && syncProvider && (
           <div className="pt-4 border-t space-y-6">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <h2 className="text-lg font-semibold tracking-tight">Active Secret Sync</h2>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Source Provider</span>
-                <Select value={syncProvider} onValueChange={(v: any) => setSyncProvider(v)}>
+                <Select value={syncProvider} onValueChange={(v: any) => setSyncProvider(v as SyncProvider)}>
                   <SelectTrigger className="h-8 w-44 bg-muted/30 text-xs font-semibold">
-                    <SelectValue />
+                    <SelectValue placeholder="Select Provider" />
                   </SelectTrigger>
                   <SelectContent>
-                    {(Object.keys(statuses) as SyncProvider[])
-                      .filter(p => statuses[p]?.connected && INTEGRATION_METADATA[p].category !== "notifications")
-                      .map(p => (
-                        <SelectItem key={p} value={p} className="text-xs">{INTEGRATION_METADATA[p].name}</SelectItem>
-                      ))
-                    }
+                    {connectedProviders.map(p => (
+                      <SelectItem key={p} value={p} className="text-xs">{INTEGRATION_METADATA[p].name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
@@ -218,6 +228,10 @@ export default function IntegrationsPage() {
               repos={repos[syncProvider] || []}
               syncProvider={syncProvider}
               onSyncSuccess={() => refreshStatus(syncProvider)}
+              onRefreshProjects={refreshProjects}
+              onRefreshRepos={() => refreshRepos(syncProvider)}
+              refreshingProjects={refreshingProjects}
+              refreshingRepos={refreshingRepos[syncProvider] || false}
             />
           </div>
         )}
