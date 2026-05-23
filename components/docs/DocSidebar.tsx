@@ -53,54 +53,56 @@ export function DocSidebar({
 }: DocSidebarProps) {
   return (
     <aside className={cn(
-      "hidden md:flex bg-card h-screen w-72 flex-col fixed left-0 z-40 border-r border-border overflow-y-auto",
+      "hidden md:flex bg-card/65 dark:bg-zinc-950/65 backdrop-blur-xl h-screen w-72 flex-col fixed left-0 z-40 border-r border-border/40 overflow-y-auto custom-scrollbar transition-all duration-300",
       className
     )}>
-      {/* ── Brand / Logo ─────────── ──────────────────────── */}
-      <div className="h-14 flex items-center px-6 mb-4 mt-2">
-        <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:opacity-80 transition-opacity">
-          <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={24} height={24} className="rounded-md" />
-          <span className="text-foreground">Xtra<span className="text-primary font-black italic">Security</span></span>
+      {/* ── Brand / Logo ────────────────────────────────── */}
+      <div className="h-16 flex items-center px-6 mb-4 mt-2">
+        <Link href="/" className="flex items-center gap-2.5 font-bold text-lg tracking-tight hover:opacity-90 transition-opacity">
+          <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shadow-inner">
+            <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={20} height={20} className="rounded" />
+          </div>
+          <span className="text-foreground tracking-tight">Xtra<span className="text-primary font-black italic">Security</span></span>
         </Link>
       </div>
 
       {/* ── Search ───────────────────────────────────────── */}
-      <div className="px-4 mb-4">
+      <div className="px-4 mb-5">
         <div className="relative group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-foreground transition-colors" />
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground group-focus-within:text-primary transition-colors duration-250" />
           <input
             type="text"
             placeholder="Search docs..."
             value={searchQuery}
             onChange={(e) => setSearchQuery?.(e.target.value)}
-            className="w-full bg-transparent border border-border text-sm rounded-md pl-9 pr-10 py-1.5 focus:ring-1 focus:ring-foreground focus:border-foreground transition-all outline-none text-foreground placeholder:text-muted-foreground"
+            className="w-full bg-muted/30 hover:bg-muted/50 border border-border/40 text-xs rounded-lg pl-9.5 pr-10 py-2.5 focus:border-primary/60 focus:ring-2 focus:ring-primary/5 transition-all outline-none text-foreground placeholder:text-muted-foreground/70"
           />
-          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1">
-            <kbd className="font-mono text-[10px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded border border-border">⌘K</kbd>
+          <div className="absolute right-3.5 top-1/2 -translate-y-1/2 flex items-center gap-1 pointer-events-none opacity-50 group-focus-within:opacity-100 transition-opacity">
+            <kbd className="font-mono text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded border border-border/60">⌘K</kbd>
           </div>
         </div>
       </div>
 
       {/* ── Navigation ───────────────────────────────────── */}
-      <nav className="flex-1 flex flex-col gap-1 px-3">
+      <nav className="flex-1 flex flex-col gap-1.5 px-3">
         {SECTIONS.map((section) => {
           const isActive = activeSection === section.id
           const Icon = section.icon
 
           return (
-            <div key={section.id}>
+            <div key={section.id} className="relative">
               {section.href ? (
                 <Link
                   href={section.href}
                   className={cn(
-                    "w-full px-3 py-2 rounded-md transition-all flex items-center gap-3 text-sm font-medium",
-                    "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                    "w-full px-3.5 py-2.5 rounded-lg transition-all flex items-center gap-3 text-xs font-semibold cursor-pointer border-l-2 border-transparent",
+                    "text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:pl-4"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4 text-muted-foreground")} />
-                  <span className="flex-1">{section.label}</span>
+                  <Icon className={cn("h-4 w-4 text-muted-foreground/80 group-hover:text-foreground")} />
+                  <span className="flex-1 tracking-tight">{section.label}</span>
                   {(section as any).comingSoon && (
-                    <span className="text-[9px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
+                    <span className="text-[8px] font-black uppercase tracking-widest px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20">
                       Soon
                     </span>
                   )}
@@ -109,14 +111,14 @@ export function DocSidebar({
                 <button
                   onClick={() => setActiveSection(section.id)}
                   className={cn(
-                    "w-full px-3 py-2 rounded-md transition-all flex items-center gap-3 text-sm font-medium",
+                    "w-full px-3.5 py-2.5 rounded-lg transition-all flex items-center gap-3 text-xs font-semibold cursor-pointer border-l-2 text-left",
                     isActive
-                      ? "text-foreground bg-accent/50"
-                      : "text-muted-foreground hover:text-foreground hover:bg-accent/30"
+                      ? "text-primary bg-primary/10 border-primary font-bold shadow-inner"
+                      : "text-muted-foreground hover:text-foreground hover:bg-muted/40 hover:pl-4 border-transparent"
                   )}
                 >
-                  <Icon className={cn("h-4 w-4", isActive ? "text-foreground" : "text-muted-foreground")} />
-                  {section.label}
+                  <Icon className={cn("h-4 w-4", isActive ? "text-primary" : "text-muted-foreground/80")} />
+                  <span className="flex-1 tracking-tight">{section.label}</span>
                 </button>
               )}
 
@@ -127,8 +129,8 @@ export function DocSidebar({
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.2 }}
-                    className="ml-9 border-l border-border flex flex-col gap-1 py-1"
+                    transition={{ duration: 0.25, ease: "easeInOut" }}
+                    className="ml-5.5 border-l border-border/50 flex flex-col gap-1 py-1.5 mt-1"
                   >
                     {subSections.map((sub) => (
                       <button
@@ -136,7 +138,7 @@ export function DocSidebar({
                         onClick={() => {
                           document.getElementById(sub.id)?.scrollIntoView({ behavior: 'smooth' });
                         }}
-                        className="text-left px-4 py-1.5 text-[13px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+                        className="text-left px-5 py-1.5 text-[11px] font-medium text-muted-foreground/75 hover:text-primary hover:border-primary/50 border-l border-transparent -ml-px transition-all cursor-pointer truncate"
                       >
                         {sub.label}
                       </button>

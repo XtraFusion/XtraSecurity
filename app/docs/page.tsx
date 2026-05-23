@@ -200,21 +200,21 @@ export default function DocsPage() {
                             {/* Hero Header */}
                             <div id="introduction" className="space-y-6 scroll-mt-32">
                                 {/* Badge */}
-                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/5 border border-primary/10 text-[11px] font-semibold tracking-tight text-primary">
-                                    <Sparkles className="h-3.5 w-3.5" />
+                                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/8 dark:bg-primary/15 border border-primary/25 text-[10px] font-black uppercase tracking-wider text-primary">
+                                    <Sparkles className="h-3.5 w-3.5 animate-pulse" />
                                     Getting Started
                                 </div>
 
                                 {/* Title + desc */}
                                 <div className="space-y-4">
-                                    <h1 className="text-3xl sm:text-4xl font-bold text-foreground tracking-tight leading-tight">
+                                    <h1 className="text-4xl sm:text-5xl font-black text-foreground tracking-tight leading-[1.1] max-w-3xl">
                                         Build without{" "}
-                                        <span className="text-primary italic">
+                                        <span className="bg-gradient-to-r from-primary via-accent to-primary bg-clip-text text-transparent italic font-black">
                                             secrets leaking
                                         </span>
                                     </h1>
                                     <div className="space-y-4 max-w-2xl">
-                                        <p className="text-base text-muted-foreground leading-relaxed">
+                                        <p className="text-[14.5px] text-muted-foreground leading-relaxed">
                                             XtraSecurity is a unified secrets management platform. It replaces insecure local config files with a <strong>Zero-Trust Injection Layer</strong> that works across your CLI, Team, and Production.
                                         </p>
                                         <PremiumCallout type="info" className="bg-primary/5 border-primary/20">
@@ -233,8 +233,8 @@ export default function DocsPage() {
                                         { label: "Zero-trust access", icon: Lock },
                                         { label: "Audit every access", icon: Activity },
                                     ].map(({ label, icon: Icon }) => (
-                                        <div key={label} className="flex items-center gap-2 px-3 py-1 rounded-md bg-muted/40 border border-border/50 text-xs font-medium text-muted-foreground">
-                                            <Icon className="h-3 w-3 text-primary/70" />
+                                        <div key={label} className="flex items-center gap-2 px-3.5 py-1.5 rounded-lg bg-card/50 dark:bg-zinc-900/40 border border-border/40 text-xs font-semibold text-muted-foreground shadow-sm hover:border-primary/20 transition-all duration-300 hover:text-foreground">
+                                            <Icon className="h-3.5 w-3.5 text-primary" />
                                             {label}
                                         </div>
                                     ))}
@@ -931,11 +931,11 @@ RUN xtra run -e staging -- npm run build`, filename: "Dockerfile" },
 
 function StepHeader({ number, title }: { number: number; title: string }) {
     return (
-        <div className="flex items-center gap-3">
-            <div className="h-7 w-7 rounded-md bg-primary/10 border border-primary/20 flex items-center justify-center text-xs font-bold text-primary flex-shrink-0">
+        <div className="flex items-center gap-3.5 pt-2">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-tr from-primary to-accent text-primary-foreground flex items-center justify-center text-xs font-black shadow-md shadow-primary/10 flex-shrink-0">
                 {number}
             </div>
-            <h2 className="text-xl font-bold text-foreground tracking-tight">
+            <h2 className="text-lg font-black text-foreground tracking-tight">
                 {title}
             </h2>
         </div>
@@ -944,11 +944,11 @@ function StepHeader({ number, title }: { number: number; title: string }) {
 
 function SectionHeader({ icon: Icon, title }: { icon: LucideIcon; title: string }) {
     return (
-        <div className="flex items-center gap-2.5">
-            <div className="h-8 w-8 rounded-md bg-muted border border-border flex items-center justify-center">
-                <Icon className="h-4 w-4 text-muted-foreground" />
+        <div className="flex items-center gap-3 pt-2">
+            <div className="h-9 w-9 rounded-xl bg-primary/10 dark:bg-primary/15 border border-primary/25 flex items-center justify-center shadow-sm">
+                <Icon className="h-4.5 w-4.5 text-primary" />
             </div>
-            <h2 className="text-lg font-bold text-foreground tracking-tight uppercase">{title}</h2>
+            <h2 className="text-xs font-black text-foreground/90 tracking-widest uppercase">{title}</h2>
         </div>
     );
 }
@@ -963,57 +963,62 @@ function CommandCard({ cmd }: { cmd: CommandEntry }) {
         setTimeout(() => setCopied(false), 2000);
     };
 
-    const badgeClass = "bg-muted/30 border-border/50 text-muted-foreground";
+    const badgeColorClass = "bg-primary/5 border-primary/20 text-primary dark:text-primary-foreground";
 
     return (
-        <div className="group relative p-6 rounded-xl bg-transparent border border-border/50 shadow-sm hover:border-border transition-all duration-300">
+        <div className="group relative p-6 rounded-2xl bg-card/45 dark:bg-zinc-950/20 border border-border/40 shadow-sm hover:border-primary/25 hover:bg-card/75 dark:hover:bg-zinc-950/40 hover:shadow-md transition-all duration-300">
             {/* Header */}
             <div className="flex items-start justify-between gap-6 mb-5">
                 <div className="flex items-center gap-4">
-                    <div className="h-10 w-10 rounded-md bg-muted border border-border flex items-center justify-center">
-                        <Terminal className="h-5 w-5 text-muted-foreground" />
+                    <div className="h-11 w-11 rounded-xl bg-muted/60 border border-border flex items-center justify-center">
+                        <Terminal className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
                     </div>
                     <div>
-                        <h3 className="text-sm font-bold text-foreground tracking-tight uppercase">{cmd.name}</h3>
-                        <p className="text-xs text-muted-foreground mt-0.5">{cmd.description}</p>
+                        <h3 className="text-xs font-black text-foreground tracking-widest uppercase">{cmd.name}</h3>
+                        <p className="text-[11px] text-muted-foreground mt-0.5 leading-relaxed">{cmd.description}</p>
                     </div>
                 </div>
-                <div className={cn("px-2.5 py-0.5 rounded-full border text-[10px] font-semibold uppercase tracking-tight", badgeClass)}>
+                <div className={cn("px-2.5 py-0.5 rounded-full border text-[9px] font-bold uppercase tracking-wider", badgeColorClass)}>
                     {cmd.section}
                 </div>
             </div>
 
             {/* Command line */}
-            <div className="relative flex items-center justify-between bg-transparent rounded-md px-4 py-2.5 border border-border font-mono text-sm mb-4">
-                <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground text-xs">$</span>
-                    <code className="text-foreground font-medium text-[13px] tracking-tight">{cmd.command}</code>
+            <div className="relative flex items-center justify-between bg-zinc-950/90 dark:bg-zinc-950 border border-zinc-800/40 rounded-xl px-4 py-3 font-mono text-xs mb-4 shadow-inner">
+                <div className="flex items-center gap-2.5">
+                    <span className="text-primary font-bold select-none">$</span>
+                    <code className="text-zinc-100 font-semibold text-[12.5px] tracking-tight">{cmd.command}</code>
                 </div>
                 <button 
                     onClick={handleCopy} 
-                    className="text-zinc-500 hover:text-zinc-100 transition-colors"
+                    className="text-zinc-450 hover:text-zinc-100 transition-colors p-1.5 hover:bg-zinc-900 border border-transparent hover:border-zinc-800 rounded-md cursor-pointer flex items-center justify-center"
+                    title="Copy command"
                 >
-                    {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                    {copied ? (
+                        <Check className="h-3.5 w-3.5 text-emerald-500" />
+                    ) : (
+                        <Copy className="h-3.5 w-3.5" />
+                    )}
                 </button>
             </div>
 
             {/* Long description */}
             {cmd.longDesc && (
-                <p className="text-[13px] text-muted-foreground leading-relaxed pl-4 border-l-2 border-primary/20 mb-4">
+                <p className="text-[12.5px] text-muted-foreground leading-relaxed pl-4 border-l-2 border-primary/20 mb-4 font-medium">
                     {cmd.longDesc}
                 </p>
             )}
 
             {/* Options grid */}
             {cmd.options && cmd.options.length > 0 && (
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                     {cmd.options.map((opt, i) => (
-                        <div key={i} className="px-3 py-2 rounded-md bg-muted/30 border border-border group-hover:border-border/60 transition-all">
-                            <div className="flex items-center justify-between mb-1">
-                                <code className="text-[10px] font-mono font-bold text-foreground bg-muted px-1.5 py-0.5 rounded">{opt.flag}</code>
-                                {opt.required && <span className="text-[9px] font-medium uppercase text-foreground">Required</span>}
+                        <div key={i} className="px-3 py-2.5 rounded-xl bg-background/50 dark:bg-background/25 border border-border/30 hover:border-border/60 hover:bg-background/85 transition-all">
+                            <div className="flex items-center justify-between mb-1.5">
+                                <code className="text-[10px] font-mono font-bold text-primary bg-primary/5 border border-primary/10 px-1.5 py-0.5 rounded">{opt.flag}</code>
+                                {opt.required && <span className="text-[8px] font-black uppercase tracking-widest text-primary">Required</span>}
                             </div>
-                            <p className="text-[10px] text-muted-foreground/80">{opt.desc}</p>
+                            <p className="text-[10.5px] text-muted-foreground leading-normal">{opt.desc}</p>
                         </div>
                     ))}
                 </div>
@@ -1024,26 +1029,26 @@ function CommandCard({ cmd }: { cmd: CommandEntry }) {
 
 function VscodeFeatureCard({ feature }: { feature: typeof VSCODE_FEATURES[0] }) {
     return (
-        <div className="group p-6 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 relative overflow-hidden">
+        <div className="group p-6 rounded-2xl bg-card/45 dark:bg-zinc-950/20 border border-border/40 shadow-sm hover:border-primary/25 hover:bg-card/75 dark:hover:bg-zinc-950/40 hover:shadow-md transition-all duration-300 relative overflow-hidden">
             <div className="flex items-center gap-4 mb-5">
-                <div className="h-12 w-12 rounded-lg border border-border flex items-center justify-center relative overflow-hidden flex-shrink-0 bg-muted">
-                    <Puzzle className="h-6 w-6 text-primary" />
+                <div className="h-12 w-12 rounded-xl border border-border/40 flex items-center justify-center relative overflow-hidden flex-shrink-0 bg-muted/60">
+                    <Puzzle className="h-6 w-6 text-primary group-hover:scale-110 transition-transform duration-300" />
                 </div>
                 <div>
-                    <h3 className="text-base font-bold text-foreground uppercase tracking-tight">{feature.name}</h3>
-                    <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed max-w-md">{feature.description}</p>
+                    <h3 className="text-xs font-black text-foreground uppercase tracking-widest">{feature.name}</h3>
+                    <p className="text-[11.5px] text-muted-foreground mt-0.5 leading-relaxed max-w-md">{feature.description}</p>
                 </div>
             </div>
 
             {feature.commands && (
                 <div className="space-y-2.5 mb-4">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/40">Extension Commands</div>
+                    <div className="text-[9px] font-bold uppercase tracking-widest text-muted-foreground/50">Extension Commands</div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                         {feature.commands.map(cmd => (
-                            <div key={cmd.id} className="px-3 py-2 rounded-md bg-muted/40 border border-border hover:bg-muted/60 transition-all">
-                                <code className="text-[10px] font-mono font-bold text-primary block mb-1">{cmd.id}</code>
+                            <div key={cmd.id} className="px-3.5 py-2.5 rounded-xl bg-background/50 dark:bg-background/25 border border-border/30 hover:bg-background/85 transition-all">
+                                <code className="text-[9px] font-mono font-bold text-primary block mb-1.5">{cmd.id}</code>
                                 <div className="text-xs font-bold text-foreground mb-0.5">{cmd.name}</div>
-                                <div className="text-[11px] text-muted-foreground/60">{cmd.desc}</div>
+                                <div className="text-[10.5px] text-muted-foreground/60 leading-normal">{cmd.desc}</div>
                             </div>
                         ))}
                     </div>
@@ -1059,21 +1064,21 @@ function VscodeFeatureCard({ feature }: { feature: typeof VSCODE_FEATURES[0] }) 
 
 function IntegrationCard({ item }: { item: any }) {
     return (
-        <div className="group p-6 rounded-xl bg-card border border-border shadow-sm hover:shadow-md transition-all duration-300 cursor-pointer overflow-hidden relative">
+        <div className="group p-6 rounded-2xl bg-card/45 dark:bg-zinc-950/20 border border-border/40 shadow-sm hover:border-primary/25 hover:bg-card/75 dark:hover:bg-zinc-950/40 hover:shadow-md hover:scale-[1.01] transition-all duration-300 cursor-pointer overflow-hidden relative">
             <div className="flex items-center justify-between mb-5">
-                <div className="h-14 w-14 rounded-lg bg-transparent border border-border flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                    <img src={item.logo} className="h-8 w-8 object-contain" alt={item.name} />
+                <div className="h-14 w-14 rounded-xl bg-background/50 border border-border flex items-center justify-center shadow-inner group-hover:scale-105 transition-transform duration-300">
+                    <img src={item.logo} className="h-7 w-7 object-contain group-hover:rotate-3 transition-transform" alt={item.name} />
                 </div>
-                <div className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-tight text-foreground bg-muted/50 border border-border">
+                <div className="px-2.5 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 bg-emerald-500/5 border border-emerald-500/10">
                     Ready
                 </div>
             </div>
             <div className="space-y-1.5">
-                <h3 className="text-base font-bold text-foreground tracking-tight">{item.name}</h3>
+                <h3 className="text-sm font-bold text-foreground tracking-tight">{item.name}</h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">{item.desc}</p>
             </div>
-            <div className="mt-4 flex items-center gap-2 text-xs font-bold text-primary/60 group-hover:text-primary transition-colors">
-                View docs <ArrowRight className="h-3.5 w-3.5" />
+            <div className="mt-4 flex items-center gap-1.5 text-xs font-bold text-primary/70 group-hover:text-primary transition-colors">
+                View docs <ArrowRight className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
             </div>
         </div>
     );

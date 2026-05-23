@@ -35,7 +35,11 @@ export function DocLayout({
   }, [activeSection])
 
   return (
-    <div className="docs-container min-h-screen bg-background text-foreground selection:bg-foreground/20 selection:text-foreground" style={{ fontFamily: 'var(--font-docs-body)' }}>
+    <div className="docs-container min-h-screen bg-background text-foreground selection:bg-foreground/20 selection:text-foreground relative overflow-hidden" style={{ fontFamily: 'var(--font-docs-body)' }}>
+      
+      {/* Premium ambient decorative glowing backdrops */}
+      <div className="absolute top-[-10%] left-[-10%] w-[50vw] h-[50vw] rounded-full bg-gradient-to-tr from-primary/10 via-accent/5 to-transparent blur-[120px] pointer-events-none z-0 glow-bg" />
+      <div className="absolute bottom-[20%] right-[-10%] w-[40vw] h-[40vw] rounded-full bg-gradient-to-br from-primary/8 via-accent/3 to-transparent blur-[100px] pointer-events-none z-0 glow-bg" />
 
       <div className="relative flex min-h-screen z-10">
         {/* ── Left Sidebar (Desktop) ─────────────────────── */}
@@ -48,8 +52,8 @@ export function DocLayout({
         />
 
         {/* ── Main Content ─────────────────────────────────── */}
-        <main className="flex-1 lg:ml-72 xl:mr-64 relative min-w-0">
-          <div className="max-w-6xl mx-auto px-6 md:px-12 lg:px-12 pt-24 md:pt-16 pb-32 bg-background min-h-screen">
+        <main className="flex-1 lg:ml-72 xl:mr-64 relative min-w-0 z-10">
+          <div className="max-w-6xl mx-auto px-6 md:px-12 lg:px-12 pt-24 md:pt-16 pb-32 bg-transparent min-h-screen">
             {/* Content Container */}
             <div
               id="docs-content-top"

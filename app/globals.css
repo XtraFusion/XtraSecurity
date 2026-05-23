@@ -59,6 +59,7 @@
     --radius: 8px;
     --radius-lg: 12px;
     --radius-xl: 16px;
+    --font-docs-body: var(--font-geist, var(--font-sans, sans-serif));
 }
 
 :root.dark, .dark {
@@ -187,5 +188,46 @@
   }
   .custom-scrollbar:hover::-webkit-scrollbar-thumb {
     background-color: hsl(220 10% 46% / 0.6);
+  }
+
+  .glass-card {
+    background-color: color-mix(in oklch, var(--card) 60%, transparent);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid color-mix(in oklch, var(--border) 40%, transparent);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .dark .glass-card {
+    background-color: color-mix(in oklch, var(--card) 45%, transparent);
+    border: 1px solid color-mix(in oklch, var(--border) 25%, transparent);
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.15);
+  }
+
+  .glow-bg {
+    filter: blur(120px);
+    opacity: 0.6;
+    pointer-events: none;
+  }
+  
+  .glow-hover {
+    position: relative;
+    z-index: 1;
+  }
+  
+  .glow-hover::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    border-radius: inherit;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .glow-hover:hover::before {
+    opacity: 0.08;
   }
 }
