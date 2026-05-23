@@ -13,13 +13,18 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
     const userId = session?.userId;
     const userEmail = session?.email;
     
+    console.log("DEBUG /api/project GET -> Session:", session);
+
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { searchParams } = new URL(request.url);
     const id = searchParams.get("id");
-    const workspaceId = searchParams.get("workspaceId");
+    let workspaceId = searchParams.get("workspaceId");
+    if (workspaceId === "undefined" || workspaceId === "null") {
+        workspaceId = null;
+    }
 
     if (!id) {
       // Service Accounts are not allowed to list all projects (prevents project switching)

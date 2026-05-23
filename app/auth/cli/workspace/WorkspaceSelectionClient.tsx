@@ -59,18 +59,7 @@ export default function WorkspaceSelectionClient() {
             });
 
             if (res.data.redirectUrl) {
-                try {
-                    await fetch(res.data.redirectUrl, { mode: 'no-cors' });
-                } catch (fetchError) {
-                    console.warn("CLI ping failed (CLI might have already exited or blocked):", fetchError);
-                }
-
-                setIsSuccess(true);
-                setIsRedirecting(false);
-
-                setTimeout(() => {
-                    window.close();
-                }, 2000);
+                window.location.href = res.data.redirectUrl;
             }
         } catch (error) {
             console.error("Failed to complete SSO", error);
