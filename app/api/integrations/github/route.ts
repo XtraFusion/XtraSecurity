@@ -35,7 +35,14 @@ export async function GET(req: NextRequest) {
         }, { status: 500 });
       }
       // Return OAuth URL if not connected
-      const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI!)}&scope=repo`;
+      const jwt = await import("jsonwebtoken");
+      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+      const state = jwt.sign(
+        { userId: auth.userId, provider: "github", nonce: crypto.randomUUID() },
+        secret,
+        { expiresIn: "15m" }
+      );
+      const authUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITHUB_REDIRECT_URI!)}&scope=repo&state=${encodeURIComponent(state)}`;
       return NextResponse.json({
         connected: false,
         authUrl

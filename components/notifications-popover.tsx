@@ -111,7 +111,7 @@ export function NotificationsPopover() {
                     {unreadCount > 0 && (
                         <Button
                             variant="ghost"
-                            size="xs"
+                            size="sm"
                             className="h-auto px-2 text-xs text-muted-foreground hover:text-foreground"
                             onClick={markAllAsRead}
                         >

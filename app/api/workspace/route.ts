@@ -58,27 +58,35 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
       .map(t => t.workspaceId)
       .filter((id): id is string => !!id);
 
-    const memberWorkspaces = await prisma.workspace.findMany({
+    const teamWorkspaces = await prisma.workspace.findMany({
       where: { 
         id: { in: teamWorkspaceIds },
-        NOT: { createdBy: userId }
+        createdBy: { not: userId } // Avoid duplicates if user is owner and in a team
       },
     });
 
+    // 3. Combine and attach roles
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
-    const allWorkspaces = await Promise.all([...ownedWorkspaces, ...memberWorkspaces].map(async (w) => {
-      const role = await getUserWorkspaceRole(userId, w.id);
-      return { ...w, role };
-    }));
+    
+    const allWorkspaces = [...ownedWorkspaces, ...teamWorkspaces];
+    const workspacesWithRoles = await Promise.all(
+      allWorkspaces.map(async (ws) => {
+        const role = await getUserWorkspaceRole(userId, ws.id);
+        return {
+          ...ws,
+          role: role || "viewer"
+        };
+      })
+    );
 
-    return NextResponse.json(allWorkspaces);
+    return NextResponse.json({ workspaces: workspacesWithRoles });
   } catch (error) {
-    console.error("Error fetching workspace(s):", error);
-    return NextResponse.json({ error: "Failed to fetch workspace(s)" }, { status: 500 });
+    console.error("Error fetching workspaces:", error);
+    return NextResponse.json({ error: "Failed to fetch workspaces" }, { status: 500 });
   }
 });
 
-// POST /api/workspace - create a workspace
+// POST /api/workspace - create a new workspace
 export const POST = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
     if (!session?.userId) {
@@ -86,7 +94,19 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     }
     const userId = session.userId;
 
-    // Fetch user with tier
+    const body = await request.json();
+    const { name, description, workspaceType = "personal" } = body;
+
+    const { validateWorkspaceName, validateDescription } = await import("@/lib/validators");
+    const nameCheck = validateWorkspaceName(name);
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+    }
+    const descCheck = validateDescription(description);
+    if (!descCheck.valid) {
+      return NextResponse.json({ error: descCheck.error }, { status: 400 });
+    }
+
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: { tier: true }
@@ -95,35 +115,45 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     const userTier = (user?.tier || "free") as Tier;
     const limit = DAILY_LIMITS[userTier].maxWorkspaces;
     
-    const workspaceCount = await prisma.workspace.count({
+    const initialCount = await prisma.workspace.count({
       where: { createdBy: userId }
     });
 
-    if (workspaceCount >= limit) {
+    if (initialCount >= limit) {
       return NextResponse.json({ 
         error: "Workspace limit reached", 
         message: `Your ${userTier} plan allows creating up to ${limit} workspaces. Please upgrade for more capacity.` 
       }, { status: 403 });
     }
 
-    const body = await request.json();
-    const { name, description = "", workspaceType = "personal" } = body;
-    // subscriptionPlan, projectLimit, subscriptionEnd are NOT user-settable
-
-    if (!name) {
-      return NextResponse.json({ error: "Name is required" }, { status: 400 });
-    }
-
     const workspace = await prisma.workspace.create({
       data: {
-        name,
-        description,
+        name: nameCheck.cleanName!,
+        description: descCheck.cleanDesc || "",
         workspaceType,
         createdBy: userId,
         subscriptionPlan: "free",
         projectLimit: 5,
       },
     });
+
+    // Concurrency guard: If parallel race requests created workspaces exceeding limit, clean up excess
+    const allUserWorkspaces = await prisma.workspace.findMany({
+      where: { createdBy: userId },
+      orderBy: { createdAt: "asc" },
+      select: { id: true }
+    });
+
+    if (allUserWorkspaces.length > limit) {
+      const createdIndex = allUserWorkspaces.findIndex(w => w.id === workspace.id);
+      if (createdIndex >= limit) {
+        await prisma.workspace.delete({ where: { id: workspace.id } }).catch(() => {});
+        return NextResponse.json({ 
+          error: "Workspace limit reached", 
+          message: `Your ${userTier} plan allows creating up to ${limit} workspaces. Please upgrade for more capacity.` 
+        }, { status: 403 });
+      }
+    }
 
     return NextResponse.json(workspace, { status: 201 });
   } catch (error) {
@@ -142,8 +172,6 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
 
     const body = await request.json();
     const { id, name, description, workspaceType, icon } = body;
-    // NOTE: subscriptionPlan, projectLimit, subscriptionEnd are NOT user-editable.
-    // They must be set by the payment/billing system only.
 
     if (!id) {
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
@@ -179,7 +207,7 @@ export const PUT = withSecurity(async (request: NextRequest, context: any, sessi
   }
 });
 
-// DELETE /api/workspace?id=<id> - delete a workspace
+// DELETE /api/workspace - delete a workspace
 export const DELETE = withSecurity(async (request: NextRequest, context: any, session: any) => {
   try {
     if (!session?.userId) {
@@ -194,7 +222,7 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
       return NextResponse.json({ error: "Workspace ID is required" }, { status: 400 });
     }
 
-    // RBAC Check: Only Owner can delete
+    // RBAC Check
     const { getUserWorkspaceRole } = await import("@/lib/permissions");
     const role = await getUserWorkspaceRole(userId, id);
 
@@ -202,65 +230,33 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
          return NextResponse.json({ error: "Only the workspace owner can delete the workspace" }, { status: 403 });
     }
 
-    // Cascade delete manually
-    const projects = await prisma.project.findMany({ where: { workspaceId: id }, select: { id: true } });
-    const projectIds = projects.map(p => p.id);
+    // 1. Delete associated projects (and their branches/secrets)
+    const projects = await prisma.project.findMany({
+      where: { workspaceId: id },
+    });
 
-    if (projectIds.length > 0) {
-      const secrets = await prisma.secret.findMany({ where: { projectId: { in: projectIds } }, select: { id: true } });
-      const secretIds = secrets.map(s => s.id);
-      
-      if (secretIds.length > 0) {
-        await prisma.secretSync.deleteMany({ where: { secretId: { in: secretIds } } });
-        await prisma.secretShare.deleteMany({ where: { secretId: { in: secretIds } } });
-        
-        const schedules = await prisma.rotationSchedule.findMany({ where: { secretId: { in: secretIds } }, select: { id: true } });
-        const scheduleIds = schedules.map(s => s.id);
-        if (scheduleIds.length > 0) {
-           await prisma.rotationLog.deleteMany({ where: { scheduleId: { in: scheduleIds } } });
-           await prisma.rotationSchedule.deleteMany({ where: { id: { in: scheduleIds } } });
-        }
-        
-        // Remove sourceSecretId references first to avoid foreign key issues
-        await prisma.secret.updateMany({
-            where: { projectId: { in: projectIds } },
-            data: { sourceSecretId: null }
-        });
-        await prisma.secret.deleteMany({ where: { projectId: { in: projectIds } } });
-      }
-
-      await prisma.branch.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.teamProject.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.serviceAccount.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.webhook.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.accessRequest.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.userRole.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.breakGlassSession.deleteMany({ where: { projectId: { in: projectIds } } });
-      await prisma.jitLink.deleteMany({ where: { projectId: { in: projectIds } } });
-      
-      await prisma.project.deleteMany({ where: { workspaceId: id } });
+    for (const project of projects) {
+      await prisma.secret.deleteMany({ where: { projectId: project.id } });
+      await prisma.branch.deleteMany({ where: { projectId: project.id } });
+      await prisma.project.delete({ where: { id: project.id } });
     }
 
-    const teams = await prisma.team.findMany({ where: { workspaceId: id }, select: { id: true } });
-    const teamIds = teams.map(t => t.id);
-    if (teamIds.length > 0) {
-      await prisma.teamUser.deleteMany({ where: { teamId: { in: teamIds } } });
-      await prisma.teamSSO.deleteMany({ where: { teamId: { in: teamIds } } });
-      await prisma.team.deleteMany({ where: { workspaceId: id } });
+    // 2. Delete associated teams
+    const teams = await prisma.team.findMany({
+      where: { workspaceId: id }
+    });
+    for (const team of teams) {
+      await prisma.teamUser.deleteMany({ where: { teamId: team.id } });
+      await prisma.teamProject.deleteMany({ where: { teamId: team.id } });
+      await prisma.team.delete({ where: { id: team.id } });
     }
 
-    await prisma.apiKey.deleteMany({ where: { workspaceId: id } });
-    await prisma.auditLog.deleteMany({ where: { workspaceId: id } });
-    await prisma.notification.deleteMany({ where: { workspaceId: id } });
-    await prisma.notificationRule.deleteMany({ where: { workspaceId: id } });
-    await prisma.notificationChannel.deleteMany({ where: { workspaceId: id } });
-    await prisma.securityEvent.deleteMany({ where: { workspaceId: id } });
-    await prisma.jitLink.deleteMany({ where: { workspaceId: id } });
-    await prisma.accessRequest.deleteMany({ where: { workspaceId: id } });
+    // 3. Delete workspace
+    await prisma.workspace.delete({
+      where: { id },
+    });
 
-    await prisma.workspace.delete({ where: { id } });
-
-    return NextResponse.json({ message: "Workspace deleted" });
+    return NextResponse.json({ message: "Workspace deleted successfully" });
   } catch (error) {
     console.error("Error deleting workspace:", error);
     return NextResponse.json({ error: "Failed to delete workspace" }, { status: 500 });

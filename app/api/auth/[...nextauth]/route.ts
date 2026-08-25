@@ -81,6 +81,13 @@ export const authOptions: NextAuthOptions = {
 
         // 1. Handle OTP-based Auth (MFA ON)
         if (credentials.otp && credentials.otp !== "SKIPPED") {
+          // If user has a password, verify password first
+          if (user.password) {
+            const { compare } = await import("bcryptjs");
+            const isPasswordValid = await compare(credentials.password || "", user.password);
+            if (!isPasswordValid) return null;
+          }
+
           if (!user.emailOtp || !user.emailOtpExpiry) return null;
           if (user.emailOtp !== credentials.otp) return null;
           if (new Date() > user.emailOtpExpiry) return null;

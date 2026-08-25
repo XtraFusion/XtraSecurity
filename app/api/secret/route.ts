@@ -6,6 +6,7 @@ import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
 import { notify } from "@/lib/notifications/engine";
 import { queueSecretSync } from "@/lib/queue/sync-queue";
 import { logAudit } from "@/lib/audit";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -157,6 +158,25 @@ export const POST = withSecurity(async (request, context, session) => {
       );
     }
 
+    const { validateSecretKey, validateSecretValue, validateDescription } = await import("@/lib/validators");
+    const keyCheck = validateSecretKey(key);
+    if (!keyCheck.valid) {
+      return NextResponse.json({ error: keyCheck.error }, { status: 400 });
+    }
+
+    const valCheck = validateSecretValue(value);
+    if (!valCheck.valid) {
+      return NextResponse.json({ error: valCheck.error }, { status: 400 });
+    }
+
+    const descCheck = validateDescription(description, 1000);
+    if (!descCheck.valid) {
+      return NextResponse.json({ error: descCheck.error }, { status: 400 });
+    }
+
+    const cleanKey = keyCheck.cleanKey!;
+    const cleanDescription = descCheck.cleanDesc || "";
+
     // Rate Limiting Logic for Secrets
     const projectRecord = await prisma.project.findUnique({
       where: { id: projectId },
@@ -167,9 +187,8 @@ export const POST = withSecurity(async (request, context, session) => {
         return NextResponse.json({ error: "Project or owner not found" }, { status: 404 });
     }
 
-    const ownerTier = (projectRecord.user.tier || "free") as import("@/lib/rate-limit-config").Tier;
-    const maxSecretsPerProject = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[ownerTier].maxSecretsPerProject);
-    const resolvedMaxSecrets = await maxSecretsPerProject;
+    const ownerTier = (projectRecord.user.tier || "free") as Tier;
+    const resolvedMaxSecrets = DAILY_LIMITS[ownerTier]?.maxSecretsPerProject || 50;
 
     const secretCount = await prisma.secret.count({
       where: { projectId: projectId }
@@ -211,9 +230,9 @@ export const POST = withSecurity(async (request, context, session) => {
     const newSecret = await prisma.secret.create({
       // ... data ...
       data: {
-        key,
+        key: cleanKey,
         value: [encryptedString], // Store encrypted object as JSON string in array
-        description: description || "",
+        description: cleanDescription,
         environmentType,
         version: "1",
         projectId,
@@ -224,7 +243,7 @@ export const POST = withSecurity(async (request, context, session) => {
           {
             version: "1",
             value: [encryptedString], // Store as encrypted array for consistency
-            description: description || "",
+            description: cleanDescription,
             updatedAt: new Date().toISOString(),
             updatedBy: session.email,
           },
@@ -436,7 +455,11 @@ export const PUT = withSecurity(async (request, context, session) => {
       console.error("Failed to trigger notification for secret update:", notifErr);
     }
 
-    return NextResponse.json(updatedSecret);
+    return NextResponse.json({
+      ...updatedSecret,
+      value: "[encrypted]",
+      history: undefined,
+    });
   } catch (error: any) {
     console.error("Error updating secret:", error);
     console.error("Error details:", error.message);

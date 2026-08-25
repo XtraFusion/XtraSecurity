@@ -2,13 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { isRequestSafe, filterContent, UNSAFE_RESPONSE } from "@/lib/content-filter";
 
-// Initialize Gemini AI with API key
-const API_KEY = process.env.GEMINI_API_KEY;
-if (!API_KEY) {
-  console.error("GEMINI_API_KEY is not set in environment variables");
-}
-const genAI = new GoogleGenerativeAI(API_KEY || "");
-
 // System prompt - concise version for Gemini API
 const SYSTEM_PROMPT = `You are ONLY a documentation assistant for XtraSecurity CLI commands. You ONLY answer questions using the commands and information below. Do NOT use generic knowledge.
 
@@ -113,6 +106,7 @@ Other → "I only have information about XtraSecurity CLI commands"`;
 export async function POST(request: NextRequest) {
   try {
     // Validate API key is configured
+    const API_KEY = process.env.GEMINI_API_KEY;
     if (!API_KEY) {
       console.error("Gemini API key not configured");
       return NextResponse.json(
@@ -120,6 +114,7 @@ export async function POST(request: NextRequest) {
         { status: 503 }
       );
     }
+    const genAI = new GoogleGenerativeAI(API_KEY);
 
     const body = await request.json();
     const { messages, userMessage } = body;

@@ -39,11 +39,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     alternates: {
       canonical: post.canonical || `https://xtrasecurity.in/blog/${post.slug}`,
     },
-    article: {
-      publishedTime: post.date,
-      modifiedTime: post.dateModified || post.date,
-      authors: [post.author],
-    },
   }
 }
 

@@ -1,0 +1,568 @@
+[
+  {
+    "id": "op_wqb14uh",
+    "timestamp": "2026-08-25T06:37:15.114Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Owner updates project settings",
+    "role": "Owner",
+    "actorEmail": "pro-user-owner-e2e@xtrasecurity.test",
+    "endpoint": "/api/project?id=6a8d381a534d51a47a3d4002",
+    "method": "PUT",
+    "requestPayload": {
+      "name": "CyberCore Core Banking Service (Prod v2)"
+    },
+    "responseStatus": 200,
+    "responseSummary": {
+      "name": "CyberCore Core Banking Service (Prod v2)",
+      "id": "6a8d381a534d51a47a3d4002"
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_kk1vb95",
+    "timestamp": "2026-08-25T06:37:15.170Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Admin adds IP allowlist rule to project",
+    "role": "Admin",
+    "actorEmail": "pro-user-admin-e2e@xtrasecurity.test",
+    "endpoint": "/api/project/6a8d381a534d51a47a3d4002/ip",
+    "method": "POST",
+    "requestPayload": {
+      "ip": "198.51.100.77"
+    },
+    "responseStatus": 200,
+    "responseSummary": {
+      "success": true,
+      "message": "IP 198.51.100.77 added to project restrictions",
+      "ipRestrictions": [
+        {
+          "ip": "198.51.100.77",
+          "description": "Admin Bastion Host",
+          "addedAt": "2026-08-25T06:37:15.143Z"
+        }
+      ]
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_7xm5qsm",
+    "timestamp": "2026-08-25T06:37:15.229Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Viewer attempts to modify IP allowlist (Access Control Check)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/project/6a8d381a534d51a47a3d4002/ip",
+    "method": "POST",
+    "requestPayload": {
+      "ip": "203.0.113.88"
+    },
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Forbidden: Only owners and admins can manage IP restrictions"
+    },
+    "expectedStatus": 403,
+    "notes": "Viewers have read-only privileges and must never alter network firewall policies"
+  },
+  {
+    "id": "op_y70yanv",
+    "timestamp": "2026-08-25T06:37:15.347Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Admin removes IP allowlist rule from project",
+    "role": "Admin",
+    "actorEmail": "pro-user-admin-e2e@xtrasecurity.test",
+    "endpoint": "/api/project/6a8d381a534d51a47a3d4002/ip",
+    "method": "DELETE",
+    "requestPayload": {
+      "ip": "198.51.100.77"
+    },
+    "responseStatus": 200,
+    "responseSummary": {
+      "success": true,
+      "message": "IP 198.51.100.77 removed from project restrictions",
+      "ipRestrictions": []
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_0t6derm",
+    "timestamp": "2026-08-25T06:37:15.430Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Developer attempts to delete project (Privilege Boundary Check)",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/project?id=6a8d381a534d51a47a3d4002",
+    "method": "DELETE",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Viewers and developers are not allowed to delete projects."
+    },
+    "expectedStatus": 403
+  },
+  {
+    "id": "op_hy2rwa0",
+    "timestamp": "2026-08-25T06:37:15.473Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "External attacker attempts IDOR access to victim project",
+    "role": "Attacker (Untrusted)",
+    "actorEmail": "free-user-attacker-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Forbidden"
+    },
+    "expectedStatus": 403,
+    "notes": "Strict multi-tenant boundary successfully blocked unauthorized cross-tenant read"
+  },
+  {
+    "id": "op_yb3up5b",
+    "timestamp": "2026-08-25T06:37:15.520Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer creates a feature branch",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/branch",
+    "method": "POST",
+    "requestPayload": {
+      "name": "feature/crypto-speedup",
+      "projectId": "6a8d381a534d51a47a3d4002"
+    },
+    "responseStatus": 201,
+    "responseSummary": {
+      "name": "feature/crypto-speedup",
+      "id": "6a8d381b534d51a47a3d4014"
+    },
+    "expectedStatus": 201
+  },
+  {
+    "id": "op_wkrure4",
+    "timestamp": "2026-08-25T06:37:15.537Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Viewer attempts to create a branch (Write Boundary Check)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/branch",
+    "method": "POST",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Forbidden: Viewers cannot create branches"
+    },
+    "expectedStatus": 403
+  },
+  {
+    "id": "op_5ucmbnj",
+    "timestamp": "2026-08-25T06:37:15.566Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Viewer lists project branches (Read Allowed)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/branch?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "count": 3
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_vslpqeo",
+    "timestamp": "2026-08-25T06:37:15.663Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer clears and deletes completed feature branch",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/branch?id=6a8d381b534d51a47a3d4014",
+    "method": "DELETE",
+    "responseStatus": 200,
+    "responseSummary": {
+      "message": "Branch deleted successfully",
+      "branch": {
+        "id": "6a8d381b534d51a47a3d4014",
+        "name": "feature/crypto-speedup",
+        "description": "Optimized cryptography routines",
+        "createdBy": "6a8d381a534d51a47a3d3ff8",
+        "projectId": "6a8d381a534d51a47a3d4002",
+        "versionNo": "1",
+        "permissions": [],
+        "createdAt": "2026-08-25T06:37:15.501Z"
+      }
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_rlofp8c",
+    "timestamp": "2026-08-25T06:37:15.788Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer creates development secret",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret",
+    "method": "POST",
+    "requestPayload": {
+      "key": "DEV_CUSTOM_TOKEN",
+      "environmentType": "development"
+    },
+    "responseStatus": 201,
+    "responseSummary": {
+      "key": "DEV_CUSTOM_TOKEN",
+      "value": "[encrypted]",
+      "id": "6a8d381b534d51a47a3d4018"
+    },
+    "expectedStatus": 201,
+    "notes": "HTTP response returned masked value '[encrypted]' to prevent credential leakage in transit"
+  },
+  {
+    "id": "op_9l8apk8",
+    "timestamp": "2026-08-25T06:37:15.898Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Owner creates production secret",
+    "role": "Owner",
+    "actorEmail": "pro-user-owner-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret",
+    "method": "POST",
+    "requestPayload": {
+      "key": "PROD_CUSTOM_KEY",
+      "environmentType": "production"
+    },
+    "responseStatus": 201,
+    "responseSummary": {
+      "key": "PROD_CUSTOM_KEY",
+      "value": "[encrypted]",
+      "id": "6a8d381b534d51a47a3d401b"
+    },
+    "expectedStatus": 201
+  },
+  {
+    "id": "op_ahzjh17",
+    "timestamp": "2026-08-25T06:37:15.959Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer retrieves and decrypts development secret",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "key": "DEV_DATABASE_URL",
+      "valueDecrypted": true
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_xbn5buk",
+    "timestamp": "2026-08-25T06:37:15.982Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Developer attempts to mutate production secret (Separation of Duties Check)",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?id=6a8d381a534d51a47a3d400a",
+    "method": "PUT",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Developers cannot update secrets in Production"
+    },
+    "expectedStatus": 403,
+    "notes": "Developers are restricted from modifying production secrets directly"
+  },
+  {
+    "id": "op_39w79nf",
+    "timestamp": "2026-08-25T06:37:16.054Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer updates development secret (Version Bump to v2)",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?id=6a8d381a534d51a47a3d4009",
+    "method": "PUT",
+    "responseStatus": 200,
+    "responseSummary": {
+      "version": "2",
+      "id": "6a8d381a534d51a47a3d4009"
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_wxpa6s7",
+    "timestamp": "2026-08-25T06:37:16.155Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer rolls back development secret to v1",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret/rollback",
+    "method": "POST",
+    "requestPayload": {
+      "secretId": "6a8d381a534d51a47a3d4009",
+      "targetVersion": "1"
+    },
+    "responseStatus": 200,
+    "responseSummary": {
+      "version": "3"
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_jwig190",
+    "timestamp": "2026-08-25T06:37:16.271Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer copies secret from main to staging branch",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret/copy",
+    "method": "POST",
+    "responseStatus": 200,
+    "responseSummary": {
+      "message": "Successfully copied 1 secrets.",
+      "successCount": 1,
+      "skipCount": 0
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_gfpvchs",
+    "timestamp": "2026-08-25T06:37:16.321Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Attacker attempts to copy victim's secret into attacker project (Cross-Tenant Theft)",
+    "role": "Attacker (Untrusted)",
+    "actorEmail": "free-user-attacker-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret/copy",
+    "method": "POST",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Forbidden: You do not have access to the source project"
+    },
+    "expectedStatus": 403
+  },
+  {
+    "id": "op_k7o4ck0",
+    "timestamp": "2026-08-25T06:37:16.392Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Viewer reads secrets (Role Redaction Verification)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "devSecretValue": "[REDACTED]",
+      "prodSecretValue": "[REDACTED]",
+      "isFullyRedacted": true
+    },
+    "expectedStatus": 200,
+    "notes": "All plaintext credentials masked with [REDACTED] for Viewers to enforce least privilege"
+  },
+  {
+    "id": "op_pubfqc7",
+    "timestamp": "2026-08-25T06:37:16.433Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Viewer attempts secret creation (Mutation Blocked)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret",
+    "method": "POST",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Viewers do not have permission to create secrets"
+    },
+    "expectedStatus": 403
+  },
+  {
+    "id": "op_esq8kgk",
+    "timestamp": "2026-08-25T06:37:16.471Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Service Account accesses scoped project secrets",
+    "role": "Service Account (Machine Token)",
+    "actorEmail": "ci-bot@serviceaccount.xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "key": "DEV_DATABASE_URL",
+      "valueDecrypted": true
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_idy3nqb",
+    "timestamp": "2026-08-25T06:37:16.505Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Read-only Service Account attempts write:secrets (Scope Check)",
+    "role": "Service Account (Read-Only)",
+    "actorEmail": "audit-scanner@serviceaccount.xtrasecurity.test",
+    "endpoint": "/api/secret",
+    "method": "POST",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Forbidden: Missing write:secrets scope"
+    },
+    "expectedStatus": 403,
+    "notes": "Enforced missing write:secrets scope restriction on machine token"
+  },
+  {
+    "id": "op_wciqf8s",
+    "timestamp": "2026-08-25T06:37:16.584Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Viewer accesses secret with approved JIT Elevation",
+    "role": "Viewer (JIT Elevated)",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "prodSecretValue": "[DECRYPTED]",
+      "devSecretValue": "[REDACTED]"
+    },
+    "expectedStatus": 200,
+    "notes": "Granular JIT elevation unlocked PROD_PAYMENT_SECRET while DEV_DATABASE_URL remained safely redacted"
+  },
+  {
+    "id": "op_iw4vclr",
+    "timestamp": "2026-08-25T06:37:16.648Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Viewer accesses secret after JIT Revocation",
+    "role": "Viewer (JIT Revoked)",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "prodSecretValue": "[REDACTED]"
+    },
+    "expectedStatus": 200,
+    "notes": "Instant re-redaction to [REDACTED] upon revocation"
+  },
+  {
+    "id": "op_s862hss",
+    "timestamp": "2026-08-25T06:37:16.706Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Emergency responder activates Break-Glass Session",
+    "role": "Break-Glass Responder (Emergency Admin)",
+    "actorEmail": "pro-user-responder-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret?projectId=6a8d381a534d51a47a3d4002",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "prodSecretDecrypted": true
+    },
+    "expectedStatus": 200,
+    "notes": "Break-Glass session granted emergency decrypted access under active audit surveillance"
+  },
+  {
+    "id": "op_mhuyk43",
+    "timestamp": "2026-08-25T06:37:16.764Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Developer bulk imports development secrets",
+    "role": "Developer",
+    "actorEmail": "free-user-developer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret/bulk",
+    "method": "POST",
+    "responseStatus": 201,
+    "responseSummary": {
+      "importedCount": 2
+    },
+    "expectedStatus": [
+      200,
+      201
+    ]
+  },
+  {
+    "id": "op_q3qsmyb",
+    "timestamp": "2026-08-25T06:37:16.802Z",
+    "passed": true,
+    "securityVerdict": "SECURE_BLOCKED",
+    "scenario": "Viewer attempts bulk secret import (Mutation Blocked)",
+    "role": "Viewer",
+    "actorEmail": "free-user-viewer-e2e@xtrasecurity.test",
+    "endpoint": "/api/secret/bulk",
+    "method": "POST",
+    "responseStatus": 403,
+    "responseSummary": {
+      "error": "Viewers do not have permission to create secrets"
+    },
+    "expectedStatus": 403
+  },
+  {
+    "id": "op_3isekwg",
+    "timestamp": "2026-08-25T06:37:16.828Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Owner inspects tamper-evident audit logs (Zero Credential Leakage Check)",
+    "role": "Owner",
+    "actorEmail": "pro-user-owner-e2e@xtrasecurity.test",
+    "endpoint": "/api/audit?workspaceId=6a8d381a534d51a47a3d3ffc",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "totalLogs": 10,
+      "hasPasswordLeaks": false,
+      "hasMfaSecretLeaks": false
+    },
+    "expectedStatus": 200,
+    "notes": "Audit log responses are strictly sanitized to never expose password hashes or TOTP seeds"
+  },
+  {
+    "id": "op_to4p07l",
+    "timestamp": "2026-08-25T06:37:16.871Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Admin views security dashboard analytics and anomalies",
+    "role": "Admin",
+    "actorEmail": "pro-user-admin-e2e@xtrasecurity.test",
+    "endpoint": "/api/audit/dashboard?workspaceId=6a8d381a534d51a47a3d3ffc",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "stats": {
+        "totalEvents": 10,
+        "secretAccesses": 0,
+        "failedLogins": 0,
+        "activeUsers": 3
+      },
+      "anomalyCount": 0
+    },
+    "expectedStatus": 200
+  },
+  {
+    "id": "op_2m600kp",
+    "timestamp": "2026-08-25T06:37:16.902Z",
+    "passed": true,
+    "securityVerdict": "SECURE_ALLOWED",
+    "scenario": "Owner generates SOC 2 compliance posture report",
+    "role": "Owner",
+    "actorEmail": "pro-user-owner-e2e@xtrasecurity.test",
+    "endpoint": "/api/compliance/report?workspaceId=6a8d381a534d51a47a3d3ffc",
+    "method": "GET",
+    "responseStatus": 200,
+    "responseSummary": {
+      "generatedBy": "pro-user-owner-e2e@xtrasecurity.test",
+      "totalProjects": 1,
+      "totalSecrets": 7,
+      "totalAuditEntries": 10
+    },
+    "expectedStatus": 200
+  }
+]

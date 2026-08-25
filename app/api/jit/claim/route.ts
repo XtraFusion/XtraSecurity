@@ -42,10 +42,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "You cannot claim your own JIT link" }, { status: 400 });
     }
 
-    // Note: No workspace membership check here — the JIT token itself is the
-    // authorization. Any authenticated user with a valid token can submit a
-    // request, which still requires admin/owner approval before access is granted.
-
     // Check if user already has a pending request from this JIT link
     const existingRequest = await prisma.accessRequest.findFirst({
       where: {
@@ -62,6 +58,21 @@ export async function POST(req: NextRequest) {
       }, { status: 409 });
     }
 
+    // Atomic consumption of JIT link usage to prevent race conditions (TOCTOU protection)
+    const updateResult = await prisma.jitLink.updateMany({
+      where: {
+        id: jitLink.id,
+        usedCount: { lt: jitLink.maxUses },
+        isRevoked: false,
+        expiresAt: { gt: new Date() }
+      },
+      data: { usedCount: { increment: 1 } },
+    });
+
+    if (updateResult.count === 0) {
+      return NextResponse.json({ error: "This JIT link has reached its usage limit or has expired" }, { status: 410 });
+    }
+
     // Build reason from JIT label + scope
     const scopeParts: string[] = [];
     if (jitLink.environment) scopeParts.push(`env: ${jitLink.environment}`);
@@ -75,19 +86,13 @@ export async function POST(req: NextRequest) {
       data: {
         userId: auth.userId,
         projectId: jitLink.projectId,
-        secretIds: jitLink.secretIds, // Populating the array of allowed secret IDs
+        secretIds: jitLink.secretIds,
         reason,
         duration: jitLink.duration,
         status: "pending",
         workspaceId: jitLink.workspaceId,
         requestedAt: new Date(),
       },
-    });
-
-    // Increment usage count
-    await prisma.jitLink.update({
-      where: { id: jitLink.id },
-      data: { usedCount: { increment: 1 } },
     });
 
     try {
@@ -108,7 +113,6 @@ export async function POST(req: NextRequest) {
     });
 
     if (project) {
-      // Notify project owner
       const owner = await prisma.user.findUnique({
         where: { id: project.userId },
         select: { id: true, email: true },

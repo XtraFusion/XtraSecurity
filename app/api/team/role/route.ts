@@ -56,15 +56,7 @@ export async function PUT(req: Request) {
 
         // Create audit log
         try {
-            await logAudit("MEMBER_ROLE_UPDATED", auth.userId, targetTeamUser.teamId, { memberId, previousRole: targetTeamUser.role, newRole }, targetTeamUser.team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
-                data: {
-                    userId: auth.userId,
-                    action: "role_change",
-                    entity: "team_user",
-                    entityId: memberId,
-                    changes: { newRole },
-                },
-            }); }
+            await logAudit("MEMBER_ROLE_UPDATED", auth.userId, targetTeamUser.teamId, { memberId, previousRole: targetTeamUser.role, newRole }, targetTeamUser.team?.workspaceId || undefined);
         } catch (auditErr) {
             console.error("Failed to write audit log for role change:", auditErr);
         }

@@ -1,24 +1,63 @@
 import * as QRCode from "qrcode";
 import crypto from "crypto";
 
-async function getAuthenticator() {
-  const otplib = await import("otplib");
-  const authenticator: any = (otplib as any).authenticator ?? (otplib as any).default?.authenticator ?? otplib;
-  if (authenticator && typeof authenticator === "object") {
-    authenticator.options = {
-      window: 1,
-      step: 30,
-    };
+const BASE32_ALPHABET = "ABCDEFGHIJKLMNOPQRSTUVWXYZ234567";
+
+function base32Encode(buffer: Buffer): string {
+  let bits = 0;
+  let value = 0;
+  let output = "";
+  for (let i = 0; i < buffer.length; i++) {
+    value = (value << 8) | buffer[i];
+    bits += 8;
+    while (bits >= 5) {
+      output += BASE32_ALPHABET[(value >>> (bits - 5)) & 31];
+      bits -= 5;
+    }
   }
-  return authenticator;
+  if (bits > 0) {
+    output += BASE32_ALPHABET[(value << (5 - bits)) & 31];
+  }
+  return output;
+}
+
+function base32Decode(base32: string): Buffer {
+  const clean = base32.toUpperCase().replace(/=+$/, "").replace(/\s+/g, "");
+  let bits = 0;
+  let value = 0;
+  const bytes: number[] = [];
+  for (let i = 0; i < clean.length; i++) {
+    const val = BASE32_ALPHABET.indexOf(clean[i]);
+    if (val === -1) continue;
+    value = (value << 5) | val;
+    bits += 5;
+    if (bits >= 8) {
+      bytes.push((value >>> (bits - 8)) & 255);
+      bits -= 8;
+    }
+  }
+  return Buffer.from(bytes);
+}
+
+function computeTotp(secret: string, counter: number): string {
+  const key = base32Decode(secret);
+  const buffer = Buffer.alloc(8);
+  buffer.writeBigUInt64BE(BigInt(counter));
+  const hmac = crypto.createHmac("sha1", key).update(buffer).digest();
+  const offset = hmac[hmac.length - 1] & 0x0f;
+  const code =
+    ((hmac[offset] & 0x7f) << 24) |
+    ((hmac[offset + 1] & 0xff) << 16) |
+    ((hmac[offset + 2] & 0xff) << 8) |
+    (hmac[offset + 3] & 0xff);
+  return (code % 1000000).toString().padStart(6, "0");
 }
 
 /**
- * Generate a new TOTP secret for a user
+ * Generate a new TOTP secret for a user (160-bit base32)
  */
 export async function generateMfaSecret(): Promise<string> {
-  const authenticator = await getAuthenticator();
-  return authenticator.generateSecret();
+  return base32Encode(crypto.randomBytes(20));
 }
 
 /**
@@ -27,29 +66,36 @@ export async function generateMfaSecret(): Promise<string> {
 export async function generateQrCode(
   email: string,
   secret: string,
-  appName: string = "XtraSync"
+  appName: string = "XtraSecurity"
 ): Promise<string> {
-  const authenticator = await getAuthenticator();
-  const otpauthUrl = authenticator.keyuri(email, appName, secret);
+  const otpauthUrl = `otpauth://totp/${encodeURIComponent(appName)}:${encodeURIComponent(email)}?secret=${secret}&issuer=${encodeURIComponent(appName)}`;
   return QRCode.toDataURL(otpauthUrl);
 }
 
 /**
- * Verify TOTP token
+ * Verify TOTP token against secret with +/- 1 time step window tolerance
  */
-export async function verifyTotp(token: string, secret: string): Promise<boolean> {
-  try {
-    const authenticator = await getAuthenticator();
-    if (typeof authenticator.check === "function") {
-      return !!authenticator.check(token, secret);
-    }
-    if (typeof authenticator.verify === "function") {
-      return !!authenticator.verify({ token, secret });
-    }
-    return false;
-  } catch {
+export async function verifyTotp(token: string, secret: string, window: number = 1): Promise<boolean> {
+  if (!token || typeof token !== "string" || token.trim().length !== 6) {
     return false;
   }
+
+  const currentCounter = Math.floor(Date.now() / 1000 / 30);
+  for (let i = -window; i <= window; i++) {
+    const expected = computeTotp(secret, currentCounter + i);
+    if (token.trim() === expected) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
+ * Generate a valid TOTP token from secret (for current time step)
+ */
+export async function generateTotpToken(secret: string, timestamp: number = Date.now()): Promise<string> {
+  const currentCounter = Math.floor(timestamp / 1000 / 30);
+  return computeTotp(secret, currentCounter);
 }
 
 /**

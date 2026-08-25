@@ -3,6 +3,7 @@ import prisma from "@/lib/db";
 import { encrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
 import { getUserProjectRole } from "@/lib/permissions";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 // POST /api/secret/bulk - Bulk create secrets
 export const POST = withSecurity(async (request, context, session) => {
@@ -31,9 +32,8 @@ export const POST = withSecurity(async (request, context, session) => {
         return NextResponse.json({ error: "Project or owner not found" }, { status: 404 });
     }
 
-    const ownerTier = (projectRecord.user.tier || "free") as import("@/lib/rate-limit-config").Tier;
-    const maxSecretsPerProject = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[ownerTier].maxSecretsPerProject);
-    const resolvedMaxSecrets = await maxSecretsPerProject;
+    const ownerTier = (projectRecord.user.tier || "free") as Tier;
+    const resolvedMaxSecrets = DAILY_LIMITS[ownerTier]?.maxSecretsPerProject || 50;
 
     const secretCount = await prisma.secret.count({
       where: { projectId: projectId }
@@ -88,7 +88,7 @@ export const POST = withSecurity(async (request, context, session) => {
               history: [
                 {
                   version: "1",
-                  value: secretInput.value,
+                  value: [encryptedString],
                   description: secretInput.description || "Imported from .env file",
                   updatedAt: new Date().toISOString(),
                   updatedBy: session.email!,
@@ -102,7 +102,8 @@ export const POST = withSecurity(async (request, context, session) => {
 
         return {
             ...newSecret,
-            value: secretInput.value, // Return plain text value for the UI immediately
+            value: "[encrypted]",
+            history: undefined,
         };
     });
 

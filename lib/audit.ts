@@ -46,14 +46,13 @@ interface AuditLogData {
  */
 export async function createTamperEvidentLog(data: AuditLogData) {
   // 1. Fetch the latest log (head of the chain)
-  // We strictly verify serialization by timestamp + insertion order if needed, 
-  // but for MVP findFirst order by timestamp desc is sufficient.
   const lastLog = await prisma.auditLog.findFirst({
-    orderBy: { timestamp: "desc" },
+    orderBy: [{ timestamp: "desc" }, { id: "desc" }],
   });
 
   const previousHash = lastLog?.currentHash || GENESIS_HASH;
   const timestamp = data.timestamp || new Date();
+  const normalizedChanges = data.changes ? JSON.parse(JSON.stringify(data.changes)) : {};
 
   // Handle Service Account IDs (strip sa_ prefix for MongoDB ObjectId compatibility)
   const cleanUserId = data.userId.startsWith("sa_") ? data.userId.replace("sa_", "") : data.userId;
@@ -64,9 +63,9 @@ export async function createTamperEvidentLog(data: AuditLogData) {
       previousHash,
       timestamp.toISOString(),
       data.action,
-      cleanUserId, // Use cleaned ID for consistent hashing
+      cleanUserId,
       data.entityId,
-      JSON.stringify(data.changes)
+      JSON.stringify(normalizedChanges)
   ].join("|");
 
   const currentHash = createHash("sha256").update(payload).digest("hex");
@@ -78,7 +77,7 @@ export async function createTamperEvidentLog(data: AuditLogData) {
       action: data.action,
       entity: data.entity,
       entityId: data.entityId,
-      changes: data.changes,
+      changes: normalizedChanges,
       workspaceId: data.workspaceId,
       timestamp: timestamp,
       previousHash: previousHash,
@@ -91,11 +90,11 @@ export async function createTamperEvidentLog(data: AuditLogData) {
 
 /**
  * Verifies the integrity of the audit log chain.
- * Returns { valid: boolean, brokenAtId?: string }
+ * Returns { valid: boolean, brokenAtId?: string, reason?: string }
  */
 export async function verifyAuditChain() {
   const logs = await prisma.auditLog.findMany({
-    orderBy: { timestamp: "asc" } 
+    orderBy: [{ timestamp: "asc" }, { id: "asc" }] 
   });
 
   if (logs.length === 0) return { valid: true };
@@ -109,13 +108,14 @@ export async function verifyAuditChain() {
     }
 
     // 2. Re-compute current hash
+    const normalizedChanges = log.changes ? JSON.parse(JSON.stringify(log.changes)) : {};
     const payload = [
         log.previousHash,
         log.timestamp.toISOString(),
         log.action,
         log.userId,
         log.entityId,
-        JSON.stringify(log.changes)
+        JSON.stringify(normalizedChanges)
     ].join("|");
 
     const computedHash = createHash("sha256").update(payload).digest("hex");

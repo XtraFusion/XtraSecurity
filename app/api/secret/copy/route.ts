@@ -18,6 +18,41 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
             return NextResponse.json({ error: "Source and Target Branch IDs are required" }, { status: 400 });
         }
 
+        const { getUserProjectRole } = await import("@/lib/permissions");
+
+        // 1. Verify Source Branch and permissions
+        const sourceBranch = await prisma.branch.findUnique({
+            where: { id: sourceBranchId },
+            select: { id: true, projectId: true }
+        });
+
+        if (!sourceBranch) {
+            return NextResponse.json({ error: "Source branch not found" }, { status: 404 });
+        }
+
+        const sourceRole = await getUserProjectRole(session.userId, sourceBranch.projectId);
+        if (!sourceRole) {
+            return NextResponse.json({ error: "Forbidden: You do not have access to the source project" }, { status: 403 });
+        }
+
+        // 2. Verify Target Branch and permissions
+        const targetBranch = await prisma.branch.findUnique({
+            where: { id: targetBranchId },
+            select: { id: true, projectId: true }
+        });
+
+        if (!targetBranch) {
+            return NextResponse.json({ error: "Target branch not found" }, { status: 404 });
+        }
+
+        const targetRole = await getUserProjectRole(session.userId, targetBranch.projectId);
+        if (!targetRole || targetRole === "viewer") {
+            return NextResponse.json(
+                { error: "Forbidden: Your role does not permit writing secrets to this target project." },
+                { status: 403 }
+            );
+        }
+
         // Fetch source secrets
         let sourceQuery: any = { branchId: sourceBranchId };
         if (sourceEnvironment && sourceEnvironment !== "all") {
@@ -30,35 +65,6 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
 
         if (sourceSecrets.length === 0) {
             return NextResponse.json({ message: "No secrets found to copy", count: 0 }, { status: 200 });
-        }
-
-        // Verify Target Branch exists and user has access
-        const targetBranch = await prisma.branch.findUnique({
-            where: { id: targetBranchId },
-        });
-
-        if (!targetBranch) {
-            return NextResponse.json({ error: "Target branch not found" }, { status: 404 });
-        }
-
-        // RBAC Write Check — only owner, admin, developer can write secrets
-        const WRITE_ROLES = ["owner", "admin", "developer"];
-
-        const callerRole = await prisma.userRole.findFirst({
-            where: {
-              userId: session.userId,
-              OR: [{ projectId: targetBranch.projectId }, { projectId: null }]
-            },
-            select: { role: { select: { name: true } } }
-        });
-
-        const roleName = callerRole?.role?.name?.toLowerCase() || "viewer";
-
-        if (!WRITE_ROLES.includes(roleName)) {
-            return NextResponse.json(
-                { error: "Forbidden: Your role does not permit writing secrets to this project." },
-                { status: 403 }
-            );
         }
 
         const envDest = targetEnvironment && targetEnvironment !== "all" ? targetEnvironment : null;
@@ -82,8 +88,12 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
                     (s: any) => s.key === secret.key && s.environmentType === targetEnvForSecret
                 );
 
-                const encryptedValueObj = encrypt(secret.value[0] || "");
-                const encryptedString = JSON.stringify(encryptedValueObj);
+                const rawVal = secret.value && secret.value.length > 0 ? secret.value[0] : "";
+                let encryptedString = rawVal;
+                // If the value is not already an encrypted JSON object, encrypt it
+                if (!rawVal.startsWith("{") || !rawVal.includes("encryptedData")) {
+                    encryptedString = JSON.stringify(encrypt(rawVal));
+                }
 
                 if (existing) {
                     if (overwrite) {

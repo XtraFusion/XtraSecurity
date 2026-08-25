@@ -12,7 +12,7 @@ export type WebhookEvent =
 interface WebhookPayload {
   event: WebhookEvent;
   projectName?: string;
-  details: string;
+  details?: string;
   timestamp?: string;
   [key: string]: unknown;
 }

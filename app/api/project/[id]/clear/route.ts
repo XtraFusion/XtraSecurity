@@ -5,7 +5,7 @@ import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const auth = await verifyAuth(req);
@@ -13,8 +13,10 @@ export async function POST(
       return new NextResponse("Unauthorized", { status: 401 });
     }
 
+    const { id: projectId } = await params;
+
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id: projectId },
     });
 
     if (!project) {
@@ -29,14 +31,14 @@ export async function POST(
     // Clear all project data
     await prisma.$transaction([
       prisma.secret.deleteMany({
-        where: { projectId: params.id }
+        where: { projectId }
       }),
       prisma.branch.deleteMany({
-        where: { projectId: params.id }
+        where: { projectId }
       }),
     ]);
 
-    try { await logAudit("PROJECT_CLEARED", auth.userId, params.id, {}, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json({ message: "Project cleared successfully" });
+    try { await logAudit("PROJECT_CLEARED", auth.userId, projectId, {}, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json({ message: "Project cleared successfully" });
   } catch (error) {
     console.error("[PROJECT_CLEAR]", error);
     return new NextResponse("Internal Error", { status: 500 });

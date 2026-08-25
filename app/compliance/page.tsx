@@ -1,11 +1,13 @@
 "use client";
 
 import { useState, useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import {
     Shield,
     Download,
     RefreshCw,
     ArrowLeft,
+    ArrowRight,
     CheckCircle2,
     AlertTriangle,
     Clock,
@@ -103,6 +105,7 @@ const fmtFull = (iso: string | null | undefined) => {
 };
 
 export default function SecurityHealthPage() {
+    const router = useRouter();
     const [loading, setLoading] = useState(true);
     const [report, setReport] = useState<ReportData | null>(null);
     const [searchTerm, setSearchTerm] = useState("");

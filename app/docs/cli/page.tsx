@@ -20,7 +20,8 @@ import cliData from "@/CLI_COMMANDS_REFERENCE.json";
 
 interface CommandOption {
   flag: string;
-  desc: string;
+  desc?: string;
+  description?: string;
 }
 
 interface CommandExample {

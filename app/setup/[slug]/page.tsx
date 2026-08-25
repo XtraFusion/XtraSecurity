@@ -80,7 +80,7 @@ export default function SetupGuidePage({ params }: Props) {
           <div className="flex items-start gap-6 mb-6">
             <span className="text-6xl">{integration.icon}</span>
             <div>
-              <Badge className={difficulty[integration.difficulty as keyof typeof difficulty]} className="mb-4">
+              <Badge className={`${difficulty[integration.difficulty as keyof typeof difficulty]} mb-4`}>
                 {integration.difficulty}
               </Badge>
               <h1 className="text-5xl md:text-6xl font-bold mb-4 text-black dark:text-white">

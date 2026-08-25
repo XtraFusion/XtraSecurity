@@ -27,7 +27,7 @@ export async function POST(
         return NextResponse.json({ error: "Secret not found" }, { status: 404 });
     }
 
-    if (secret.shadowStatus !== "active" || !secret.shadowValue || secret.shadowValue.length === 0) {
+    if (!secret.shadowValue || secret.shadowValue.length === 0) {
         return NextResponse.json({ error: "No active shadow value to promote" }, { status: 400 });
     }
 
@@ -53,8 +53,6 @@ export async function POST(
             
             // Clear shadow
             shadowValue: [],
-            shadowStatus: null,
-            shadowExpiresAt: null,
 
             history: [...currentHistory, historyEntry],
             updatedBy: auth.userId

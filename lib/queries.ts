@@ -140,19 +140,9 @@ const api = {
 
 // Team hooks
 export function useTeamMembers() {
-  const { actions } = useAppStore()
-
   return useQuery({
     queryKey: ["team-members"],
     queryFn: api.getTeamMembers,
-    onError: () => {
-      actions.addNotification({
-        title: "Error",
-        message: "Failed to load team members",
-        type: "error",
-        read: false,
-      })
-    },
   })
 }
 
@@ -190,36 +180,16 @@ export function useAuditLogs(filters?: {
   status?: string
   dateRange?: { from?: Date; to?: Date }
 }) {
-  const { actions } = useAppStore()
-
   return useQuery({
     queryKey: ["audit-logs", filters],
     queryFn: () => api.getAuditLogs(filters),
-    onError: () => {
-      actions.addNotification({
-        title: "Error",
-        message: "Failed to load audit logs",
-        type: "error",
-        read: false,
-      })
-    },
   })
 }
 
 // Project hooks
 export function useProjects() {
-  const { actions } = useAppStore()
-
   return useQuery({
     queryKey: ["projects"],
     queryFn: api.getProjects,
-    onError: () => {
-      actions.addNotification({
-        title: "Error",
-        message: "Failed to load projects",
-        type: "error",
-        read: false,
-      })
-    },
   })
 }

@@ -26,6 +26,10 @@ export interface NotificationEvent {
 export async function notify(event: NotificationEvent): Promise<void> {
   try {
     // 1. Fetch all enabled rules for this workspace
+    if (!event.workspaceId || !/^[0-9a-fA-F]{24}$/.test(event.workspaceId)) {
+      return;
+    }
+
     const rules = await prisma.notificationRule.findMany({
       where: {
         workspaceId: event.workspaceId,

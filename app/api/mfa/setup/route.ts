@@ -103,15 +103,7 @@ export async function PUT(req: NextRequest) {
     });
 
     // Create audit log
-    await logAudit("MEMBER_MFA_ENABLED", auth.userId, auth.userId, { enabled: true }); if (false) { await prisma.auditLog.create({
-      data: {
-        userId: auth.userId,
-        action: "mfa_enabled",
-        entity: "user",
-        entityId: auth.userId,
-        changes: {}
-      }
-    }); }
+    await logAudit("MEMBER_MFA_ENABLED", auth.userId, auth.userId, { enabled: true });
 
     return NextResponse.json({
       success: true,
@@ -164,15 +156,7 @@ export async function DELETE(req: NextRequest) {
     });
 
     // Create audit log
-    await logAudit("MEMBER_MFA_DISABLED", auth.userId, auth.userId, { enabled: false }); if (false) { await prisma.auditLog.create({
-      data: {
-        userId: auth.userId,
-        action: "mfa_disabled",
-        entity: "user",
-        entityId: auth.userId,
-        changes: {}
-      }
-    }); }
+    await logAudit("MEMBER_MFA_DISABLED", auth.userId, auth.userId, { enabled: false });
 
     return NextResponse.json({
       success: true,

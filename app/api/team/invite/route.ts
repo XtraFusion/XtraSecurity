@@ -9,13 +9,35 @@ import { logAudit } from "@/lib/audit";
 export async function POST(req: Request) {
   try {
     const { member } = await req.json();
+    if (!member) {
+      return NextResponse.json({ error: "Member data is required" }, { status: 400 });
+    }
+
     const { teamId, email, role } = member;
+    if (!teamId || !email || !role) {
+      return NextResponse.json({ error: "teamId, email, and role are required" }, { status: 400 });
+    }
+
+    const { validateEmail, validateRole } = await import("@/lib/validators");
+    const emailCheck = validateEmail(email);
+    if (!emailCheck.valid) {
+      return NextResponse.json({ error: emailCheck.error }, { status: 400 });
+    }
+
+    const roleCheck = validateRole(role, ["owner", "admin", "developer", "viewer"]);
+    if (!roleCheck.valid) {
+      return NextResponse.json({ error: roleCheck.error }, { status: 400 });
+    }
+
+    const cleanEmail = emailCheck.cleanEmail!;
+    const cleanRole = roleCheck.cleanRole!;
+
     const auth = await verifyAuth(req);
     if (!auth?.email) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({ where: { email: email } });
+    const user = await prisma.user.findUnique({ where: { email: cleanEmail } });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -39,7 +61,7 @@ export async function POST(req: Request) {
       data: {
         teamId,
         userId: user.id,
-        role,
+        role: cleanRole,
         status: "pending",
         invitedBy: auth.userId,
       },
@@ -51,7 +73,7 @@ export async function POST(req: Request) {
         "MEMBER_INVITED",
         auth.userId,
         teamId,
-        { invitedUserId: user.id, invitedEmail: user.email, role },
+        { invitedUserId: user.id, invitedEmail: user.email, role: cleanRole },
         team?.workspaceId || undefined
       );
     } catch (e) {
@@ -135,7 +157,15 @@ export async function GET(req: NextRequest) {
     where: { userId: auth.userId, status: "pending" },
     include: {
       team: true,
-      user: true
+      user: {
+        select: {
+          id: true,
+          name: true,
+          email: true,
+          image: true,
+          role: true
+        }
+      }
     }
   });
 

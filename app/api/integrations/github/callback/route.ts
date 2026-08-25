@@ -14,8 +14,26 @@ export async function GET(req: NextRequest) {
     const code = url.searchParams.get("code");
     const state = url.searchParams.get("state");
 
-    if (!code) {
-      return NextResponse.redirect(new URL("/integrations?error=no_code", req.url));
+    const auth = await verifyAuth(req);
+    if (!auth?.userId) {
+      return NextResponse.redirect(new URL("/integrations?error=not_authenticated", req.url));
+    }
+
+    if (!code || !state) {
+      return NextResponse.redirect(new URL("/integrations?error=missing_oauth_state", req.url));
+    }
+
+    // Verify state token
+    const jwt = await import("jsonwebtoken");
+    const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+    try {
+      const decoded = jwt.verify(state, secret) as any;
+      if (decoded.provider !== "github" || decoded.userId !== auth.userId) {
+        return NextResponse.redirect(new URL("/integrations?error=invalid_oauth_state", req.url));
+      }
+    } catch (err) {
+      console.error("GitHub OAuth state verification failed:", err);
+      return NextResponse.redirect(new URL("/integrations?error=expired_oauth_state", req.url));
     }
 
     // Exchange code for access token
@@ -49,15 +67,6 @@ export async function GET(req: NextRequest) {
     });
 
     const userData = await userRes.json();
-
-    // Get session from cookies to identify user
-    const { getServerSession } = await import("next-auth");
-    const { authOptions } = await import("@/app/api/auth/[...nextauth]/route");
-    const auth = await verifyAuth(req);
-
-    if (!auth?.userId) {
-      return NextResponse.redirect(new URL("/integrations?error=not_authenticated", req.url));
-    }
 
     // Encrypt and store token
     const encryptedToken = encrypt(tokenData.access_token);

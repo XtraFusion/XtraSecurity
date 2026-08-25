@@ -101,7 +101,7 @@ export async function DELETE(
     const updatedProject = await prisma.project.update({
       where: { id: params.id },
       data: {
-        ipRestrictions: updatedRestrictions
+        ipRestrictions: updatedRestrictions as any
       }
     });
 

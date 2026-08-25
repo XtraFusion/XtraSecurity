@@ -81,8 +81,6 @@ export async function POST(
                 }]
             } : {
                 shadowValue: [encryptedString],
-                shadowStatus: "active",
-                shadowExpiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000), 
             }),
             
             updatedBy: auth.userId
@@ -93,7 +91,7 @@ export async function POST(
         success: true,
         message: "Secret rotated",
         shadowValue: strategy === "regenerate" ? newValue : serializedShadow(updated.shadowValue),
-        expiresAt: updated.shadowExpiresAt
+        expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     });
 
   } catch (error: any) {

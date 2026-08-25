@@ -137,8 +137,17 @@ export async function GET(req: Request) {
             action: { in: ["break_glass", "admin_override", "bulk_export", "access_revoked"] }
         },
         orderBy: { timestamp: "desc" },
-        take: 5,
-        include: { user: true }
+        include: {
+            user: {
+                select: {
+                    id: true,
+                    name: true,
+                    email: true,
+                    image: true,
+                    role: true
+                }
+            }
+        }
     });
 
     return NextResponse.json({

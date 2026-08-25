@@ -6,6 +6,7 @@ import { createNotification } from "@/lib/notifications";
 import { verifyAuth } from "@/lib/server-auth";
 import { withSecurity } from "@/lib/api-middleware";
 import { logAudit } from "@/lib/audit";
+import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
 
 // GET /api/project - Get all projects or a specific project by ID
 export const GET = withSecurity(async (request: NextRequest, context: any, session: any) => {
@@ -236,13 +237,19 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
 
 
 
-    if (!newProject.name) {
-      console.error("Project name is missing");
-      return NextResponse.json(
-        { error: "Project name is required" },
-        { status: 400 }
-      );
+    const { validateProjectName, validateDescription } = await import("@/lib/validators");
+    const nameCheck = validateProjectName(newProject.name);
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
     }
+
+    const descCheck = validateDescription(newProject.description, 1000);
+    if (!descCheck.valid) {
+      return NextResponse.json({ error: descCheck.error }, { status: 400 });
+    }
+
+    newProject.name = nameCheck.cleanName!;
+    newProject.description = descCheck.cleanDesc || "";
 
     if (!newProject.workspaceId) {
       console.error("Workspace ID is missing");
@@ -263,10 +270,8 @@ export const POST = withSecurity(async (request: NextRequest, context: any, sess
     }
 
     // Determine the tier based on the workspace owner or workspace subscription
-    const workspaceTier = (workspace.user?.tier || workspace.subscriptionPlan || "free") as import("@/lib/rate-limit-config").Tier;
-    const projectLimit = import("@/lib/rate-limit-config").then(mod => mod.DAILY_LIMITS[workspaceTier].maxProjectsPerWorkspace);
-    
-    const resolvedProjectLimit = await projectLimit;
+    const workspaceTier = (workspace.user?.tier || workspace.subscriptionPlan || "free") as Tier;
+    const resolvedProjectLimit = DAILY_LIMITS[workspaceTier]?.maxProjectsPerWorkspace || 3;
 
     const projectCount = await prisma.project.count({
       where: { workspaceId: newProject.workspaceId }

@@ -28,7 +28,14 @@ export async function GET(req: NextRequest) {
     });
 
     if (!integration) {
-      const authUrl = `https://gitlab.com/oauth/authorize?client_id=${GITLAB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITLAB_REDIRECT_URI!)}&response_type=code&scope=api`;
+      const jwt = await import("jsonwebtoken");
+      const secret = process.env.NEXTAUTH_SECRET || "fallback_secret";
+      const state = jwt.sign(
+        { userId: auth.userId, provider: "gitlab", nonce: crypto.randomUUID() },
+        secret,
+        { expiresIn: "15m" }
+      );
+      const authUrl = `https://gitlab.com/oauth/authorize?client_id=${GITLAB_CLIENT_ID}&redirect_uri=${encodeURIComponent(GITLAB_REDIRECT_URI!)}&response_type=code&scope=api&state=${encodeURIComponent(state)}`;
       return NextResponse.json({
         connected: false,
         authUrl

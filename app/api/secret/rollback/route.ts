@@ -131,24 +131,23 @@ export async function POST(req: NextRequest) {
 
     // 6. Create Audit Log
     try {
-      await prisma.auditLog.create({
-        data: {
-          userId: auth.userId,
-          action: "secret_rollback",
-          entity: "secret",
-          entityId: secretId,
-          workspaceId: secret.project.workspaceId,
-          ipAddress: req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1",
-          userAgent: req.headers.get("user-agent") || "unknown",
-          changes: {
-            projectId,
-            environment,
-            secretKey: secret.key,
-            fromVersion: secret.version,
-            toVersion: newVersionNumber,
-            targetVersion: targetVersion,
-            reason: changeReason || "Manual rollback via dashboard",
-          },
+      const { createTamperEvidentLog } = await import("@/lib/audit");
+      await createTamperEvidentLog({
+        userId: auth.userId,
+        action: "SECRET_ROLLBACK",
+        entity: "secret",
+        entityId: secretId,
+        workspaceId: secret.project?.workspaceId || undefined,
+        ipAddress: req.headers.get("x-forwarded-for")?.split(",")[0] || "127.0.0.1",
+        userAgent: req.headers.get("user-agent") || "unknown",
+        changes: {
+          projectId,
+          environment,
+          secretKey: secret.key,
+          fromVersion: secret.version,
+          toVersion: newVersionNumber,
+          targetVersion: targetVersion,
+          reason: changeReason || "Manual rollback via dashboard",
         },
       });
     } catch (auditError) {

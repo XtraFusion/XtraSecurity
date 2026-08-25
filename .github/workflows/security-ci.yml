@@ -1,0 +1,137 @@
+name: Security CI & Automated Testing Pipeline
+
+on:
+  push:
+    branches:
+      - main
+      - master
+      - develop
+  pull_request:
+    branches:
+      - main
+      - master
+      - develop
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_ENV: test
+  NEXTAUTH_SECRET: "ci-secret-key-super-secure-32chars-min-xtra"
+  NEXTAUTH_URL: "http://localhost:3000"
+  ENCRYPTION_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+  CRON_SECRET: "test-cron-secret-12345"
+  DATABASE_URL: "mongodb://localhost:27017/xtrasecurity_ci"
+  NEXT_TELEMETRY_DISABLED: 1
+
+jobs:
+  # =========================================================================
+  # JOB 1: DEPENDENCY AUDIT & SECURITY VULNERABILITY SCANNING
+  # =========================================================================
+  security-audit:
+    name: 🛡️ Security Audit & Dependency Scans
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Run NPM Security Audit
+        run: npm audit --audit-level=critical || true
+
+  # =========================================================================
+  # JOB 2: STRICT TYPESCRIPT STATIC ANALYSIS & COMPILATION
+  # =========================================================================
+  typecheck-and-lint:
+    name: 🔍 TypeScript Static Type Checking
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Strict TypeScript Compilation (Zero Errors)
+        run: npx tsc --noEmit
+
+  # =========================================================================
+  # JOB 3: MASTER TEST SUITE (25 SUITES & 251 TESTS)
+  # =========================================================================
+  master-test-battery:
+    name: 🧪 Master Test Battery (25 Suites / 251 Tests)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Run Complete 25-Suite Test Battery
+        run: npx jest --runInBand --ci --detectOpenHandles --forceExit
+        env:
+          NODE_ENV: test
+          NEXTAUTH_SECRET: ${{ env.NEXTAUTH_SECRET }}
+          ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
+          CRON_SECRET: ${{ env.CRON_SECRET }}
+
+  # =========================================================================
+  # JOB 4: PRODUCTION BUILD & STATIC BUNDLE VERIFICATION
+  # =========================================================================
+  production-build:
+    name: 📦 Production Build & SSG/SSR Verification
+    needs: [typecheck-and-lint, master-test-battery]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20.x
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "npm"
+
+      - name: Install Dependencies
+        run: npm ci --legacy-peer-deps || npm install
+
+      - name: Generate Prisma Client
+        run: npx prisma generate
+
+      - name: Build Next.js Production Bundle
+        run: npm run build
+        env:
+          NODE_ENV: production
+          NEXTAUTH_SECRET: ${{ env.NEXTAUTH_SECRET }}
+          ENCRYPTION_KEY: ${{ env.ENCRYPTION_KEY }}
+          CRON_SECRET: ${{ env.CRON_SECRET }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}

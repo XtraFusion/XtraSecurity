@@ -12,6 +12,26 @@ export async function getUserTeamRole(userId: string, teamId: string) {
     } catch (e) {}
   }
 
+  // 1. Check if user created the team or owns the workspace containing the team
+  const team = await prisma.team.findUnique({
+    where: { id: teamId },
+    select: { createdBy: true, workspaceId: true }
+  });
+  if (team && String(team.createdBy) === String(userId)) {
+    if (redis) redis.set(cacheKey, "owner", "EX", CACHE_TTL).catch(() => {});
+    return "owner";
+  }
+  if (team?.workspaceId) {
+    const workspace = await prisma.workspace.findUnique({
+      where: { id: team.workspaceId },
+      select: { createdBy: true }
+    });
+    if (workspace && String(workspace.createdBy) === String(userId)) {
+      if (redis) redis.set(cacheKey, "owner", "EX", CACHE_TTL).catch(() => {});
+      return "owner";
+    }
+  }
+
   const teamUser = await prisma.teamUser.findFirst({ where: { userId, teamId } });
   const role = teamUser?.role || null;
 
@@ -46,7 +66,7 @@ export async function getUserProjectRole(userId: string, projectId: string) {
         select: { projectId: true }
     });
     // Service Account is strictly locked to its own project
-    const role = (sa && sa.projectId === projectId) ? "developer" : null;
+    const role = (sa && String(sa.projectId) === String(projectId)) ? "developer" : null;
     if (redis && role) {
       await redis.set(cacheKey, role, "EX", CACHE_TTL).catch(() => {});
     }
@@ -78,7 +98,7 @@ export async function getUserProjectRole(userId: string, projectId: string) {
 
   const roles = teamProjects
     .flatMap(tp => tp.team.members)
-    .filter(m => m.userId === userId)
+    .filter(m => String(m.userId) === String(userId))
     .map(m => m.role);
   
   if (roles.length === 0) return null;
@@ -228,7 +248,7 @@ export async function getUserSecretAccess(userId: string, projectId: string, sec
   }
 
   const role = await getUserProjectRole(userId, projectId);
-  if (role === "owner" || role === "admin") return { hasAccess: true, role };
+  if (role === "owner" || role === "admin" || role === "developer") return { hasAccess: true, role };
   
   const now = new Date();
 

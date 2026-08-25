@@ -111,7 +111,17 @@ export async function GET(req: Request) {
       orderBy: { timestamp: 'desc' },
       skip: (page - 1) * pageSize,
       take: pageSize,
-      include: { user: true },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true
+          }
+        }
+      },
     });
 
     return NextResponse.json({ data: logs, total, page, pageSize });

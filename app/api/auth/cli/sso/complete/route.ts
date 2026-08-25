@@ -3,10 +3,12 @@ import jwt from "jsonwebtoken";
 import { logAudit } from "@/lib/audit";
 import { verifyAuth } from "@/lib/server-auth";
 
-const SECRET_KEY = process.env.NEXTAUTH_SECRET;
-if (!SECRET_KEY) throw new Error("FATAL: NEXTAUTH_SECRET environment variable is required");
-
 export async function POST(req: NextRequest) {
+  const SECRET_KEY = process.env.NEXTAUTH_SECRET;
+  if (!SECRET_KEY) {
+    return NextResponse.json({ error: "Server configuration error" }, { status: 500 });
+  }
+
   const auth = await verifyAuth(req);
   
   if (!auth) {

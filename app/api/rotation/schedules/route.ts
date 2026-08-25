@@ -179,7 +179,7 @@ export async function POST(req: Request) {
         frequency,
         customDays: frequency === "custom" ? customDays : null,
         nextRotation,
-        method: rotationMethod,
+        method: rotationMethod || body.method || body.strategy || "auto-generate",
         webhookUrl,
         status: "active"
       },

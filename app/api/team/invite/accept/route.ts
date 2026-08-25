@@ -9,9 +9,10 @@ export async function POST(req: Request) {
     const { teamId, status = "active" } = await req.json();
 
     const auth = await verifyAuth(req);
-    if (!auth?.email) {
+    if (!auth || !auth.userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+    const currentUserId = auth.userId;
 
     const team = await prisma.team.findUnique({
       where: { id: teamId },
@@ -31,15 +32,7 @@ export async function POST(req: Request) {
 
       // audit log
       try {
-        await logAudit("MEMBER_INVITE_ACCEPTED", auth.userId, teamId, { status }, team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
-          data: {
-            userId: auth.userId,
-            action: "invite_accepted",
-            entity: "team_user",
-            entityId: teamId,
-            changes: { status },
-          },
-        }); }
+        await logAudit("MEMBER_INVITE_ACCEPTED", auth.userId, teamId, { status }, team?.workspaceId || undefined);
       } catch (auditErr) {
         console.error("Failed to write audit log for invite acceptance:", auditErr);
       }
@@ -81,15 +74,7 @@ export async function POST(req: Request) {
 
       // audit log
       try {
-        await logAudit("MEMBER_INVITE_DECLINED", auth.userId, teamId, { status }, team?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
-          data: {
-            userId: auth.userId,
-            action: "invite_declined",
-            entity: "team_user",
-            entityId: teamId,
-            changes: { status },
-          },
-        }); }
+        await logAudit("MEMBER_INVITE_DECLINED", auth.userId, teamId, { status }, team?.workspaceId || undefined);
       } catch (auditErr) {
         console.error("Failed to write audit log for invite decline:", auditErr);
       }

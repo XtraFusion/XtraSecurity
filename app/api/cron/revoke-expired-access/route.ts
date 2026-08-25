@@ -50,6 +50,23 @@ export async function GET(req: NextRequest) {
           status: "expired",
         },
       });
+
+      // Invalidate RBAC cache so the user's revoked permissions take effect immediately
+      const { invalidateUserRbacCache } = await import("@/lib/permissions");
+      await invalidateUserRbacCache(request.userId);
+
+      // Audit log the automated revocation
+      try {
+        const { logAudit } = await import("@/lib/audit");
+        await logAudit(
+          "JIT_ACCESS_EXPIRED",
+          request.userId,
+          request.projectId || request.userId,
+          { requestId: request.id, userId: request.userId, secretIds: request.secretIds }
+        );
+      } catch (e) {
+        console.error("Audit log failed for expired access:", e);
+      }
  
       revokedCount++;
     }

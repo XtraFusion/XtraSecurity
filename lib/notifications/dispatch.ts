@@ -38,7 +38,10 @@ export async function dispatchNotification(options: DispatchOptions): Promise<vo
         { workspaceId: { $exists: false } },
       ];
     } else {
-      filter.workspaceId = { $in: [null, undefined] };
+      filter.$or = [
+        { workspaceId: null },
+        { workspaceId: { $exists: false } },
+      ];
     }
 
     const result = await (prisma as any).$runCommandRaw({

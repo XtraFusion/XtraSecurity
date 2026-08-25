@@ -32,14 +32,14 @@ export async function DELETE(req: Request) {
         await invalidateUserRbacCache(teamUser.userId);
     }
 
+    const workspace = await prisma.team.findUnique({
+        where: { id: teamUser.teamId },
+        select: { workspaceId: true }
+    });
+
     // Revoke JIT Access Requests for this user in the workspace
     // This ensures that removal from a team immediately cuts off temporary access.
     try {
-        const workspace = await prisma.team.findUnique({
-            where: { id: teamUser.teamId },
-            select: { workspaceId: true }
-        });
-
         if (workspace?.workspaceId) {
             await prisma.accessRequest.updateMany({
                 where: {
@@ -59,19 +59,7 @@ export async function DELETE(req: Request) {
 
     // Audit log
     try {
-      await logAudit("MEMBER_REMOVED", auth.userId, teamUser.teamId, { removedMemberId: memberId, removedUserId: teamUser.userId, teamId: teamUser.teamId }, workspace?.workspaceId || undefined); if (false) { await prisma.auditLog.create({
-        data: {
-          userId: auth.userId,
-          action: "member_removed",
-          entity: "team_user",
-          entityId: memberId,
-          changes: { 
-              removedMemberId: memberId,
-              removedUserId: teamUser.userId,
-              teamId: teamUser.teamId
-          },
-        },
-      }); }
+      await logAudit("MEMBER_REMOVED", auth.userId, teamUser.teamId, { removedMemberId: memberId, removedUserId: teamUser.userId, teamId: teamUser.teamId }, workspace?.workspaceId || undefined);
     } catch (auditErr) {
       console.error("Failed to write audit log for member removal:", auditErr);
     }

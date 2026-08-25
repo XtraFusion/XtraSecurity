@@ -38,7 +38,6 @@ interface ApiKey {
   label: string;
   key: string;
   createdAt: string;
-  createdAt: string;
   expiresAt?: string;
   lastUsed?: string;
 }

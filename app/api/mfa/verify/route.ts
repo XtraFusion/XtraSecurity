@@ -70,15 +70,7 @@ export async function POST(req: NextRequest) {
     );
 
     // Create audit log
-    await logAudit("MEMBER_MFA_VERIFIED", auth.userId, auth.userId, { method: useBackupCode ? "backup_code" : "totp" }); if (false) { await prisma.auditLog.create({
-      data: {
-        userId: auth.userId,
-        action: "mfa_verified",
-        entity: "user",
-        entityId: auth.userId,
-        changes: { method: useBackupCode ? "backup_code" : "totp" }
-      }
-    }); }
+    await logAudit("MEMBER_MFA_VERIFIED", auth.userId, auth.userId, { method: useBackupCode ? "backup_code" : "totp" });
 
     return NextResponse.json({
       success: true,

@@ -19,43 +19,45 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get("projectId");
 
+    if (!projectId) {
+      return NextResponse.json({ error: "projectId query parameter is required" }, { status: 400 });
+    }
+
     // Access Control & Redaction Check
     let isViewer = false;
     let allowedSecretIds = new Set<string>();
 
-    if (projectId) {
-        const { getUserProjectRole } = await import("@/lib/permissions");
-        const role = await getUserProjectRole(auth.userId, projectId);
-        if (!role) {
-             return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    const { getUserProjectRole } = await import("@/lib/permissions");
+    const role = await getUserProjectRole(auth.userId, projectId);
+    if (!role) {
+      return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
+    }
+    if (role === 'viewer') {
+      isViewer = true;
+      
+      // Check for active JIT access requests
+      const activeRequests = await prisma.accessRequest.findMany({
+        where: {
+          userId: auth.userId,
+          projectId: projectId,
+          status: "approved",
+          expiresAt: { gt: new Date() }
         }
-        if (role === 'viewer') {
-            isViewer = true;
-            
-            // Check for active JIT access requests
-            const activeRequests = await prisma.accessRequest.findMany({
-                where: {
-                    userId: auth.userId,
-                    projectId: projectId,
-                    status: "approved",
-                    expiresAt: { gt: new Date() }
-                }
-            });
-            
-            for (const req of activeRequests) {
-                if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length > 0) {
-                    req.secretIds.forEach((id: string) => allowedSecretIds.add(id));
-                } else if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length === 0) {
-                    // Empty secretIds means full project/branch JIT access
-                    isViewer = false;
-                    break;
-                }
-            }
+      });
+      
+      for (const req of activeRequests) {
+        if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length > 0) {
+          req.secretIds.forEach((id: string) => allowedSecretIds.add(id));
+        } else if (req.secretIds && Array.isArray(req.secretIds) && req.secretIds.length === 0) {
+          // Empty secretIds means full project/branch JIT access
+          isViewer = false;
+          break;
         }
+      }
     }
 
     const branches = await prisma.branch.findMany({
-      where: projectId ? { projectId } : undefined,
+      where: { projectId },
       include: {
         project: true,
         secrets: true
@@ -198,6 +200,20 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    const { validateBranchName, validateDescription } = await import("@/lib/validators");
+    const nameCheck = validateBranchName(name);
+    if (!nameCheck.valid) {
+      return NextResponse.json({ error: nameCheck.error }, { status: 400 });
+    }
+
+    const descCheck = validateDescription(description, 500);
+    if (!descCheck.valid) {
+      return NextResponse.json({ error: descCheck.error }, { status: 400 });
+    }
+
+    const cleanBranchName = nameCheck.cleanName!;
+    const cleanDescription = descCheck.cleanDesc || "";
+
     // RBAC: Check Project Permissions
     const { getUserProjectRole } = await import("@/lib/permissions");
     const role = await getUserProjectRole(auth.userId, projectId);
@@ -229,7 +245,7 @@ export async function POST(request: NextRequest) {
     // Check if branch with same name exists in project
     const existingBranch = await prisma.branch.findFirst({
       where: {
-        name,
+        name: cleanBranchName,
         projectId
       }
     });
@@ -243,12 +259,12 @@ export async function POST(request: NextRequest) {
 
     const branch = await prisma.branch.create({
       data: {
-        name,
-        description: description || "",
+        name: cleanBranchName,
+        description: cleanDescription,
         createdBy: auth.userId,
         projectId,
-        versionNo,
-        permissions
+        versionNo: versionNo || "1",
+        permissions: permissions || []
       },
       include: {
         project: true
@@ -260,7 +276,7 @@ export async function POST(request: NextRequest) {
         "BRANCH_CREATED",
         auth.userId,
         projectId,
-        { branchId: branch.id, branchName: name },
+        { branchId: branch.id, branchName: cleanBranchName },
         projectRecord?.workspaceId
       );
     } catch (e) {

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import { logAudit } from "@/lib/audit";
 import { validateApiKey, hashApiKey } from "@/lib/auth/service-account";
 // import { sign } from "jsonwebtoken"; // If separate JWT needed, but for now we might simple return a session token or basic mimic
@@ -9,7 +9,7 @@ const SECRET_KEY = process.env.NEXTAUTH_SECRET;
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, apiKey } = await req.json();
+    const { email, password, apiKey, totpCode, backupCode } = await req.json();
 
     if (apiKey) {
       // Clean up the key first
@@ -146,6 +146,46 @@ export async function POST(req: NextRequest) {
       const valid = await bcrypt.compare(password, user.password);
       if (!valid) {
         return NextResponse.json({ error: "Invalid credentials" }, { status: 401 });
+      }
+
+      // Enforce MFA verification if enabled
+      if (user.mfaEnabled) {
+        if (!totpCode && !backupCode) {
+          return NextResponse.json({ 
+            error: "MFA_REQUIRED", 
+            message: "Two-factor authentication is enabled on this account. Please provide 'totpCode' or 'backupCode'." 
+          }, { status: 403 });
+        }
+
+        let mfaValid = false;
+
+        if (backupCode && Array.isArray(user.mfaBackupCodes)) {
+          const { verifyBackupCode } = await import("@/lib/mfa");
+          const index = verifyBackupCode(backupCode, user.mfaBackupCodes);
+          if (index !== -1) {
+            const updatedCodes = [...user.mfaBackupCodes];
+            updatedCodes.splice(index, 1);
+            await prisma.user.update({
+              where: { id: user.id },
+              data: { mfaBackupCodes: updatedCodes }
+            });
+            mfaValid = true;
+          }
+        } else if (totpCode && user.mfaSecret) {
+          try {
+            const { decrypt } = await import("@/lib/encription");
+            const { verifyTotp } = await import("@/lib/mfa");
+            const encryptedSecret = JSON.parse(user.mfaSecret);
+            const rawSecret = decrypt(encryptedSecret);
+            mfaValid = await verifyTotp(totpCode, rawSecret);
+          } catch (e) {
+            console.error("MFA verification error:", e);
+          }
+        }
+
+        if (!mfaValid) {
+          return NextResponse.json({ error: "Invalid two-factor authentication code" }, { status: 401 });
+        }
       }
 
       // Issue true JWT instead of base64 placeholder
