@@ -14,6 +14,7 @@ import * as path from 'path';
 import * as os from 'os';
 
 import { XtraSentinel, ThreatAssessment } from './sentinel';
+import { XtraDynamicSecrets, DynamicSecretOptions, DynamicSecretCredential } from './dynamic';
 
 export type EnvironmentType = 'development' | 'staging' | 'production';
 
@@ -68,6 +69,7 @@ export class XtraClient {
     public branches: BranchesApi;
     public notifications: NotificationsApi;
     public sentinel: XtraSentinel;
+    public dynamicSecrets: XtraDynamicSecrets = new XtraDynamicSecrets();
 
     private defaultProjectId?: string;
     private cacheTtl: number;
@@ -419,5 +421,12 @@ export class XtraClient {
 
     public clearCache(): void {
         this.cache.clear();
+    }
+
+    /**
+     * Generates a temporary, self-destructing dynamic database credential (Feature 3).
+     */
+    public createDynamicSecret(options: DynamicSecretOptions): DynamicSecretCredential {
+        return this.dynamicSecrets.createDynamicSecret(options);
     }
 }
