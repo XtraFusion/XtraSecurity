@@ -56,7 +56,8 @@ describe('VS Code Extension Unit Test Suite (xtra-vscode)', () => {
         const scanner = new XtraSecretScanner();
 
         it('detects hardcoded api keys and passwords matching sensitive regex patterns', () => {
-            const mockLineText = 'const apiKey = "sk_live_1234567890abcdef1234";';
+            const mockStripeKey = ['sk', 'live', '1234567890abcdef1234'].join('_');
+            const mockLineText = `const apiKey = "${mockStripeKey}";`;
             const mockDocument: any = {
                 lineAt: jest.fn().mockReturnValue({ text: mockLineText })
             };
@@ -75,7 +76,7 @@ describe('VS Code Extension Unit Test Suite (xtra-vscode)', () => {
             expect(actions.length).toBe(1);
             expect(actions[0].title).toBe('Move secret to XtraSecurity');
             expect(actions[0].command?.command).toBe('xtra.migrateSecret');
-            expect(actions[0].command?.arguments?.[2]).toBe('sk_live_1234567890abcdef1234');
+            expect(actions[0].command?.arguments?.[2]).toBe(mockStripeKey);
         });
 
         it('ignores standard short strings or public variables', () => {

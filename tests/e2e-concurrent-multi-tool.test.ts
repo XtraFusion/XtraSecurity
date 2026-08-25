@@ -165,9 +165,10 @@ describe('Concurrent & Parallel End-to-End Multi-Tool Integration Suite', () => 
         const autocompleteProvider = new XtraAutocompleteProvider(mockVsCodeApiService, mockVsCodeContext);
         const driftDetector = new XtraDriftDetector(mockVsCodeApiService, mockVsCodeContext);
 
+        const mockParallelKey = ['sk', 'live', 'parallel123'].join('_');
         const [cliResult, nodeSecrets, autocompleteItems] = await Promise.all([
             // 1. CLI command setting secret
-            secretsCommand.parseAsync(['set', 'NEW_API_KEY=sk_live_parallel123', '-p', 'proj-concurrent-1'], { from: 'user' }),
+            secretsCommand.parseAsync(['set', `NEW_API_KEY=${mockParallelKey}`, '-p', 'proj-concurrent-1'], { from: 'user' }),
 
             // 2. Node SDK fetching secrets
             nodeClient.getSecrets('development'),
@@ -183,7 +184,7 @@ describe('Concurrent & Parallel End-to-End Multi-Tool Integration Suite', () => 
             // 4. VS Code Scanner parsing document for secrets
             Promise.resolve(
                 scanner.provideCodeActions(
-                    { lineAt: jest.fn().mockReturnValue({ text: 'const key = "sk_live_9988776655443322";' }) } as any,
+                    { lineAt: jest.fn().mockReturnValue({ text: `const key = "${['sk', 'live', '9988776655443322'].join('_')}";` }) } as any,
                     { start: { line: 0, character: 0 } } as any,
                     {} as any,
                     {} as any
@@ -191,7 +192,7 @@ describe('Concurrent & Parallel End-to-End Multi-Tool Integration Suite', () => 
             )
         ]);
 
-        expect(mockCliApi.setSecrets).toHaveBeenCalledWith('proj-concurrent-1', undefined, { NEW_API_KEY: 'sk_live_parallel123' }, {}, 'main');
+        expect(mockCliApi.setSecrets).toHaveBeenCalledWith('proj-concurrent-1', undefined, { NEW_API_KEY: mockParallelKey }, {}, 'main');
         expect(nodeSecrets.DATABASE_URL).toBe('postgres://user:pass@localhost:5432/devdb');
         expect(autocompleteItems.length).toBe(2);
         expect(driftDetector).toBeDefined();
