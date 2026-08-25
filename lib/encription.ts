@@ -8,7 +8,16 @@ const getEncryptionKey = () => {
   if (cachedKey && process.env.ENCRYPTION_KEY) {
     return cachedKey;
   }
-  const envKey = process.env.ENCRYPTION_KEY || '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+  const envKey = process.env.ENCRYPTION_KEY;
+  if (!envKey) {
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error('FATAL: ENCRYPTION_KEY environment variable is required in production mode.');
+    }
+    // Development/Test fallback key only
+    const devFallbackKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
+    cachedKey = Buffer.from(devFallbackKey, 'hex');
+    return cachedKey;
+  }
   cachedKey = Buffer.from(envKey, 'hex');
   return cachedKey;
 };

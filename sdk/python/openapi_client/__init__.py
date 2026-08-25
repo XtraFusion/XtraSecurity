@@ -95,4 +95,6 @@ from openapi_client.models.team import Team as Team
 from openapi_client.models.upsert_secrets200_response import UpsertSecrets200Response as UpsertSecrets200Response
 from openapi_client.models.upsert_secrets409_response import UpsertSecrets409Response as UpsertSecrets409Response
 from openapi_client.models.upsert_secrets_request import UpsertSecretsRequest as UpsertSecretsRequest
+from openapi_client.wrapper import XtraClient as XtraClient, XtraError as XtraError
+
 
