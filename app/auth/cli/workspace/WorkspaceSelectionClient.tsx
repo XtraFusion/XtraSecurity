@@ -35,7 +35,8 @@ export default function WorkspaceSelectionClient() {
         try {
             const res = await axios.get("/api/workspace");
             if (res.status === 200) {
-                setWorkspaces(res.data);
+                const rawList = Array.isArray(res.data) ? res.data : (res.data?.workspaces || []);
+                setWorkspaces(rawList);
             }
         } catch (error) {
             console.error("Failed to fetch workspaces", error);

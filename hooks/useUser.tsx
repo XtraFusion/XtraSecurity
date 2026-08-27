@@ -40,7 +40,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const res = await axios.get("/api/workspace");
       if (res.status === 200) {
         // Map to include label/value for UI components
-        const mapped = res.data.map((w: any) => ({
+        const rawList = Array.isArray(res.data) ? res.data : (res.data?.workspaces || []);
+        const mapped = rawList.map((w: any) => ({
           ...w,
           label: w.name,
           value: w.id,

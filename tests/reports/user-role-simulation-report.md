@@ -1,6 +1,6 @@
 # Comprehensive User Role Simulation & RBAC Security Audit Report
 
-**Generated**: 2026-08-25T07:37:54.079Z
+**Generated**: 2026-08-26T05:18:20.252Z
 
 ## Executive Summary
 
@@ -13,30 +13,30 @@
 
 | ID | Scenario | Actor Role | Method | Endpoint | Expected | Received | Security Verdict | Passed |
 | :--- | :--- | :--- | :---: | :--- | :---: | :---: | :--- | :---: |
-| `op_tlqby2a` | Owner lists organizations/workspaces | **Owner** | `GET` | `/api/workspace` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_z5t0dma` | Admin invites contractor with viewer role | **Admin** | `POST` | `/api/team/invite` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_tiek9eo` | Contractor accepts team invitation | **Contractor** | `POST` | `/api/team/invite/accept` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_oujk3mi` | Admin promotes contractor role to developer | **Admin** | `PUT` | `/api/team/role` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_wvajcxu` | Owner removes contractor from team | **Owner** | `DELETE` | `/api/team/remove` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_w3y0fb3` | Admin tests IP allowlist lifecycle (Add & Remove) | **Admin** | `POST/DELETE` | `/api/project/6a8d4651b108999412b1f0b6/ip` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_im4s25c` | Developer completes full branch lifecycle (Create, List, Delete) | **Developer** | `POST/GET/DELETE` | `/api/branch` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_k73z0wi` | Developer creates development secret | **Developer** | `POST` | `/api/secret` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_ii0bmpj` | Developer creates time-limited secret share link | **Developer** | `POST` | `/api/secret/share` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_fm1k8d0` | Developer updates secret (v1 -> v2) and rolls back to v1 content | **Developer** | `POST` | `/api/secret/rollback` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_jvs6r8t` | Owner generates time-limited JIT invitation link | **Owner** | `POST` | `/api/jit/generate` | `200/201` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_6ca8g9e` | Contractor claims JIT link (AccessRequest generated) | **Contractor** | `POST` | `/api/jit/claim` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_ripgtmr` | Owner creates machine service account | **Owner** | `POST` | `/api/projects/6a8d4651b108999412b1f0b6/service-accounts` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_up5f9rt` | Owner generates API key for service account | **Owner** | `POST` | `/api/projects/6a8d4651b108999412b1f0b6/service-accounts/6a8d4651b108999412b1f0d7/keys` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_e79bti8` | Owner registers security webhook | **Owner** | `POST` | `/api/projects/6a8d4651b108999412b1f0b6/webhooks` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_mpsv10s` | Owner configures 30-day automatic rotation schedule | **Owner** | `POST` | `/api/rotation/schedules` | `200/201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_xdlc8et` | User updates profile display name | **Developer** | `PATCH` | `/api/user/settings` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_eki8x4v` | Owner checks subscription quota usage | **Owner** | `GET` | `/api/subscription/usage` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_kvih4rb` | Owner queries audit trail (Zero Credential Leakage Check) | **Owner** | `GET` | `/api/audit?workspaceId=6a8d4651b108999412b1f0b0` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_ucilsh9` | Owner generates SOC 2 posture report | **Owner** | `GET` | `/api/compliance/report?workspaceId=6a8d4651b108999412b1f0b0` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_da9hsro` | Owner lists organizations/workspaces | **Owner** | `GET` | `/api/workspace` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_lq0j74o` | Admin invites contractor with viewer role | **Admin** | `POST` | `/api/team/invite` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_bsfiifa` | Contractor accepts team invitation | **Contractor** | `POST` | `/api/team/invite/accept` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_z6e7yrq` | Admin promotes contractor role to developer | **Admin** | `PUT` | `/api/team/role` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_nn2bfcp` | Owner removes contractor from team | **Owner** | `DELETE` | `/api/team/remove` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_mtlic8x` | Admin tests IP allowlist lifecycle (Add & Remove) | **Admin** | `POST/DELETE` | `/api/project/6a8e7719843b253560203c5a/ip` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_qotztji` | Developer completes full branch lifecycle (Create, List, Delete) | **Developer** | `POST/GET/DELETE` | `/api/branch` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_4kz779s` | Developer creates development secret | **Developer** | `POST` | `/api/secret` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_prejn96` | Developer creates time-limited secret share link | **Developer** | `POST` | `/api/secret/share` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_idgti2e` | Developer updates secret (v1 -> v2) and rolls back to v1 content | **Developer** | `POST` | `/api/secret/rollback` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_0dkuhpp` | Owner generates time-limited JIT invitation link | **Owner** | `POST` | `/api/jit/generate` | `200/201` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_ds39iy6` | Contractor claims JIT link (AccessRequest generated) | **Contractor** | `POST` | `/api/jit/claim` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_d02ln6f` | Owner creates machine service account | **Owner** | `POST` | `/api/projects/6a8e7719843b253560203c5a/service-accounts` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_h554jq8` | Owner generates API key for service account | **Owner** | `POST` | `/api/projects/6a8e7719843b253560203c5a/service-accounts/6a8e771b843b253560203c7b/keys` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_atp5wzq` | Owner registers security webhook | **Owner** | `POST` | `/api/projects/6a8e7719843b253560203c5a/webhooks` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_1l9ukey` | Owner configures 30-day automatic rotation schedule | **Owner** | `POST` | `/api/rotation/schedules` | `200/201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_oi0iuj8` | User updates profile display name | **Developer** | `PATCH` | `/api/user/settings` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_te52t0a` | Owner checks subscription quota usage | **Owner** | `GET` | `/api/subscription/usage` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_bkv66hh` | Owner queries audit trail (Zero Credential Leakage Check) | **Owner** | `GET` | `/api/audit?workspaceId=6a8e7719843b253560203c54` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_dlqh1df` | Owner generates SOC 2 posture report | **Owner** | `GET` | `/api/compliance/report?workspaceId=6a8e7719843b253560203c54` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
 
 ## Detailed Operation Records
 
-### [PASS] Owner lists organizations/workspaces (`op_tlqby2a`)
+### [PASS] Owner lists organizations/workspaces (`op_da9hsro`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
 - **Request**: `GET /api/workspace`
 - **Status**: `200` (Expected: `200`)
@@ -48,7 +48,7 @@
 }
 ```
 
-### [PASS] Admin invites contractor with viewer role (`op_z5t0dma`)
+### [PASS] Admin invites contractor with viewer role (`op_lq0j74o`)
 - **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
 - **Request**: `POST /api/team/invite`
 - **Status**: `200` (Expected: `200`)
@@ -65,19 +65,19 @@
 {
   "message": "Invitation sent",
   "invite": {
-    "id": "6a8d4651b108999412b1f0bd",
-    "teamId": "6a8d4651b108999412b1f0b1",
-    "userId": "6a8d4650b108999412b1f0ad",
+    "id": "6a8e7719843b253560203c61",
+    "teamId": "6a8e7719843b253560203c55",
+    "userId": "6a8e77182e06bba47f5bd9f6",
     "role": "viewer",
     "status": "pending",
-    "joinedAt": "2026-08-25T07:37:53.325Z",
-    "invitedBy": "6a8d4650b108999412b1f0a9"
+    "joinedAt": "2026-08-26T05:18:17.776Z",
+    "invitedBy": "6a8e7717843b253560203c4e"
   },
-  "inviteToken": "q2a5hbz55o"
+  "inviteToken": "9au33vuyab"
 }
 ```
 
-### [PASS] Contractor accepts team invitation (`op_tiek9eo`)
+### [PASS] Contractor accepts team invitation (`op_bsfiifa`)
 - **Actor**: `contractor@external-vendor.test` (**Role**: `Contractor`)
 - **Request**: `POST /api/team/invite/accept`
 - **Status**: `200` (Expected: `200`)
@@ -87,18 +87,18 @@
 {
   "message": "Invitation accepted",
   "acceptInvite": {
-    "id": "6a8d4651b108999412b1f0bd",
-    "teamId": "6a8d4651b108999412b1f0b1",
-    "userId": "6a8d4650b108999412b1f0ad",
+    "id": "6a8e7719843b253560203c61",
+    "teamId": "6a8e7719843b253560203c55",
+    "userId": "6a8e77182e06bba47f5bd9f6",
     "role": "viewer",
     "status": "active",
-    "joinedAt": "2026-08-25T07:37:53.325Z",
-    "invitedBy": "6a8d4650b108999412b1f0a9"
+    "joinedAt": "2026-08-26T05:18:17.776Z",
+    "invitedBy": "6a8e7717843b253560203c4e"
   }
 }
 ```
 
-### [PASS] Admin promotes contractor role to developer (`op_oujk3mi`)
+### [PASS] Admin promotes contractor role to developer (`op_z6e7yrq`)
 - **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
 - **Request**: `PUT /api/team/role`
 - **Status**: `200` (Expected: `200`)
@@ -106,7 +106,7 @@
 - **Request Payload**:
 ```json
 {
-  "memberId": "6a8d4651b108999412b1f0bd",
+  "memberId": "6a8e7719843b253560203c61",
   "newRole": "developer"
 }
 ```
@@ -117,7 +117,7 @@
 }
 ```
 
-### [PASS] Owner removes contractor from team (`op_wvajcxu`)
+### [PASS] Owner removes contractor from team (`op_nn2bfcp`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
 - **Request**: `DELETE /api/team/remove`
 - **Status**: `200` (Expected: `200`)
@@ -129,9 +129,9 @@
 }
 ```
 
-### [PASS] Admin tests IP allowlist lifecycle (Add & Remove) (`op_w3y0fb3`)
+### [PASS] Admin tests IP allowlist lifecycle (Add & Remove) (`op_mtlic8x`)
 - **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
-- **Request**: `POST/DELETE /api/project/6a8d4651b108999412b1f0b6/ip`
+- **Request**: `POST/DELETE /api/project/6a8e7719843b253560203c5a/ip`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
@@ -141,7 +141,7 @@
 }
 ```
 
-### [PASS] Developer completes full branch lifecycle (Create, List, Delete) (`op_im4s25c`)
+### [PASS] Developer completes full branch lifecycle (Create, List, Delete) (`op_qotztji`)
 - **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
 - **Request**: `POST/GET/DELETE /api/branch`
 - **Status**: `200` (Expected: `200`)
@@ -154,7 +154,7 @@
 }
 ```
 
-### [PASS] Developer creates development secret (`op_k73z0wi`)
+### [PASS] Developer creates development secret (`op_4kz779s`)
 - **Actor**: `dev.junior@xtrasecurity.test` (**Role**: `Developer`)
 - **Request**: `POST /api/secret`
 - **Status**: `201` (Expected: `201`)
@@ -168,7 +168,7 @@
 }
 ```
 
-### [PASS] Developer creates time-limited secret share link (`op_ii0bmpj`)
+### [PASS] Developer creates time-limited secret share link (`op_prejn96`)
 - **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
 - **Request**: `POST /api/secret/share`
 - **Status**: `201` (Expected: `201`)
@@ -176,12 +176,12 @@
 - **Response Summary**:
 ```json
 {
-  "shareUrl": "http://localhost:3000/share/da4a7c5f176206e4756cfa2687c01a75119572e1db2226aa8439b20d48b7813b",
-  "token": "da4a7c5f176206e4756cfa2687c01a75119572e1db2226aa8439b20d48b7813b"
+  "shareUrl": "http://localhost:3000/share/a901f9695ca3192068f03f722b6f06e4c5db9fcb943bf58d370ed7d00792e3f9",
+  "token": "a901f9695ca3192068f03f722b6f06e4c5db9fcb943bf58d370ed7d00792e3f9"
 }
 ```
 
-### [PASS] Developer updates secret (v1 -> v2) and rolls back to v1 content (`op_fm1k8d0`)
+### [PASS] Developer updates secret (v1 -> v2) and rolls back to v1 content (`op_idgti2e`)
 - **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
 - **Request**: `POST /api/secret/rollback`
 - **Status**: `200` (Expected: `200`)
@@ -195,7 +195,7 @@
 }
 ```
 
-### [PASS] Owner generates time-limited JIT invitation link (`op_jvs6r8t`)
+### [PASS] Owner generates time-limited JIT invitation link (`op_0dkuhpp`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
 - **Request**: `POST /api/jit/generate`
 - **Status**: `200` (Expected: `200/201`)
@@ -203,12 +203,12 @@
 - **Response Summary**:
 ```json
 {
-  "token": "9be1873c96bedf3033f494d4e6bd32fa156370e375f6b164",
-  "url": "http://localhost:3000/jit/9be1873c96bedf3033f494d4e6bd32fa156370e375f6b164"
+  "token": "714262d2b19bf654d3fc60d6658ee49952f97da11324bfb3",
+  "url": "http://localhost:3000/jit/714262d2b19bf654d3fc60d6658ee49952f97da11324bfb3"
 }
 ```
 
-### [PASS] Contractor claims JIT link (AccessRequest generated) (`op_6ca8g9e`)
+### [PASS] Contractor claims JIT link (AccessRequest generated) (`op_ds39iy6`)
 - **Actor**: `contractor@external-vendor.test` (**Role**: `Contractor`)
 - **Request**: `POST /api/jit/claim`
 - **Status**: `200` (Expected: `200`)
@@ -217,7 +217,7 @@
 ```json
 {
   "success": true,
-  "requestId": "6a8d4651b108999412b1f0d4",
+  "requestId": "6a8e771b843b253560203c78",
   "status": "pending",
   "message": "Access request submitted. Awaiting admin/owner approval.",
   "duration": 45,
@@ -225,35 +225,35 @@
 }
 ```
 
-### [PASS] Owner creates machine service account (`op_ripgtmr`)
+### [PASS] Owner creates machine service account (`op_d02ln6f`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a8d4651b108999412b1f0b6/service-accounts`
+- **Request**: `POST /api/projects/6a8e7719843b253560203c5a/service-accounts`
 - **Status**: `201` (Expected: `201`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
 ```json
 {
-  "saId": "6a8d4651b108999412b1f0d7",
+  "saId": "6a8e771b843b253560203c7b",
   "name": "Terraform Infrastructure Automation"
 }
 ```
 
-### [PASS] Owner generates API key for service account (`op_up5f9rt`)
+### [PASS] Owner generates API key for service account (`op_h554jq8`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a8d4651b108999412b1f0b6/service-accounts/6a8d4651b108999412b1f0d7/keys`
+- **Request**: `POST /api/projects/6a8e7719843b253560203c5a/service-accounts/6a8e771b843b253560203c7b/keys`
 - **Status**: `201` (Expected: `201`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
 ```json
 {
-  "keyMask": "xtra_...0f7b",
+  "keyMask": "xtra_...4a4b",
   "label": "Production Key 2026"
 }
 ```
 
-### [PASS] Owner registers security webhook (`op_e79bti8`)
+### [PASS] Owner registers security webhook (`op_atp5wzq`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a8d4651b108999412b1f0b6/webhooks`
+- **Request**: `POST /api/projects/6a8e7719843b253560203c5a/webhooks`
 - **Status**: `201` (Expected: `201`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
@@ -268,7 +268,7 @@
 }
 ```
 
-### [PASS] Owner configures 30-day automatic rotation schedule (`op_mpsv10s`)
+### [PASS] Owner configures 30-day automatic rotation schedule (`op_1l9ukey`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
 - **Request**: `POST /api/rotation/schedules`
 - **Status**: `201` (Expected: `200/201`)
@@ -276,23 +276,23 @@
 - **Response Summary**:
 ```json
 {
-  "id": "6a8d4651b108999412b1f0dd",
-  "secretId": "6a8d4651b108999412b1f0bb",
+  "id": "6a8e771b843b253560203c81",
+  "secretId": "6a8e7719843b253560203c5f",
   "secretKey": "STRIPE_PAYMENT_GATEWAY_KEY",
-  "projectId": "6a8d4651b108999412b1f0b6",
+  "projectId": "6a8e7719843b253560203c5a",
   "projectName": "Core Financial Transactions Service",
   "branch": "main",
   "frequency": "monthly",
   "customDays": null,
   "enabled": true,
-  "nextRotation": "2026-09-24T07:37:53.982Z",
+  "nextRotation": "2026-09-25T05:18:19.944Z",
   "rotationMethod": "shadow",
   "webhookUrl": null,
-  "createdAt": "2026-08-25T07:37:53.984Z"
+  "createdAt": "2026-08-26T05:18:19.947Z"
 }
 ```
 
-### [PASS] User updates profile display name (`op_xdlc8et`)
+### [PASS] User updates profile display name (`op_oi0iuj8`)
 - **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
 - **Request**: `PATCH /api/user/settings`
 - **Status**: `200` (Expected: `200`)
@@ -302,15 +302,15 @@
 {
   "success": true,
   "user": {
-    "id": "6a8d4650b108999412b1f0aa",
+    "id": "6a8e7717843b253560203c4f",
     "name": "Senior Lead Engineer",
     "email": "dev.senior@xtrasecurity.test",
     "emailVerified": null,
     "image": null,
-    "createdAt": "2026-08-25T07:37:52.708Z",
-    "updatedAt": "2026-08-25T07:37:54.009Z",
+    "createdAt": "2026-08-26T05:18:15.953Z",
+    "updatedAt": "2026-08-26T05:18:19.982Z",
     "role": "developer",
-    "password": "$2b$10$UGyFZ9t9I3j8gW1gFX53ZuHo4r3wWKwdFa4EFednGy7NSXc54E66e",
+    "password": "$2b$10$jxjsI.81yTlc4mOqTaaQ/OV/7OMyFBn4Kk0dW57K3MeyxCE9imFee",
     "emailOtp": null,
     "emailOtpExpiry": null,
     "mfaEnabled": false,
@@ -324,7 +324,7 @@
 }
 ```
 
-### [PASS] Owner checks subscription quota usage (`op_eki8x4v`)
+### [PASS] Owner checks subscription quota usage (`op_te52t0a`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
 - **Request**: `GET /api/subscription/usage`
 - **Status**: `200` (Expected: `200`)
@@ -351,24 +351,24 @@
 }
 ```
 
-### [PASS] Owner queries audit trail (Zero Credential Leakage Check) (`op_kvih4rb`)
+### [PASS] Owner queries audit trail (Zero Credential Leakage Check) (`op_bkv66hh`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/audit?workspaceId=6a8d4651b108999412b1f0b0`
+- **Request**: `GET /api/audit?workspaceId=6a8e7719843b253560203c54`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Notes**: Audit log verified tamper-evident and clean of credential leakage
 - **Response Summary**:
 ```json
 {
-  "totalAuditEntries": 11,
+  "totalAuditEntries": 10,
   "hasPasswordLeaks": false,
   "hasMfaSecretLeaks": false
 }
 ```
 
-### [PASS] Owner generates SOC 2 posture report (`op_ucilsh9`)
+### [PASS] Owner generates SOC 2 posture report (`op_dlqh1df`)
 - **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/compliance/report?workspaceId=6a8d4651b108999412b1f0b0`
+- **Request**: `GET /api/compliance/report?workspaceId=6a8e7719843b253560203c54`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
@@ -380,7 +380,7 @@
     "totalSecrets": 3,
     "overdueRotations": 0,
     "prodAccessEntries": 0,
-    "totalAuditEntries": 11
+    "totalAuditEntries": 10
   }
 }
 ```

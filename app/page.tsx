@@ -388,40 +388,23 @@ function SectionHeader({
   sub?: string;
   icon?: string;
 }) {
-  const ref = useRef(null);
-  const inView = useInView(ref, { once: true, margin: "-80px" });
-
   return (
-    <motion.div
-      ref={ref}
-      initial="hidden"
-      animate={inView ? "show" : "hidden"}
-      variants={fadeUpStagger}
-      className="text-center mb-16"
-    >
-      <motion.div variants={fadeUp} className="flex items-center justify-center gap-3 mb-4">
+    <div className="text-center mb-16">
+      <div className="flex items-center justify-center gap-3 mb-4">
         {icon && <div className="text-cyan-400 flex items-center justify-center">{getIcon(icon, 24)}</div>}
         <SectionLabel>{label}</SectionLabel>
-      </motion.div>
-      <motion.h2
-        variants={fadeUp}
-        className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4 leading-[1.1] max-w-2xl mx-auto"
-      >
+      </div>
+      <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4 leading-[1.1] max-w-2xl mx-auto">
         {title}
-      </motion.h2>
+      </h2>
       {sub && (
-        <motion.p
-          variants={fadeUp}
-          className="text-slate-400 text-lg leading-relaxed max-w-xl mx-auto"
-        >
+        <p className="text-slate-400 text-lg leading-relaxed max-w-xl mx-auto">
           {sub}
-        </motion.p>
+        </p>
       )}
-    </motion.div>
+    </div>
   );
 }
-
-// ─────────────────────────────────────────────
 // NAVBAR
 // ─────────────────────────────────────────────
 
@@ -451,10 +434,7 @@ function Navbar() {
   };
 
   return (
-    <motion.nav
-      initial={{ y: -20 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.3 }}
+    <nav
       className={`fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-6 transition-all duration-300 ${scrolled
         ? "bg-[#0a0f1e]/90 backdrop-blur-xl border-b border-white/[0.06] shadow-2xl"
         : "bg-transparent"
@@ -502,8 +482,8 @@ function Navbar() {
             </button>
           </div>
         ) : (
-          <Link href="/login" className="hidden md:flex px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all no-underline"
-            style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)" }}>
+          <Link href="/login" className="hidden md:flex px-4 py-2 rounded-lg text-sm font-bold text-[#002022] transition-all no-underline hover:brightness-110"
+            style={{ background: "linear-gradient(135deg, #00f2ff, #0284c7)", boxShadow: "0 0 20px rgba(0,242,255,0.4)" }}>
             Get started →
           </Link>
         )}
@@ -558,7 +538,7 @@ function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
-    </motion.nav>
+    </nav>
   );
 }
 
@@ -567,27 +547,8 @@ function Navbar() {
 // ─────────────────────────────────────────────
 
 function Terminal() {
-  const container = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        delayChildren: 0.8,
-        staggerChildren: 0.38,
-      },
-    },
-  };
-
-  const item = {
-    hidden: { opacity: 0, x: -8 },
-    show: { opacity: 1, x: 0, transition: { duration: 0.3 } },
-  };
-
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: 0.8, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+    <div
       className="w-full max-w-2xl mx-auto mt-16 rounded-2xl overflow-hidden border border-white/[0.08]"
       style={{ boxShadow: "0 40px 80px -20px rgba(0,0,0,0.8), 0 0 0 1px rgba(255,255,255,0.04)" }}
     >
@@ -599,17 +560,9 @@ function Terminal() {
         <span className="flex-1 text-center text-xs text-slate-500 font-mono">xtra — terminal</span>
       </div>
       {/* Body */}
-      <motion.div 
-        variants={container}
-        initial="hidden"
-        animate="show"
-        className="bg-[#0d1117] p-6 min-h-[200px] font-mono text-sm leading-8"
-      >
+      <div className="bg-[#0d1117] p-6 min-h-[200px] font-mono text-sm leading-8">
         {TERMINAL_LINES.map((line, i) => (
-          <motion.div
-            key={i}
-            variants={item}
-          >
+          <div key={i}>
             {line.type === "cmd" ? (
               <div className="flex gap-3">
                 <span className="text-cyan-400">$</span>
@@ -627,19 +580,14 @@ function Terminal() {
                 {line.text}
               </div>
             )}
-          </motion.div>
+          </div>
         ))}
-        <motion.div 
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.8 + TERMINAL_LINES.length * 0.38 }}
-          className="flex items-center gap-3 mt-1"
-        >
+        <div className="flex items-center gap-3 mt-1">
           <span className="text-slate-600 font-mono text-sm">$</span>
           <span className="inline-block w-2 h-4 bg-cyan-400 animate-pulse" />
-        </motion.div>
-      </motion.div>
-    </motion.div>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -660,25 +608,15 @@ function HeroSection() {
       />
 
       {/* Badge */}
-      <motion.div
-        initial={{ y: 12 }}
-        animate={{ y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur text-xs font-semibold text-slate-400 mb-8"
-      >
+      <div className="relative z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full border border-white/10 bg-white/[0.04] backdrop-blur text-xs font-semibold text-slate-400 mb-8">
         <span className="w-5 h-5 rounded-full flex items-center justify-center text-[10px]"
           style={{ background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(45 100% 45%))" }}>✦</span>
         Best Free Environment Manager & .env Security Tool
-      </motion.div>
+      </div>
 
       {/* H1 */}
-      <motion.h1
-        initial={{ y: 16 }}
-        animate={{ y: 0 }}
-        transition={{ delay: 0.05, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-        className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8"
-      >
-        <span className="text-white">Best Free Env Manager</span>
+      <h1 className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8">
+        <span className="text-white">Stop Committing Secrets</span>
         <br />
         <span style={{
           background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
@@ -686,36 +624,26 @@ function HeroSection() {
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          Built for .env Security.
+          The vault your team actually uses.
         </span>
-      </motion.h1>
+      </h1>
 
       {/* Sub */}
-      <motion.p
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2, duration: 0.6 }}
-        className="relative z-10 text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed font-medium"
-      >
+      <p className="relative z-10 text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed font-medium">
         Manage your environment variables and .env files securely. 
         Collaborate with your team using an encrypted vault designed for modern engineering.
-      </motion.p>
+      </p>
 
       {/* CTAs */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.6 }}
-        className="relative z-10 flex flex-wrap items-center justify-center gap-3 mb-10"
-      >
+      <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 mb-10">
         <motion.a
           href="/login"
           whileHover={{ scale: 1.03, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white no-underline"
+          className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-[#002022] no-underline hover:brightness-110"
           style={{
-            background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 38%), hsl(45 100% 45%))",
-            boxShadow: "0 4px 24px rgba(37,99,235,0.4), 0 0 0 1px rgba(255,255,255,0.08)",
+            background: "linear-gradient(135deg, #00f2ff, #0284c7)",
+            boxShadow: "0 0 30px rgba(0,242,255,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
           }}
         >
           Start for free
@@ -728,15 +656,10 @@ function HeroSection() {
         >
           Log into workspace →
         </motion.a>
-      </motion.div>
+      </div>
 
       {/* Trust */}
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.5, duration: 0.6 }}
-        className="relative z-10 flex flex-wrap items-center justify-center gap-5 mb-0"
-      >
+      <div className="relative z-10 flex flex-wrap items-center justify-center gap-5 mb-0">
         {[
           "✓ No credit card required",
           "✓ Free plan forever",
@@ -748,7 +671,7 @@ function HeroSection() {
             {t}
           </div>
         ))}
-      </motion.div>
+      </div>
 
       <Terminal />
     </section>
@@ -787,8 +710,8 @@ function StatsSection() {
             transition={{ delay: 0.2, duration: 0.6 }}
             className="text-center px-4"
           >
-            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">50+</div>
-            <div className="text-xs text-slate-400">Platform integrations</div>
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">&lt;50ms</div>
+            <div className="text-xs text-slate-400">Secret fetch latency</div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -796,8 +719,8 @@ function StatsSection() {
             transition={{ delay: 0.3, duration: 0.6 }}
             className="text-center px-4"
           >
-            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">2 min</div>
-            <div className="text-xs text-slate-400">Setup time</div>
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">99.99%</div>
+            <div className="text-xs text-slate-400">Uptime SLA maintained</div>
           </motion.div>
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -805,8 +728,8 @@ function StatsSection() {
             transition={{ delay: 0.4, duration: 0.6 }}
             className="text-center px-4"
           >
-            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">100%</div>
-            <div className="text-xs text-slate-400">Audit trail coverage</div>
+            <div className="text-2xl md:text-3xl font-black text-white mb-1.5">0</div>
+            <div className="text-xs text-slate-400">Confirmed breaches</div>
           </motion.div>
         </div>
       </div>
@@ -824,7 +747,7 @@ function FeaturesSection() {
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-20">
           <h2 className="text-4xl md:text-5xl font-medium text-white mb-6 tracking-tight">
-            Best environment variable manager for developers
+            Everything your team needs. Nothing you don&apos;t.
           </h2>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
             Built for how modern teams actually work. Where humans, pipelines, and AI agents all need secrets to operate.
@@ -1114,18 +1037,15 @@ function SecurityFortress() {
                     viewport={{ once: true, margin: "-50px" }}
                     transition={{ delay: i * 0.15 }}
                     key={f.title} 
-                    className={`group relative p-8 rounded-3xl bg-white/[0.02] border border-white/[0.05] hover:bg-white/[0.04] transition-all duration-500 shadow-2xl flex flex-col items-center text-center hover:-translate-y-2 w-full sm:w-[280px] h-[320px] ${translateY}`}
+                    className={`group relative p-8 rounded-2xl bg-[#0d1322] border border-white/10 hover:border-white/20 transition-all duration-300 shadow-lg flex flex-col items-center text-center hover:-translate-y-1 w-full sm:w-[280px] h-[320px] ${translateY}`}
                   >
-                    {/* Glowing Squircle Icon Container */}
-                    <div className="mb-8 mt-4 relative">
-                      {/* Diffuse colored glow behind icon */}
-                      <div className={`absolute inset-0 ${glowColor} blur-2xl rounded-full scale-[2] group-hover:scale-[2.5] transition-all duration-500 pointer-events-none`} />
-                      
-                      <div className="w-20 h-20 rounded-[1.25rem] bg-white border border-white/20 flex items-center justify-center relative z-10 shadow-[0_15px_35px_rgba(0,0,0,0.3)]">
+                    {/* Icon Container */}
+                    <div className="mb-6 mt-2 relative">
+                      <div className="w-16 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative z-10">
                         <img 
                           src={iconUrl} 
                           alt={f.title} 
-                          className="w-12 h-12 object-contain group-hover:scale-110 transition-transform duration-500"
+                          className="w-10 h-10 object-contain group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>
                     </div>
@@ -1220,13 +1140,13 @@ function PricingSection() {
                 transition={{ duration: 0.25 }}
                 className="relative rounded-2xl border overflow-hidden h-full flex flex-col"
                 style={plan.featured ? {
-                  background: "#0d1017",
-                  borderColor: "rgba(196,160,32,0.55)",
-                  boxShadow: "0 0 0 1px rgba(196,160,32,0.15), 0 24px 48px -12px rgba(0,0,0,0.6)",
+                  background: "#0d1322",
+                  borderColor: "rgba(245,200,66,0.4)",
+                  boxShadow: "0 10px 30px -10px rgba(0,0,0,0.5)",
                 } : {
-                  background: "rgba(255,255,255,0.025)",
-                  borderColor: "rgba(255,255,255,0.07)",
-                  boxShadow: "0 8px 24px -8px rgba(0,0,0,0.3)",
+                  background: "#0d1322",
+                  borderColor: "rgba(255,255,255,0.1)",
+                  boxShadow: "0 10px 30px -10px rgba(0,0,0,0.3)",
                 }}
               >
                 {/* Gold top line for featured */}
@@ -1294,12 +1214,11 @@ function PricingSection() {
                     style={plan.featured ? {
                       background: "linear-gradient(90deg, #b8860b, #f5c842, #d4a017)",
                       color: "#0d0b00",
-                      boxShadow: "0 4px 20px rgba(196,160,32,0.3)",
                       letterSpacing: "0.02em",
                     } : {
                       background: "rgba(255,255,255,0.05)",
                       color: "#94a3b8",
-                      border: "1px solid rgba(255,255,255,0.08)",
+                      border: "1px solid rgba(255,255,255,0.1)",
                     }}
                   >
                     {plan.cta}
@@ -1659,9 +1578,9 @@ function Footer() {
             <span className="text-white">Xtra<span className="text-cyan-400">Security</span></span>
           </Link>
           <nav className="flex flex-wrap gap-1">
-            {[...NAV_LINKS, { label: "Docs", href: "#" }].map((l) => (
+            {NAV_LINKS.map((l) => (
               <button
-                key={l.label}
+                key={l.href}
                 onClick={() => handleNav(l.href)}
                 className="px-3 py-2 text-sm text-slate-500 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none font-[inherit]"
               >
@@ -1686,6 +1605,332 @@ function Footer() {
         </div>
       </div>
     </footer>
+  );
+}
+
+// ─────────────────────────────────────────────
+// LIVE DEMO WIDGET
+// ─────────────────────────────────────────────
+
+function LiveDemoWidget() {
+  const [activeEnv, setActiveEnv] = useState<"development" | "staging" | "production">("production");
+
+  const envData = {
+    development: {
+      cmd: "xtra run --env development -- npm run dev",
+      vault: "Vault-dev (Local Sandbox)",
+      keys: 8,
+      latency: "18ms",
+      status: "Verified local process injection",
+    },
+    staging: {
+      cmd: "xtra run --env staging -- npm run build",
+      vault: "Vault-staging (AWS us-east-1)",
+      keys: 12,
+      latency: "31ms",
+      status: "Synced across 4 worker nodes",
+    },
+    production: {
+      cmd: "xtra run --env production -- npm start",
+      vault: "Vault-prod (Global Edge HSM)",
+      keys: 16,
+      latency: "42ms",
+      status: "Zero-knowledge hardware lock active",
+    },
+  };
+
+  const current = envData[activeEnv];
+
+  return (
+    <section className="relative z-10 py-12 px-6 bg-[#0a0f1e]">
+      <div className="max-w-4xl mx-auto rounded-3xl border border-white/10 bg-[#0d1322] p-8 shadow-xl relative overflow-hidden">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-cyan-400 mb-1">
+              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+              Interactive CLI Simulator
+            </div>
+            <h3 className="text-xl font-bold text-white tracking-tight">Try Secret Injection In Action</h3>
+          </div>
+
+          {/* Environment Selector Tabs */}
+          <div className="flex gap-1.5 p-1 rounded-xl bg-[#080d1a] border border-white/10">
+            {(["development", "staging", "production"] as const).map((env) => (
+              <button
+                key={env}
+                onClick={() => setActiveEnv(env)}
+                className={`px-3.5 py-1.5 rounded-lg text-xs font-bold capitalize transition-all cursor-pointer border-none font-[inherit] ${
+                  activeEnv === env
+                    ? "bg-cyan-500 text-black"
+                    : "text-slate-400 hover:text-white bg-transparent"
+                }`}
+              >
+                {env}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Console Box */}
+        <div className="rounded-2xl bg-[#080d1a] border border-white/10 p-6 font-mono text-sm mb-6">
+          <div className="flex items-center gap-2 text-xs text-slate-400 mb-4 pb-3 border-b border-white/5">
+            <span className="text-cyan-400">$</span>
+            <span className="text-white font-bold">{current.cmd}</span>
+          </div>
+
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeEnv}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.2 }}
+              className="space-y-2 text-xs md:text-sm"
+            >
+              <div className="text-slate-400">
+                [info] Connecting to <span className="text-cyan-300 font-semibold">{current.vault}</span>...
+              </div>
+              <div className="text-emerald-400 flex items-center gap-2 font-medium">
+                <span>✓</span> {current.keys} secrets fetched in <span className="text-white font-bold">{current.latency}</span>
+              </div>
+              <div className="text-emerald-400 flex items-center gap-2 font-medium">
+                <span>✓</span> 0 plaintext leaks detected · {current.status}
+              </div>
+              <div className="text-cyan-400 font-mono text-xs pt-1">
+                → Injected into process memory (RAM). Zero disk footprint.
+              </div>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Bottom Metrics & CTA */}
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
+          <div className="flex items-center gap-6 text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-emerald-400" />
+              <span>Secrets Injected: <strong className="text-white">{current.keys}</strong></span>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-cyan-400" />
+              <span>Leaks Detected: <strong className="text-white">0</strong></span>
+            </div>
+          </div>
+
+          <Link
+            href="/login"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline"
+          >
+            Try it free →
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
+// TESTIMONIALS SECTION
+// ─────────────────────────────────────────────
+
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      quote: "We replaced our entire .env workflow in one afternoon. The audit trail alone saved us during our SOC 2 audit.",
+      name: "Arjun Mehta",
+      role: "CTO @ FinStack",
+      initials: "AM",
+      gradient: "from-cyan-500 to-blue-600",
+    },
+    {
+      quote: "Shadow rotation is a game-changer. Zero downtime secret swaps — I wish we had this 2 years ago.",
+      name: "Sarah Lin",
+      role: "DevOps Lead @ Scalr",
+      initials: "SL",
+      gradient: "from-indigo-500 to-purple-600",
+    },
+    {
+      quote: "The free plan has more features than what we were paying $49/mo for at Doppler. We switched immediately.",
+      name: "Rohan Patel",
+      role: "Founder @ Buildify",
+      initials: "RP",
+      gradient: "from-amber-500 to-orange-600",
+    },
+  ];
+
+  return (
+    <section className="py-24 px-6 bg-[#0a0f1e] relative">
+      <div className="max-w-[1200px] mx-auto">
+        <SectionHeader
+          label="Loved by Engineering Leaders"
+          title="Loved by teams who take security seriously"
+          sub="See why fast-growing companies trust XtraSecurity to manage their environment secrets."
+        />
+
+        <motion.div
+          initial="hidden"
+          whileInView="show"
+          viewport={{ once: true, margin: "-60px" }}
+          variants={fadeUpStagger}
+          className="grid grid-cols-1 md:grid-cols-3 gap-6"
+        >
+          {testimonials.map((t) => (
+            <motion.div
+              key={t.name}
+              variants={fadeUp}
+              whileHover={{ y: -4 }}
+              className="flex flex-col justify-between p-8 rounded-2xl border border-white/10 bg-[#0d1322] hover:border-white/20 transition-all shadow-lg"
+            >
+              <div className="mb-6">
+                <div className="flex items-center gap-1 text-amber-400 text-sm mb-4">
+                  {"★★★★★".split("").map((star, idx) => (
+                    <span key={idx}>{star}</span>
+                  ))}
+                </div>
+                <p className="text-slate-300 text-base leading-relaxed italic">
+                  &ldquo;{t.quote}&rdquo;
+                </p>
+              </div>
+
+              <div className="flex items-center gap-3 pt-4 border-t border-white/[0.06]">
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${t.gradient} flex items-center justify-center font-bold text-xs text-white`}>
+                  {t.initials}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-white leading-tight">{t.name}</h4>
+                  <p className="text-xs font-semibold text-cyan-400">{t.role}</p>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+// ─────────────────────────────────────────────
+// USE CASES SECTION
+// ─────────────────────────────────────────────
+
+function UseCaseSection() {
+  const [activeTab, setActiveTab] = useState<"startups" | "devops" | "enterprise">("startups");
+
+  const useCases = {
+    startups: {
+      title: "Move Fast Without Leaking Credentials",
+      subtitle: "Stop sending secrets over Slack or checking .env files into git repositories.",
+      bullets: [
+        "Zero-config CLI setup in under 2 minutes",
+        "Free tier with unlimited local secret management",
+        "Instant team onboarding with role-based access",
+        "Automatic leak prevention before git commits",
+      ],
+      cta: "Get started for free →",
+      href: "/login",
+      badge: "For Startups & Builders",
+    },
+    devops: {
+      title: "Automate Infrastructure & CI/CD Pipelines",
+      subtitle: "Inject secrets directly into process RAM without storing plaintext on disk.",
+      bullets: [
+        "In-memory injection with zero disk footprint",
+        "GitHub Actions, Vercel, and Docker integrations",
+        "Automated background secret rotation (Shadow Mode)",
+        "Real-time drift detection and health monitoring",
+      ],
+      cta: "Explore CLI & SDK Docs →",
+      href: "/docs",
+      badge: "For DevOps & Platform Engineers",
+    },
+    enterprise: {
+      title: "Total Governance, Compliance & Self-Hosting",
+      subtitle: "Meet SOC 2 Type II and ISO 27001 requirements with complete audit trails.",
+      bullets: [
+        "Just-In-Time (JIT) access approval workflows",
+        "On-premise self-hosting in your own AWS/Azure VPC",
+        "Tamper-proof SHA-256 chained audit logs",
+        "IP allowlisting and SSO / SAML enforcement",
+      ],
+      cta: "Book an Enterprise Demo →",
+      href: "/book-demo",
+      badge: "For Security Leaders & Enterprise",
+    },
+  };
+
+  const current = useCases[activeTab];
+
+  return (
+    <section className="py-28 px-6 bg-[#0a0f1e] relative border-t border-b border-white/[0.04]">
+      <div className="max-w-[1200px] mx-auto">
+        <SectionHeader
+          label="Tailored Solutions"
+          title="Built for every stage of your stack"
+          sub="Whether you're a 2-person startup or a regulated enterprise, XtraSecurity fits your workflow."
+        />
+
+        {/* Selector Tabs */}
+        <div className="flex justify-center mb-12">
+          <div className="flex gap-2 p-1.5 rounded-2xl bg-[#080d1a] border border-white/10">
+            {(["startups", "devops", "enterprise"] as const).map((tabKey) => (
+              <button
+                key={tabKey}
+                onClick={() => setActiveTab(tabKey)}
+                className={`px-6 py-3 rounded-xl text-sm font-bold capitalize transition-all cursor-pointer border-none font-[inherit] ${
+                  activeTab === tabKey
+                    ? "bg-cyan-500 text-black"
+                    : "text-slate-400 hover:text-white bg-transparent"
+                }`}
+              >
+                {tabKey === "devops" ? "DevOps Teams" : tabKey}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Active Tab Panel */}
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeTab}
+            initial={{ opacity: 0, y: 16 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -16 }}
+            transition={{ duration: 0.3 }}
+            className="rounded-3xl border border-white/10 bg-[#0d1322] p-8 md:p-12 shadow-xl grid grid-cols-1 md:grid-cols-2 gap-8 items-center"
+          >
+            <div>
+              <span className="inline-block text-xs font-bold uppercase tracking-wider text-cyan-400 px-3 py-1 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-4">
+                {current.badge}
+              </span>
+              <h3 className="text-2xl md:text-3xl font-black text-white mb-4 tracking-tight">
+                {current.title}
+              </h3>
+              <p className="text-slate-400 text-base leading-relaxed mb-8">
+                {current.subtitle}
+              </p>
+              <Link
+                href={current.href}
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline"
+              >
+                {current.cta}
+              </Link>
+            </div>
+
+            <div className="space-y-4 bg-[#080d1a] p-6 md:p-8 rounded-2xl border border-white/10">
+              {current.bullets.map((bullet, idx) => (
+                <div key={idx} className="flex items-start gap-3">
+                  <div className="w-5 h-5 rounded-full bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 flex items-center justify-center text-xs flex-shrink-0 mt-0.5">
+                    ✓
+                  </div>
+                  <span className="text-sm font-medium text-slate-200 leading-relaxed">
+                    {bullet}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </AnimatePresence>
+      </div>
+    </section>
   );
 }
 
@@ -1722,8 +1967,11 @@ export default function Page() {
 
       <Navbar />
       <HeroSection />
+      <LiveDemoWidget />
       <StatsSection />
+      <TestimonialsSection />
       <FeaturesSection />
+      <UseCaseSection />
       <HowItWorksSection />
       <SecurityFortress />
 
