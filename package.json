@@ -9,6 +9,7 @@
     "start": "next start",
     "test": "jest",
     "test:watch": "jest --watch",
+    "test:e2e": "playwright test",
     "generate:sdk:node": "openapi-generator-cli generate -i ./app/api/openapi.json -g typescript-axios -o ./sdk/node --skip-validate-spec",
     "generate:sdk:python": "openapi-generator-cli generate -i ./app/api/openapi.json -g python -o ./sdk/python --skip-validate-spec",
     "generate:sdk:go": "openapi-generator-cli generate -i ./app/api/openapi.json -g go -o ./sdk/go --skip-validate-spec",
@@ -83,9 +84,9 @@
     "qrcode": "^1.5.4",
     "rate-limiter-flexible": "^9.1.1",
     "razorpay": "^2.9.6",
-    "react": "^19",
+    "react": "19.0.0",
     "react-day-picker": "9.8.0",
-    "react-dom": "^19",
+    "react-dom": "19.0.0",
     "react-hook-form": "^7.60.0",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^2.1.7",
@@ -100,6 +101,7 @@
   },
   "devDependencies": {
     "@openapitools/openapi-generator-cli": "^2.16.1",
+    "@playwright/test": "^1.62.1",
     "@tailwindcss/postcss": "^4.1.9",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^7.0.1",
@@ -124,6 +126,8 @@
     "typescript": "^5"
   },
   "overrides": {
+    "react": "19.0.0",
+    "react-dom": "19.0.0",
     "tar": ">=7.5.21",
     "uuid": ">=11.1.1"
   },
