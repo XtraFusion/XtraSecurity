@@ -102,7 +102,7 @@ export const POST = withSecurity(async (request, context, session) => {
 
         return {
             ...newSecret,
-            value: "[encrypted]",
+            value: secretInput.value,
             history: undefined,
         };
     });

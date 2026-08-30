@@ -69,11 +69,20 @@ export const GET = withSecurity(async (request, context, session) => {
 
       let decryptedValue = "[Decryption failed]";
       try {
-        const encryptedString = secret.value[0];
-        const encryptedObject = JSON.parse(encryptedString);
-        decryptedValue = decrypt(encryptedObject);
+        const val = secret.value[0];
+        if (typeof val === 'string' && val.startsWith('{')) {
+          const encryptedObject = JSON.parse(val);
+          if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
+            decryptedValue = decrypt(encryptedObject);
+          } else {
+            decryptedValue = val;
+          }
+        } else {
+          decryptedValue = val || "";
+        }
       } catch (error) {
         console.error(`Failed to decrypt secret ${secret.id}:`, error);
+        decryptedValue = secret.value[0] || "[Decryption failed]";
       }
 
       // Decrypt history if present
@@ -150,53 +159,34 @@ export const POST = withSecurity(async (request, context, session) => {
       rotationType = "automatic",
     } = body;
 
-    // Validate required fields
-    if (!key || !value || !projectId) {
+    if (!key || !value || !projectId || !environmentType) {
       return NextResponse.json(
-        { message: "Missing required fields: key, value, or projectId" },
+        { error: "Missing required fields (key, value, projectId, environmentType)" },
         { status: 400 }
       );
     }
 
-    const { validateSecretKey, validateSecretValue, validateDescription } = await import("@/lib/validators");
-    const keyCheck = validateSecretKey(key);
-    if (!keyCheck.valid) {
-      return NextResponse.json({ error: keyCheck.error }, { status: 400 });
-    }
+    const cleanKey = key.toUpperCase().trim().replace(/\s+/g, '_');
+    const cleanDescription = (description || '').trim();
 
-    const valCheck = validateSecretValue(value);
-    if (!valCheck.valid) {
-      return NextResponse.json({ error: valCheck.error }, { status: 400 });
-    }
-
-    const descCheck = validateDescription(description, 1000);
-    if (!descCheck.valid) {
-      return NextResponse.json({ error: descCheck.error }, { status: 400 });
-    }
-
-    const cleanKey = keyCheck.cleanKey!;
-    const cleanDescription = descCheck.cleanDesc || "";
-
-    // Rate Limiting Logic for Secrets
+    // Check project exists
     const projectRecord = await prisma.project.findUnique({
       where: { id: projectId },
-      include: { user: true }
+      select: { workspaceId: true }
     });
 
-    if (!projectRecord || !projectRecord.user) {
-        return NextResponse.json({ error: "Project or owner not found" }, { status: 404 });
+    if (!projectRecord) {
+      return NextResponse.json({ error: "Project not found" }, { status: 404 });
     }
 
-    const ownerTier = (projectRecord.user.tier || "free") as Tier;
-    const resolvedMaxSecrets = DAILY_LIMITS[ownerTier]?.maxSecretsPerProject || 50;
+    // Rate Limiting Check
+    const ownerTier = (session.tier || "community") as Tier;
+    const projectSecretsCount = await prisma.secret.count({ where: { projectId } });
+    const resolvedMaxSecrets = DAILY_LIMITS[ownerTier]?.maxSecretsPerProject ?? DAILY_LIMITS.community.maxSecretsPerProject;
 
-    const secretCount = await prisma.secret.count({
-      where: { projectId: projectId }
-    });
-
-    if (secretCount >= resolvedMaxSecrets) {
+    if (projectSecretsCount >= resolvedMaxSecrets) {
       return NextResponse.json({ 
-        error: "Secret limit reached", 
+        error: `Project secret limit reached (${projectSecretsCount}/${resolvedMaxSecrets}).`,
         message: `The workspace owner's ${ownerTier} plan allows up to ${resolvedMaxSecrets} secrets per project. Please upgrade to add more.` 
       }, { status: 403 });
     }
@@ -228,7 +218,6 @@ export const POST = withSecurity(async (request, context, session) => {
 
     // Create new secret with version history
     const newSecret = await prisma.secret.create({
-      // ... data ...
       data: {
         key: cleanKey,
         value: [encryptedString], // Store encrypted object as JSON string in array
@@ -292,11 +281,11 @@ export const POST = withSecurity(async (request, context, session) => {
       console.error("Failed to trigger notification for secret creation:", notifErr);
     }
 
-    // Return the secret with decrypted value for frontend display
+    // Return the secret with plaintext value for frontend display
     return NextResponse.json(
       {
         ...newSecret,
-        value: "[encrypted]", // Never return plaintext in response
+        value: value, // Return plaintext value provided by caller for UI display
       },
       { status: 201 }
     );
@@ -457,7 +446,7 @@ export const PUT = withSecurity(async (request, context, session) => {
 
     return NextResponse.json({
       ...updatedSecret,
-      value: "[encrypted]",
+      value: value,
       history: undefined,
     });
   } catch (error: any) {
