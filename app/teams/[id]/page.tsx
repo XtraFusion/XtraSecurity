@@ -410,31 +410,31 @@ const TeamDetailPage = () => {
                           Invite Member
                         </Button>
                       </DialogTrigger>
-                      <DialogContent className="bg-zinc-950 border border-zinc-800 text-zinc-100 rounded-2xl">
+                      <DialogContent className="bg-popover dark:bg-zinc-950 border border-border dark:border-zinc-800 text-popover-foreground dark:text-zinc-100 rounded-2xl">
                         <DialogHeader>
                           <DialogTitle>Invite to Team</DialogTitle>
-                          <DialogDescription className="text-zinc-400">Add a new member and assign their initial role.</DialogDescription>
+                          <DialogDescription className="text-muted-foreground dark:text-zinc-400">Add a new member and assign their initial role.</DialogDescription>
                         </DialogHeader>
                         <div className="space-y-4 py-4">
                           <div className="space-y-2">
-                              <Label className="text-zinc-300">Email Address</Label>
+                              <Label className="text-foreground/90 dark:text-zinc-300">Email Address</Label>
                               <Input 
                                   placeholder="user@example.com"
                                   value={inviteForm.email}
                                   onChange={e => setInviteForm({...inviteForm, email: e.target.value})}
-                                  className="bg-zinc-900 border-zinc-800 focus-visible:ring-blue-500"
+                                  className="bg-background dark:bg-zinc-900 border-input dark:border-zinc-800 focus-visible:ring-blue-500 text-foreground"
                               />
                           </div>
                           <div className="space-y-2">
-                                  <Label className="text-zinc-300">Team Role</Label>
+                                  <Label className="text-foreground/90 dark:text-zinc-300">Team Role</Label>
                                   <Select 
                                       value={inviteForm.role} 
                                       onValueChange={(val: any) => setInviteForm({...inviteForm, role: val})}
                                   >
-                                      <SelectTrigger className="bg-zinc-900 border-zinc-800">
+                                      <SelectTrigger className="bg-background dark:bg-zinc-900 border-input dark:border-zinc-800">
                                           <SelectValue />
                                       </SelectTrigger>
-                                      <SelectContent className="bg-zinc-950 border-zinc-800 text-zinc-100">
+                                      <SelectContent className="bg-popover dark:bg-zinc-950 border-border dark:border-zinc-800 text-popover-foreground dark:text-zinc-100">
                                           <SelectItem value="viewer">Viewer</SelectItem>
                                           <SelectItem value="developer">Developer</SelectItem>
                                           <SelectItem value="admin">Admin</SelectItem>
@@ -443,7 +443,7 @@ const TeamDetailPage = () => {
                           </div>
                         </div>
                         <DialogFooter>
-                          <Button variant="outline" onClick={() => setInviteDialogOpen(false)} className="border-zinc-800 hover:bg-zinc-900 hover:text-white">Cancel</Button>
+                          <Button variant="outline" onClick={() => setInviteDialogOpen(false)} className="border-border dark:border-zinc-800 hover:bg-muted dark:hover:bg-zinc-900">Cancel</Button>
                           <Button onClick={handleInviteMember} disabled={isInviting} className="bg-blue-600 hover:bg-blue-700 text-white">
                               {isInviting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Send Invitation
                           </Button>
@@ -551,10 +551,10 @@ const TeamDetailPage = () => {
                                                         </Button>
                                                          {activeDropdown === member.id && (
                                                              <div 
-                                                               className="fixed w-48 rounded-md border border-zinc-800 bg-zinc-950 text-zinc-100 shadow-xl z-[9999] overflow-hidden text-left p-1.5 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
+                                                               className="fixed w-48 rounded-md border border-border dark:border-zinc-800 bg-popover dark:bg-zinc-950 text-popover-foreground dark:text-zinc-100 shadow-xl z-[9999] overflow-hidden text-left p-1.5 animate-in fade-in zoom-in duration-100 custom-dropdown-container"
                                                                style={{ top: dropdownPos.top, right: dropdownPos.right }}
                                                              >
-                                                                 <div className="px-2 py-1.5 text-xs font-semibold text-zinc-500">Manage Role</div>
+                                                                 <div className="px-2 py-1.5 text-xs font-semibold text-muted-foreground">Manage Role</div>
                                                                  <div className="space-y-0.5">
                                                                      {['admin', 'developer', 'viewer'].map(role => (
                                                                          <button 
@@ -563,7 +563,7 @@ const TeamDetailPage = () => {
                                                                                  "w-full text-left px-2 py-1.5 text-xs rounded transition-all capitalize font-medium cursor-pointer flex items-center justify-between", 
                                                                                  member.role === role 
                                                                                      ? "bg-blue-600/20 text-blue-400 font-semibold" 
-                                                                                     : "text-zinc-300 hover:bg-zinc-800 hover:text-white"
+                                                                                     : "text-foreground/80 dark:text-zinc-300 hover:bg-muted dark:hover:bg-zinc-800 hover:text-foreground dark:hover:text-white"
                                                                              )}
                                                                              disabled={member.role === role}
                                                                              onClick={() => { setConfirmDialog({ open: true, type: 'role-change', member, newRole: role as any }); setActiveDropdown(null); }}
@@ -575,7 +575,7 @@ const TeamDetailPage = () => {
                                                                          </button>
                                                                      ))}
                                                                  </div>
-                                                                 <div className="h-px bg-zinc-800 my-1.5" />
+                                                                 <div className="h-px bg-border dark:bg-zinc-800 my-1.5" />
                                                                  <button 
                                                                      className="w-full text-left px-2 py-1.5 text-xs rounded transition-colors text-red-400 hover:bg-red-950/30 hover:text-red-300 font-medium flex items-center gap-1.5 cursor-pointer"
                                                                      onClick={() => { setConfirmDialog({ open: true, type: 'remove', member }); setActiveDropdown(null); }}

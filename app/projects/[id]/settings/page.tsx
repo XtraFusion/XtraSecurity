@@ -815,27 +815,28 @@ export default function ProjectSettings() {
                   </p>
                 </>
               ) : (
-                <div className="space-y-4 p-4 bg-orange-50 rounded-lg border border-orange-200">
-                  <div className="flex items-center gap-2 text-orange-800">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="font-medium">Confirm Project Data Clearance</span>
+                <div className="space-y-4 p-4 bg-amber-500/10 dark:bg-amber-950/30 rounded-lg border border-amber-200 dark:border-amber-900/50">
+                  <div className="flex items-center gap-2 text-amber-800 dark:text-amber-400">
+                    <AlertTriangle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+                    <span className="font-medium text-amber-900 dark:text-amber-300">Confirm Project Data Clearance</span>
                   </div>
 
-                  <p className="text-sm text-orange-700">
+                  <p className="text-sm text-amber-700 dark:text-amber-300/90">
                     Type "{project?.name}" to confirm clearing all branch and secret data:
                   </p>
 
                   <Input
                     value={clearConfirmText}
                     onChange={(e) => setClearConfirmText(e.target.value)}
-                    className="border-orange-300 bg-white"
+                    placeholder={project?.name}
+                    className="border-amber-300 dark:border-amber-800 bg-white dark:bg-background/80 text-foreground placeholder:text-muted-foreground focus-visible:ring-amber-500"
                     disabled={isLoading.clearProject}
                   />
 
                   <div className="flex gap-2">
                     <Button
                       variant="outline"
-                      className="border-orange-600 text-orange-600 hover:bg-orange-100 cursor-pointer"
+                      className="border-amber-600 text-amber-600 dark:text-amber-400 hover:bg-amber-500/10 dark:hover:bg-amber-950/50 cursor-pointer"
                       onClick={handleClearProject}
                       disabled={isLoading.clearProject || clearConfirmText !== project?.name}
                     >
@@ -849,7 +850,7 @@ export default function ProjectSettings() {
                         setClearConfirmText('');
                       }}
                       disabled={isLoading.clearProject}
-                      className="cursor-pointer hover:bg-orange-100 hover:text-orange-900"
+                      className="cursor-pointer hover:bg-amber-500/10 text-muted-foreground hover:text-foreground"
                     >
                       Cancel
                     </Button>
@@ -861,9 +862,9 @@ export default function ProjectSettings() {
         </TabsContent>
 
         <TabsContent value="danger">
-          <Card>
+          <Card className="border-red-500/20 dark:border-red-900/40">
             <CardHeader>
-              <CardTitle className="text-red-600">Danger Zone</CardTitle>
+              <CardTitle className="text-red-600 dark:text-red-400">Danger Zone</CardTitle>
               <CardDescription>Irreversible actions that affect your project</CardDescription>
             </CardHeader>
             <CardContent>
@@ -876,20 +877,21 @@ export default function ProjectSettings() {
                   Delete Project
                 </Button>
               ) : (
-                <div className="space-y-4 p-4 bg-red-50 rounded-lg border border-red-200">
-                  <div className="flex items-center gap-2 text-red-800">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span className="font-medium">Confirm Project Deletion</span>
+                <div className="space-y-4 p-4 bg-red-500/10 dark:bg-red-950/30 rounded-lg border border-red-200 dark:border-red-900/50">
+                  <div className="flex items-center gap-2 text-red-800 dark:text-red-400">
+                    <AlertTriangle className="w-4 h-4 text-red-600 dark:text-red-400" />
+                    <span className="font-medium text-red-900 dark:text-red-300">Confirm Project Deletion</span>
                   </div>
 
-                  <p className="text-sm text-red-700">
+                  <p className="text-sm text-red-700 dark:text-red-300/90">
                     Type "{project?.name}" to confirm deletion:
                   </p>
 
                   <Input
                     value={deleteConfirmText}
                     onChange={(e) => setDeleteConfirmText(e.target.value)}
-                    className="border-red-300"
+                    placeholder={project?.name}
+                    className="border-red-300 dark:border-red-800 bg-white dark:bg-background/80 text-foreground placeholder:text-muted-foreground focus-visible:ring-red-500"
                     disabled={isLoading.deleteProject}
                   />
 
@@ -909,6 +911,7 @@ export default function ProjectSettings() {
                         setDeleteConfirmText('');
                       }}
                       disabled={isLoading.deleteProject}
+                      className="hover:bg-muted"
                     >
                       Cancel
                     </Button>
