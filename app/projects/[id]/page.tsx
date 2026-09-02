@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
+import { encryptSecretValue, deriveProjectKey } from "@/lib/crypto/e2ee";
 import {
   Search,
   Plus,
@@ -629,12 +630,10 @@ const VaultManager: React.FC = () => {
       setNotification({ type: "destructive", message: "Secret value is required" });
       return;
     }
-    if (!selectedBranch) {
-      setNotification({ type: "destructive", message: "Please select a branch first" });
-      return;
-    }
 
-    // Prepare secret data WITHOUT id - let Prisma auto-generate it
+    const targetBranchId = selectedBranch?.id || (branches.length > 0 ? branches[0].id : null);
+
+    // Prepare secret data for v1 fallback
     const secretData = {
       key: newSecret.key,
       value: newSecret.value,
@@ -644,17 +643,51 @@ const VaultManager: React.FC = () => {
       rotationPolicy: newSecret.rotationPolicy,
       rotationType: newSecret.rotationType,
       projectId: projectId as string,
-      branchId: selectedBranch.id,
+      branchId: targetBranchId,
       permission: [],
       expiryDate: newSecret.expiryDate || undefined,
     };
 
     setIsSavingSecret(true);
     try {
-      const response = await axios.post("/api/secret", secretData);
-      const createdSecret = response.data;
+      let createdSecret: any = null;
 
-      // Add the created secret (with proper ID from DB) to local state
+      try {
+        // Zero-Knowledge Client-Side Encryption (E2EE) in Browser
+        const projectKey = deriveProjectKey(projectId as string);
+        const encrypted = encryptSecretValue(newSecret.value, projectKey);
+
+        const v2Payload = {
+          key: newSecret.key,
+          ciphertext: encrypted.ciphertext,
+          iv: encrypted.iv,
+          authTag: encrypted.authTag,
+          description: newSecret.description,
+          environmentType: newSecret.environmentType,
+          projectId: projectId as string,
+          branchId: targetBranchId,
+        };
+
+        const response = await axios.post("/api/v2/secret", v2Payload);
+        createdSecret = {
+          id: response.data.id || Date.now().toString(),
+          key: newSecret.key,
+          value: newSecret.value,
+          description: newSecret.description,
+          environmentType: newSecret.environmentType,
+          type: newSecret.type || "API Key",
+          projectId: projectId as string,
+          branchId: targetBranchId,
+          version: "1",
+          updatedAt: new Date().toISOString()
+        };
+      } catch (v2Error) {
+        // Fallback to v1 endpoint if v2 endpoint is unreachable or error occurs
+        const v1Response = await axios.post("/api/secret", secretData);
+        createdSecret = v1Response.data;
+      }
+
+      // Add the created secret to local state
       setSecrets((prev) => [createdSecret, ...prev]);
       setIsAddSecretOpen(false);
       setNewSecret({
