@@ -1,83 +1,83 @@
 {
-  "projectId": "699db06cd575ad0235efd6be",
+  "projectId": "6a93f70d8189782a2e800643",
   "environment": "development",
-  "lastSyncedAt": "2026-08-27T04:19:49.746Z",
+  "lastSyncedAt": "2026-08-31T06:05:51.841Z",
   "secrets": {
     "GOOGLE_CLIENT_SECRET": {
       "hash": "067f88de5c4f895035bf7fc2d42ce59d2d23563c255d40b95c36d9c9ef8b6358",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "REDIS_URL": {
       "hash": "1a45d351210b8ae1e66ee0704b3c0eb0a472f9aad6e024ba233ecc324475ff64",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "RAZORRPAY_SECRET": {
       "hash": "1650279ef4c0ef9eb0f5fa93bdef623a146163bcbbf0b5ec5032c681f402b941",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "GITHUB_CLIENT_ID": {
-      "hash": "587b5455f568774cf82844d8b017d3fbebe8acce499883422bce13d23555ffac",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "hash": "0247aba893f273b1c4c8018f0e5d25794bdebe248e08c54658c237e020c1b3b0",
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "ENCRYPTION_KEY": {
       "hash": "889501f9154fe9869b79242d40c512a5d54580f0794518fe39f65d010d449681",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_USER": {
       "hash": "662e58ddad83ac6a2021ca5e99c5baf4dd5ed35ee93a5e927786d593ebeac916",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_PORT": {
       "hash": "82a93b152b275d4c8de67c3d05c9b00e92477eeb024f117c7632cdb26fd874aa",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_SECURE": {
       "hash": "fcbcf165908dd18a9e49f7ff27810176db8e9f63b4352213741664245224f8aa",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "NEXT_PUBLIC_APP_URL": {
       "hash": "f1de9e489ba88cb15968b97f40f59e8ef0da5ca03ad1f37fc13a2aa45a2512a9",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_HOST": {
       "hash": "baf8948be444889e4c5309caa2da8bb3b3e14e4ebda34e5d87eaf4f5c44d22b2",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_FROM_EMAIL": {
       "hash": "662e58ddad83ac6a2021ca5e99c5baf4dd5ed35ee93a5e927786d593ebeac916",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "SMTP_PASS": {
       "hash": "8cd286b743ffcc8fc3c75754be1b8501b75ca36783a45526e9311fd9a90735b7",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "NEXTAUTH_SECRET": {
       "hash": "28cb3fa3edde71498f2ba90026f1a94c1f13114125a8be4259d09878494e9572",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "NEXTAUTH_URL": {
       "hash": "f1de9e489ba88cb15968b97f40f59e8ef0da5ca03ad1f37fc13a2aa45a2512a9",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "GITHUB_CLIENT_SECRET": {
-      "hash": "891e06a0ca3a9c4ebe2486712910b3b90ccf0a4b4837b9ed32c7bca457da066e",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "hash": "4cf5930576707f3ec68c1ce93c9af8834389d1b076ead674d1d8ab9eb6f12b5d",
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "GOOGLE_CLIENT_ID": {
       "hash": "1e39b972d8eb3381a6b497739c308194ca128df906e2f631436d8b0ba65c2732",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "RAZORRPAY_ID": {
       "hash": "13bcdc1faa5bdf5f00cc42b1aac0ba9de320edf7380a9be3c54c64f9b72ade43",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "DATABASE_URL": {
       "hash": "f897e64124289a342d4347d4033db54e3aa27d727cb34386ae1f36c529914084",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "GEMINI_API_KEY": {
       "hash": "c37ad0d7ae3eb2fd3484eb8d3aba56a9e583903ef6b9c7d82d8063c4226c7746",
-      "updatedAt": "2026-08-27T04:19:49.747Z"
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     },
     "DEMO": {
       "hash": "4ff006ca6b88e752f08cb7881714505ceb3d2079eea432acfda8e158e0d1d82e",
@@ -106,6 +106,18 @@
     "NAME": {
       "hash": "3c436cda3c183dc614e9fa6465d9dd53a415dad6661817d76bad709841f03cba",
       "updatedAt": "2026-08-27T04:19:49.747Z"
+    },
+    "AWS_ID": {
+      "hash": "fd2b5efd0407840e07ffa1fa7564c3d87a4014b54899aa0eb34a96418045541e",
+      "updatedAt": "2026-08-31T06:05:51.842Z"
+    },
+    "GITLAB_SECRET": {
+      "hash": "9e2eecfdb52eeccfcf1ae802de5c27ecc10ff99e37052e339656293673431e8a",
+      "updatedAt": "2026-08-31T06:05:51.842Z"
+    },
+    "TEST": {
+      "hash": "94ee059335e587e501cc4bf90613e0814f00a7b08bc7c648fd865a2af6a22cc2",
+      "updatedAt": "2026-08-31T06:05:51.842Z"
     }
   }
 }
