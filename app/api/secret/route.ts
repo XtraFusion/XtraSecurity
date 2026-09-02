@@ -74,6 +74,10 @@ export const GET = withSecurity(async (request, context, session) => {
           const encryptedObject = JSON.parse(val);
           if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
             decryptedValue = decrypt(encryptedObject);
+          } else if (encryptedObject.ciphertext && encryptedObject.iv) {
+            const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+            const projectKey = deriveProjectKey(secret.projectId);
+            decryptedValue = decryptSecretValue(encryptedObject, projectKey);
           } else {
             decryptedValue = val;
           }

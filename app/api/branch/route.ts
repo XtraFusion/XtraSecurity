@@ -94,11 +94,23 @@ export async function GET(request: NextRequest) {
         let decryptedValue = "";
         try {
           const encryptedString = secret.value[0];
-          const encryptedObject = JSON.parse(encryptedString);
-          decryptedValue = decrypt(encryptedObject);
+          if (typeof encryptedString === 'string' && encryptedString.startsWith('{')) {
+            const encryptedObject = JSON.parse(encryptedString);
+            if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
+              decryptedValue = decrypt(encryptedObject);
+            } else if (encryptedObject.ciphertext && encryptedObject.iv) {
+              const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+              const projectKey = deriveProjectKey(branch.projectId);
+              decryptedValue = decryptSecretValue(encryptedObject, projectKey);
+            } else {
+              decryptedValue = encryptedString;
+            }
+          } else {
+            decryptedValue = encryptedString || "";
+          }
         } catch (error) {
           console.error(`Failed to decrypt secret ${secret.id}:`, error);
-          decryptedValue = "[Decryption failed]";
+          decryptedValue = secret.value[0] || "[Decryption failed]";
         }
 
         // Decrypt history
