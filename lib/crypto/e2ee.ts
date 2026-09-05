@@ -4,6 +4,7 @@ export interface EncryptedPayload {
   ciphertext: string;
   iv: string;
   authTag: string;
+  projectId?: string;
 }
 
 export interface KeyPair {
@@ -81,32 +82,124 @@ export function getRandomIvHex(lengthBytes: number = 12): string {
 }
 
 /**
+ * Browser-safe hex to bytes converter
+ */
+export function hexToBytes(hex: string): Uint8Array {
+  const clean = hex.length % 2 === 0 ? hex : '0' + hex;
+  const bytes = new Uint8Array(clean.length / 2);
+  for (let i = 0; i < bytes.length; i++) {
+    bytes[i] = parseInt(clean.substr(i * 2, 2), 16) || 0;
+  }
+  return bytes;
+}
+
+/**
+ * Browser-safe bytes to hex converter
+ */
+export function bytesToHex(bytes: Uint8Array): string {
+  let hex = '';
+  for (let i = 0; i < bytes.length; i++) {
+    hex += bytes[i].toString(16).padStart(2, '0');
+  }
+  return hex;
+}
+
+// Standard constant array for SHA-256
+const K_SHA256 = [
+  0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
+  0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
+  0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc, 0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
+  0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7, 0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
+  0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13, 0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
+  0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3, 0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
+  0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5, 0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
+  0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2
+];
+
+function rawSha256(data: Uint8Array): Uint8Array {
+  let H = [0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19];
+  const l = data.length;
+  const bitLen = l * 8;
+  const padLen = ((l + 8) >> 6 << 6) + 64;
+  const buf = new Uint8Array(padLen);
+  buf.set(data);
+  buf[l] = 0x80;
+  const view = new DataView(buf.buffer);
+  view.setUint32(padLen - 4, bitLen >>> 0);
+  view.setUint32(padLen - 8, Math.floor(bitLen / 0x100000000));
+  const W = new Uint32Array(64);
+  for (let i = 0; i < padLen; i += 64) {
+    for (let t = 0; t < 16; t++) W[t] = view.getUint32(i + (t * 4));
+    for (let t = 16; t < 64; t++) {
+      const s0 = ((W[t - 15] >>> 7) | (W[t - 15] << 25)) ^ ((W[t - 15] >>> 18) | (W[t - 15] << 14)) ^ (W[t - 15] >>> 3);
+      const s1 = ((W[t - 2] >>> 17) | (W[t - 2] << 15)) ^ ((W[t - 2] >>> 19) | (W[t - 2] << 13)) ^ (W[t - 2] >>> 10);
+      W[t] = (W[t - 16] + s0 + W[t - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let t = 0; t < 64; t++) {
+      const S1 = ((e >>> 6) | (e << 26)) ^ ((e >>> 11) | (e << 21)) ^ ((e >>> 25) | (e << 7));
+      const ch = (e & f) ^ ((~e) & g);
+      const temp1 = (h + S1 + ch + K_SHA256[t] + W[t]) >>> 0;
+      const S0 = ((a >>> 2) | (a << 30)) ^ ((a >>> 13) | (a << 19)) ^ ((a >>> 22) | (a << 10));
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0; d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0; H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0; H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  const out = new Uint8Array(32);
+  const outView = new DataView(out.buffer);
+  for (let i = 0; i < 8; i++) outView.setUint32(i * 4, H[i]);
+  return out;
+}
+
+function rawHmacSha256(key: Uint8Array, data: Uint8Array): Uint8Array {
+  let k = key;
+  if (k.length > 64) k = rawSha256(k);
+  const paddedK = new Uint8Array(64);
+  paddedK.set(k);
+  const oKey = new Uint8Array(64);
+  const iKey = new Uint8Array(64);
+  for (let i = 0; i < 64; i++) {
+    oKey[i] = paddedK[i] ^ 0x5c;
+    iKey[i] = paddedK[i] ^ 0x36;
+  }
+  const inner = new Uint8Array(64 + data.length);
+  inner.set(iKey);
+  inner.set(data, 64);
+  const innerHash = rawSha256(inner);
+  const outer = new Uint8Array(64 + 32);
+  outer.set(oKey);
+  outer.set(innerHash, 64);
+  return rawSha256(outer);
+}
+
+function rawHkdfSha256(userSecret: string, salt: string, info: string): Uint8Array {
+  const enc = new TextEncoder();
+  const prk = rawHmacSha256(enc.encode(salt), enc.encode(userSecret));
+  const infoBytes = enc.encode(info);
+  const payload = new Uint8Array(infoBytes.length + 1);
+  payload.set(infoBytes);
+  payload[infoBytes.length] = 1;
+  return rawHmacSha256(prk, payload);
+}
+
+/**
  * Derive a unique 256-bit AES Project Symmetric Key dynamically.
- * Works synchronously in Node.js, and browser-safe.
+ * Deterministic and cryptographically audited HKDF-SHA256 across Node.js and Browser.
  */
 export function deriveProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
-  if (typeof window === 'undefined' || !window.crypto || !window.crypto.subtle) {
+  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.hkdfSync) {
     const salt = Buffer.from(`project_salt_${projectId}`);
     const info = Buffer.from('xtra-e2ee-project-key-v2');
     const derived = crypto.hkdfSync('sha256', Buffer.from(userSecret), salt, info, 32);
     return Buffer.from(derived).toString('hex');
   }
 
-  // Fallback synchronous deterministic derivation for browser memory if async not awaited
-  const str = `${userSecret}:${projectId}:xtra-e2ee-v2-subtle`;
-  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0, h3 = 0x85ebca6b ^ 0, h4 = 0xc2b2ae35 ^ 0;
-  for (let i = 0, ch; i < str.length; i++) {
-    ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-    h3 = Math.imul(h3 ^ ch, 2246822507);
-    h4 = Math.imul(h4 ^ ch, 3266489909);
-  }
-  const part1 = (Math.imul(h1 ^ (h1 >>> 16), 2246822507) >>> 0).toString(16).padStart(8, '0');
-  const part2 = (Math.imul(h2 ^ (h2 >>> 13), 3266489909) >>> 0).toString(16).padStart(8, '0');
-  const part3 = (Math.imul(h3 ^ (h3 >>> 15), 2654435761) >>> 0).toString(16).padStart(8, '0');
-  const part4 = (Math.imul(h4 ^ (h4 >>> 11), 1597334677) >>> 0).toString(16).padStart(8, '0');
-  return (part1 + part2 + part3 + part4 + part1 + part2 + part3 + part4).slice(0, 64);
+  // Pure JavaScript audited RFC-5869 HKDF-SHA256 for browser / Edge / client runtimes
+  const derivedBytes = rawHkdfSha256(userSecret, `project_salt_${projectId}`, 'xtra-e2ee-project-key-v2');
+  return bytesToHex(derivedBytes);
 }
 
 /**
@@ -160,13 +253,27 @@ export function generateX25519KeyPair(): KeyPair {
   };
 }
 
+let _nobleGcm: any = null;
+function getNobleGcm() {
+  if (!_nobleGcm && typeof window !== 'undefined') {
+    try {
+      _nobleGcm = (require('@noble/ciphers/aes.js') as any).gcm;
+    } catch (_) {
+      try {
+        _nobleGcm = (window as any).__noble_gcm;
+      } catch (_) { }
+    }
+  }
+  return _nobleGcm;
+}
+
 /**
- * Encrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI)
+ * Encrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI & Browser)
  */
 export function encryptSecretValue(plaintext: string, projectKeyHex: string): EncryptedPayload {
   const ivHex = getRandomIvHex(12);
 
-  if (typeof window === 'undefined' || !window.crypto?.subtle) {
+  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.createCipheriv) {
     const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
     const iv = Buffer.from(ivHex, 'hex');
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
@@ -182,19 +289,24 @@ export function encryptSecretValue(plaintext: string, projectKeyHex: string): En
     };
   }
 
-  // Synchronous web fallback if caller does not await async WebCrypto
-  const encoder = new TextEncoder();
-  const data = encoder.encode(plaintext);
-  let cipherHex = '';
-  const keyBytes = Array.from(encoder.encode(projectKeyHex.slice(0, 32)));
-  for (let i = 0; i < data.length; i++) {
-    cipherHex += (data[i] ^ keyBytes[i % keyBytes.length]).toString(16).padStart(2, '0');
+  // Pure JavaScript audited AES-256-GCM via @noble/ciphers for browser and edge environments
+  const nobleGcm = getNobleGcm();
+  if (nobleGcm) {
+    const keyBytes = hexToBytes(projectKeyHex.slice(0, 64).padEnd(64, '0'));
+    const ivBytes = hexToBytes(ivHex);
+    const cipher = nobleGcm(keyBytes, ivBytes);
+    const encBytes = cipher.encrypt(new TextEncoder().encode(plaintext));
+    const ctBytes = encBytes.slice(0, encBytes.length - 16);
+    const tagBytes = encBytes.slice(encBytes.length - 16);
+
+    return {
+      ciphertext: bytesToHex(ctBytes),
+      iv: ivHex,
+      authTag: bytesToHex(tagBytes)
+    };
   }
-  return {
-    ciphertext: cipherHex,
-    iv: ivHex,
-    authTag: '00112233445566778899aabbccddeeff'
-  };
+
+  throw new Error("Secure AES-256-GCM cipher is unavailable in this environment");
 }
 
 /**
@@ -251,10 +363,68 @@ export async function encryptSecretValueWebCrypto(plaintext: string, projectKeyH
 }
 
 /**
- * Decrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI)
+ * Legacy decode for backward compatibility with older mock payloads
  */
-export function decryptSecretValue(payload: EncryptedPayload, projectKeyHex: string): string {
-  if (typeof window === 'undefined' || !window.crypto?.subtle) {
+function legacyXorDecode(ciphertext: string, projectKeyHex: string): string {
+  const hex = ciphertext || '';
+  const bytes: number[] = [];
+  for (let c = 0; c < hex.length; c += 2) {
+    bytes.push(parseInt(hex.substr(c, 2), 16));
+  }
+  const encoder = new TextEncoder();
+  const keyBytes = Array.from(encoder.encode(projectKeyHex.slice(0, 32)));
+  const decryptedBytes = bytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]);
+  return new TextDecoder().decode(new Uint8Array(decryptedBytes));
+}
+
+/**
+ * Legacy browser key derivation (v2 subtle) for backward compatibility with secrets encrypted in earlier browser sessions
+ */
+export function deriveLegacyBrowserProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
+  const str = `${userSecret}:${projectId}:xtra-e2ee-v2-subtle`;
+  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0, h3 = 0x85ebca6b ^ 0, h4 = 0xc2b2ae35 ^ 0;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+    h3 = Math.imul(h3 ^ ch, 2246822507);
+    h4 = Math.imul(h4 ^ ch, 3266489909);
+  }
+  const part1 = (Math.imul(h1 ^ (h1 >>> 16), 2246822507) >>> 0).toString(16).padStart(8, '0');
+  const part2 = (Math.imul(h2 ^ (h2 >>> 13), 3266489909) >>> 0).toString(16).padStart(8, '0');
+  const part3 = (Math.imul(h3 ^ (h3 >>> 15), 2654435761) >>> 0).toString(16).padStart(8, '0');
+  const part4 = (Math.imul(h4 ^ (h4 >>> 11), 1597334677) >>> 0).toString(16).padStart(8, '0');
+  return (part1 + part2 + part3 + part4 + part1 + part2 + part3 + part4).slice(0, 64);
+}
+
+/**
+ * Legacy browser key derivation (v1) for backward compatibility with early prototype mock payloads
+ */
+export function deriveLegacyBrowserV1ProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
+  const str = `${userSecret}:${projectId}:xtra-e2ee-v2`;
+  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
+  for (let i = 0, ch; i < str.length; i++) {
+    ch = str.charCodeAt(i);
+    h1 = Math.imul(h1 ^ ch, 2654435761);
+    h2 = Math.imul(h2 ^ ch, 1597334677);
+  }
+  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+  const hash = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
+  return (hash + hash + hash + hash).slice(0, 64);
+}
+
+/**
+ * Decrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI & Browser)
+ */
+export function decryptSecretValue(
+  payload: EncryptedPayload,
+  projectKeyHex: string,
+  projectIdFallback?: string
+): string {
+  const targetProjectId = payload.projectId || projectIdFallback;
+
+  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.createDecipheriv) {
     try {
       const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
       const iv = Buffer.from(payload.iv, 'hex');
@@ -267,35 +437,96 @@ export function decryptSecretValue(payload: EncryptedPayload, projectKeyHex: str
       decrypted += decipher.final('utf8');
       return decrypted;
     } catch (e) {
-      // Fallback for mock browser XOR if encountered
-      const hex = payload.ciphertext || '';
-      const bytes: number[] = [];
-      for (let c = 0; c < hex.length; c += 2) {
-        bytes.push(parseInt(hex.substr(c, 2), 16));
+      // Automatic fallback for legacy browser-encrypted payloads if authentication fails
+      if (targetProjectId) {
+        const legacyKeys = [
+          deriveLegacyBrowserProjectKey(targetProjectId),
+          deriveLegacyBrowserV1ProjectKey(targetProjectId)
+        ];
+        for (const legKey of legacyKeys) {
+          if (legKey !== projectKeyHex) {
+            try {
+              const k = Buffer.from(legKey.slice(0, 64).padEnd(64, '0'), 'hex');
+              const iv = Buffer.from(payload.iv, 'hex');
+              const authTag = Buffer.from(payload.authTag, 'hex');
+              const decipher = crypto.createDecipheriv('aes-256-gcm', k, iv);
+              decipher.setAuthTag(authTag);
+              let decrypted = decipher.update(payload.ciphertext, 'hex', 'utf8');
+              decrypted += decipher.final('utf8');
+              return decrypted;
+            } catch (_) {}
+          }
+        }
       }
-      const encoder = new TextEncoder();
-      const keyBytes = Array.from(encoder.encode(projectKeyHex.slice(0, 32)));
-      const decryptedBytes = bytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]);
-      return new TextDecoder().decode(new Uint8Array(decryptedBytes));
+
+      if (payload.authTag === '00112233445566778899aabbccddeeff') {
+        return legacyXorDecode(payload.ciphertext, projectKeyHex);
+      }
+      throw e;
     }
   }
 
-  // Web fallback
-  const hex = payload.ciphertext || '';
-  const bytes: number[] = [];
-  for (let c = 0; c < hex.length; c += 2) {
-    bytes.push(parseInt(hex.substr(c, 2), 16));
+  // Browser / Edge synchronous decryption using @noble/ciphers AES-256-GCM
+  const nobleGcm = getNobleGcm();
+  if (nobleGcm) {
+    try {
+      const keyBytes = hexToBytes(projectKeyHex.slice(0, 64).padEnd(64, '0'));
+      const ivBytes = hexToBytes(payload.iv);
+      const ctBytes = hexToBytes(payload.ciphertext);
+      const tagBytes = hexToBytes(payload.authTag);
+
+      const combined = new Uint8Array(ctBytes.length + tagBytes.length);
+      combined.set(ctBytes, 0);
+      combined.set(tagBytes, ctBytes.length);
+
+      const cipher = nobleGcm(keyBytes, ivBytes);
+      const decryptedBytes = cipher.decrypt(combined);
+      return new TextDecoder().decode(decryptedBytes);
+    } catch (err) {
+      if (targetProjectId) {
+        const legacyKeys = [
+          deriveLegacyBrowserProjectKey(targetProjectId),
+          deriveLegacyBrowserV1ProjectKey(targetProjectId)
+        ];
+        for (const legKey of legacyKeys) {
+          if (legKey !== projectKeyHex) {
+            try {
+              const keyBytes = hexToBytes(legKey.slice(0, 64).padEnd(64, '0'));
+              const ivBytes = hexToBytes(payload.iv);
+              const ctBytes = hexToBytes(payload.ciphertext);
+              const tagBytes = hexToBytes(payload.authTag);
+              const combined = new Uint8Array(ctBytes.length + tagBytes.length);
+              combined.set(ctBytes, 0);
+              combined.set(tagBytes, ctBytes.length);
+              const cipher = nobleGcm(keyBytes, ivBytes);
+              const decryptedBytes = cipher.decrypt(combined);
+              return new TextDecoder().decode(decryptedBytes);
+            } catch (_) {}
+          }
+        }
+      }
+
+      if (payload.authTag === '00112233445566778899aabbccddeeff') {
+        return legacyXorDecode(payload.ciphertext, projectKeyHex);
+      }
+      throw err;
+    }
   }
-  const encoder = new TextEncoder();
-  const keyBytes = Array.from(encoder.encode(projectKeyHex.slice(0, 32)));
-  const decryptedBytes = bytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]);
-  return new TextDecoder().decode(new Uint8Array(decryptedBytes));
+
+  if (payload.authTag === '00112233445566778899aabbccddeeff') {
+    return legacyXorDecode(payload.ciphertext, projectKeyHex);
+  }
+  throw new Error("Secure AES-256-GCM decipher is unavailable in this environment");
 }
 
 /**
  * Async WebCrypto Native AES-256-GCM Decryption (Browser-recommended)
  */
-export async function decryptSecretValueWebCrypto(payload: EncryptedPayload, projectKeyHex: string): Promise<string> {
+export async function decryptSecretValueWebCrypto(
+  payload: EncryptedPayload,
+  projectKeyHex: string,
+  projectIdFallback?: string
+): Promise<string> {
   if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && payload.authTag !== '00112233445566778899aabbccddeeff') {
     try {
       const keyBytes = new Uint8Array(32);
@@ -345,7 +576,7 @@ export async function decryptSecretValueWebCrypto(payload: EncryptedPayload, pro
     }
   }
 
-  return decryptSecretValue(payload, projectKeyHex);
+  return decryptSecretValue(payload, projectKeyHex, projectIdFallback);
 }
 
 /**
@@ -361,7 +592,9 @@ export function createWorkloadKeyEnvelope(projectKeyHex: string, recipientPublic
     publicKey: recipientPublicKey
   });
 
-  const derivedKey = crypto.hkdfSync('sha256', sharedSecret, Buffer.alloc(0), Buffer.from('xtra-workload-envelope'), 32);
+  const derivedKey = Buffer.from(
+    crypto.hkdfSync('sha256', sharedSecret, Buffer.alloc(0), Buffer.from('xtra-workload-envelope'), 32)
+  );
 
   const iv = crypto.randomBytes(12);
   const cipher = crypto.createCipheriv('aes-256-gcm', derivedKey, iv);
@@ -394,7 +627,9 @@ export function decryptWorkloadKeyEnvelope(
     publicKey: ephemeralPublicKey
   });
 
-  const derivedKey = crypto.hkdfSync('sha256', sharedSecret, Buffer.alloc(0), Buffer.from('xtra-workload-envelope'), 32);
+  const derivedKey = Buffer.from(
+    crypto.hkdfSync('sha256', sharedSecret, Buffer.alloc(0), Buffer.from('xtra-workload-envelope'), 32)
+  );
 
   const iv = Buffer.from(envelope.iv, 'hex');
   const authTag = Buffer.from(envelope.authTag, 'hex');

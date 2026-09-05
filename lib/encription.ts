@@ -71,7 +71,7 @@ export function decrypt(encrypted: {
       try {
         const { decryptSecretValue, deriveProjectKey } = require("./crypto/e2ee");
         const projectKey = deriveProjectKey(encrypted.projectId);
-        return decryptSecretValue({ ciphertext: encryptedData, iv, authTag }, projectKey);
+        return decryptSecretValue({ ciphertext: encryptedData, iv, authTag }, projectKey, encrypted.projectId);
       } catch (_) {}
     }
     throw serverDecryptionErr;

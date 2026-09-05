@@ -4,7 +4,9 @@ import {
   decryptSecretValue,
   createWorkloadKeyEnvelope,
   decryptWorkloadKeyEnvelope,
-  generateRecoveryMnemonic
+  generateRecoveryMnemonic,
+  deriveProjectKey,
+  deriveLegacyBrowserProjectKey
 } from '../lib/crypto/e2ee';
 
 describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
@@ -48,5 +50,52 @@ describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
 
     expect(words).toHaveLength(24);
     expect(recovery.recoveryKey).toHaveLength(64); // 32 bytes hex
+  });
+
+  test('Scenario 4: HKDF-SHA256 deterministic Project Key Derivation', () => {
+    const key1 = deriveProjectKey('proj_123456');
+    const key2 = deriveProjectKey('proj_123456');
+    const key3 = deriveProjectKey('proj_different');
+
+    expect(key1).toHaveLength(64);
+    expect(key1).toEqual(key2);
+    expect(key1).not.toEqual(key3);
+  });
+
+  test('Scenario 5: AES-256-GCM Cryptographic Integrity & Tamper Detection', () => {
+    const encrypted = encryptSecretValue('confidential-payload', projectKeyHex);
+
+    // Tamper with ciphertext by altering the last hex character
+    const tamperedCiphertext =
+      encrypted.ciphertext.slice(0, -1) + (encrypted.ciphertext.endsWith('a') ? 'b' : 'a');
+
+    expect(() => {
+      decryptSecretValue(
+        {
+          ...encrypted,
+          ciphertext: tamperedCiphertext,
+        },
+        projectKeyHex
+      );
+    }).toThrow();
+  });
+
+  test('Scenario 6: Backward compatibility with legacy browser-encrypted payloads', () => {
+    const legacyProjId = 'proj_legacy_123';
+    const legacyKey = deriveLegacyBrowserProjectKey(legacyProjId);
+    const plaintext = 'super-secret-legacy-value';
+    const legacyEncrypted = encryptSecretValue(plaintext, legacyKey);
+
+    // Caller attempts to decrypt using new HKDF projectKey, but provides projectId metadata
+    const newHkdfKey = deriveProjectKey(legacyProjId);
+    const decrypted = decryptSecretValue(
+      {
+        ...legacyEncrypted,
+        projectId: legacyProjId
+      },
+      newHkdfKey
+    );
+
+    expect(decrypted).toEqual(plaintext);
   });
 });

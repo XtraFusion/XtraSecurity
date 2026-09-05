@@ -101,7 +101,7 @@ export async function GET(request: NextRequest) {
             } else if (encryptedObject.ciphertext && encryptedObject.iv) {
               const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
               const projectKey = deriveProjectKey(branch.projectId);
-              decryptedValue = decryptSecretValue(encryptedObject, projectKey);
+              decryptedValue = decryptSecretValue(encryptedObject, projectKey, branch.projectId);
             } else {
               decryptedValue = encryptedString;
             }
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
                     const projectKey = deriveProjectKey(branch.projectId);
                     return {
                         ...h,
-                        value: decryptSecretValue(histEncryptedObject, projectKey)
+                        value: decryptSecretValue(histEncryptedObject, projectKey, branch.projectId)
                     };
                 }
                 return h;
