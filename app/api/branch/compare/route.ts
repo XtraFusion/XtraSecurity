@@ -53,6 +53,14 @@ export const GET = withSecurity(async (req: NextRequest, context: any, session: 
                 const encryptedObj = JSON.parse(rawValue);
                 if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
                     return decrypt(encryptedObj);
+                } else if (encryptedObj.ciphertext && encryptedObj.iv) {
+                    try {
+                        const { decryptSecretValue: decryptV2, deriveProjectKey } = require("@/lib/crypto/e2ee");
+                        const projectKey = deriveProjectKey(baseBranch.projectId);
+                        return decryptV2(encryptedObj, projectKey);
+                    } catch {
+                        return encryptedObj.ciphertext;
+                    }
                 }
                 return rawValue;
             } catch (e) {

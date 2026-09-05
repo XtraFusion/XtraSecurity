@@ -94,10 +94,12 @@ export async function POST(req: NextRequest) {
       try {
         const parsed = JSON.parse(val);
         if (parsed.iv && parsed.encryptedData) {
-          // It's encrypted! We should keep it as is or re-encrypt it? 
-          // Best is to re-encrypt to have a fresh IV, but decrypting first is safer for validation.
           const { decrypt } = await import("@/lib/encription");
           plainValue = decrypt(parsed);
+        } else if (parsed.ciphertext && parsed.iv) {
+          const { decryptSecretValue, deriveProjectKey } = await import("@/lib/crypto/e2ee");
+          const projectKey = deriveProjectKey(secret.projectId);
+          plainValue = decryptSecretValue(parsed, projectKey);
         } else {
           plainValue = val;
         }

@@ -1,7 +1,7 @@
 [
   {
-    "id": "op_da9hsro",
-    "timestamp": "2026-08-26T05:18:17.724Z",
+    "id": "op_ov1d136",
+    "timestamp": "2026-09-04T17:15:54.740Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner lists organizations/workspaces",
@@ -16,8 +16,8 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_lq0j74o",
-    "timestamp": "2026-08-26T05:18:17.849Z",
+    "id": "op_u5j1ehq",
+    "timestamp": "2026-09-04T17:15:54.825Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Admin invites contractor with viewer role",
@@ -33,21 +33,21 @@
     "responseSummary": {
       "message": "Invitation sent",
       "invite": {
-        "id": "6a8e7719843b253560203c61",
-        "teamId": "6a8e7719843b253560203c55",
-        "userId": "6a8e77182e06bba47f5bd9f6",
+        "id": "6a9afcca14a6925499d8c5cd",
+        "teamId": "6a9afcca14a6925499d8c5c1",
+        "userId": "6a9afcca14a6925499d8c5b7",
         "role": "viewer",
         "status": "pending",
-        "joinedAt": "2026-08-26T05:18:17.776Z",
-        "invitedBy": "6a8e7717843b253560203c4e"
+        "joinedAt": "2026-09-04T17:15:54.775Z",
+        "invitedBy": "6a9afcc914a6925499d8c5ab"
       },
-      "inviteToken": "9au33vuyab"
+      "inviteToken": "514d3tktni"
     },
     "expectedStatus": 200
   },
   {
-    "id": "op_bsfiifa",
-    "timestamp": "2026-08-26T05:18:17.980Z",
+    "id": "op_3rsdo7v",
+    "timestamp": "2026-09-04T17:15:54.873Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Contractor accepts team invitation",
@@ -59,20 +59,20 @@
     "responseSummary": {
       "message": "Invitation accepted",
       "acceptInvite": {
-        "id": "6a8e7719843b253560203c61",
-        "teamId": "6a8e7719843b253560203c55",
-        "userId": "6a8e77182e06bba47f5bd9f6",
+        "id": "6a9afcca14a6925499d8c5cd",
+        "teamId": "6a9afcca14a6925499d8c5c1",
+        "userId": "6a9afcca14a6925499d8c5b7",
         "role": "viewer",
         "status": "active",
-        "joinedAt": "2026-08-26T05:18:17.776Z",
-        "invitedBy": "6a8e7717843b253560203c4e"
+        "joinedAt": "2026-09-04T17:15:54.775Z",
+        "invitedBy": "6a9afcc914a6925499d8c5ab"
       }
     },
     "expectedStatus": 200
   },
   {
-    "id": "op_z6e7yrq",
-    "timestamp": "2026-08-26T05:18:18.153Z",
+    "id": "op_hgy9alg",
+    "timestamp": "2026-09-04T17:15:54.931Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Admin promotes contractor role to developer",
@@ -81,7 +81,7 @@
     "endpoint": "/api/team/role",
     "method": "PUT",
     "requestPayload": {
-      "memberId": "6a8e7719843b253560203c61",
+      "memberId": "6a9afcca14a6925499d8c5cd",
       "newRole": "developer"
     },
     "responseStatus": 200,
@@ -91,8 +91,8 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_nn2bfcp",
-    "timestamp": "2026-08-26T05:18:18.270Z",
+    "id": "op_eqp8cnr",
+    "timestamp": "2026-09-04T17:15:54.984Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner removes contractor from team",
@@ -107,14 +107,14 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_mtlic8x",
-    "timestamp": "2026-08-26T05:18:18.501Z",
+    "id": "op_sy6kyhh",
+    "timestamp": "2026-09-04T17:15:55.088Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Admin tests IP allowlist lifecycle (Add & Remove)",
     "role": "Admin",
     "actorEmail": "admin.team@xtrasecurity.test",
-    "endpoint": "/api/project/6a8e7719843b253560203c5a/ip",
+    "endpoint": "/api/project/6a9afcca14a6925499d8c5c6/ip",
     "method": "POST/DELETE",
     "responseStatus": 200,
     "responseSummary": {
@@ -123,8 +123,8 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_qotztji",
-    "timestamp": "2026-08-26T05:18:18.894Z",
+    "id": "op_9x2xj7t",
+    "timestamp": "2026-09-04T17:15:55.224Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Developer completes full branch lifecycle (Create, List, Delete)",
@@ -140,8 +140,8 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_4kz779s",
-    "timestamp": "2026-08-26T05:18:19.102Z",
+    "id": "op_6ucp1pm",
+    "timestamp": "2026-09-04T17:15:55.305Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Developer creates development secret",
@@ -158,8 +158,8 @@
     "notes": "HTTP response returned masked value '[encrypted]'"
   },
   {
-    "id": "op_prejn96",
-    "timestamp": "2026-08-26T05:18:19.216Z",
+    "id": "op_j5tpjaj",
+    "timestamp": "2026-09-04T17:15:55.366Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Developer creates time-limited secret share link",
@@ -169,14 +169,14 @@
     "method": "POST",
     "responseStatus": 201,
     "responseSummary": {
-      "shareUrl": "http://localhost:3000/share/a901f9695ca3192068f03f722b6f06e4c5db9fcb943bf58d370ed7d00792e3f9",
-      "token": "a901f9695ca3192068f03f722b6f06e4c5db9fcb943bf58d370ed7d00792e3f9"
+      "shareUrl": "http://localhost:3000/share/715c8abbe9377770b70899c7df410633553ae34bfd511b00e1d2b4aad04e2bcb",
+      "token": "715c8abbe9377770b70899c7df410633553ae34bfd511b00e1d2b4aad04e2bcb"
     },
     "expectedStatus": 201
   },
   {
-    "id": "op_idgti2e",
-    "timestamp": "2026-08-26T05:18:19.562Z",
+    "id": "op_2zlw124",
+    "timestamp": "2026-09-04T17:15:55.497Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Developer updates secret (v1 -> v2) and rolls back to v1 content",
@@ -193,8 +193,8 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_0dkuhpp",
-    "timestamp": "2026-08-26T05:18:19.633Z",
+    "id": "op_5cy66og",
+    "timestamp": "2026-09-04T17:15:55.546Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner generates time-limited JIT invitation link",
@@ -204,8 +204,8 @@
     "method": "POST",
     "responseStatus": 200,
     "responseSummary": {
-      "token": "714262d2b19bf654d3fc60d6658ee49952f97da11324bfb3",
-      "url": "http://localhost:3000/jit/714262d2b19bf654d3fc60d6658ee49952f97da11324bfb3"
+      "token": "899ac64b584ed8bfb9ba0100e48651a7012c3d0c84857ff6",
+      "url": "http://localhost:3000/jit/899ac64b584ed8bfb9ba0100e48651a7012c3d0c84857ff6"
     },
     "expectedStatus": [
       200,
@@ -213,8 +213,8 @@
     ]
   },
   {
-    "id": "op_ds39iy6",
-    "timestamp": "2026-08-26T05:18:19.731Z",
+    "id": "op_d23zgls",
+    "timestamp": "2026-09-04T17:15:55.609Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Contractor claims JIT link (AccessRequest generated)",
@@ -225,7 +225,7 @@
     "responseStatus": 200,
     "responseSummary": {
       "success": true,
-      "requestId": "6a8e771b843b253560203c78",
+      "requestId": "6a9afccb14a6925499d8c5e4",
       "status": "pending",
       "message": "Access request submitted. Awaiting admin/owner approval.",
       "duration": 45,
@@ -234,48 +234,48 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_d02ln6f",
-    "timestamp": "2026-08-26T05:18:19.777Z",
+    "id": "op_vta60ep",
+    "timestamp": "2026-09-04T17:15:55.647Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner creates machine service account",
     "role": "Owner",
     "actorEmail": "owner.enterprise@xtrasecurity.test",
-    "endpoint": "/api/projects/6a8e7719843b253560203c5a/service-accounts",
+    "endpoint": "/api/projects/6a9afcca14a6925499d8c5c6/service-accounts",
     "method": "POST",
     "responseStatus": 201,
     "responseSummary": {
-      "saId": "6a8e771b843b253560203c7b",
+      "saId": "6a9afccb14a6925499d8c5e7",
       "name": "Terraform Infrastructure Automation"
     },
     "expectedStatus": 201
   },
   {
-    "id": "op_h554jq8",
-    "timestamp": "2026-08-26T05:18:19.837Z",
+    "id": "op_epr4bmg",
+    "timestamp": "2026-09-04T17:15:55.688Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner generates API key for service account",
     "role": "Owner",
     "actorEmail": "owner.enterprise@xtrasecurity.test",
-    "endpoint": "/api/projects/6a8e7719843b253560203c5a/service-accounts/6a8e771b843b253560203c7b/keys",
+    "endpoint": "/api/projects/6a9afcca14a6925499d8c5c6/service-accounts/6a9afccb14a6925499d8c5e7/keys",
     "method": "POST",
     "responseStatus": 201,
     "responseSummary": {
-      "keyMask": "xtra_...4a4b",
+      "keyMask": "xtra_...f72b",
       "label": "Production Key 2026"
     },
     "expectedStatus": 201
   },
   {
-    "id": "op_atp5wzq",
-    "timestamp": "2026-08-26T05:18:19.917Z",
+    "id": "op_5o5aqgf",
+    "timestamp": "2026-09-04T17:15:55.723Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner registers security webhook",
     "role": "Owner",
     "actorEmail": "owner.enterprise@xtrasecurity.test",
-    "endpoint": "/api/projects/6a8e7719843b253560203c5a/webhooks",
+    "endpoint": "/api/projects/6a9afcca14a6925499d8c5c6/webhooks",
     "method": "POST",
     "responseStatus": 201,
     "responseSummary": {
@@ -289,8 +289,8 @@
     "expectedStatus": 201
   },
   {
-    "id": "op_1l9ukey",
-    "timestamp": "2026-08-26T05:18:19.963Z",
+    "id": "op_e88odxc",
+    "timestamp": "2026-09-04T17:15:55.757Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner configures 30-day automatic rotation schedule",
@@ -300,19 +300,19 @@
     "method": "POST",
     "responseStatus": 201,
     "responseSummary": {
-      "id": "6a8e771b843b253560203c81",
-      "secretId": "6a8e7719843b253560203c5f",
+      "id": "6a9afccb14a6925499d8c5ed",
+      "secretId": "6a9afcca14a6925499d8c5cb",
       "secretKey": "STRIPE_PAYMENT_GATEWAY_KEY",
-      "projectId": "6a8e7719843b253560203c5a",
+      "projectId": "6a9afcca14a6925499d8c5c6",
       "projectName": "Core Financial Transactions Service",
       "branch": "main",
       "frequency": "monthly",
       "customDays": null,
       "enabled": true,
-      "nextRotation": "2026-09-25T05:18:19.944Z",
+      "nextRotation": "2026-10-04T17:15:55.736Z",
       "rotationMethod": "shadow",
       "webhookUrl": null,
-      "createdAt": "2026-08-26T05:18:19.947Z"
+      "createdAt": "2026-09-04T17:15:55.738Z"
     },
     "expectedStatus": [
       200,
@@ -320,8 +320,8 @@
     ]
   },
   {
-    "id": "op_oi0iuj8",
-    "timestamp": "2026-08-26T05:18:20.015Z",
+    "id": "op_s2whz1x",
+    "timestamp": "2026-09-04T17:15:55.775Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "User updates profile display name",
@@ -333,15 +333,15 @@
     "responseSummary": {
       "success": true,
       "user": {
-        "id": "6a8e7717843b253560203c4f",
+        "id": "6a9afcc914a6925499d8c5ae",
         "name": "Senior Lead Engineer",
         "email": "dev.senior@xtrasecurity.test",
         "emailVerified": null,
         "image": null,
-        "createdAt": "2026-08-26T05:18:15.953Z",
-        "updatedAt": "2026-08-26T05:18:19.982Z",
-        "role": "developer",
-        "password": "$2b$10$jxjsI.81yTlc4mOqTaaQ/OV/7OMyFBn4Kk0dW57K3MeyxCE9imFee",
+        "createdAt": "2026-09-04T17:15:53.596Z",
+        "updatedAt": "2026-09-04T17:15:55.768Z",
+        "role": "owner",
+        "password": "$2b$10$Wo0tZPc0JlP34Qdv5YSGUeGvO.I.Y57gvLMY9Vh61.14cqAb0LD9e",
         "emailOtp": null,
         "emailOtpExpiry": null,
         "mfaEnabled": false,
@@ -350,14 +350,14 @@
         "passwordResetToken": null,
         "passwordResetExpiry": null,
         "ipAllowlist": [],
-        "tier": "free"
+        "tier": "enterprise"
       }
     },
     "expectedStatus": 200
   },
   {
-    "id": "op_te52t0a",
-    "timestamp": "2026-08-26T05:18:20.122Z",
+    "id": "op_u19d01z",
+    "timestamp": "2026-09-04T17:15:55.804Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner checks subscription quota usage",
@@ -387,18 +387,18 @@
     "expectedStatus": 200
   },
   {
-    "id": "op_bkv66hh",
-    "timestamp": "2026-08-26T05:18:20.168Z",
+    "id": "op_yi9g8bk",
+    "timestamp": "2026-09-04T17:15:55.829Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner queries audit trail (Zero Credential Leakage Check)",
     "role": "Owner",
     "actorEmail": "owner.enterprise@xtrasecurity.test",
-    "endpoint": "/api/audit?workspaceId=6a8e7719843b253560203c54",
+    "endpoint": "/api/audit?workspaceId=6a9afcca14a6925499d8c5c0",
     "method": "GET",
     "responseStatus": 200,
     "responseSummary": {
-      "totalAuditEntries": 10,
+      "totalAuditEntries": 11,
       "hasPasswordLeaks": false,
       "hasMfaSecretLeaks": false
     },
@@ -406,14 +406,14 @@
     "notes": "Audit log verified tamper-evident and clean of credential leakage"
   },
   {
-    "id": "op_dlqh1df",
-    "timestamp": "2026-08-26T05:18:20.248Z",
+    "id": "op_06w9i8p",
+    "timestamp": "2026-09-04T17:15:55.859Z",
     "passed": true,
     "securityVerdict": "SECURE_ALLOWED",
     "scenario": "Owner generates SOC 2 posture report",
     "role": "Owner",
     "actorEmail": "owner.enterprise@xtrasecurity.test",
-    "endpoint": "/api/compliance/report?workspaceId=6a8e7719843b253560203c54",
+    "endpoint": "/api/compliance/report?workspaceId=6a9afcca14a6925499d8c5c0",
     "method": "GET",
     "responseStatus": 200,
     "responseSummary": {
@@ -423,7 +423,7 @@
         "totalSecrets": 3,
         "overdueRotations": 0,
         "prodAccessEntries": 0,
-        "totalAuditEntries": 10
+        "totalAuditEntries": 11
       }
     },
     "expectedStatus": 200

@@ -90,8 +90,9 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
 
                 const rawVal = secret.value && secret.value.length > 0 ? secret.value[0] : "";
                 let encryptedString = rawVal;
-                // If the value is not already an encrypted JSON object, encrypt it
-                if (!rawVal.startsWith("{") || !rawVal.includes("encryptedData")) {
+                // If the value is not already an encrypted JSON object (v1 or v2 E2EE), encrypt it
+                const isAlreadyEncrypted = rawVal.startsWith("{") && (rawVal.includes("encryptedData") || rawVal.includes("ciphertext"));
+                if (!isAlreadyEncrypted) {
                     encryptedString = JSON.stringify(encrypt(rawVal));
                 }
 

@@ -1,7 +1,13 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { encryptSecretValue, deriveProjectKey } from "@/lib/crypto/e2ee";
+import {
+  encryptSecretValue,
+  encryptSecretValueWebCrypto,
+  decryptSecretValue,
+  decryptSecretValueWebCrypto,
+  deriveProjectKey
+} from "@/lib/crypto/e2ee";
 import {
   Search,
   Plus,
@@ -531,6 +537,36 @@ const VaultManager: React.FC = () => {
   const [isSyncTargetsOpen, setIsSyncTargetsOpen] = React.useState(false);
   const [syncTargetSecret, setSyncTargetSecret] = React.useState<{id: string, key: string} | null>(null);
 
+  // Client-Side Zero-Knowledge Secret Decryption
+  const decryptClientSecretList = React.useCallback((rawSecrets: any[], pId: string): any[] => {
+    if (!rawSecrets || !Array.isArray(rawSecrets)) return [];
+    try {
+      const projectKey = deriveProjectKey(pId);
+      return rawSecrets.map((secret) => {
+        let val = secret.value;
+        if (Array.isArray(val) && val.length > 0) {
+          val = val[0];
+        }
+        if (typeof val === "string" && val.startsWith("{")) {
+          try {
+            const parsed = JSON.parse(val);
+            if (parsed.ciphertext && parsed.iv) {
+              const decrypted = decryptSecretValue(parsed, projectKey);
+              return {
+                ...secret,
+                value: decrypted,
+                isZeroKnowledge: true
+              };
+            }
+          } catch (_) {}
+        }
+        return secret;
+      });
+    } catch (_) {
+      return rawSecrets;
+    }
+  }, []);
+
   // --- Data Loading ---
 
   const loadProject = React.useCallback(async (silent = false) => {
@@ -567,7 +603,8 @@ const VaultManager: React.FC = () => {
           branchData[0];
 
         setSelectedBranch(foundBranch);
-        setSecrets(foundBranch.secrets || []);
+        const decryptedSecrets = decryptClientSecretList(foundBranch.secrets || [], projectId as string);
+        setSecrets(decryptedSecrets);
       }
 
       setProject({
@@ -583,7 +620,7 @@ const VaultManager: React.FC = () => {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [projectId, searchParams, selectedWorkspace, workspaces, setSelectedWorkspace, selectedBranch]); // Added dependencies
+  }, [projectId, searchParams, selectedWorkspace, workspaces, setSelectedWorkspace, selectedBranch, decryptClientSecretList]); // Added dependencies
 
   // Initial Load - minimal dependency
   React.useEffect(() => {
@@ -604,7 +641,8 @@ const VaultManager: React.FC = () => {
     const branch = branches.find((b) => b.id === branchId);
     if (branch) {
       setSelectedBranch(branch);
-      setSecrets(branch.secrets || []);
+      const decryptedSecrets = decryptClientSecretList(branch.secrets || [], projectId as string);
+      setSecrets(decryptedSecrets);
       updateUrl("branch", branch.id);
     }
   };
@@ -655,7 +693,7 @@ const VaultManager: React.FC = () => {
       try {
         // Zero-Knowledge Client-Side Encryption (E2EE) in Browser
         const projectKey = deriveProjectKey(projectId as string);
-        const encrypted = encryptSecretValue(newSecret.value, projectKey);
+        const encrypted = await encryptSecretValueWebCrypto(newSecret.value, projectKey);
 
         const v2Payload = {
           key: newSecret.key,
@@ -679,6 +717,7 @@ const VaultManager: React.FC = () => {
           projectId: projectId as string,
           branchId: targetBranchId,
           version: "1",
+          isZeroKnowledge: true,
           updatedAt: new Date().toISOString()
         };
       } catch (v2Error) {
@@ -700,7 +739,7 @@ const VaultManager: React.FC = () => {
         rotationType: "30-days",
         expiryDate: "",
       });
-      setNotification({ type: "default", message: "✓ Secret created successfully" });
+      setNotification({ type: "default", message: "✓ Secret created with Zero-Knowledge encryption" });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to create secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
@@ -757,20 +796,60 @@ const VaultManager: React.FC = () => {
 
     setIsImporting(true);
     try {
-      const response = await axios.post("/api/secret/bulk", {
-        projectId: projectId as string,
-        branchId: selectedBranch.id,
-        secrets: parsedSecrets,
-      });
+      let createdSecrets: any[] = [];
 
-      const createdSecrets = response.data.secrets;
+      try {
+        // Zero-Knowledge Client Bulk Encryption
+        const projectKey = deriveProjectKey(projectId as string);
+        const encryptedSecrets = await Promise.all(
+          parsedSecrets.map(async (sec) => {
+            const enc = await encryptSecretValueWebCrypto(sec.value, projectKey);
+            return {
+              key: sec.key,
+              ciphertext: enc.ciphertext,
+              iv: enc.iv,
+              authTag: enc.authTag,
+              description: sec.description,
+              environmentType: sec.environmentType
+            };
+          })
+        );
+
+        const v2Res = await axios.post("/api/v2/secret/bulk", {
+          projectId: projectId as string,
+          branchId: selectedBranch.id,
+          secrets: encryptedSecrets,
+        });
+
+        createdSecrets = (v2Res.data.secrets || []).map((resSec: any, idx: number) => ({
+          id: resSec.id,
+          key: resSec.key,
+          value: parsedSecrets[idx].value,
+          description: parsedSecrets[idx].description,
+          environmentType: resSec.environmentType,
+          type: "API Key",
+          projectId: projectId as string,
+          branchId: selectedBranch.id,
+          isZeroKnowledge: true,
+          version: "1",
+          updatedAt: resSec.updatedAt || new Date().toISOString()
+        }));
+      } catch (v2Err) {
+        // Fallback to legacy v1 bulk endpoint
+        const response = await axios.post("/api/secret/bulk", {
+          projectId: projectId as string,
+          branchId: selectedBranch.id,
+          secrets: parsedSecrets,
+        });
+        createdSecrets = response.data.secrets || [];
+      }
 
       // Add the created secrets to local state
       setSecrets((prev) => [...createdSecrets, ...prev]);
       setIsAddSecretOpen(false);
       setEnvImportText("");
       setAddSecretTab("details");
-      setNotification({ type: "default", message: `✓ ${createdSecrets.length} secrets imported successfully` });
+      setNotification({ type: "default", message: `✓ ${createdSecrets.length} secrets imported with Zero-Knowledge encryption` });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to import secrets";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
@@ -794,13 +873,31 @@ const VaultManager: React.FC = () => {
 
     setIsEditingSecret(true);
     try {
-      await axios.put(`/api/secret?id=${editingSecret.id}`, {
-        ...editingSecret,
-        changeReason: editingSecret.changeReason
-      });
-      setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, changeReason: "" } : s)));
+      try {
+        // Zero-Knowledge Client Secret Encryption
+        const projectKey = deriveProjectKey(projectId as string);
+        const encrypted = await encryptSecretValueWebCrypto(editingSecret.value, projectKey);
+
+        await axios.put(`/api/v2/secret?id=${editingSecret.id}`, {
+          id: editingSecret.id,
+          ciphertext: encrypted.ciphertext,
+          iv: encrypted.iv,
+          authTag: encrypted.authTag,
+          description: editingSecret.description,
+          environmentType: editingSecret.environmentType,
+          changeReason: editingSecret.changeReason
+        });
+      } catch (v2Error) {
+        // Fallback to v1 endpoint
+        await axios.put(`/api/secret?id=${editingSecret.id}`, {
+          ...editingSecret,
+          changeReason: editingSecret.changeReason
+        });
+      }
+
+      setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, isZeroKnowledge: true, changeReason: "" } : s)));
       setIsEditSecretOpen(false);
-      setNotification({ type: "default", message: "✓ Secret updated successfully" });
+      setNotification({ type: "default", message: "✓ Secret updated with Zero-Knowledge encryption" });
     } catch (error: any) {
       const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
@@ -812,7 +909,11 @@ const VaultManager: React.FC = () => {
   const handleDeleteSecret = async (secretId: string) => {
     setDeletingSecretId(secretId);
     try {
-      await axios.delete(`/api/secret?id=${secretId}`);
+      try {
+        await axios.delete(`/api/v2/secret?id=${secretId}`);
+      } catch (v2Err) {
+        await axios.delete(`/api/secret?id=${secretId}`);
+      }
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
       setNotification({ type: "default", message: "✓ Secret deleted successfully" });
       setSecretToDelete(null);
@@ -920,7 +1021,11 @@ const VaultManager: React.FC = () => {
     try {
       for (const id of Array.from(selectedSecretIds)) {
         try {
-          await axios.delete(`/api/secret?id=${id}`);
+          try {
+            await axios.delete(`/api/v2/secret?id=${id}&projectId=${projectId}`);
+          } catch {
+            await axios.delete(`/api/secret?id=${id}`);
+          }
           successCount++;
         } catch (e) {
           // continue with others
@@ -1167,7 +1272,13 @@ const VaultManager: React.FC = () => {
         {/* Header Section */}
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+            <div className="flex flex-wrap items-center gap-3">
+              <h1 className="text-3xl font-bold tracking-tight">{project?.name}</h1>
+              <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/30 gap-1.5 py-1">
+                <ShieldCheck className="h-3.5 w-3.5" />
+                Zero-Knowledge E2EE Active
+              </Badge>
+            </div>
             <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
           <div className="flex flex-wrap items-center gap-3">

@@ -71,8 +71,15 @@ export const POST = withSecurity(async (request, context, session) => {
 
     // Use Promise.all with map for efficiency, assuming < 200 secrets.
     const createPromises = secrets.map(async (secretInput: any) => {
-        const encryptedValue = encrypt(secretInput.value);
-        const encryptedString = JSON.stringify(encryptedValue);
+        let encryptedString: string;
+        if (secretInput.encryptedPayload) {
+            encryptedString = JSON.stringify(secretInput.encryptedPayload);
+        } else if (typeof secretInput.value === "string" && secretInput.value.startsWith("{") && (secretInput.value.includes("ciphertext") || secretInput.value.includes("encryptedData"))) {
+            encryptedString = secretInput.value;
+        } else {
+            const encryptedValue = encrypt(secretInput.value);
+            encryptedString = JSON.stringify(encryptedValue);
+        }
 
         const newSecret = await prisma.secret.create({
             data: {

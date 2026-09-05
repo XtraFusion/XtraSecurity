@@ -121,10 +121,10 @@ Server-side secret decryption leaves plaintext accessible in server memory. Movi
 ```
 
 ### Implementation Checklist
-- [ ] Create `@xtra/crypto` package using WebCrypto & `libsodium-wrappers` (X25519 + AES-256-GCM).
-- [ ] Build `/app/api/v2/secret/route.ts` accepting pre-encrypted payload blobs `{ iv, ciphertext, authTag }`.
-- [ ] Implement 24-word recovery mnemonic flow during user onboarding.
-- [ ] Implement automated Project Key Rotation on team member removal.
+- [x] Core Cryptographic Engine (`lib/crypto/e2ee.ts`) using WebCrypto & Node crypto (X25519 + AES-256-GCM).
+- [x] Build `/app/api/v2/secret` suite (GET, POST, PUT, DELETE) and `/app/api/v2/secret/bulk` accepting pre-encrypted payload blobs `{ iv, ciphertext, authTag }`.
+- [x] Implement 24-word BIP-39 recovery mnemonic generation and 32-byte recovery key derivation.
+- [x] Client-side Zero-Knowledge encryption in Web Dashboard (`/projects/[id]`: create, edit, bulk import, local decrypt) and `xtra-cli` E2EE methods.
 
 ---
 

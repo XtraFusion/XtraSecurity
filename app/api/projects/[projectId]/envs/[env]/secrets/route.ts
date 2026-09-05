@@ -144,6 +144,10 @@ export const GET = withSecurity(async (
                 const encryptedObj = JSON.parse(rawValue);
                 if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
                     decryptedValue = decrypt(encryptedObj);
+                } else if (encryptedObj.ciphertext && encryptedObj.iv) {
+                    const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+                    const projectKey = deriveProjectKey(projectId);
+                    decryptedValue = decryptSecretValue(encryptedObj, projectKey);
                 } else {
                     decryptedValue = rawValue;
                 }
@@ -181,6 +185,10 @@ export const GET = withSecurity(async (
                 const encryptedObj = JSON.parse(rawValue);
                 if (encryptedObj.iv && encryptedObj.encryptedData && encryptedObj.authTag) {
                     secretsMap[secret.key] = decrypt(encryptedObj);
+                } else if (encryptedObj.ciphertext && encryptedObj.iv) {
+                    const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+                    const projectKey = deriveProjectKey(projectId);
+                    secretsMap[secret.key] = decryptSecretValue(encryptedObj, projectKey);
                 } else {
                     secretsMap[secret.key] = rawValue;
                 }
@@ -353,9 +361,14 @@ export const POST = withSecurity(async (
       }
     });
 
-    // Encrypt
-    const encryptedValue = encrypt(value as string);
-    const encryptedString = JSON.stringify(encryptedValue);
+    // Encrypt (or preserve pre-encrypted payload)
+    let encryptedString = "";
+    if (typeof value === "string" && value.startsWith("{") && (value.includes("ciphertext") || value.includes("encryptedData"))) {
+      encryptedString = value;
+    } else {
+      const encryptedValue = encrypt(value as string);
+      encryptedString = JSON.stringify(encryptedValue);
+    }
 
     if (existing) {
       // Update

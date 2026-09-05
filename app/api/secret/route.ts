@@ -1,12 +1,37 @@
 import { NextRequest, NextResponse } from "next/server";
-import prisma from "@/lib/db";
-import { encrypt, decrypt } from "@/lib/encription";
 import { withSecurity } from "@/lib/api-middleware";
-import { getUserProjectRole, getUserSecretAccess } from "@/lib/permissions";
-import { notify } from "@/lib/notifications/engine";
-import { queueSecretSync } from "@/lib/queue/sync-queue";
-import { logAudit } from "@/lib/audit";
-import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
+import {
+  SecretService,
+  SecretValidationError,
+  SecretNotFoundError,
+  SecretForbiddenError,
+  SecretQuotaExceededError,
+} from "@/lib/services/secret.service";
+
+/**
+ * Maps domain service errors to HTTP response envelopes
+ */
+function handleServiceError(error: any, fallbackMessage: string) {
+  if (error instanceof SecretValidationError) {
+    return NextResponse.json({ error: error.message, message: error.message }, { status: 400 });
+  }
+  if (error instanceof SecretNotFoundError) {
+    return NextResponse.json({ error: error.message, message: error.message }, { status: 404 });
+  }
+  if (error instanceof SecretForbiddenError) {
+    return NextResponse.json({ error: error.message, message: error.message }, { status: 403 });
+  }
+  if (error instanceof SecretQuotaExceededError) {
+    return NextResponse.json({ error: error.errorName, message: error.message }, { status: 403 });
+  }
+
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  console.error(`[SecretRoute] ${fallbackMessage}:`, errorMessage, error);
+  return NextResponse.json(
+    { error: fallbackMessage, message: fallbackMessage },
+    { status: 500 }
+  );
+}
 
 // GET /api/secret - Get all secrets for a project
 export const GET = withSecurity(async (request, context, session) => {
@@ -16,127 +41,13 @@ export const GET = withSecurity(async (request, context, session) => {
     }
 
     const { searchParams } = new URL(request.url);
-    const projectId = searchParams.get("projectId");
+    const projectId = searchParams.get("projectId") || "";
     const branchId = searchParams.get("branchId");
 
-
-
-    if (!projectId) {
-         return NextResponse.json({ error: "Project ID is required" }, { status: 400 });
-    }
-
-    // Access Control
-    let isViewer = false;
-    if (session.isServiceAccount) {
-
-        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
-        if (!session.permissions?.includes("read:secrets")) return NextResponse.json({ error: "Forbidden: Missing read:secrets scope" }, { status: 403 });
-    } else {
-
-        const role = await getUserProjectRole(session.userId, projectId);
-
-        if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
-        if (role === 'viewer') isViewer = true;
-    }
-
-    const query: any = { projectId };
-    if (branchId) query.branchId = branchId;
-
-
-    const secrets = await prisma.secret.findMany({
-      where: query,
-      include: {
-        project: true,
-      },
-    });
-
-
-    // Decrypted secret values and history before sending to frontend
-    const decryptedSecrets = await Promise.all(secrets.map(async (secret) => {
-      // Access Control check per-secret (handles JIT and standard roles)
-      const access = await getUserSecretAccess(session.userId, projectId, secret.id);
-      
-      const shouldRedact = !access.hasAccess || (access.role === "viewer" && !access.isJit);
-
-      // If Redacted (Viewer without JIT), hide content
-      if (shouldRedact) {
-          return {
-              ...secret,
-              value: "[REDACTED]",
-              history: [] // Hide history too
-          };
-      }
-
-      let decryptedValue = "[Decryption failed]";
-      try {
-        const val = secret.value[0];
-        if (typeof val === 'string' && val.startsWith('{')) {
-          const encryptedObject = JSON.parse(val);
-          if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
-            decryptedValue = decrypt(encryptedObject);
-          } else if (encryptedObject.ciphertext && encryptedObject.iv) {
-            const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-            const projectKey = deriveProjectKey(secret.projectId);
-            decryptedValue = decryptSecretValue(encryptedObject, projectKey);
-          } else {
-            decryptedValue = val;
-          }
-        } else {
-          decryptedValue = val || "";
-        }
-      } catch (error) {
-        console.error(`Failed to decrypt secret ${secret.id}:`, error);
-        decryptedValue = secret.value[0] || "[Decryption failed]";
-      }
-
-      // Decrypt history if present
-      let decryptedHistory = secret.history;
-      if (Array.isArray(secret.history)) {
-        decryptedHistory = secret.history.map((h: any) => {
-          try {
-            let val = h.value;
-            if (Array.isArray(val) && val.length > 0) {
-              val = val[0];
-            }
-
-            if (typeof val === 'string' && (val.startsWith('{') || val.startsWith('['))) {
-              try {
-                const parsed = JSON.parse(val);
-                if (parsed.iv && parsed.encryptedData && parsed.authTag) {
-                  val = decrypt(parsed);
-                } else if (Array.isArray(parsed) && parsed.length > 0) {
-                  const inner = JSON.parse(parsed[0]);
-                  if (inner && inner.iv && inner.encryptedData && inner.authTag) {
-                    val = decrypt(inner);
-                  }
-                }
-              } catch (e) {}
-            }
-            return { ...h, value: val };
-          } catch (e) {
-            return h;
-          }
-        });
-      }
-
-      return {
-        ...secret,
-        value: decryptedValue,
-        history: decryptedHistory,
-        isJit: access.isJit, // Inform frontend about JIT status
-        expiresAt: access.expiresAt
-      };
-    }));
-
-    return NextResponse.json(decryptedSecrets);
+    const secrets = await SecretService.listSecrets(session, { projectId, branchId });
+    return NextResponse.json(secrets);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    console.error("Error fetching secrets:", errorMessage);
-    console.error("Full error details:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch secrets" },
-      { status: 500 }
-    );
+    return handleServiceError(error, "Failed to fetch secrets");
   }
 });
 
@@ -148,158 +59,10 @@ export const POST = withSecurity(async (request, context, session) => {
     }
 
     const body = await request.json();
-
-    const {
-      key,
-      value,
-      description,
-      environmentType,
-      projectId,
-      type,
-      branchId,
-      permission = [],
-      expiryDate,
-      rotationPolicy = "manual",
-      rotationType = "automatic",
-    } = body;
-
-    if (!key || !value || !projectId || !environmentType) {
-      return NextResponse.json(
-        { error: "Missing required fields (key, value, projectId, environmentType)" },
-        { status: 400 }
-      );
-    }
-
-    const cleanKey = key.toUpperCase().trim().replace(/\s+/g, '_');
-    const cleanDescription = (description || '').trim();
-
-    // Check project exists
-    const projectRecord = await prisma.project.findUnique({
-      where: { id: projectId },
-      select: { workspaceId: true }
-    });
-
-    if (!projectRecord) {
-      return NextResponse.json({ error: "Project not found" }, { status: 404 });
-    }
-
-    // Rate Limiting Check
-    const ownerTier = (session.tier || "community") as Tier;
-    const projectSecretsCount = await prisma.secret.count({ where: { projectId } });
-    const resolvedMaxSecrets = DAILY_LIMITS[ownerTier]?.maxSecretsPerProject ?? DAILY_LIMITS.community.maxSecretsPerProject;
-
-    if (projectSecretsCount >= resolvedMaxSecrets) {
-      return NextResponse.json({ 
-        error: `Project secret limit reached (${projectSecretsCount}/${resolvedMaxSecrets}).`,
-        message: `The workspace owner's ${ownerTier} plan allows up to ${resolvedMaxSecrets} secrets per project. Please upgrade to add more.` 
-      }, { status: 403 });
-    }
-
-    // Access Control
-    if (session.isServiceAccount) {
-        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
-        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
-    } else {
-        const role = await getUserProjectRole(session.userId, projectId);
-        
-        if (!role) {
-             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
-        }
-
-        // ACL Check: Write
-        if (role === "viewer") {
-             return NextResponse.json({ error: "Viewers do not have permission to create secrets" }, { status: 403 });
-        }
-        
-        if (role === "developer" && environmentType === "production") {
-             return NextResponse.json({ error: "Developers cannot create secrets in Production" }, { status: 403 });
-        }
-    }
-
-    // Encrypt and prepare value as array
-    const encryptedValue = encrypt(value);
-    const encryptedString = JSON.stringify(encryptedValue);
-
-    // Create new secret with version history
-    const newSecret = await prisma.secret.create({
-      data: {
-        key: cleanKey,
-        value: [encryptedString], // Store encrypted object as JSON string in array
-        description: cleanDescription,
-        environmentType,
-        version: "1",
-        projectId,
-        branchId: branchId || null,
-        rotationPolicy,
-        type: type || "API Key",
-        history: [
-          {
-            version: "1",
-            value: [encryptedString], // Store as encrypted array for consistency
-            description: cleanDescription,
-            updatedAt: new Date().toISOString(),
-            updatedBy: session.email,
-          },
-        ],
-        updatedBy: session.email,
-        permission,
-        expiryDate: expiryDate ? new Date(expiryDate) : null,
-      },
-    });
-
-    // TRIGGER SYNC
-    await queueSecretSync(newSecret.id);
-
-    // Audit Log
-    try {
-      await logAudit(
-        "SECRET_CREATED",
-        session.userId,
-        projectId,
-        { secretId: newSecret.id, key: newSecret.key, environment: environmentType, branchId },
-        projectRecord.workspaceId
-      );
-    } catch (e) {
-      console.error("Audit log failed:", e);
-    }
-
-    // Notify Rule Engine
-    try {
-      await notify({
-        type: "secret_change",
-        title: "Secret Created",
-        message: `Secret "${key}" was created by ${session.email}`,
-        description: `New secret added to environment "${environmentType}"`,
-        severity: "info",
-        workspaceId: projectRecord.workspaceId || "",
-        projectId: projectId,
-        branch: branchId,
-        metadata: { key, environmentType, type: type || "API Key" },
-        fields: [
-          { label: "Key", value: key },
-          { label: "Environment", value: environmentType },
-          { label: "Created By", value: session.email },
-        ]
-      });
-    } catch (notifErr) {
-      console.error("Failed to trigger notification for secret creation:", notifErr);
-    }
-
-    // Return the secret with plaintext value for frontend display
-    return NextResponse.json(
-      {
-        ...newSecret,
-        value: value, // Return plaintext value provided by caller for UI display
-      },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    console.error("Error creating secret:", error);
-    console.error("Error details:", error.message);
-    return NextResponse.json(
-      { message: "Failed to create secret" },
-      { status: 500 }
-    );
+    const createdSecret = await SecretService.createSecret(session, body);
+    return NextResponse.json(createdSecret, { status: 201 });
+  } catch (error) {
+    return handleServiceError(error, "Failed to create secret");
   }
 });
 
@@ -311,155 +74,13 @@ export const PUT = withSecurity(async (request, context, session) => {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
-
-    if (!id) {
-      return NextResponse.json(
-        { message: "Secret ID is required" },
-        { status: 400 }
-      );
-    }
-
+    const id = searchParams.get("id") || "";
     const body = await request.json();
 
-    const {
-      key,
-      value,
-      description,
-      environmentType,
-      type,
-      permission,
-      expiryDate,
-      rotationPolicy,
-    } = body;
-
-    // Get existing secret to verify project access
-    const existingSecret = await prisma.secret.findUnique({
-      where: { id },
-      include: { project: true },
-    });
-
-    if (!existingSecret) {
-      return NextResponse.json({ message: "Secret not found" }, { status: 404 });
-    }
-
-    const projectId = existingSecret.projectId;
-
-    // Access Control
-    if (session.isServiceAccount) {
-        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
-        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
-    } else {
-        const role = await getUserProjectRole(session.userId, projectId);
-        
-        if (!role) {
-             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
-        }
-        
-        // ACL Check: Write/Update
-        if (role === "viewer") {
-             return NextResponse.json({ error: "Viewers do not have permission to update secrets" }, { status: 403 });
-        }
-
-        if (role === "developer" && existingSecret.environmentType === "production") {
-             return NextResponse.json({ error: "Developers cannot update secrets in Production" }, { status: 403 });
-        }
-    }
-
-    // Parse existing history and add new version
-    const history = Array.isArray(existingSecret.history) ? existingSecret.history : [];
-    const newVersion = (parseInt(existingSecret.version || "1") + 1).toString();
-
-    // Prepare update data
-    const updateData: any = {
-      version: newVersion,
-      updatedBy: session.email,
-    };
-
-    // Only update fields that are provided
-    if (key) updateData.key = key;
-    if (description !== undefined) updateData.description = description;
-    if (environmentType) updateData.environmentType = environmentType;
-    if (type) updateData.type = type;
-    if (permission) updateData.permission = permission;
-    if (rotationPolicy) updateData.rotationPolicy = rotationPolicy;
-    if (expiryDate) updateData.expiryDate = new Date(expiryDate);
-
-    // Handle value encryption if provided
-    if (value) {
-      const encryptedValue = encrypt(value);
-      const encryptedString = JSON.stringify(encryptedValue);
-      updateData.value = [encryptedString];
-    }
-
-    // Update history
-    updateData.history = [
-      {
-        version: newVersion,
-        value: value ? [JSON.stringify(encrypt(value))] : (existingSecret.value || "[unchanged]"),
-        description: description || existingSecret.description,
-        updatedAt: new Date().toISOString(),
-        updatedBy: session.email,
-        changeReason: body.changeReason,
-      },
-      ...history,
-    ];
-
-    const updatedSecret = await prisma.secret.update({
-      where: { id },
-      data: updateData,
-    });
-
-    // TRIGGER SYNC
-    await queueSecretSync(updatedSecret.id);
-
-    // Audit Log
-    try {
-      await logAudit(
-        "SECRET_UPDATED",
-        session.userId,
-        projectId,
-        { secretId: updatedSecret.id, key: updatedSecret.key, environment: updatedSecret.environmentType, branchId: updatedSecret.branchId, version: updatedSecret.version },
-        existingSecret.project?.workspaceId
-      );
-    } catch (e) {
-      console.error("Audit log failed:", e);
-    }
-
-    // Notify Rule Engine
-    try {
-      await notify({
-        type: "secret_change",
-        title: "Secret Updated",
-        message: `Secret "${existingSecret.key}" was updated by ${session.email}`,
-        description: `Modifications made to secret in "${existingSecret.environmentType}"`,
-        severity: "warning",
-        workspaceId: existingSecret.project?.workspaceId || "",
-        projectId: existingSecret.projectId,
-        branch: existingSecret.branchId || undefined,
-        metadata: { key: existingSecret.key, id },
-        fields: [
-          { label: "Key", value: existingSecret.key },
-          { label: "Updated By", value: session.email },
-          { label: "Environment", value: existingSecret.environmentType },
-        ]
-      });
-    } catch (notifErr) {
-      console.error("Failed to trigger notification for secret update:", notifErr);
-    }
-
-    return NextResponse.json({
-      ...updatedSecret,
-      value: value,
-      history: undefined,
-    });
-  } catch (error: any) {
-    console.error("Error updating secret:", error);
-    console.error("Error details:", error.message);
-    return NextResponse.json(
-      { message: "Failed to update secret" },
-      { status: 500 }
-    );
+    const updatedSecret = await SecretService.updateSecret(session, id, body);
+    return NextResponse.json(updatedSecret, { status: 200 });
+  } catch (error) {
+    return handleServiceError(error, "Failed to update secret");
   }
 });
 
@@ -471,103 +92,11 @@ export const DELETE = withSecurity(async (request, context, session) => {
     }
 
     const { searchParams } = new URL(request.url);
-    const id = searchParams.get("id");
+    const id = searchParams.get("id") || "";
 
-    if (!id) {
-      return NextResponse.json(
-        { message: "Secret ID is required" },
-        { status: 400 }
-      );
-    }
-
-    // Check if secret exists
-    const existingSecret = await prisma.secret.findUnique({
-      where: { id },
-      include: { project: true },
-    });
-
-    if (!existingSecret) {
-      return NextResponse.json(
-        { message: "Secret not found" },
-        { status: 404 }
-      );
-    }
-
-    const projectId = existingSecret.projectId;
-
-    // Access Control
-    if (session.isServiceAccount) {
-        if (session.projectId !== projectId) return NextResponse.json({ error: "Forbidden: SA locked to project" }, { status: 403 });
-        if (!session.permissions?.includes("write:secrets")) return NextResponse.json({ error: "Forbidden: Missing write:secrets scope" }, { status: 403 });
-    } else {
-        const role = await getUserProjectRole(session.userId, projectId);
-        
-        if (!role) {
-             return NextResponse.json({ error: "Forbidden: You do not have access to this project" }, { status: 403 });
-        }
-        
-        // ACL Check: Delete
-        if (role === "viewer") {
-             return NextResponse.json({ error: "Viewers do not have permission to delete secrets" }, { status: 403 });
-        }
-        
-        if (role === "developer") {
-             // Developers cannot delete in Production
-             if (existingSecret.environmentType === "production") {
-                  return NextResponse.json({ error: "Developers cannot delete secrets in Production" }, { status: 403 });
-             }
-        }
-    }
-
-    await prisma.secret.delete({
-      where: { id },
-    });
-
-    // Audit Log
-    try {
-      await logAudit(
-        "SECRET_DELETED",
-        session.userId,
-        projectId,
-        { secretId: existingSecret.id, key: existingSecret.key, environment: existingSecret.environmentType, branchId: existingSecret.branchId },
-        existingSecret.project?.workspaceId
-      );
-    } catch (e) {
-      console.error("Audit log failed:", e);
-    }
-
-    // Notify Rule Engine
-    try {
-      await notify({
-        type: "secret_change",
-        title: "Secret Deleted",
-        message: `Secret "${existingSecret.key}" was deleted by ${session.email}`,
-        description: `Permanent removal of secret from "${existingSecret.environmentType}"`,
-        severity: "critical",
-        workspaceId: existingSecret.project?.workspaceId || "",
-        projectId: existingSecret.projectId,
-        branch: existingSecret.branchId || undefined,
-        metadata: { key: existingSecret.key },
-        fields: [
-          { label: "Key", value: existingSecret.key },
-          { label: "Deleted By", value: session.email },
-          { label: "Environment", value: existingSecret.environmentType },
-        ]
-      });
-    } catch (notifErr) {
-      console.error("Failed to trigger notification for secret deletion:", notifErr);
-    }
-
-    return NextResponse.json(
-      { message: "Secret deleted successfully" },
-      { status: 200 }
-    );
-  } catch (error: any) {
-    console.error("Error deleting secret:", error);
-    console.error("Error details:", error.message);
-    return NextResponse.json(
-      { message: "Failed to delete secret" },
-      { status: 500 }
-    );
+    const result = await SecretService.deleteSecret(session, id);
+    return NextResponse.json(result, { status: 200 });
+  } catch (error) {
+    return handleServiceError(error, "Failed to delete secret");
   }
 });

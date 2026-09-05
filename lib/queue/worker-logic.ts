@@ -63,11 +63,33 @@ export async function processSyncJob(data: any) {
     if (!secret || secret.syncs.length === 0) return;
 
     // Decrypt value
-    const decryptedValue = decrypt({
-        iv: secret.value[0],
-        encryptedData: secret.value[1],
-        authTag: secret.value[2]
-    });
+    let decryptedValue = "";
+    try {
+        const val = secret.value[0];
+        if (typeof val === "string" && val.startsWith("{")) {
+            const parsed = JSON.parse(val);
+            if (parsed.iv && parsed.encryptedData && parsed.authTag) {
+                decryptedValue = decrypt(parsed);
+            } else if (parsed.ciphertext && parsed.iv) {
+                const { decryptSecretValue, deriveProjectKey } = await import("@/lib/crypto/e2ee");
+                const projectKey = deriveProjectKey(secret.projectId);
+                decryptedValue = decryptSecretValue(parsed, projectKey);
+            } else {
+                decryptedValue = val;
+            }
+        } else if (secret.value.length >= 3) {
+            decryptedValue = decrypt({
+                iv: secret.value[0],
+                encryptedData: secret.value[1],
+                authTag: secret.value[2]
+            });
+        } else {
+            decryptedValue = val || "";
+        }
+    } catch (err: any) {
+        console.error("Worker decryption error:", err.message);
+        return;
+    }
 
     for (const sync of secret.syncs) {
         if (sync.status !== "active") continue;

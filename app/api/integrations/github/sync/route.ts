@@ -104,7 +104,15 @@ export async function POST(req: NextRequest) {
         try {
           const rawValue = Array.isArray(secret.value) ? secret.value[0] : secret.value;
           const encryptedValue = typeof rawValue === "string" ? JSON.parse(rawValue) : rawValue;
-          decryptedValue = decrypt(encryptedValue);
+          if (encryptedValue.iv && encryptedValue.encryptedData && encryptedValue.authTag) {
+            decryptedValue = decrypt(encryptedValue);
+          } else if (encryptedValue.ciphertext && encryptedValue.iv) {
+            const { decryptSecretValue, deriveProjectKey } = await import("@/lib/crypto/e2ee");
+            const projectKey = deriveProjectKey(secret.projectId);
+            decryptedValue = decryptSecretValue(encryptedValue, projectKey);
+          } else {
+            decryptedValue = rawValue;
+          }
         } catch (decryptErr: any) {
           syncResults.push({ key: secret.key, success: false, error: `Decryption failed: ${decryptErr.message}` });
           continue;

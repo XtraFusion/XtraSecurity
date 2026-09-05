@@ -56,7 +56,18 @@ export async function GET(
     for (const secret of secrets) {
       try {
         const encryptedValue = JSON.parse(secret.value[0]);
-        const decryptedValue = decrypt(encryptedValue);
+        let decryptedValue = "";
+        if (encryptedValue?.ciphertext && encryptedValue?.iv) {
+          try {
+            const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+            const projectKey = deriveProjectKey(projectId);
+            decryptedValue = decryptSecretValue(encryptedValue, projectKey);
+          } catch {
+            decryptedValue = decrypt(encryptedValue);
+          }
+        } else {
+          decryptedValue = decrypt(encryptedValue);
+        }
         // Base64 encode for K8s
         data[secret.key] = Buffer.from(decryptedValue).toString("base64");
       } catch {

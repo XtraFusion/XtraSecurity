@@ -40,13 +40,40 @@ export function encrypt(text: string) {
 }
 
 // Decrypt function
-export function decrypt(encrypted: { iv: string; encryptedData: string; authTag: string }) {
-  const KEY = getEncryptionKey();
-  const { iv, encryptedData, authTag } = encrypted;
-  const decipher = crypto.createDecipheriv(ALGORITHM, KEY, Buffer.from(iv, 'hex'));
-  decipher.setAuthTag(Buffer.from(authTag, 'hex'));
+export function decrypt(encrypted: {
+  iv: string;
+  encryptedData?: string;
+  ciphertext?: string;
+  authTag?: string;
+  tag?: string;
+  projectId?: string;
+}) {
+  const { iv } = encrypted;
+  const encryptedData = encrypted.encryptedData || encrypted.ciphertext;
+  const authTag = encrypted.authTag || encrypted.tag;
 
-  let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  return decrypted;
+  if (!encryptedData || !iv || !authTag) {
+    throw new Error("Invalid encrypted payload: missing iv, encryptedData/ciphertext, or authTag");
+  }
+
+  // 1. Try standard server decryption with ENCRYPTION_KEY
+  try {
+    const KEY = getEncryptionKey();
+    const decipher = crypto.createDecipheriv(ALGORITHM, KEY, Buffer.from(iv, 'hex'));
+    decipher.setAuthTag(Buffer.from(authTag, 'hex'));
+
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
+  } catch (serverDecryptionErr) {
+    // 2. If it's a v2 E2EE payload with ciphertext and projectId, attempt projectKey derivation
+    if (encrypted.ciphertext && encrypted.projectId) {
+      try {
+        const { decryptSecretValue, deriveProjectKey } = require("./crypto/e2ee");
+        const projectKey = deriveProjectKey(encrypted.projectId);
+        return decryptSecretValue({ ciphertext: encryptedData, iv, authTag }, projectKey);
+      } catch (_) {}
+    }
+    throw serverDecryptionErr;
+  }
 }

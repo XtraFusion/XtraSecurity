@@ -84,7 +84,15 @@ export async function GET(req: NextRequest) {
   try {
     const encryptedString = share.secret.value[0];
     const encryptedObject = JSON.parse(encryptedString);
-    decryptedValue = decrypt(encryptedObject);
+    if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
+      decryptedValue = decrypt(encryptedObject);
+    } else if (encryptedObject.ciphertext && encryptedObject.iv) {
+      const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+      const projectKey = deriveProjectKey(share.secret.projectId);
+      decryptedValue = decryptSecretValue(encryptedObject, projectKey);
+    } else {
+      decryptedValue = encryptedString;
+    }
   } catch (e) {
     console.error("Failed to decrypt shared secret:", e);
   }

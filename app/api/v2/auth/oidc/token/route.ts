@@ -44,6 +44,18 @@ export async function POST(req: NextRequest) {
       { expiresIn: '5m' }
     );
 
+    // 4. Generate Workload Envelope if workload public key is provided
+    let envelope = null;
+    if (body.workloadPublicKey && projectId) {
+      try {
+        const { deriveProjectKey, createWorkloadKeyEnvelope } = await import('@/lib/crypto/e2ee');
+        const projectKey = deriveProjectKey(projectId);
+        envelope = createWorkloadKeyEnvelope(projectKey, body.workloadPublicKey);
+      } catch (envErr: any) {
+        console.warn('[OIDC] Could not generate workload key envelope:', envErr.message);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       tokenType: 'Bearer',
@@ -54,8 +66,7 @@ export async function POST(req: NextRequest) {
         repository: repo,
         issuer: decodedPayload.iss
       },
-      // Note: In Phase 3, this will also return the encrypted project key envelope
-      envelope: null
+      envelope
     });
   } catch (error: any) {
     console.error('[API v2 OIDC] Authentication failed:', error.message);

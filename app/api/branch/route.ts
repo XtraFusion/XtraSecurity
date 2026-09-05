@@ -127,6 +127,13 @@ export async function GET(request: NextRequest) {
                         ...h,
                         value: decrypt(histEncryptedObject)
                     };
+                } else if (histEncryptedObject.ciphertext && histEncryptedObject.iv) {
+                    const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
+                    const projectKey = deriveProjectKey(branch.projectId);
+                    return {
+                        ...h,
+                        value: decryptSecretValue(histEncryptedObject, projectKey)
+                    };
                 }
                 return h;
             } catch (e) {

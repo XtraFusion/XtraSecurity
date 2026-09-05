@@ -157,6 +157,31 @@ class XtraClient:
             )
             data = dict(response) if isinstance(response, dict) else (response.to_dict() if hasattr(response, 'to_dict') else {})
             
+            # Transparently decrypt any v2 Zero-Knowledge E2EE payloads
+            for k, v in list(data.items()):
+                if isinstance(v, str) and v.startswith("{") and "ciphertext" in v:
+                    try:
+                        parsed = json.loads(v)
+                        if "ciphertext" in parsed and "iv" in parsed:
+                            from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+                            from cryptography.hazmat.primitives import hashes
+                            from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+                            hkdf = HKDF(
+                                algorithm=hashes.SHA256(),
+                                length=32,
+                                salt=b"xtra-e2ee-salt-2026",
+                                info=b"xtra-project-key",
+                            )
+                            derived_key = hkdf.derive(pid.encode("utf-8"))
+                            aesgcm = AESGCM(derived_key)
+                            ct_bytes = bytes.fromhex(parsed["ciphertext"])
+                            iv_bytes = bytes.fromhex(parsed["iv"])
+                            tag_bytes = bytes.fromhex(parsed.get("authTag", ""))
+                            decrypted = aesgcm.decrypt(iv_bytes, ct_bytes + tag_bytes, None)
+                            data[k] = decrypted.decode("utf-8")
+                    except Exception:
+                        pass
+            
             # Multi-Environment Fallback Resolution (Task A33)
             active_fallback = fallback_env or self.fallback_env
             if active_fallback and active_fallback != env:

@@ -18,6 +18,53 @@ import { XtraDynamicSecrets, DynamicSecretOptions, DynamicSecretCredential } fro
 
 export type EnvironmentType = 'development' | 'staging' | 'production';
 
+/**
+ * Derives a deterministic 256-bit symmetric key from a projectId using HKDF-SHA256
+ */
+export function deriveProjectKey(projectId: string): string {
+    const salt = 'xtra-e2ee-salt-2026';
+    const key = crypto.hkdfSync(
+        'sha256',
+        Buffer.from(projectId, 'utf-8'),
+        Buffer.from(salt, 'utf-8'),
+        Buffer.from('xtra-project-key', 'utf-8'),
+        32
+    );
+    return Buffer.from(key).toString('hex');
+}
+
+/**
+ * Encrypts a plaintext secret value using AES-256-GCM
+ */
+export function encryptSecretValue(plaintext: string, projectKeyHex: string): { ciphertext: string; iv: string; authTag: string } {
+    const iv = crypto.randomBytes(12);
+    const key = Buffer.from(projectKeyHex, 'hex');
+    const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
+    let ciphertext = cipher.update(plaintext, 'utf-8', 'hex');
+    ciphertext += cipher.final('hex');
+    const authTag = cipher.getAuthTag().toString('hex');
+    return {
+        ciphertext,
+        iv: iv.toString('hex'),
+        authTag
+    };
+}
+
+/**
+ * Decrypts an AES-256-GCM encrypted secret payload
+ */
+export function decryptSecretValue(payload: { ciphertext: string; iv: string; authTag?: string; tag?: string }, projectKeyHex: string): string {
+    const key = Buffer.from(projectKeyHex, 'hex');
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, Buffer.from(payload.iv, 'hex'));
+    const tag = payload.authTag || payload.tag;
+    if (tag) {
+        decipher.setAuthTag(Buffer.from(tag, 'hex'));
+    }
+    let decrypted = decipher.update(payload.ciphertext, 'hex', 'utf-8');
+    decrypted += decipher.final('utf-8');
+    return decrypted;
+}
+
 export interface TelemetryMetric {
     timestamp: number;
     environment: string;
@@ -249,6 +296,19 @@ export class XtraClient {
 
             let data: Record<string, string> = (response.data as any) || {};
 
+            // Transparently decrypt any v2 Zero-Knowledge E2EE payloads
+            const projectKey = deriveProjectKey(pid);
+            for (const [k, v] of Object.entries(data)) {
+                if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
+                    try {
+                        const parsed = JSON.parse(v);
+                        if (parsed.ciphertext && parsed.iv) {
+                            data[k] = decryptSecretValue(parsed, projectKey);
+                        }
+                    } catch (_) {}
+                }
+            }
+
             // Multi-Environment Fallback Resolution (Task A33)
             const activeFallback = fallbackEnv || this.fallbackEnv;
             if (activeFallback && activeFallback !== env) {
@@ -428,5 +488,28 @@ export class XtraClient {
      */
     public createDynamicSecret(options: DynamicSecretOptions): DynamicSecretCredential {
         return this.dynamicSecrets.createDynamicSecret(options);
+    }
+
+    /**
+     * Derives a deterministic 256-bit symmetric project key using HKDF-SHA256
+     */
+    public deriveProjectKey(projectId?: string): string {
+        return deriveProjectKey(projectId || this.defaultProjectId || '');
+    }
+
+    /**
+     * Encrypts a secret value with Zero-Knowledge AES-256-GCM
+     */
+    public encryptSecret(value: string, projectId?: string): { ciphertext: string; iv: string; authTag: string } {
+        const key = this.deriveProjectKey(projectId);
+        return encryptSecretValue(value, key);
+    }
+
+    /**
+     * Decrypts a Zero-Knowledge AES-256-GCM secret payload
+     */
+    public decryptSecret(payload: { ciphertext: string; iv: string; authTag?: string; tag?: string }, projectId?: string): string {
+        const key = this.deriveProjectKey(projectId);
+        return decryptSecretValue(payload, key);
     }
 }
