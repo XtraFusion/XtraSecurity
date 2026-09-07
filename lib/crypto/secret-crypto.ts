@@ -55,7 +55,7 @@ export class SecretCryptoStrategy {
       // Strategy 2: Project-derived E2EE
       if (parsed.ciphertext && parsed.iv) {
         const projectKey = deriveProjectKey(projectId);
-        return decryptSecretValue(parsed, projectKey, projectId);
+        return decryptSecretValue(parsed, projectKey);
       }
 
       return val;
@@ -87,14 +87,14 @@ export class SecretCryptoStrategy {
               val = decrypt(parsed);
             } else if (parsed.ciphertext && parsed.iv) {
               const projectKey = deriveProjectKey(projectId);
-              val = decryptSecretValue(parsed, projectKey, projectId);
+              val = decryptSecretValue(parsed, projectKey);
             } else if (Array.isArray(parsed) && parsed.length > 0) {
               const inner = JSON.parse(parsed[0]);
               if (inner && inner.iv && inner.encryptedData && inner.authTag) {
                 val = decrypt(inner);
               } else if (inner && inner.ciphertext && inner.iv) {
                 const projectKey = deriveProjectKey(projectId);
-                val = decryptSecretValue(inner, projectKey, projectId);
+                val = decryptSecretValue(inner, projectKey);
               }
             }
           } catch (_) {

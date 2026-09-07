@@ -186,31 +186,45 @@ function rawHkdfSha256(userSecret: string, salt: string, info: string): Uint8Arr
 }
 
 /**
+ * Master Secret Seed for Zero-Knowledge Project Key Derivation.
+ * Prioritizes environment variables XTRA_MASTER_SECRET and ENCRYPTION_KEY.
+ */
+export function getMasterSecret(): string {
+  if (typeof process !== 'undefined' && process.env) {
+    if (process.env.XTRA_MASTER_SECRET) return process.env.XTRA_MASTER_SECRET;
+    if (process.env.ENCRYPTION_KEY) return process.env.ENCRYPTION_KEY;
+  }
+  return 'xtra-zero-knowledge-master';
+}
+
+/**
  * Derive a unique 256-bit AES Project Symmetric Key dynamically.
  * Deterministic and cryptographically audited HKDF-SHA256 across Node.js and Browser.
  */
-export function deriveProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
+export function deriveProjectKey(projectId: string, userSecret?: string): string {
+  const secret = userSecret || getMasterSecret();
   if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.hkdfSync) {
     const salt = Buffer.from(`project_salt_${projectId}`);
     const info = Buffer.from('xtra-e2ee-project-key-v2');
-    const derived = crypto.hkdfSync('sha256', Buffer.from(userSecret), salt, info, 32);
+    const derived = crypto.hkdfSync('sha256', Buffer.from(secret), salt, info, 32);
     return Buffer.from(derived).toString('hex');
   }
 
   // Pure JavaScript audited RFC-5869 HKDF-SHA256 for browser / Edge / client runtimes
-  const derivedBytes = rawHkdfSha256(userSecret, `project_salt_${projectId}`, 'xtra-e2ee-project-key-v2');
+  const derivedBytes = rawHkdfSha256(secret, `project_salt_${projectId}`, 'xtra-e2ee-project-key-v2');
   return bytesToHex(derivedBytes);
 }
 
 /**
  * Async WebCrypto native HKDF Project Key derivation
  */
-export async function deriveProjectKeyWebCrypto(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): Promise<string> {
+export async function deriveProjectKeyWebCrypto(projectId: string, userSecret?: string): Promise<string> {
+  const secret = userSecret || getMasterSecret();
   if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
     const enc = new TextEncoder();
     const keyMaterial = await window.crypto.subtle.importKey(
       'raw',
-      enc.encode(userSecret),
+      enc.encode(secret),
       { name: 'HKDF' },
       false,
       ['deriveBits']
@@ -228,7 +242,7 @@ export async function deriveProjectKeyWebCrypto(projectId: string, userSecret: s
     const bytes = new Uint8Array(derivedBits);
     return Array.from(bytes).map(b => b.toString(16).padStart(2, '0')).join('');
   }
-  return deriveProjectKey(projectId, userSecret);
+  return deriveProjectKey(projectId, secret);
 }
 
 /**
@@ -363,171 +377,47 @@ export async function encryptSecretValueWebCrypto(plaintext: string, projectKeyH
 }
 
 /**
- * Legacy decode for backward compatibility with older mock payloads
- */
-function legacyXorDecode(ciphertext: string, projectKeyHex: string): string {
-  const hex = ciphertext || '';
-  const bytes: number[] = [];
-  for (let c = 0; c < hex.length; c += 2) {
-    bytes.push(parseInt(hex.substr(c, 2), 16));
-  }
-  const encoder = new TextEncoder();
-  const keyBytes = Array.from(encoder.encode(projectKeyHex.slice(0, 32)));
-  const decryptedBytes = bytes.map((b, i) => b ^ keyBytes[i % keyBytes.length]);
-  return new TextDecoder().decode(new Uint8Array(decryptedBytes));
-}
-
-/**
- * Legacy browser key derivation (v2 subtle) for backward compatibility with secrets encrypted in earlier browser sessions
- */
-export function deriveLegacyBrowserProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
-  const str = `${userSecret}:${projectId}:xtra-e2ee-v2-subtle`;
-  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0, h3 = 0x85ebca6b ^ 0, h4 = 0xc2b2ae35 ^ 0;
-  for (let i = 0, ch; i < str.length; i++) {
-    ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-    h3 = Math.imul(h3 ^ ch, 2246822507);
-    h4 = Math.imul(h4 ^ ch, 3266489909);
-  }
-  const part1 = (Math.imul(h1 ^ (h1 >>> 16), 2246822507) >>> 0).toString(16).padStart(8, '0');
-  const part2 = (Math.imul(h2 ^ (h2 >>> 13), 3266489909) >>> 0).toString(16).padStart(8, '0');
-  const part3 = (Math.imul(h3 ^ (h3 >>> 15), 2654435761) >>> 0).toString(16).padStart(8, '0');
-  const part4 = (Math.imul(h4 ^ (h4 >>> 11), 1597334677) >>> 0).toString(16).padStart(8, '0');
-  return (part1 + part2 + part3 + part4 + part1 + part2 + part3 + part4).slice(0, 64);
-}
-
-/**
- * Legacy browser key derivation (v1) for backward compatibility with early prototype mock payloads
- */
-export function deriveLegacyBrowserV1ProjectKey(projectId: string, userSecret: string = 'xtra-zero-knowledge-master'): string {
-  const str = `${userSecret}:${projectId}:xtra-e2ee-v2`;
-  let h1 = 0xdeadbeef ^ 0, h2 = 0x41c6ce57 ^ 0;
-  for (let i = 0, ch; i < str.length; i++) {
-    ch = str.charCodeAt(i);
-    h1 = Math.imul(h1 ^ ch, 2654435761);
-    h2 = Math.imul(h2 ^ ch, 1597334677);
-  }
-  h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
-  h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
-  const hash = (4294967296 * (2097151 & h2) + (h1 >>> 0)).toString(16);
-  return (hash + hash + hash + hash).slice(0, 64);
-}
-
-/**
  * Decrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI & Browser)
  */
-export function decryptSecretValue(
-  payload: EncryptedPayload,
-  projectKeyHex: string,
-  projectIdFallback?: string
-): string {
-  const targetProjectId = payload.projectId || projectIdFallback;
-
+export function decryptSecretValue(payload: EncryptedPayload, projectKeyHex: string): string {
   if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.createDecipheriv) {
-    try {
-      const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
-      const iv = Buffer.from(payload.iv, 'hex');
-      const authTag = Buffer.from(payload.authTag, 'hex');
+    const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
+    const iv = Buffer.from(payload.iv, 'hex');
+    const authTag = Buffer.from(payload.authTag, 'hex');
 
-      const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
-      decipher.setAuthTag(authTag);
+    const decipher = crypto.createDecipheriv('aes-256-gcm', key, iv);
+    decipher.setAuthTag(authTag);
 
-      let decrypted = decipher.update(payload.ciphertext, 'hex', 'utf8');
-      decrypted += decipher.final('utf8');
-      return decrypted;
-    } catch (e) {
-      // Automatic fallback for legacy browser-encrypted payloads if authentication fails
-      if (targetProjectId) {
-        const legacyKeys = [
-          deriveLegacyBrowserProjectKey(targetProjectId),
-          deriveLegacyBrowserV1ProjectKey(targetProjectId)
-        ];
-        for (const legKey of legacyKeys) {
-          if (legKey !== projectKeyHex) {
-            try {
-              const k = Buffer.from(legKey.slice(0, 64).padEnd(64, '0'), 'hex');
-              const iv = Buffer.from(payload.iv, 'hex');
-              const authTag = Buffer.from(payload.authTag, 'hex');
-              const decipher = crypto.createDecipheriv('aes-256-gcm', k, iv);
-              decipher.setAuthTag(authTag);
-              let decrypted = decipher.update(payload.ciphertext, 'hex', 'utf8');
-              decrypted += decipher.final('utf8');
-              return decrypted;
-            } catch (_) {}
-          }
-        }
-      }
-
-      if (payload.authTag === '00112233445566778899aabbccddeeff') {
-        return legacyXorDecode(payload.ciphertext, projectKeyHex);
-      }
-      throw e;
-    }
+    let decrypted = decipher.update(payload.ciphertext, 'hex', 'utf8');
+    decrypted += decipher.final('utf8');
+    return decrypted;
   }
 
   // Browser / Edge synchronous decryption using @noble/ciphers AES-256-GCM
   const nobleGcm = getNobleGcm();
   if (nobleGcm) {
-    try {
-      const keyBytes = hexToBytes(projectKeyHex.slice(0, 64).padEnd(64, '0'));
-      const ivBytes = hexToBytes(payload.iv);
-      const ctBytes = hexToBytes(payload.ciphertext);
-      const tagBytes = hexToBytes(payload.authTag);
+    const keyBytes = hexToBytes(projectKeyHex.slice(0, 64).padEnd(64, '0'));
+    const ivBytes = hexToBytes(payload.iv);
+    const ctBytes = hexToBytes(payload.ciphertext);
+    const tagBytes = hexToBytes(payload.authTag);
 
-      const combined = new Uint8Array(ctBytes.length + tagBytes.length);
-      combined.set(ctBytes, 0);
-      combined.set(tagBytes, ctBytes.length);
+    const combined = new Uint8Array(ctBytes.length + tagBytes.length);
+    combined.set(ctBytes, 0);
+    combined.set(tagBytes, ctBytes.length);
 
-      const cipher = nobleGcm(keyBytes, ivBytes);
-      const decryptedBytes = cipher.decrypt(combined);
-      return new TextDecoder().decode(decryptedBytes);
-    } catch (err) {
-      if (targetProjectId) {
-        const legacyKeys = [
-          deriveLegacyBrowserProjectKey(targetProjectId),
-          deriveLegacyBrowserV1ProjectKey(targetProjectId)
-        ];
-        for (const legKey of legacyKeys) {
-          if (legKey !== projectKeyHex) {
-            try {
-              const keyBytes = hexToBytes(legKey.slice(0, 64).padEnd(64, '0'));
-              const ivBytes = hexToBytes(payload.iv);
-              const ctBytes = hexToBytes(payload.ciphertext);
-              const tagBytes = hexToBytes(payload.authTag);
-              const combined = new Uint8Array(ctBytes.length + tagBytes.length);
-              combined.set(ctBytes, 0);
-              combined.set(tagBytes, ctBytes.length);
-              const cipher = nobleGcm(keyBytes, ivBytes);
-              const decryptedBytes = cipher.decrypt(combined);
-              return new TextDecoder().decode(decryptedBytes);
-            } catch (_) {}
-          }
-        }
-      }
-
-      if (payload.authTag === '00112233445566778899aabbccddeeff') {
-        return legacyXorDecode(payload.ciphertext, projectKeyHex);
-      }
-      throw err;
-    }
+    const cipher = nobleGcm(keyBytes, ivBytes);
+    const decryptedBytes = cipher.decrypt(combined);
+    return new TextDecoder().decode(decryptedBytes);
   }
 
-  if (payload.authTag === '00112233445566778899aabbccddeeff') {
-    return legacyXorDecode(payload.ciphertext, projectKeyHex);
-  }
   throw new Error("Secure AES-256-GCM decipher is unavailable in this environment");
 }
 
 /**
  * Async WebCrypto Native AES-256-GCM Decryption (Browser-recommended)
  */
-export async function decryptSecretValueWebCrypto(
-  payload: EncryptedPayload,
-  projectKeyHex: string,
-  projectIdFallback?: string
-): Promise<string> {
-  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle && payload.authTag !== '00112233445566778899aabbccddeeff') {
+export async function decryptSecretValueWebCrypto(payload: EncryptedPayload, projectKeyHex: string): Promise<string> {
+  if (typeof window !== 'undefined' && window.crypto && window.crypto.subtle) {
     try {
       const keyBytes = new Uint8Array(32);
       const cleanKeyHex = projectKeyHex.slice(0, 64).padEnd(64, '0');
@@ -576,7 +466,7 @@ export async function decryptSecretValueWebCrypto(
     }
   }
 
-  return decryptSecretValue(payload, projectKeyHex, projectIdFallback);
+  return decryptSecretValue(payload, projectKeyHex);
 }
 
 /**
