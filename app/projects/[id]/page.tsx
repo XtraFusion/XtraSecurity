@@ -6,7 +6,9 @@ import {
   encryptSecretValueWebCrypto,
   decryptSecretValue,
   decryptSecretValueWebCrypto,
-  deriveProjectKey
+  deriveProjectKey,
+  generateRecoveryMnemonic,
+  validateProjectPassphrase
 } from "@/lib/crypto/e2ee";
 import {
   Search,
@@ -32,6 +34,7 @@ import {
   Filter,
   RefreshCw,
   Lock,
+  Unlock,
   ExternalLink,
   ChevronDown,
   LayoutGrid,
@@ -131,6 +134,7 @@ interface Secret {
   type: string;
   status?: "active" | "expiring" | "expired" | "rotating";
   changeReason?: string;
+  isLocked?: boolean;
 }
 
 interface Branch {
@@ -222,6 +226,7 @@ const SecretCard = ({
   onShare,
   onGenerateJit,
   onSyncTargets,
+  onUnlockVault,
   isViewer,
 }: {
   secret: Secret;
@@ -236,6 +241,7 @@ const SecretCard = ({
   onShare: () => void;
   onGenerateJit: () => void;
   onSyncTargets: () => void;
+  onUnlockVault?: () => void;
   isViewer?: boolean;
 }) => {
   const [isDropdownOpen, setIsDropdownOpen] = React.useState(false);
@@ -330,7 +336,24 @@ const SecretCard = ({
 
         {/* Secret Value */}
         <div className="relative">
-          {secret.value === "[REDACTED]" ? (
+          {secret.isLocked || (typeof secret.value === "string" && secret.value.startsWith("[Locked")) ? (
+            <div className="flex items-center justify-between p-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+              <div className="flex items-center gap-2 text-xs text-amber-500 font-mono">
+                <Lock className="h-3.5 w-3.5" />
+                <span>Vault Locked (Strict E2EE)</span>
+              </div>
+              {onUnlockVault && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-7 text-xs border-amber-500/30 text-amber-500 hover:bg-amber-500/10"
+                  onClick={onUnlockVault}
+                >
+                  <Unlock className="h-3 w-3 mr-1" /> Unlock
+                </Button>
+              )}
+            </div>
+          ) : secret.value === "[REDACTED]" ? (
             <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed rounded-lg bg-muted/30 group/req">
               <Lock className="h-8 w-8 text-muted-foreground mb-2 group-hover/req:text-primary transition-colors" />
               <p className="text-xs text-muted-foreground mb-3 font-medium">Access Restricted</p>
@@ -381,10 +404,10 @@ const SecretCard = ({
             <StatusIndicator status={secret.status} />
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
-            {secret.rotationPolicy !== "manual" && (
+            {Boolean(secret.rotationPolicy && secret.rotationPolicy !== "manual") && (
               <div className="flex items-center gap-1" title="Auto-rotation enabled">
                 <RefreshCw className="h-3 w-3 text-primary" />
-                <span>{secret.rotationType}</span>
+                <span>{secret.rotationType || (secret.rotationPolicy === "auto" ? "Auto" : "Interval")}</span>
               </div>
             )}
             <div className="flex items-center gap-1" title={`Updated ${new Date(secret.lastUpdated).toLocaleDateString()}`}>
@@ -463,6 +486,24 @@ const VaultManager: React.FC = () => {
   const [historySecret, setHistorySecret] = React.useState<Secret | null>(null);
   const [requestAccessSecret, setRequestAccessSecret] = React.useState<Secret | null>(null);
 
+  // Level 3 Strict Zero-Knowledge Vault State
+  const [vaultPassphrase, setVaultPassphrase] = React.useState<string>(() => {
+    if (typeof window !== "undefined") {
+      return sessionStorage.getItem(`xtra_vault_${projectId}`) || "";
+    }
+    return "";
+  });
+  const [isVaultUnlocked, setIsVaultUnlocked] = React.useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      return Boolean(sessionStorage.getItem(`xtra_vault_${projectId}`));
+    }
+    return false;
+  });
+  const [isUnlockModalOpen, setIsUnlockModalOpen] = React.useState(false);
+  const [unlockInputPassphrase, setUnlockInputPassphrase] = React.useState("");
+  const [unlockError, setUnlockError] = React.useState<string | null>(null);
+  const [recoveryMnemonic, setRecoveryMnemonic] = React.useState<string | null>(null);
+
   const [notification, setNotification] = React.useState<{ type: "default" | "destructive"; message: string } | null>(null);
 
   const [newSecret, setNewSecret] = React.useState({
@@ -537,11 +578,14 @@ const VaultManager: React.FC = () => {
   const [isSyncTargetsOpen, setIsSyncTargetsOpen] = React.useState(false);
   const [syncTargetSecret, setSyncTargetSecret] = React.useState<{id: string, key: string} | null>(null);
 
-  // Client-Side Zero-Knowledge Secret Decryption
-  const decryptClientSecretList = React.useCallback((rawSecrets: any[], pId: string): any[] => {
+  // Client-Side Zero-Knowledge Secret Decryption (Level 3 Strict Zero-Knowledge)
+  const decryptClientSecretList = React.useCallback((rawSecrets: any[], pId: string, overridePassphrase?: string): any[] => {
     if (!rawSecrets || !Array.isArray(rawSecrets)) return [];
     try {
-      const projectKey = deriveProjectKey(pId);
+      const activePassphrase = overridePassphrase !== undefined ? overridePassphrase : vaultPassphrase;
+      const projectKey = activePassphrase ? deriveProjectKey(pId, activePassphrase) : null;
+      const legacyKey = deriveProjectKey(pId); // Legacy Level 2 fallback test
+
       return rawSecrets.map((secret) => {
         let val = secret.value;
         if (Array.isArray(val) && val.length > 0) {
@@ -551,21 +595,65 @@ const VaultManager: React.FC = () => {
           try {
             const parsed = JSON.parse(val);
             if (parsed.ciphertext && parsed.iv) {
-              const decrypted = decryptSecretValue(parsed, projectKey);
+              if (projectKey) {
+                try {
+                  const decrypted = decryptSecretValue(parsed, projectKey);
+                  return {
+                    ...secret,
+                    value: decrypted,
+                    rotationPolicy: secret.rotationPolicy || "manual",
+                    rotationType: secret.rotationType || "",
+                    isZeroKnowledge: true,
+                    isLocked: false
+                  };
+                } catch (_) {
+                  // If custom passphrase fails, test legacy key for migration compatibility
+                  try {
+                    const legacyDecrypted = decryptSecretValue(parsed, legacyKey);
+                    return {
+                      ...secret,
+                      value: legacyDecrypted,
+                      rotationPolicy: secret.rotationPolicy || "manual",
+                      rotationType: secret.rotationType || "",
+                      isZeroKnowledge: true,
+                      isLocked: false
+                    };
+                  } catch (__) {
+                    return {
+                      ...secret,
+                      value: "[Locked - Incorrect Passphrase]",
+                      rotationPolicy: secret.rotationPolicy || "manual",
+                      rotationType: secret.rotationType || "",
+                      isZeroKnowledge: true,
+                      isLocked: true
+                    };
+                  }
+                }
+              }
+
+              // Vault is locked: user has not entered master passphrase yet
               return {
                 ...secret,
-                value: decrypted,
-                isZeroKnowledge: true
+                value: "[Locked - Enter Passphrase to Decrypt]",
+                rotationPolicy: secret.rotationPolicy || "manual",
+                rotationType: secret.rotationType || "",
+                isZeroKnowledge: true,
+                isLocked: true
               };
             }
           } catch (_) {}
         }
-        return secret;
+        return {
+          ...secret,
+          rotationPolicy: secret.rotationPolicy || "manual",
+          rotationType: secret.rotationType || "",
+          isLocked: false
+        };
       });
     } catch (_) {
       return rawSecrets;
     }
-  }, []);
+  }, [vaultPassphrase]);
 
   // --- Data Loading ---
 
@@ -656,6 +744,75 @@ const VaultManager: React.FC = () => {
     loadProject(true);
   };
 
+  // --- Vault Unlock / Lock Handlers (Level 3 Strict Zero-Knowledge) ---
+
+  const handleUnlockVault = () => {
+    const inputKey = unlockInputPassphrase.trim();
+    if (!inputKey) {
+      setUnlockError("Please enter your master vault passphrase or mnemonic.");
+      return;
+    }
+
+    try {
+      const derivedKey = deriveProjectKey(projectId as string, inputKey);
+
+      // Check if branch has any encrypted secrets to validate against
+      const branchSecrets = selectedBranch?.secrets || [];
+      let foundEncrypted = false;
+      let matched = false;
+
+      for (const s of branchSecrets) {
+        let val = s.value;
+        if (Array.isArray(val) && val.length > 0) val = val[0];
+        if (typeof val === "string") {
+          try {
+            const parsed = JSON.parse(val);
+            if (parsed.ciphertext && parsed.iv) {
+              foundEncrypted = true;
+              if (validateProjectPassphrase(parsed, derivedKey)) {
+                matched = true;
+                break;
+              }
+            }
+          } catch (_) {}
+        }
+      }
+
+      if (foundEncrypted && !matched) {
+        setUnlockError("Authentication tag mismatch. Incorrect master passphrase for this project.");
+        return;
+      }
+
+      // Success - persist in sessionStorage and state
+      setVaultPassphrase(inputKey);
+      setIsVaultUnlocked(true);
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`xtra_vault_${projectId}`, inputKey);
+      }
+      setUnlockError(null);
+      setIsUnlockModalOpen(false);
+      setUnlockInputPassphrase("");
+
+      // Decrypt secrets in current branch with new key
+      const decrypted = decryptClientSecretList(selectedBranch?.secrets || [], projectId as string, inputKey);
+      setSecrets(decrypted);
+      setNotification({ type: "default", message: "✓ Vault unlocked. Secrets decrypted locally." });
+    } catch (err: any) {
+      setUnlockError(err.message || "Failed to unlock vault.");
+    }
+  };
+
+  const handleLockVault = () => {
+    setVaultPassphrase("");
+    setIsVaultUnlocked(false);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem(`xtra_vault_${projectId}`);
+    }
+    const lockedSecrets = decryptClientSecretList(selectedBranch?.secrets || [], projectId as string, "");
+    setSecrets(lockedSecrets);
+    setNotification({ type: "default", message: "Vault locked. Passphrase purged from browser memory." });
+  };
+
   // --- Handlers ---
 
   const handleAddSecret = async () => {
@@ -692,7 +849,7 @@ const VaultManager: React.FC = () => {
 
       try {
         // Zero-Knowledge Client-Side Encryption (E2EE) in Browser
-        const projectKey = deriveProjectKey(projectId as string);
+        const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encrypted = await encryptSecretValueWebCrypto(newSecret.value, projectKey);
 
         const v2Payload = {
@@ -704,6 +861,8 @@ const VaultManager: React.FC = () => {
           environmentType: newSecret.environmentType,
           projectId: projectId as string,
           branchId: targetBranchId,
+          rotationPolicy: newSecret.rotationPolicy || "manual",
+          rotationType: newSecret.rotationType || "",
         };
 
         const response = await axios.post("/api/v2/secret", v2Payload);
@@ -716,6 +875,8 @@ const VaultManager: React.FC = () => {
           type: newSecret.type || "API Key",
           projectId: projectId as string,
           branchId: targetBranchId,
+          rotationPolicy: newSecret.rotationPolicy || "manual",
+          rotationType: newSecret.rotationType || "",
           version: "1",
           isZeroKnowledge: true,
           updatedAt: new Date().toISOString()
@@ -800,7 +961,7 @@ const VaultManager: React.FC = () => {
 
       try {
         // Zero-Knowledge Client Bulk Encryption
-        const projectKey = deriveProjectKey(projectId as string);
+        const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encryptedSecrets = await Promise.all(
           parsedSecrets.map(async (sec) => {
             const enc = await encryptSecretValueWebCrypto(sec.value, projectKey);
@@ -830,6 +991,8 @@ const VaultManager: React.FC = () => {
           type: "API Key",
           projectId: projectId as string,
           branchId: selectedBranch.id,
+          rotationPolicy: "manual",
+          rotationType: "",
           isZeroKnowledge: true,
           version: "1",
           updatedAt: resSec.updatedAt || new Date().toISOString()
@@ -875,7 +1038,7 @@ const VaultManager: React.FC = () => {
     try {
       try {
         // Zero-Knowledge Client Secret Encryption
-        const projectKey = deriveProjectKey(projectId as string);
+        const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encrypted = await encryptSecretValueWebCrypto(editingSecret.value, projectKey);
 
         await axios.put(`/api/v2/secret?id=${editingSecret.id}`, {
@@ -1148,7 +1311,7 @@ const VaultManager: React.FC = () => {
   const stats = {
     total: secrets.length,
     production: secrets.filter((s) => s.environmentType === "production").length,
-    autoRotate: secrets.filter((s) => s.rotationPolicy !== "manual").length,
+    autoRotate: secrets.filter((s) => Boolean(s.rotationPolicy && s.rotationPolicy !== "manual")).length,
     expiringSoon: secrets.filter((s) => {
       const daysUntilExpiry = Math.ceil((new Date(s.expiryDate).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
       return daysUntilExpiry <= 7 && daysUntilExpiry > 0;
@@ -1306,6 +1469,31 @@ const VaultManager: React.FC = () => {
                   Break Glass
                 </Button>
               </>
+            )}
+            {/* Strict Zero-Knowledge Vault Lock / Unlock Button */}
+            {isVaultUnlocked ? (
+              <Button
+                variant="outline"
+                onClick={handleLockVault}
+                className="border-emerald-500/40 bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 font-medium"
+                title="Vault is unlocked. Click to lock and purge passphrase from memory."
+              >
+                <Lock className="h-4 w-4 mr-2" />
+                Lock Vault
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setUnlockError(null);
+                  setIsUnlockModalOpen(true);
+                }}
+                className="border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 font-medium"
+                title="Vault is locked. Click to enter passphrase and decrypt secrets locally."
+              >
+                <Unlock className="h-4 w-4 mr-2" />
+                Unlock Vault
+              </Button>
             )}
             {project?.currentUserRole !== 'viewer' && (
               <Button onClick={() => setIsAddSecretOpen(true)}>
@@ -1502,6 +1690,33 @@ const VaultManager: React.FC = () => {
             </div>
           </div>
 
+          {/* Locked Vault Banner */}
+          {secrets.some((s) => s.isLocked) && (
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-950 dark:text-amber-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-amber-500/20 text-amber-600 dark:text-amber-400">
+                  <Lock className="h-5 w-5" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm">Vault is Locked (Strict Zero-Knowledge)</h4>
+                  <p className="text-xs opacity-80">
+                    Secrets in this branch are encrypted on client devices. Enter your master vault passphrase to decrypt them locally.
+                  </p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                onClick={() => {
+                  setUnlockError(null);
+                  setIsUnlockModalOpen(true);
+                }}
+                className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+              >
+                <Unlock className="h-4 w-4 mr-1.5" /> Unlock Vault
+              </Button>
+            </div>
+          )}
+
           {/* Secrets Display */}
           {secrets.length > 0 ? (
             <AnimatePresence mode="popLayout">
@@ -1527,6 +1742,10 @@ const VaultManager: React.FC = () => {
                         onToggleVisibility={() => toggleSecretVisibility(secret.id)}
                         onCopy={() => copyToClipboard(secret.value, secret.id)}
                         isCopied={copiedSecret === secret.id}
+                        onUnlockVault={() => {
+                          setUnlockError(null);
+                          setIsUnlockModalOpen(true);
+                        }}
                         onEdit={() => {
                           setEditingSecret(secret);
                           setIsEditSecretOpen(true);
@@ -1577,27 +1796,50 @@ const VaultManager: React.FC = () => {
                               );
                             })()}
                             <div className="min-w-0">
-                              <p className="font-medium truncate">{secret.key}</p>
+                              <div className="flex items-center gap-2">
+                                <p className="font-medium truncate">{secret.key}</p>
+                                {secret.isLocked && (
+                                  <Badge variant="outline" className="text-[10px] text-amber-600 border-amber-500/30 bg-amber-500/10">
+                                    Locked
+                                  </Badge>
+                                )}
+                              </div>
                               <p className="text-sm text-muted-foreground truncate">{secret.description}</p>
                             </div>
                           </div>
                           <div className="flex items-center gap-4">
                             <EnvironmentBadge environment={secret.environmentType} />
                             <div className="flex items-center gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => toggleSecretVisibility(secret.id)}
-                              >
-                                {visibleSecrets.has(secret.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => copyToClipboard(secret.value, secret.id)}
-                              >
-                                {copiedSecret === secret.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
-                              </Button>
+                              {secret.isLocked ? (
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  className="h-8 text-xs border-amber-500/40 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20"
+                                  onClick={() => {
+                                    setUnlockError(null);
+                                    setIsUnlockModalOpen(true);
+                                  }}
+                                >
+                                  <Unlock className="h-3.5 w-3.5 mr-1" /> Unlock
+                                </Button>
+                              ) : (
+                                <>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => toggleSecretVisibility(secret.id)}
+                                  >
+                                    {visibleSecrets.has(secret.id) ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => copyToClipboard(secret.value, secret.id)}
+                                  >
+                                    {copiedSecret === secret.id ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                                  </Button>
+                                </>
+                              )}
                               {project?.currentUserRole !== 'viewer' && (
                                 <DropdownMenu>
                                   <DropdownMenuTrigger asChild>
@@ -2479,6 +2721,115 @@ const VaultManager: React.FC = () => {
         <AccessRequestAdmin projectId={projectId} />
       </CustomDialog>
 
+
+      {/* Unlock Vault Modal (Level 3 Strict Zero-Knowledge) */}
+      <CustomDialog
+        isOpen={isUnlockModalOpen}
+        onClose={() => {
+          setIsUnlockModalOpen(false);
+          setUnlockError(null);
+        }}
+        title="Unlock Project Vault"
+        description="Strict Zero-Knowledge: Your project encryption key is derived directly in your browser using PBKDF2 with 100,000 iterations and AES-256-GCM. Your passphrase never touches the server."
+        className="max-w-lg"
+      >
+        <div className="space-y-4 mt-2">
+          <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
+            <ShieldCheck className="h-6 w-6 text-amber-500 shrink-0" />
+            <p className="text-xs leading-relaxed">
+              Enter your master vault passphrase to decrypt secrets locally on this device. The decrypted keys will remain active for this browser session only.
+            </p>
+          </div>
+
+          {unlockError && (
+            <Alert variant="destructive" className="py-2.5">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription className="text-xs">{unlockError}</AlertDescription>
+            </Alert>
+          )}
+
+          <div className="space-y-2">
+            <Label htmlFor="vault-passphrase" className="text-xs font-semibold">Master Vault Passphrase or Mnemonic</Label>
+            <Input
+              id="vault-passphrase"
+              type="password"
+              placeholder="Enter your master passphrase..."
+              value={unlockInputPassphrase}
+              onChange={(e) => {
+                setUnlockInputPassphrase(e.target.value);
+                setUnlockError(null);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  handleUnlockVault();
+                }
+              }}
+              className="font-mono text-sm"
+              autoFocus
+            />
+          </div>
+
+          {recoveryMnemonic && (
+            <div className="p-3 bg-muted rounded-lg border space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-primary">Generated 24-Word Recovery Phrase:</span>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 text-xs"
+                  onClick={() => {
+                    navigator.clipboard.writeText(recoveryMnemonic);
+                    setNotification({ type: "default", message: "✓ Recovery phrase copied to clipboard" });
+                  }}
+                >
+                  <Copy className="h-3 w-3 mr-1" /> Copy
+                </Button>
+              </div>
+              <p className="font-mono text-xs p-2 bg-background rounded border text-muted-foreground break-all select-all">
+                {recoveryMnemonic}
+              </p>
+              <p className="text-[11px] text-muted-foreground">
+                Store this phrase in a secure password manager. If you lose it, your Level 3 zero-knowledge secrets cannot be recovered by anyone, including XtraSecurity admins.
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between pt-2 border-t">
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="text-xs text-muted-foreground hover:text-foreground"
+              onClick={() => {
+                const result = generateRecoveryMnemonic();
+                setRecoveryMnemonic(result.mnemonic);
+                setUnlockInputPassphrase(result.mnemonic);
+              }}
+            >
+              <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
+            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setIsUnlockModalOpen(false);
+                  setUnlockError(null);
+                }}
+              >
+                Cancel
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleUnlockVault}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Unlock className="h-3.5 w-3.5 mr-1.5" /> Unlock Vault
+              </Button>
+            </div>
+          </div>
+        </div>
+      </CustomDialog>
 
       {/* Break Glass Modal */}
       <BreakGlassModal

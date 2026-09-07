@@ -78,73 +78,25 @@ export async function GET(request: NextRequest) {
       })
     );
 
-    // Decrypt secret values in each branch
+    // In Strict Zero-Knowledge (Level 3), the server never holds decryption keys.
+    // Return raw encrypted payloads for client-side WebCrypto decryption.
     const branchesWithDecryptedSecrets = branchesWithUsers.map((branch) => ({
       ...branch,
       secrets: branch.secrets?.map((secret) => {
         // Redact for Viewers, UNLESS they have active JIT access to this specific secret
         if (isViewer && !allowedSecretIds.has(secret.id)) {
-            return {
-                ...secret,
-                value: "[REDACTED]",
-                history: []
-            };
+          return {
+            ...secret,
+            value: ["[REDACTED]"],
+            history: []
+          };
         }
-
-        let decryptedValue = "";
-        try {
-          const encryptedString = secret.value[0];
-          if (typeof encryptedString === 'string' && encryptedString.startsWith('{')) {
-            const encryptedObject = JSON.parse(encryptedString);
-            if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
-              decryptedValue = decrypt(encryptedObject);
-            } else if (encryptedObject.ciphertext && encryptedObject.iv) {
-              const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-              const projectKey = deriveProjectKey(branch.projectId);
-              decryptedValue = decryptSecretValue(encryptedObject, projectKey);
-            } else {
-              decryptedValue = encryptedString;
-            }
-          } else {
-            decryptedValue = encryptedString || "";
-          }
-        } catch (error) {
-          console.error(`Failed to decrypt secret ${secret.id}:`, error);
-          decryptedValue = secret.value[0] || "[Decryption failed]";
-        }
-
-        // Decrypt history
-        const decryptedHistory = Array.isArray(secret.history) ? secret.history.map((h: any) => {
-            try {
-                // Check if value is array (as it is in DB) or string
-                const histRaw = Array.isArray(h.value) ? h.value[0] : h.value;
-                if (!histRaw) return h;
-
-                const histEncryptedObject = JSON.parse(histRaw);
-                // Check if it looks like an encrypted object
-                if (histEncryptedObject.iv && histEncryptedObject.encryptedData) {
-                    return {
-                        ...h,
-                        value: decrypt(histEncryptedObject)
-                    };
-                } else if (histEncryptedObject.ciphertext && histEncryptedObject.iv) {
-                    const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-                    const projectKey = deriveProjectKey(branch.projectId);
-                    return {
-                        ...h,
-                        value: decryptSecretValue(histEncryptedObject, projectKey)
-                    };
-                }
-                return h;
-            } catch (e) {
-                return h;
-            }
-        }) : secret.history;
 
         return {
           ...secret,
-          value: decryptedValue,
-          history: decryptedHistory
+          rotationPolicy: secret.rotationPolicy || "manual",
+          value: secret.value,
+          history: secret.history
         };
       }) || [],
     }));

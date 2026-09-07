@@ -19,15 +19,16 @@ import { XtraDynamicSecrets, DynamicSecretOptions, DynamicSecretCredential } fro
 export type EnvironmentType = 'development' | 'staging' | 'production';
 
 /**
- * Derives a deterministic 256-bit symmetric key from a projectId using HKDF-SHA256
+ * Derives a deterministic 256-bit symmetric key from a projectId and optional vault passphrase using HKDF-SHA256
  */
-export function deriveProjectKey(projectId: string): string {
-    const salt = 'xtra-e2ee-salt-2026';
+export function deriveProjectKey(projectId: string, userSecret: string = "xtra-zero-knowledge-master"): string {
+    const salt = Buffer.from(`project_salt_${projectId}`);
+    const info = Buffer.from('xtra-e2ee-project-key-v2');
     const key = crypto.hkdfSync(
         'sha256',
-        Buffer.from(projectId, 'utf-8'),
-        Buffer.from(salt, 'utf-8'),
-        Buffer.from('xtra-project-key', 'utf-8'),
+        Buffer.from(userSecret, 'utf-8'),
+        salt,
+        info,
         32
     );
     return Buffer.from(key).toString('hex');
@@ -98,6 +99,8 @@ export interface XtraClientOptions {
     groqApiKey?: string;
     /** Enable AI Sentinel Guard. Defaults to true. */
     enableSentinel?: boolean;
+    /** Master vault passphrase for Zero-Knowledge Level 3 client-side decryption. Defaults to XTRA_VAULT_PASSPHRASE env variable. */
+    vaultPassphrase?: string;
 }
 
 export class XtraError extends Error {
@@ -126,6 +129,7 @@ export class XtraClient {
     private maxRetries: number;
     private onTelemetry?: (metric: TelemetryMetric) => void;
     private enableSentinel: boolean;
+    private vaultPassphrase?: string;
 
     private cache: Map<string, { data: Record<string, string>; expiresAt: number }> = new Map();
     private autoRefreshTimer?: NodeJS.Timeout;
@@ -138,6 +142,7 @@ export class XtraClient {
 
         const basePath = options.apiUrl || process.env.XTRA_API_URL || 'https://www.xtrasecurity.in/api';
         this.defaultProjectId = options.projectId || process.env.XTRA_PROJECT_ID;
+        this.vaultPassphrase = options.vaultPassphrase || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
         this.useCache = options.cache !== false;
         this.cacheTtl = options.cacheTtl || 30000;
         this.fallbackEnv = options.fallbackEnv;
@@ -296,8 +301,8 @@ export class XtraClient {
 
             let data: Record<string, string> = (response.data as any) || {};
 
-            // Transparently decrypt any v2 Zero-Knowledge E2EE payloads
-            const projectKey = deriveProjectKey(pid);
+            // Transparently decrypt any v2/v3 Zero-Knowledge E2EE payloads
+            const projectKey = deriveProjectKey(pid, this.vaultPassphrase);
             for (const [k, v] of Object.entries(data)) {
                 if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
                     try {

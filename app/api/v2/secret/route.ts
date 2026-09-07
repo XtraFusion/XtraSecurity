@@ -106,6 +106,7 @@ export const GET = withSecurity(async (request, context, session) => {
         projectId: secret.projectId,
         environmentType: secret.environmentType,
         description: secret.description,
+        rotationPolicy: secret.rotationPolicy || "manual",
         isZeroKnowledge: true,
         encryptedPayload: e2eePayload || {
           ciphertext: secret.value[0] || "",
@@ -150,7 +151,8 @@ export const POST = withSecurity(async (request, context, session) => {
       environmentType,
       projectId,
       branchId,
-      workloadEnvelopes = []
+      workloadEnvelopes = [],
+      rotationPolicy = "manual"
     } = body;
 
     if (!key || !ciphertext || !iv || !authTag || !projectId || !environmentType) {
@@ -190,7 +192,7 @@ export const POST = withSecurity(async (request, context, session) => {
         projectId,
         branchId: branchId || null,
         type: "API Key",
-        rotationPolicy: "manual",
+        rotationPolicy: rotationPolicy || "manual",
         updatedBy: session.email,
         history: [
           {
@@ -218,6 +220,7 @@ export const POST = withSecurity(async (request, context, session) => {
         success: true,
         id: newSecret.id,
         key: newSecret.key,
+        rotationPolicy: newSecret.rotationPolicy,
         zeroKnowledge: true,
         message: "Secret encrypted on client and saved successfully without server-side decryption key."
       },

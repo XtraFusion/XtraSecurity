@@ -414,6 +414,19 @@ export function decryptSecretValue(payload: EncryptedPayload, projectKeyHex: str
 }
 
 /**
+ * Test whether a derived project key can successfully decrypt and authenticate a secret payload.
+ * Useful for client-side vault unlock validation.
+ */
+export function validateProjectPassphrase(testPayload: EncryptedPayload, projectKey: string): boolean {
+  try {
+    decryptSecretValue(testPayload, projectKey);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
  * Async WebCrypto Native AES-256-GCM Decryption (Browser-recommended)
  */
 export async function decryptSecretValueWebCrypto(payload: EncryptedPayload, projectKeyHex: string): Promise<string> {
