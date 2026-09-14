@@ -178,10 +178,17 @@ model Project {
   auditLogging      Boolean   @default(false)
   lastSecurityAudit DateTime?
 
+  // Soft-delete recovery (N34)
+  deletedAt DateTime?
+
   userRoles          UserRole[]
   breakGlassSessions BreakGlassSession[]
   webhooks           Webhook[]
   accessRequests     AccessRequest[]
+
+  // Optimization Compound Indexes (N30)
+  @@index([userId, workspaceId])
+  @@index([status, deletedAt])
 }
 
 // BRANCH MODEL
@@ -218,6 +225,9 @@ model Secret {
   expiryDate      DateTime?
   rotationPolicy  String // "auto", "manual", etc.
 
+  // Soft-delete recovery (N34)
+  deletedAt DateTime?
+
   // Smart Referencing
   isReference    Boolean  @default(false)
   sourceSecretId String?  @db.ObjectId
@@ -231,6 +241,10 @@ model Secret {
 
   // External Sync
   syncs SecretSync[]
+
+  // Optimization Compound Indexes (N30)
+  @@index([projectId, environmentType, key])
+  @@index([projectId, deletedAt])
 }
 
 // SECRET SYNC MODEL — mapping to external providers (AWS, Vercel, etc.)
@@ -253,6 +267,7 @@ model SecretSync {
   updatedAt DateTime @updatedAt
 
   @@unique([secretId, provider, externalId])
+  @@index([secretId, provider])
 }
 
 // SECRET SHARE MODEL — for time-limited, view-count-limited sharing
@@ -505,6 +520,8 @@ model AccessRequest {
 
   requestedAt DateTime @default(now())
   workspaceId String?  @db.ObjectId
+
+  @@index([userId, projectId])
 }
 
 // RBAC & ABAC MODELS (V2)

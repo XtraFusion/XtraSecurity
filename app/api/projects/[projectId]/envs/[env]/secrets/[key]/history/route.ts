@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
-import { decrypt, encrypt } from "@/lib/encription"; // Typo in original file path, keeping consistency
+import { decrypt, encrypt } from "@/lib/encryption";
 import { triggerWebhooks } from "@/lib/webhook";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -92,43 +93,14 @@ export async function GET(
         let value = "";
         try {
             let raw = h.value;
-            
-            // 1. Handle Array Format (Standard for main value)
             if (Array.isArray(raw) && raw.length > 0) {
                 raw = raw[0];
             }
 
-            if (typeof raw === "string") {
-                // 2. Check if it's a JSON-serialized encrypted object
-                if (raw.startsWith("{") && raw.includes("iv") && raw.includes("encryptedData")) {
-                    try {
-                        const parsed = JSON.parse(raw);
-                        value = decrypt(parsed);
-                    } catch (e) {
-                        value = raw; // Fallback to raw if JSON parse fails
-                    }
-                } else if (raw.startsWith("{") && raw.includes("ciphertext") && raw.includes("iv")) {
-                    try {
-                        const parsed = JSON.parse(raw);
-                        const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-                        const projectKey = deriveProjectKey(projectId);
-                        value = decryptSecretValue(parsed, projectKey);
-                    } catch (e) {
-                        value = raw;
-                    }
-                } else if (raw === "[unchanged]") {
-                    value = "Value unchanged in this version";
-                } else {
-                    // 3. It's plain text (Legacy)
-                    value = raw;
-                }
-            } else if (typeof raw === "object" && raw !== null && raw.iv && raw.encryptedData) {
-                // 4. It's a direct object (Legacy)
-                value = decrypt(raw);
-            } else if (typeof raw === "object" && raw !== null && raw.ciphertext && raw.iv) {
-                const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-                const projectKey = deriveProjectKey(projectId);
-                value = decryptSecretValue(raw, projectKey);
+            if (raw === "[unchanged]") {
+                value = "Value unchanged in this version";
+            } else {
+                value = SecretCryptoStrategy.decryptValue(raw, projectId);
             }
         } catch (e) {
             console.error("[History] Decryption failed for version", h.version, e);

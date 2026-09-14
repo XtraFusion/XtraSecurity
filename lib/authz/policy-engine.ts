@@ -11,7 +11,7 @@ export class PolicyEngine {
     // Fetch active policies that apply
     // For MVP, we skip complex ABAC query and assume DENY only if explicit Deny Policy exists.
 
-    // Handle Service Accounts
+    // Handle Service Accounts (N33: Supports glob path matching like API_*, DATABASE_*)
     if (userId.startsWith("sa_")) {
         const saId = userId.replace("sa_", "");
         const sa = await prisma.serviceAccount.findUnique({ where: { id: saId }});
@@ -27,8 +27,28 @@ export class PolicyEngine {
             if (action === "value.write" && perms.includes("write:secrets")) return Decision.ALLOW;
             if (action === "rotate" && perms.includes("rotate:secrets")) return Decision.ALLOW;
             
-            // If we add full project admin access for certain SAs via wildcard
+            // Full project admin or universal wildcard
             if (perms.includes("admin") || perms.includes("*")) return Decision.ALLOW;
+
+            // N33: Glob path pattern matching for secret keys (e.g. API_*, DATABASE_*)
+            const secretKey = req.context?.secretKey || (resource.startsWith("secret:") ? resource.replace("secret:", "") : undefined);
+            if (secretKey) {
+                const matchesPattern = perms.some((p: string) => {
+                    const cleanPattern = p.replace(/^(read:|write:|secret:)/, "");
+                    if (cleanPattern === "*" || cleanPattern === secretKey) return true;
+                    if (cleanPattern.includes("*")) {
+                        const regex = new RegExp("^" + cleanPattern.replace(/([.+?^=!:${}()|\[\]\/\\])/g, "\\$1").replace(/\*/g, ".*") + "$");
+                        if (regex.test(secretKey)) {
+                            // Check action consistency if prefixed
+                            if (p.startsWith("read:") && action !== "value.read" && action !== "read") return false;
+                            if (p.startsWith("write:") && action !== "value.write") return false;
+                            return true;
+                        }
+                    }
+                    return false;
+                });
+                if (matchesPattern) return Decision.ALLOW;
+            }
         }
         
         // If a Service Account tries to access something outside its scope, instantly DENY

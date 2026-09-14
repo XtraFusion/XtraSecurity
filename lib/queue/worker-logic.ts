@@ -34,12 +34,16 @@ export async function processNotificationJob(data: any) {
 }
 
 export async function processWebhookJob(data: any) {
-  const { url, body } = data;
+  const { url, body, headers } = data;
   
+  const payloadString = typeof body === "string" ? body : JSON.stringify(body);
   const res = await fetch(url, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(body),
+    headers: {
+      "Content-Type": "application/json",
+      ...(headers || {}),
+    },
+    body: payloadString,
   });
 
   if (!res.ok) {

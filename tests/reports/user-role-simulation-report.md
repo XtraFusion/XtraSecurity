@@ -1,11 +1,11 @@
 # Comprehensive User Role Simulation & RBAC Security Audit Report
 
-**Generated**: 2026-09-04T17:15:55.862Z
+**Generated**: 2026-09-14T15:02:47.464Z
 
 ## Executive Summary
 
-- **Total Operations Simulated**: 20
-- **Successful Operations (Expected Behavior)**: 20 / 20 (100.0%)
+- **Total Operations Simulated**: 30
+- **Successful Operations (Expected Behavior)**: 30 / 30 (100.0%)
 - **Failures / Anomalies**: 0
 - **Critical Security Violations (Unauthorized Leaks/Mutations)**: 0
 
@@ -13,375 +13,507 @@
 
 | ID | Scenario | Actor Role | Method | Endpoint | Expected | Received | Security Verdict | Passed |
 | :--- | :--- | :--- | :---: | :--- | :---: | :---: | :--- | :---: |
-| `op_ov1d136` | Owner lists organizations/workspaces | **Owner** | `GET` | `/api/workspace` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_u5j1ehq` | Admin invites contractor with viewer role | **Admin** | `POST` | `/api/team/invite` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_3rsdo7v` | Contractor accepts team invitation | **Contractor** | `POST` | `/api/team/invite/accept` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_hgy9alg` | Admin promotes contractor role to developer | **Admin** | `PUT` | `/api/team/role` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_eqp8cnr` | Owner removes contractor from team | **Owner** | `DELETE` | `/api/team/remove` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_sy6kyhh` | Admin tests IP allowlist lifecycle (Add & Remove) | **Admin** | `POST/DELETE` | `/api/project/6a9afcca14a6925499d8c5c6/ip` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_9x2xj7t` | Developer completes full branch lifecycle (Create, List, Delete) | **Developer** | `POST/GET/DELETE` | `/api/branch` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_6ucp1pm` | Developer creates development secret | **Developer** | `POST` | `/api/secret` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_j5tpjaj` | Developer creates time-limited secret share link | **Developer** | `POST` | `/api/secret/share` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_2zlw124` | Developer updates secret (v1 -> v2) and rolls back to v1 content | **Developer** | `POST` | `/api/secret/rollback` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_5cy66og` | Owner generates time-limited JIT invitation link | **Owner** | `POST` | `/api/jit/generate` | `200/201` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_d23zgls` | Contractor claims JIT link (AccessRequest generated) | **Contractor** | `POST` | `/api/jit/claim` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_vta60ep` | Owner creates machine service account | **Owner** | `POST` | `/api/projects/6a9afcca14a6925499d8c5c6/service-accounts` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_epr4bmg` | Owner generates API key for service account | **Owner** | `POST` | `/api/projects/6a9afcca14a6925499d8c5c6/service-accounts/6a9afccb14a6925499d8c5e7/keys` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_5o5aqgf` | Owner registers security webhook | **Owner** | `POST` | `/api/projects/6a9afcca14a6925499d8c5c6/webhooks` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_e88odxc` | Owner configures 30-day automatic rotation schedule | **Owner** | `POST` | `/api/rotation/schedules` | `200/201` | `201` | `SECURE_ALLOWED` | ✅ |
-| `op_s2whz1x` | User updates profile display name | **Developer** | `PATCH` | `/api/user/settings` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_u19d01z` | Owner checks subscription quota usage | **Owner** | `GET` | `/api/subscription/usage` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_yi9g8bk` | Owner queries audit trail (Zero Credential Leakage Check) | **Owner** | `GET` | `/api/audit?workspaceId=6a9afcca14a6925499d8c5c0` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
-| `op_06w9i8p` | Owner generates SOC 2 posture report | **Owner** | `GET` | `/api/compliance/report?workspaceId=6a9afcca14a6925499d8c5c0` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_gcu34kf` | Owner updates project settings | **Owner** | `PUT` | `/api/project?id=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_tow1d7x` | Admin adds IP allowlist rule to project | **Admin** | `POST` | `/api/project/6aa80c91e5e1558589805204/ip` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_rsuhfyj` | Viewer attempts to modify IP allowlist (Access Control Check) | **Viewer** | `POST` | `/api/project/6aa80c91e5e1558589805204/ip` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_kdrjvcb` | Admin removes IP allowlist rule from project | **Admin** | `DELETE` | `/api/project/6aa80c91e5e1558589805204/ip` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_46umrcl` | Developer attempts to delete project (Privilege Boundary Check) | **Developer** | `DELETE` | `/api/project?id=6aa80c91e5e1558589805204` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_zsb58yf` | External attacker attempts IDOR access to victim project | **Attacker (Untrusted)** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_k6l0yb7` | Developer creates a feature branch | **Developer** | `POST` | `/api/branch` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_cdazqts` | Viewer attempts to create a branch (Write Boundary Check) | **Viewer** | `POST` | `/api/branch` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_z7tafbt` | Viewer lists project branches (Read Allowed) | **Viewer** | `GET` | `/api/branch?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_efebrzg` | Developer clears and deletes completed feature branch | **Developer** | `DELETE` | `/api/branch?id=6aa80c93e5e1558589805216` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_9u7sjcz` | Developer creates development secret | **Developer** | `POST` | `/api/secret` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_p4dj2d6` | Owner creates production secret | **Owner** | `POST` | `/api/secret` | `201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_j0ryufl` | Developer retrieves and decrypts development secret | **Developer** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_j9p85dw` | Developer attempts to mutate production secret (Separation of Duties Check) | **Developer** | `PUT` | `/api/secret?id=6aa80c92e5e155858980520c` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_hct6smm` | Developer updates development secret (Version Bump to v2) | **Developer** | `PUT` | `/api/secret?id=6aa80c91e5e155858980520b` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_83wdu4u` | Developer rolls back development secret to v1 | **Developer** | `POST` | `/api/secret/rollback` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_c6vmc4n` | Developer copies secret from main to staging branch | **Developer** | `POST` | `/api/secret/copy` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_pu4vrwa` | Attacker attempts to copy victim's secret into attacker project (Cross-Tenant Theft) | **Attacker (Untrusted)** | `POST` | `/api/secret/copy` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_ldj8jm2` | Viewer reads secrets (Role Redaction Verification) | **Viewer** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_l5vw0jr` | Viewer attempts secret creation (Mutation Blocked) | **Viewer** | `POST` | `/api/secret` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_9ldyx6c` | Service Account accesses scoped project secrets | **Service Account (Machine Token)** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_51ic3tj` | Read-only Service Account attempts write:secrets (Scope Check) | **Service Account (Read-Only)** | `POST` | `/api/secret` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_ujsnjvh` | Viewer accesses secret with approved JIT Elevation | **Viewer (JIT Elevated)** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_ti4h65o` | Viewer accesses secret after JIT Revocation | **Viewer (JIT Revoked)** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_4r9tzj3` | Emergency responder activates Break-Glass Session | **Break-Glass Responder (Emergency Admin)** | `GET` | `/api/secret?projectId=6aa80c91e5e1558589805204` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_hbqfu7g` | Developer bulk imports development secrets | **Developer** | `POST` | `/api/secret/bulk` | `200/201` | `201` | `SECURE_ALLOWED` | ✅ |
+| `op_3c0kw38` | Viewer attempts bulk secret import (Mutation Blocked) | **Viewer** | `POST` | `/api/secret/bulk` | `403` | `403` | `SECURE_BLOCKED` | ✅ |
+| `op_2k4ccr8` | Owner inspects tamper-evident audit logs (Zero Credential Leakage Check) | **Owner** | `GET` | `/api/audit?workspaceId=6aa80c91e5e15585898051fe` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_3r2a90l` | Admin views security dashboard analytics and anomalies | **Admin** | `GET` | `/api/audit/dashboard?workspaceId=6aa80c91e5e15585898051fe` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
+| `op_trh4ksu` | Owner generates SOC 2 compliance posture report | **Owner** | `GET` | `/api/compliance/report?workspaceId=6aa80c91e5e15585898051fe` | `200` | `200` | `SECURE_ALLOWED` | ✅ |
 
 ## Detailed Operation Records
 
-### [PASS] Owner lists organizations/workspaces (`op_ov1d136`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/workspace`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "workspaceCount": 0
-}
-```
-
-### [PASS] Admin invites contractor with viewer role (`op_u5j1ehq`)
-- **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
-- **Request**: `POST /api/team/invite`
+### [PASS] Owner updates project settings (`op_gcu34kf`)
+- **Actor**: `pro-user-owner-e2e@xtrasecurity.test` (**Role**: `Owner`)
+- **Request**: `PUT /api/project?id=6aa80c91e5e1558589805204`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Request Payload**:
 ```json
 {
-  "email": "contractor@external-vendor.test",
-  "role": "viewer"
+  "name": "CyberCore Core Banking Service (Prod v2)"
 }
 ```
 - **Response Summary**:
 ```json
 {
-  "message": "Invitation sent",
-  "invite": {
-    "id": "6a9afcca14a6925499d8c5cd",
-    "teamId": "6a9afcca14a6925499d8c5c1",
-    "userId": "6a9afcca14a6925499d8c5b7",
-    "role": "viewer",
-    "status": "pending",
-    "joinedAt": "2026-09-04T17:15:54.775Z",
-    "invitedBy": "6a9afcc914a6925499d8c5ab"
-  },
-  "inviteToken": "514d3tktni"
+  "name": "CyberCore Core Banking Service (Prod v2)",
+  "id": "6aa80c91e5e1558589805204"
 }
 ```
 
-### [PASS] Contractor accepts team invitation (`op_3rsdo7v`)
-- **Actor**: `contractor@external-vendor.test` (**Role**: `Contractor`)
-- **Request**: `POST /api/team/invite/accept`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "message": "Invitation accepted",
-  "acceptInvite": {
-    "id": "6a9afcca14a6925499d8c5cd",
-    "teamId": "6a9afcca14a6925499d8c5c1",
-    "userId": "6a9afcca14a6925499d8c5b7",
-    "role": "viewer",
-    "status": "active",
-    "joinedAt": "2026-09-04T17:15:54.775Z",
-    "invitedBy": "6a9afcc914a6925499d8c5ab"
-  }
-}
-```
-
-### [PASS] Admin promotes contractor role to developer (`op_hgy9alg`)
-- **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
-- **Request**: `PUT /api/team/role`
+### [PASS] Admin adds IP allowlist rule to project (`op_tow1d7x`)
+- **Actor**: `pro-user-admin-e2e@xtrasecurity.test` (**Role**: `Admin`)
+- **Request**: `POST /api/project/6aa80c91e5e1558589805204/ip`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Request Payload**:
 ```json
 {
-  "memberId": "6a9afcca14a6925499d8c5cd",
-  "newRole": "developer"
+  "ip": "198.51.100.77"
 }
 ```
-- **Response Summary**:
-```json
-{
-  "count": 1
-}
-```
-
-### [PASS] Owner removes contractor from team (`op_eqp8cnr`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `DELETE /api/team/remove`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "message": "Member removed successfully"
-}
-```
-
-### [PASS] Admin tests IP allowlist lifecycle (Add & Remove) (`op_sy6kyhh`)
-- **Actor**: `admin.team@xtrasecurity.test` (**Role**: `Admin`)
-- **Request**: `POST/DELETE /api/project/6a9afcca14a6925499d8c5c6/ip`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "verified": true
-}
-```
-
-### [PASS] Developer completes full branch lifecycle (Create, List, Delete) (`op_9x2xj7t`)
-- **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
-- **Request**: `POST/GET/DELETE /api/branch`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "branchCreated": "feature/zero-knowledge-auth",
-  "branchDeleted": true
-}
-```
-
-### [PASS] Developer creates development secret (`op_6ucp1pm`)
-- **Actor**: `dev.junior@xtrasecurity.test` (**Role**: `Developer`)
-- **Request**: `POST /api/secret`
-- **Status**: `201` (Expected: `201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Notes**: HTTP response returned masked value '[encrypted]'
-- **Response Summary**:
-```json
-{
-  "key": "REDIS_SESSION_CACHE_URL",
-  "value": "[encrypted]"
-}
-```
-
-### [PASS] Developer creates time-limited secret share link (`op_j5tpjaj`)
-- **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
-- **Request**: `POST /api/secret/share`
-- **Status**: `201` (Expected: `201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "shareUrl": "http://localhost:3000/share/715c8abbe9377770b70899c7df410633553ae34bfd511b00e1d2b4aad04e2bcb",
-  "token": "715c8abbe9377770b70899c7df410633553ae34bfd511b00e1d2b4aad04e2bcb"
-}
-```
-
-### [PASS] Developer updates secret (v1 -> v2) and rolls back to v1 content (`op_2zlw124`)
-- **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
-- **Request**: `POST /api/secret/rollback`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "previousVersion": "2",
-  "restoredVersion": "3",
-  "restoredValueMatches": true
-}
-```
-
-### [PASS] Owner generates time-limited JIT invitation link (`op_5cy66og`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/jit/generate`
-- **Status**: `200` (Expected: `200/201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "token": "899ac64b584ed8bfb9ba0100e48651a7012c3d0c84857ff6",
-  "url": "http://localhost:3000/jit/899ac64b584ed8bfb9ba0100e48651a7012c3d0c84857ff6"
-}
-```
-
-### [PASS] Contractor claims JIT link (AccessRequest generated) (`op_d23zgls`)
-- **Actor**: `contractor@external-vendor.test` (**Role**: `Contractor`)
-- **Request**: `POST /api/jit/claim`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
 ```json
 {
   "success": true,
-  "requestId": "6a9afccb14a6925499d8c5e4",
-  "status": "pending",
-  "message": "Access request submitted. Awaiting admin/owner approval.",
-  "duration": 45,
-  "accessLevel": "read"
-}
-```
-
-### [PASS] Owner creates machine service account (`op_vta60ep`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a9afcca14a6925499d8c5c6/service-accounts`
-- **Status**: `201` (Expected: `201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "saId": "6a9afccb14a6925499d8c5e7",
-  "name": "Terraform Infrastructure Automation"
-}
-```
-
-### [PASS] Owner generates API key for service account (`op_epr4bmg`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a9afcca14a6925499d8c5c6/service-accounts/6a9afccb14a6925499d8c5e7/keys`
-- **Status**: `201` (Expected: `201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "keyMask": "xtra_...f72b",
-  "label": "Production Key 2026"
-}
-```
-
-### [PASS] Owner registers security webhook (`op_5o5aqgf`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/projects/6a9afcca14a6925499d8c5c6/webhooks`
-- **Status**: `201` (Expected: `201`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Response Summary**:
-```json
-{
-  "url": "https://api.internal-security.test/webhooks/secrets-audit",
-  "events": [
-    "secret.create",
-    "secret.update",
-    "secret.access"
+  "message": "IP 198.51.100.77 added to project restrictions",
+  "ipRestrictions": [
+    {
+      "ip": "198.51.100.77",
+      "description": "Admin Bastion Host",
+      "addedAt": "2026-09-14T15:02:42.812Z"
+    }
   ]
 }
 ```
 
-### [PASS] Owner configures 30-day automatic rotation schedule (`op_e88odxc`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `POST /api/rotation/schedules`
+### [PASS] Viewer attempts to modify IP allowlist (Access Control Check) (`op_rsuhfyj`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `POST /api/project/6aa80c91e5e1558589805204/ip`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Notes**: Viewers have read-only privileges and must never alter network firewall policies
+- **Request Payload**:
+```json
+{
+  "ip": "203.0.113.88"
+}
+```
+- **Response Summary**:
+```json
+{
+  "error": "Forbidden: Only owners and admins can manage IP restrictions"
+}
+```
+
+### [PASS] Admin removes IP allowlist rule from project (`op_kdrjvcb`)
+- **Actor**: `pro-user-admin-e2e@xtrasecurity.test` (**Role**: `Admin`)
+- **Request**: `DELETE /api/project/6aa80c91e5e1558589805204/ip`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Request Payload**:
+```json
+{
+  "ip": "198.51.100.77"
+}
+```
+- **Response Summary**:
+```json
+{
+  "success": true,
+  "message": "IP 198.51.100.77 removed from project restrictions",
+  "ipRestrictions": []
+}
+```
+
+### [PASS] Developer attempts to delete project (Privilege Boundary Check) (`op_46umrcl`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `DELETE /api/project?id=6aa80c91e5e1558589805204`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Response Summary**:
+```json
+{
+  "error": "Viewers and developers are not allowed to delete projects."
+}
+```
+
+### [PASS] External attacker attempts IDOR access to victim project (`op_zsb58yf`)
+- **Actor**: `free-user-attacker-e2e@xtrasecurity.test` (**Role**: `Attacker (Untrusted)`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Notes**: Strict multi-tenant boundary successfully blocked unauthorized cross-tenant read
+- **Response Summary**:
+```json
+{
+  "error": "Forbidden",
+  "message": "Forbidden"
+}
+```
+
+### [PASS] Developer creates a feature branch (`op_k6l0yb7`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `POST /api/branch`
+- **Status**: `201` (Expected: `201`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Request Payload**:
+```json
+{
+  "name": "feature/crypto-speedup",
+  "projectId": "6aa80c91e5e1558589805204"
+}
+```
+- **Response Summary**:
+```json
+{
+  "name": "feature/crypto-speedup",
+  "id": "6aa80c93e5e1558589805216"
+}
+```
+
+### [PASS] Viewer attempts to create a branch (Write Boundary Check) (`op_cdazqts`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `POST /api/branch`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Response Summary**:
+```json
+{
+  "error": "Forbidden: Viewers cannot create branches"
+}
+```
+
+### [PASS] Viewer lists project branches (Read Allowed) (`op_z7tafbt`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `GET /api/branch?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "count": 3
+}
+```
+
+### [PASS] Developer clears and deletes completed feature branch (`op_efebrzg`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `DELETE /api/branch?id=6aa80c93e5e1558589805216`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "message": "Branch deleted successfully",
+  "branch": {
+    "id": "6aa80c93e5e1558589805216",
+    "name": "feature/crypto-speedup",
+    "description": "Optimized cryptography routines",
+    "createdBy": "6aa80c90e5e15585898051fa",
+    "projectId": "6aa80c91e5e1558589805204",
+    "versionNo": "1",
+    "permissions": [],
+    "createdAt": "2026-09-14T15:02:43.467Z"
+  }
+}
+```
+
+### [PASS] Developer creates development secret (`op_9u7sjcz`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `POST /api/secret`
+- **Status**: `201` (Expected: `201`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: HTTP response returned masked value '[encrypted]' to prevent credential leakage in transit
+- **Request Payload**:
+```json
+{
+  "key": "DEV_CUSTOM_TOKEN",
+  "environmentType": "development"
+}
+```
+- **Response Summary**:
+```json
+{
+  "key": "DEV_CUSTOM_TOKEN",
+  "value": "[encrypted]",
+  "id": "6aa80c93e5e155858980521a"
+}
+```
+
+### [PASS] Owner creates production secret (`op_p4dj2d6`)
+- **Actor**: `pro-user-owner-e2e@xtrasecurity.test` (**Role**: `Owner`)
+- **Request**: `POST /api/secret`
+- **Status**: `201` (Expected: `201`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Request Payload**:
+```json
+{
+  "key": "PROD_CUSTOM_KEY",
+  "environmentType": "production"
+}
+```
+- **Response Summary**:
+```json
+{
+  "key": "PROD_CUSTOM_KEY",
+  "value": "[encrypted]",
+  "id": "6aa80c94e5e155858980521d"
+}
+```
+
+### [PASS] Developer retrieves and decrypts development secret (`op_j0ryufl`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "key": "DEV_DATABASE_URL",
+  "valueDecrypted": true
+}
+```
+
+### [PASS] Developer attempts to mutate production secret (Separation of Duties Check) (`op_j9p85dw`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `PUT /api/secret?id=6aa80c92e5e155858980520c`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Notes**: Developers are restricted from modifying production secrets directly
+- **Response Summary**:
+```json
+{
+  "error": "Developers cannot update secrets in Production",
+  "message": "Developers cannot update secrets in Production"
+}
+```
+
+### [PASS] Developer updates development secret (Version Bump to v2) (`op_hct6smm`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `PUT /api/secret?id=6aa80c91e5e155858980520b`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "version": "2",
+  "id": "6aa80c91e5e155858980520b"
+}
+```
+
+### [PASS] Developer rolls back development secret to v1 (`op_83wdu4u`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `POST /api/secret/rollback`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Request Payload**:
+```json
+{
+  "secretId": "6aa80c91e5e155858980520b",
+  "targetVersion": "1"
+}
+```
+- **Response Summary**:
+```json
+{
+  "version": "3"
+}
+```
+
+### [PASS] Developer copies secret from main to staging branch (`op_c6vmc4n`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `POST /api/secret/copy`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "message": "Successfully copied 1 secrets.",
+  "successCount": 1,
+  "skipCount": 0
+}
+```
+
+### [PASS] Attacker attempts to copy victim's secret into attacker project (Cross-Tenant Theft) (`op_pu4vrwa`)
+- **Actor**: `free-user-attacker-e2e@xtrasecurity.test` (**Role**: `Attacker (Untrusted)`)
+- **Request**: `POST /api/secret/copy`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Response Summary**:
+```json
+{
+  "error": "Forbidden: You do not have access to the source project"
+}
+```
+
+### [PASS] Viewer reads secrets (Role Redaction Verification) (`op_ldj8jm2`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: All plaintext credentials masked with [REDACTED] for Viewers to enforce least privilege
+- **Response Summary**:
+```json
+{
+  "devSecretValue": "[REDACTED]",
+  "prodSecretValue": "[REDACTED]",
+  "isFullyRedacted": true
+}
+```
+
+### [PASS] Viewer attempts secret creation (Mutation Blocked) (`op_l5vw0jr`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `POST /api/secret`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Response Summary**:
+```json
+{
+  "error": "Viewers do not have permission to create secrets",
+  "message": "Viewers do not have permission to create secrets"
+}
+```
+
+### [PASS] Service Account accesses scoped project secrets (`op_9ldyx6c`)
+- **Actor**: `ci-bot@serviceaccount.xtrasecurity.test` (**Role**: `Service Account (Machine Token)`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "key": "DEV_DATABASE_URL",
+  "valueDecrypted": true
+}
+```
+
+### [PASS] Read-only Service Account attempts write:secrets (Scope Check) (`op_51ic3tj`)
+- **Actor**: `audit-scanner@serviceaccount.xtrasecurity.test` (**Role**: `Service Account (Read-Only)`)
+- **Request**: `POST /api/secret`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
+- **Notes**: Enforced missing write:secrets scope restriction on machine token
+- **Response Summary**:
+```json
+{
+  "error": "Forbidden: Missing write:secrets scope",
+  "message": "Forbidden: Missing write:secrets scope"
+}
+```
+
+### [PASS] Viewer accesses secret with approved JIT Elevation (`op_ujsnjvh`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer (JIT Elevated)`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: Granular JIT elevation unlocked PROD_PAYMENT_SECRET while DEV_DATABASE_URL remained safely redacted
+- **Response Summary**:
+```json
+{
+  "prodSecretValue": "[DECRYPTED]",
+  "devSecretValue": "[REDACTED]"
+}
+```
+
+### [PASS] Viewer accesses secret after JIT Revocation (`op_ti4h65o`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer (JIT Revoked)`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: Instant re-redaction to [REDACTED] upon revocation
+- **Response Summary**:
+```json
+{
+  "prodSecretValue": "[REDACTED]"
+}
+```
+
+### [PASS] Emergency responder activates Break-Glass Session (`op_4r9tzj3`)
+- **Actor**: `pro-user-responder-e2e@xtrasecurity.test` (**Role**: `Break-Glass Responder (Emergency Admin)`)
+- **Request**: `GET /api/secret?projectId=6aa80c91e5e1558589805204`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: Break-Glass session granted emergency decrypted access under active audit surveillance
+- **Response Summary**:
+```json
+{
+  "prodSecretDecrypted": true
+}
+```
+
+### [PASS] Developer bulk imports development secrets (`op_hbqfu7g`)
+- **Actor**: `free-user-developer-e2e@xtrasecurity.test` (**Role**: `Developer`)
+- **Request**: `POST /api/secret/bulk`
 - **Status**: `201` (Expected: `200/201`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
 ```json
 {
-  "id": "6a9afccb14a6925499d8c5ed",
-  "secretId": "6a9afcca14a6925499d8c5cb",
-  "secretKey": "STRIPE_PAYMENT_GATEWAY_KEY",
-  "projectId": "6a9afcca14a6925499d8c5c6",
-  "projectName": "Core Financial Transactions Service",
-  "branch": "main",
-  "frequency": "monthly",
-  "customDays": null,
-  "enabled": true,
-  "nextRotation": "2026-10-04T17:15:55.736Z",
-  "rotationMethod": "shadow",
-  "webhookUrl": null,
-  "createdAt": "2026-09-04T17:15:55.738Z"
+  "importedCount": 2
 }
 ```
 
-### [PASS] User updates profile display name (`op_s2whz1x`)
-- **Actor**: `dev.senior@xtrasecurity.test` (**Role**: `Developer`)
-- **Request**: `PATCH /api/user/settings`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
+### [PASS] Viewer attempts bulk secret import (Mutation Blocked) (`op_3c0kw38`)
+- **Actor**: `free-user-viewer-e2e@xtrasecurity.test` (**Role**: `Viewer`)
+- **Request**: `POST /api/secret/bulk`
+- **Status**: `403` (Expected: `403`)
+- **Security Verdict**: `SECURE_BLOCKED`
 - **Response Summary**:
 ```json
 {
-  "success": true,
-  "user": {
-    "id": "6a9afcc914a6925499d8c5ae",
-    "name": "Senior Lead Engineer",
-    "email": "dev.senior@xtrasecurity.test",
-    "emailVerified": null,
-    "image": null,
-    "createdAt": "2026-09-04T17:15:53.596Z",
-    "updatedAt": "2026-09-04T17:15:55.768Z",
-    "role": "owner",
-    "password": "$2b$10$Wo0tZPc0JlP34Qdv5YSGUeGvO.I.Y57gvLMY9Vh61.14cqAb0LD9e",
-    "emailOtp": null,
-    "emailOtpExpiry": null,
-    "mfaEnabled": false,
-    "mfaSecret": null,
-    "mfaBackupCodes": [],
-    "passwordResetToken": null,
-    "passwordResetExpiry": null,
-    "ipAllowlist": [],
-    "tier": "enterprise"
-  }
+  "error": "Viewers do not have permission to create secrets"
 }
 ```
 
-### [PASS] Owner checks subscription quota usage (`op_u19d01z`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/subscription/usage`
+### [PASS] Owner inspects tamper-evident audit logs (Zero Credential Leakage Check) (`op_2k4ccr8`)
+- **Actor**: `pro-user-owner-e2e@xtrasecurity.test` (**Role**: `Owner`)
+- **Request**: `GET /api/audit?workspaceId=6aa80c91e5e15585898051fe`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
+- **Notes**: Audit log responses are strictly sanitized to never expose password hashes or TOTP seeds
 - **Response Summary**:
 ```json
 {
-  "workspaces": {
-    "used": 1,
-    "limit": 3
-  },
-  "projects": {
-    "used": 1,
-    "limit": 15
-  },
-  "secrets": {
-    "used": 3,
-    "limit": 100
-  },
-  "dailyRequests": {
-    "used": 1,
-    "limit": 10000
-  }
-}
-```
-
-### [PASS] Owner queries audit trail (Zero Credential Leakage Check) (`op_yi9g8bk`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/audit?workspaceId=6a9afcca14a6925499d8c5c0`
-- **Status**: `200` (Expected: `200`)
-- **Security Verdict**: `SECURE_ALLOWED`
-- **Notes**: Audit log verified tamper-evident and clean of credential leakage
-- **Response Summary**:
-```json
-{
-  "totalAuditEntries": 11,
+  "totalLogs": 10,
   "hasPasswordLeaks": false,
   "hasMfaSecretLeaks": false
 }
 ```
 
-### [PASS] Owner generates SOC 2 posture report (`op_06w9i8p`)
-- **Actor**: `owner.enterprise@xtrasecurity.test` (**Role**: `Owner`)
-- **Request**: `GET /api/compliance/report?workspaceId=6a9afcca14a6925499d8c5c0`
+### [PASS] Admin views security dashboard analytics and anomalies (`op_3r2a90l`)
+- **Actor**: `pro-user-admin-e2e@xtrasecurity.test` (**Role**: `Admin`)
+- **Request**: `GET /api/audit/dashboard?workspaceId=6aa80c91e5e15585898051fe`
 - **Status**: `200` (Expected: `200`)
 - **Security Verdict**: `SECURE_ALLOWED`
 - **Response Summary**:
 ```json
 {
-  "generatedBy": "owner.enterprise@xtrasecurity.test",
-  "summary": {
-    "totalProjects": 1,
-    "totalSecrets": 3,
-    "overdueRotations": 0,
-    "prodAccessEntries": 0,
-    "totalAuditEntries": 11
-  }
+  "stats": {
+    "totalEvents": 10,
+    "secretAccesses": 0,
+    "failedLogins": 0,
+    "activeUsers": 3
+  },
+  "anomalyCount": 0
+}
+```
+
+### [PASS] Owner generates SOC 2 compliance posture report (`op_trh4ksu`)
+- **Actor**: `pro-user-owner-e2e@xtrasecurity.test` (**Role**: `Owner`)
+- **Request**: `GET /api/compliance/report?workspaceId=6aa80c91e5e15585898051fe`
+- **Status**: `200` (Expected: `200`)
+- **Security Verdict**: `SECURE_ALLOWED`
+- **Response Summary**:
+```json
+{
+  "generatedBy": "pro-user-owner-e2e@xtrasecurity.test",
+  "totalProjects": 1,
+  "totalSecrets": 7,
+  "totalAuditEntries": 10
 }
 ```
 

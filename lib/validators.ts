@@ -194,3 +194,60 @@ export function validateDescription(desc?: any, maxLen: number = 1000): { valid:
 
   return { valid: true, cleanDesc: desc };
 }
+
+export interface PasswordValidationResult {
+  valid: boolean;
+  score: number; // 0 to 4
+  errors: string[];
+  entropyBits: number;
+}
+
+/**
+ * Reusable password & credential complexity validator (N22).
+ * Enforces min length, uppercase, lowercase, numbers, special characters, and entropy metrics.
+ */
+export function validatePasswordComplexity(password: any): PasswordValidationResult {
+  if (typeof password !== "string") {
+    return { valid: false, score: 0, errors: ["Password must be a string"], entropyBits: 0 };
+  }
+
+  const errors: string[] = [];
+  if (password.length < 8) {
+    errors.push("Password must be at least 8 characters in length");
+  }
+  if (password.length > 128) {
+    errors.push("Password cannot exceed 128 characters");
+  }
+
+  const hasLower = /[a-z]/.test(password);
+  const hasUpper = /[A-Z]/.test(password);
+  const hasDigit = /[0-9]/.test(password);
+  const hasSpecial = /[^a-zA-Z0-9]/.test(password);
+
+  if (!hasLower) errors.push("Password must include at least one lowercase letter");
+  if (!hasUpper) errors.push("Password must include at least one uppercase letter");
+  if (!hasDigit) errors.push("Password must include at least one number");
+  if (!hasSpecial) errors.push("Password must include at least one special character");
+
+  let poolSize = 0;
+  if (hasLower) poolSize += 26;
+  if (hasUpper) poolSize += 26;
+  if (hasDigit) poolSize += 10;
+  if (hasSpecial) poolSize += 33;
+
+  const entropyBits = poolSize > 0 ? Math.round(password.length * Math.log2(poolSize)) : 0;
+
+  let score = 0;
+  if (password.length >= 8) score++;
+  if (password.length >= 12) score++;
+  if (hasLower && hasUpper && hasDigit) score++;
+  if (hasSpecial && entropyBits >= 50) score++;
+
+  return {
+    valid: errors.length === 0,
+    score,
+    errors,
+    entropyBits,
+  };
+}
+
