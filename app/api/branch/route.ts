@@ -92,11 +92,45 @@ export async function GET(request: NextRequest) {
           };
         }
 
+        // Process secret value: If it's a server-managed AES secret ({ iv, encryptedData, authTag }),
+        // decrypt it on the server using ENCRYPTION_KEY so the client displays the plaintext value.
+        // If it's a Zero-Knowledge E2EE secret ({ iv, ciphertext, authTag }), return raw payload
+        // so the client browser decrypts it locally with WebCrypto and the project key.
+        let val = secret.value;
+        try {
+          const rawVal = Array.isArray(secret.value) ? secret.value[0] : secret.value;
+          if (typeof rawVal === "string" && rawVal.startsWith("{")) {
+            const parsed = JSON.parse(rawVal);
+            if (parsed.iv && parsed.encryptedData && parsed.authTag) {
+              const decryptedPlaintext = decrypt(parsed);
+              val = [decryptedPlaintext];
+            }
+          }
+        } catch (decErr) {
+          console.error(`[BranchAPI] Failed to decrypt server AES secret ${secret.id}:`, decErr);
+        }
+
+        // Process history entries similarly
+        const processedHistory = Array.isArray(secret.history) ? secret.history.map((h: any) => {
+          try {
+            const histRaw = Array.isArray(h.value) ? h.value[0] : h.value;
+            if (typeof histRaw === "string" && histRaw.startsWith("{")) {
+              const parsedHist = JSON.parse(histRaw);
+              if (parsedHist.iv && parsedHist.encryptedData && parsedHist.authTag) {
+                return { ...h, value: [decrypt(parsedHist)] };
+              }
+            }
+            return h;
+          } catch (_) {
+            return h;
+          }
+        }) : secret.history;
+
         return {
           ...secret,
           rotationPolicy: secret.rotationPolicy || "manual",
-          value: secret.value,
-          history: secret.history
+          value: val,
+          history: processedHistory
         };
       }) || [],
     }));

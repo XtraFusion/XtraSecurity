@@ -6,7 +6,8 @@ import {
   decryptWorkloadKeyEnvelope,
   generateRecoveryMnemonic,
   deriveProjectKey,
-  deriveLegacyBrowserProjectKey
+  getMasterSecret,
+  validateProjectPassphrase
 } from '../lib/crypto/e2ee';
 
 describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
@@ -80,22 +81,42 @@ describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
     }).toThrow();
   });
 
-  test('Scenario 6: Backward compatibility with legacy browser-encrypted payloads', () => {
-    const legacyProjId = 'proj_legacy_123';
-    const legacyKey = deriveLegacyBrowserProjectKey(legacyProjId);
-    const plaintext = 'super-secret-legacy-value';
-    const legacyEncrypted = encryptSecretValue(plaintext, legacyKey);
+  test('Scenario 6: Pure RFC-5869 HKDF Master Secret configuration & isolation', () => {
+    const projId = 'proj_enterprise_123';
+    const defaultKey = deriveProjectKey(projId);
+    const customKey = deriveProjectKey(projId, 'custom-workspace-passphrase-seed');
 
-    // Caller attempts to decrypt using new HKDF projectKey, but provides projectId metadata
-    const newHkdfKey = deriveProjectKey(legacyProjId);
-    const decrypted = decryptSecretValue(
-      {
-        ...legacyEncrypted,
-        projectId: legacyProjId
-      },
-      newHkdfKey
-    );
+    expect(defaultKey).toHaveLength(64);
+    expect(customKey).toHaveLength(64);
+    expect(defaultKey).not.toEqual(customKey);
 
+    const plaintext = 'top-secret-enterprise-config';
+    const encrypted = encryptSecretValue(plaintext, customKey);
+
+    // Verifies that pure AES-GCM fails closed when attempted with the wrong key
+    expect(() => {
+      decryptSecretValue(encrypted, defaultKey);
+    }).toThrow();
+
+    // Verifies that pure AES-GCM succeeds with the authorized key
+    const decrypted = decryptSecretValue(encrypted, customKey);
     expect(decrypted).toEqual(plaintext);
+  });
+
+  test('Scenario 7: Level 3 Passphrase Validation (validateProjectPassphrase)', () => {
+    const projId = 'proj_zero_knowledge_level3';
+    const userPassphrase = 'correct-horse-battery-staple-vault-secret';
+    const wrongPassphrase = 'incorrect-password-attempt';
+
+    const correctKey = deriveProjectKey(projId, userPassphrase);
+    const wrongKey = deriveProjectKey(projId, wrongPassphrase);
+
+    const encrypted = encryptSecretValue('level3-confidential-secret', correctKey);
+
+    // Correct passphrase validation succeeds
+    expect(validateProjectPassphrase(encrypted, correctKey)).toBe(true);
+
+    // Incorrect passphrase validation safely returns false without throwing unhandled exception
+    expect(validateProjectPassphrase(encrypted, wrongKey)).toBe(false);
   });
 });

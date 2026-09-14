@@ -37,16 +37,21 @@ async function main() {
 
       // 1. Check if this is an E2EE payload
       if (parsed.ciphertext && parsed.iv && parsed.authTag) {
-        const projectKey = deriveProjectKey(secret.projectId);
+        let projectKey = deriveProjectKey(secret.projectId);
 
-        // Decrypt using existing fallback logic (handles legacy Murmur or current HKDF)
+        // Decrypt using existing fallback logic (handles server key or browser standard key)
         let plaintext: string;
         try {
           plaintext = decryptSecretValue(parsed, projectKey);
         } catch (decErr: any) {
-          console.error(`❌ Failed to decrypt secret "${secret.key}" (${secret.id}):`, decErr.message);
-          errorCount++;
-          continue;
+          try {
+            projectKey = deriveProjectKey(secret.projectId, 'xtra-zero-knowledge-master');
+            plaintext = decryptSecretValue(parsed, projectKey);
+          } catch (_) {
+            console.error(`❌ Failed to decrypt secret "${secret.key}" (${secret.id}):`, decErr.message);
+            errorCount++;
+            continue;
+          }
         }
 
         // Check if already re-encrypted with standard HKDF

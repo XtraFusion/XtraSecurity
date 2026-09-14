@@ -489,13 +489,13 @@ const VaultManager: React.FC = () => {
   // Level 3 Strict Zero-Knowledge Vault State
   const [vaultPassphrase, setVaultPassphrase] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem(`xtra_vault_${projectId}`) || "";
+      return sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`) || "";
     }
     return "";
   });
   const [isVaultUnlocked, setIsVaultUnlocked] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      return Boolean(sessionStorage.getItem(`xtra_vault_${projectId}`));
+      return Boolean(sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`));
     }
     return false;
   });
@@ -503,6 +503,8 @@ const VaultManager: React.FC = () => {
   const [unlockInputPassphrase, setUnlockInputPassphrase] = React.useState("");
   const [unlockError, setUnlockError] = React.useState<string | null>(null);
   const [recoveryMnemonic, setRecoveryMnemonic] = React.useState<string | null>(null);
+  const [isUnlockingVault, setIsUnlockingVault] = React.useState(false);
+  const [rememberDevice, setRememberDevice] = React.useState(true);
 
   const [notification, setNotification] = React.useState<{ type: "default" | "destructive"; message: string } | null>(null);
 
@@ -631,15 +633,28 @@ const VaultManager: React.FC = () => {
                 }
               }
 
-              // Vault is locked: user has not entered master passphrase yet
-              return {
-                ...secret,
-                value: "[Locked - Enter Passphrase to Decrypt]",
-                rotationPolicy: secret.rotationPolicy || "manual",
-                rotationType: secret.rotationType || "",
-                isZeroKnowledge: true,
-                isLocked: true
-              };
+              // Check if secret can be decrypted with default Level 2 key
+              try {
+                const legacyDecrypted = decryptSecretValue(parsed, legacyKey);
+                return {
+                  ...secret,
+                  value: legacyDecrypted,
+                  rotationPolicy: secret.rotationPolicy || "manual",
+                  rotationType: secret.rotationType || "",
+                  isZeroKnowledge: true,
+                  isLocked: false
+                };
+              } catch (_) {
+                // Truly locked with custom passphrase that user has not entered yet
+                return {
+                  ...secret,
+                  value: "[Locked - Enter Passphrase to Decrypt]",
+                  rotationPolicy: secret.rotationPolicy || "manual",
+                  rotationType: secret.rotationType || "",
+                  isZeroKnowledge: true,
+                  isLocked: true
+                };
+              }
             }
           } catch (_) {}
         }
@@ -746,20 +761,24 @@ const VaultManager: React.FC = () => {
 
   // --- Vault Unlock / Lock Handlers (Level 3 Strict Zero-Knowledge) ---
 
-  const handleUnlockVault = () => {
-    const inputKey = unlockInputPassphrase.trim();
+  const handleUnlockVault = async (forcedPassphrase?: string) => {
+    const inputKey = (forcedPassphrase !== undefined ? forcedPassphrase : unlockInputPassphrase).trim();
     if (!inputKey) {
       setUnlockError("Please enter your master vault passphrase or mnemonic.");
       return;
     }
 
+    setIsUnlockingVault(true);
     try {
       const derivedKey = deriveProjectKey(projectId as string, inputKey);
+      const legacyKey = deriveProjectKey(projectId as string);
 
       // Check if branch has any encrypted secrets to validate against
       const branchSecrets = selectedBranch?.secrets || [];
       let foundEncrypted = false;
       let matched = false;
+      let legacyMatched = false;
+      const secretsToReencrypt: Array<{ secret: any; plaintext: string }> = [];
 
       for (const s of branchSecrets) {
         let val = s.value;
@@ -771,23 +790,58 @@ const VaultManager: React.FC = () => {
               foundEncrypted = true;
               if (validateProjectPassphrase(parsed, derivedKey)) {
                 matched = true;
-                break;
+              } else if (validateProjectPassphrase(parsed, legacyKey)) {
+                legacyMatched = true;
+                const pt = decryptSecretValue(parsed, legacyKey);
+                secretsToReencrypt.push({ secret: s, plaintext: pt });
               }
             }
           } catch (_) {}
         }
       }
 
+      // If secrets matched legacy default key and user entered a custom passphrase:
+      if (legacyMatched && !matched && secretsToReencrypt.length > 0) {
+        // Automatically re-encrypt secrets from default key to user's new master passphrase!
+        try {
+          for (const item of secretsToReencrypt) {
+            const reEnc = await encryptSecretValueWebCrypto(item.plaintext, derivedKey);
+            await axios.put(`/api/v2/secret?id=${item.secret.id}`, {
+              id: item.secret.id,
+              ciphertext: reEnc.ciphertext,
+              iv: reEnc.iv,
+              authTag: reEnc.authTag,
+              description: item.secret.description,
+              environmentType: item.secret.environmentType,
+              changeReason: "Upgrade to Level 3 Zero-Knowledge master passphrase"
+            });
+          }
+          matched = true;
+          setNotification({ type: "default", message: "✓ Vault upgraded & secrets re-encrypted with your master passphrase!" });
+        } catch (reErr: any) {
+          console.error("Failed to re-encrypt legacy secrets:", reErr);
+        }
+      }
+
       if (foundEncrypted && !matched) {
-        setUnlockError("Authentication tag mismatch. Incorrect master passphrase for this project.");
+        setUnlockError(
+          "Authentication tag mismatch. Incorrect master passphrase for this project. " +
+          "Note: A newly generated passphrase cannot decrypt secrets encrypted with an earlier key. " +
+          "Please enter the original passphrase used to create this vault, or unlock with the default key."
+        );
         return;
       }
 
-      // Success - persist in sessionStorage and state
+      // Success - persist in sessionStorage / localStorage and state
       setVaultPassphrase(inputKey);
       setIsVaultUnlocked(true);
       if (typeof window !== "undefined") {
         sessionStorage.setItem(`xtra_vault_${projectId}`, inputKey);
+        if (rememberDevice) {
+          localStorage.setItem(`xtra_vault_${projectId}`, inputKey);
+        } else {
+          localStorage.removeItem(`xtra_vault_${projectId}`);
+        }
       }
       setUnlockError(null);
       setIsUnlockModalOpen(false);
@@ -796,9 +850,13 @@ const VaultManager: React.FC = () => {
       // Decrypt secrets in current branch with new key
       const decrypted = decryptClientSecretList(selectedBranch?.secrets || [], projectId as string, inputKey);
       setSecrets(decrypted);
-      setNotification({ type: "default", message: "✓ Vault unlocked. Secrets decrypted locally." });
+      if (!legacyMatched) {
+        setNotification({ type: "default", message: "✓ Vault unlocked. Secrets decrypted locally." });
+      }
     } catch (err: any) {
       setUnlockError(err.message || "Failed to unlock vault.");
+    } finally {
+      setIsUnlockingVault(false);
     }
   };
 
@@ -807,6 +865,7 @@ const VaultManager: React.FC = () => {
     setIsVaultUnlocked(false);
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(`xtra_vault_${projectId}`);
+      localStorage.removeItem(`xtra_vault_${projectId}`);
     }
     const lockedSecrets = decryptClientSecretList(selectedBranch?.secrets || [], projectId as string, "");
     setSecrets(lockedSecrets);
@@ -2767,23 +2826,71 @@ const VaultManager: React.FC = () => {
               className="font-mono text-sm"
               autoFocus
             />
+            <div className="flex items-center space-x-2 pt-1">
+              <input
+                type="checkbox"
+                id="remember-device"
+                checked={rememberDevice}
+                onChange={(e) => setRememberDevice(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+              />
+              <label htmlFor="remember-device" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+                Remember on this device (stay unlocked across browser sessions)
+              </label>
+            </div>
           </div>
 
           {recoveryMnemonic && (
             <div className="p-3 bg-muted rounded-lg border space-y-2">
               <div className="flex items-center justify-between">
                 <span className="text-xs font-semibold text-primary">Generated 24-Word Recovery Phrase:</span>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={() => {
-                    navigator.clipboard.writeText(recoveryMnemonic);
-                    setNotification({ type: "default", message: "✓ Recovery phrase copied to clipboard" });
-                  }}
-                >
-                  <Copy className="h-3 w-3 mr-1" /> Copy
-                </Button>
+                <div className="flex items-center gap-1">
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs"
+                    onClick={() => {
+                      navigator.clipboard.writeText(recoveryMnemonic);
+                      setNotification({ type: "default", message: "✓ Recovery phrase copied to clipboard" });
+                    }}
+                  >
+                    <Copy className="h-3 w-3 mr-1" /> Copy
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 text-xs text-primary"
+                    onClick={() => {
+                      const content = [
+                        "====================================================",
+                        "  XtraSecurity Zero-Knowledge Vault Recovery Kit",
+                        "====================================================",
+                        "",
+                        `Project: ${project?.name || "Project"} (${projectId})`,
+                        `Generated At: ${new Date().toISOString()}`,
+                        "",
+                        "24-WORD RECOVERY PASSPHRASE:",
+                        recoveryMnemonic,
+                        "",
+                        "SECURITY INSTRUCTIONS:",
+                        "- This recovery phrase derives the AES-256-GCM encryption key for this project.",
+                        "- XtraSecurity servers NEVER receive or store this phrase (Zero-Knowledge).",
+                        "- Store this file securely in a Password Manager (Bitwarden, 1Password, etc.).",
+                        "- If lost, no administrator can recover your encrypted secrets."
+                      ].join("\n");
+                      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                      const url = URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      a.download = `xtra-recovery-kit-${(project?.name || "project").toLowerCase().replace(/[^a-z0-9]/g, "-")}.txt`;
+                      a.click();
+                      URL.revokeObjectURL(url);
+                      setNotification({ type: "default", message: "✓ Recovery kit downloaded" });
+                    }}
+                  >
+                    <Download className="h-3 w-3 mr-1" /> Download (.txt)
+                  </Button>
+                </div>
               </div>
               <p className="font-mono text-xs p-2 bg-background rounded border text-muted-foreground break-all select-all">
                 {recoveryMnemonic}
@@ -2794,21 +2901,35 @@ const VaultManager: React.FC = () => {
             </div>
           )}
 
-          <div className="flex items-center justify-between pt-2 border-t">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              className="text-xs text-muted-foreground hover:text-foreground"
-              onClick={() => {
-                const result = generateRecoveryMnemonic();
-                setRecoveryMnemonic(result.mnemonic);
-                setUnlockInputPassphrase(result.mnemonic);
-              }}
-            >
-              <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
-            </Button>
-            <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 border-t gap-2">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  const result = generateRecoveryMnemonic();
+                  setRecoveryMnemonic(result.mnemonic);
+                  setUnlockInputPassphrase(result.mnemonic);
+                }}
+              >
+                <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="text-xs text-muted-foreground hover:text-foreground"
+                onClick={() => {
+                  handleUnlockVault("xtra-zero-knowledge-master");
+                }}
+                title="Unlock using default system key if no custom passphrase was set"
+              >
+                Use Default Key
+              </Button>
+            </div>
+            <div className="flex gap-2 justify-end">
               <Button
                 variant="ghost"
                 size="sm"
@@ -2821,10 +2942,19 @@ const VaultManager: React.FC = () => {
               </Button>
               <Button
                 size="sm"
-                onClick={handleUnlockVault}
+                disabled={isUnlockingVault}
+                onClick={() => handleUnlockVault()}
                 className="bg-primary hover:bg-primary/90"
               >
-                <Unlock className="h-3.5 w-3.5 mr-1.5" /> Unlock Vault
+                {isUnlockingVault ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" /> Unlocking...
+                  </>
+                ) : (
+                  <>
+                    <Unlock className="h-3.5 w-3.5 mr-1.5" /> Unlock Vault
+                  </>
+                )}
               </Button>
             </div>
           </div>

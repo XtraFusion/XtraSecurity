@@ -54,8 +54,13 @@ export class SecretCryptoStrategy {
 
       // Strategy 2: Project-derived E2EE
       if (parsed.ciphertext && parsed.iv) {
-        const projectKey = deriveProjectKey(projectId);
-        return decryptSecretValue(parsed, projectKey);
+        try {
+          const projectKey = deriveProjectKey(projectId);
+          return decryptSecretValue(parsed, projectKey);
+        } catch (_) {
+          const browserKey = deriveProjectKey(projectId, "xtra-zero-knowledge-master");
+          return decryptSecretValue(parsed, browserKey);
+        }
       }
 
       return val;
@@ -86,15 +91,25 @@ export class SecretCryptoStrategy {
             if (parsed.iv && parsed.encryptedData && parsed.authTag) {
               val = decrypt(parsed);
             } else if (parsed.ciphertext && parsed.iv) {
-              const projectKey = deriveProjectKey(projectId);
-              val = decryptSecretValue(parsed, projectKey);
+              try {
+                const projectKey = deriveProjectKey(projectId);
+                val = decryptSecretValue(parsed, projectKey);
+              } catch (_) {
+                const browserKey = deriveProjectKey(projectId, "xtra-zero-knowledge-master");
+                val = decryptSecretValue(parsed, browserKey);
+              }
             } else if (Array.isArray(parsed) && parsed.length > 0) {
               const inner = JSON.parse(parsed[0]);
               if (inner && inner.iv && inner.encryptedData && inner.authTag) {
                 val = decrypt(inner);
               } else if (inner && inner.ciphertext && inner.iv) {
-                const projectKey = deriveProjectKey(projectId);
-                val = decryptSecretValue(inner, projectKey);
+                try {
+                  const projectKey = deriveProjectKey(projectId);
+                  val = decryptSecretValue(inner, projectKey);
+                } catch (_) {
+                  const browserKey = deriveProjectKey(projectId, "xtra-zero-knowledge-master");
+                  val = decryptSecretValue(inner, browserKey);
+                }
               }
             }
           } catch (_) {
