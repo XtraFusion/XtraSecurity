@@ -6,188 +6,353 @@ export default function PrivacyPolicy() {
       <div className="max-w-4xl mx-auto">
         <div className="prose prose-lg dark:prose-invert max-w-none">
           <h1 className="text-4xl font-bold mb-2">Privacy Policy</h1>
-          <p className="text-gray-600 dark:text-gray-400 mb-8">Last updated: February 26, 2026</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-2">Last updated: October 7, 2026</p>
+          <p className="text-gray-600 dark:text-gray-400 mb-8">Effective: October 7, 2026</p>
 
+          {/* 1. Who We Are */}
           <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
+            <h2 className="text-2xl font-semibold mb-4">1. Who We Are</h2>
             <p>
-              XtraSecurity ("we", "our", "us", or "Company") operates the XtraSecurity platform. This page informs you of our policies regarding the collection, use, and disclosure of personal data when you use our Service and the choices you have associated with that data.
+              XtraSecurity (&quot;XtraSecurity&quot;, &quot;we&quot;, &quot;our&quot;, or &quot;us&quot;) operates the XtraSecurity secrets management platform, available at xtrasecurity.com, and its associated CLI, SDK, VS Code extension, and APIs (collectively, the &quot;Service&quot;).
             </p>
             <p className="mt-4">
-              <strong>IMPORTANT DISCLAIMER:</strong> While we implement industry-standard security measures, we do not guarantee absolute protection of your data. You use XtraSecurity at your own risk. XtraSecurity shall not be liable for any unauthorized access, data breaches, or loss of personal information.
+              For privacy enquiries, please contact our Grievance Officer:
             </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">2. Information Collection</h2>
-            <p className="mb-4">We collect several different types of information for various purposes to provide and improve our Service to you.</p>
-
-            <h3 className="text-xl font-semibold mb-3">2.1 Personal Data</h3>
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Account Information:</strong> Name, email address, phone number, company name, and other profile information you provide</li>
-              <li><strong>Authentication Data:</strong> Usernames, passwords (encrypted), and multi-factor authentication details</li>
-              <li><strong>Credentials and Secrets:</strong> API keys, tokens, database credentials, and other sensitive information you choose to store</li>
-              <li><strong>Usage Data:</strong> Information about how you use the Service, including IP address, browser type, pages visited, and actions taken</li>
-              <li><strong>Communication Data:</strong> Messages, email communications, and support tickets you send us</li>
-            </ul>
-
-            <h3 className="text-xl font-semibold mb-3">2.2 Automatic Data Collection</h3>
-            <ul className="list-disc pl-6 mb-4">
-              <li>Log data (IP addresses, timestamps, URLs visited)</li>
-              <li>Device information (device type, operating system, browser)</li>
-              <li>Cookies and similar tracking technologies</li>
-              <li>Performance and error metrics</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">3. Use of Data</h2>
-            <p className="mb-4">XtraSecurity uses the collected data for various purposes:</p>
-            <ul className="list-disc pl-6 mb-4">
-              <li>To provide and maintain our Service</li>
-              <li>To notify you about changes to our Service</li>
-              <li>To allow you to participate in interactive features of our Service</li>
-              <li>To provide customer service and respond to your requests</li>
-              <li>To gather analysis or valuable information so that we can improve our Service</li>
-              <li>To monitor the usage of our Service</li>
-              <li>To detect, prevent, and address fraud, abuse, and security issues</li>
-              <li>To enforce compliance with our Terms and other legal agreements</li>
-              <li>For marketing and promotional purposes (with your consent)</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">4. Security of Data</h2>
-            <p>
-              The security of your data is important to us but remember that no method of transmission over the Internet or method of electronic storage is 100% secure. While we strive to use commercially acceptable means to protect your Personal Data, we cannot guarantee its absolute security.
-            </p>
-            <p className="mt-4">
-              XtraSecurity implements encryption, secure authentication protocols, and access controls. However, we make no warranty regarding the complete security of your data. You acknowledge that:
-            </p>
-            <ul className="list-disc pl-6 mt-4">
-              <li>Your credentials and secrets are stored at your own risk</li>
-              <li>Despite our security measures, breaches are possible</li>
-              <li>We are not liable for any unauthorized access or data compromise</li>
-              <li>You should use strong passwords and enable multi-factor authentication</li>
-              <li>You should never share your account credentials with others</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">5. Data Retention</h2>
-            <p>
-              XtraSecurity will retain your Personal Data only for as long as necessary for the purposes set out in this Privacy Policy. We will retain and use your Personal Data to the extent necessary to comply with our legal obligations.
-            </p>
-            <p className="mt-4">
-              Your credentials and secrets will be retained as long as your account is active. Upon account deletion or termination, we will delete your data within 30 days, unless we are required to retain it by law or for compliance purposes.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">6. Disclosure of Data</h2>
-            <p className="mb-4">We may disclose your personal information in the following circumstances:</p>
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>By Law:</strong> When required by law, court order, or government request</li>
-              <li><strong>Service Providers:</strong> We may share data with third-party service providers who process it on our behalf (hosting, analytics, email delivery)</li>
-              <li><strong>Business Transfers:</strong> In the event of merger, acquisition, bankruptcy, or asset sale</li>
-              <li><strong>With Your Consent:</strong> When you explicitly authorize data sharing</li>
-              <li><strong>Security and Legal:</strong> To protect the rights, privacy, safety, or property of XtraSecurity, users, or the public</li>
-            </ul>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">7. Your Data Rights</h2>
-            <p className="mb-4">Depending on your location, you may have certain rights regarding your data:</p>
-            <ul className="list-disc pl-6 mb-4">
-              <li><strong>Access:</strong> The right to access your personal data</li>
-              <li><strong>Correction:</strong> The right to correct inaccurate data</li>
-              <li><strong>Deletion:</strong> The right to delete your data (subject to legal obligations)</li>
-              <li><strong>Portability:</strong> The right to receive your data in a portable format</li>
-              <li><strong>Opt-Out:</strong> The right to opt-out of marketing communications</li>
-            </ul>
-            <p className="mt-4">
-              To exercise these rights, please contact us at privacy@xtrasecurity.com. Please note that deleting your account will permanently delete your stored credentials and secrets, and we may not be able to recover them.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">8. Cookies</h2>
-            <p>
-              We use cookies and similar tracking technologies to enhance your experience on our Service. Cookies are small files stored on your device that help us remember your preferences and track your usage.
-            </p>
-            <p className="mt-4">
-              You can control cookie settings through your browser preferences. However, disabling cookies may affect the functionality of the Service.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">9. Third-Party Links and Services</h2>
-            <p>
-              Our Service may contain links to third-party websites and services that are not operated by XtraSecurity. This Privacy Policy does not apply to third-party services, and we are not responsible for their privacy practices.
-            </p>
-            <p className="mt-4">
-              Please review the privacy policies of any third-party services before providing them with your information.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">10. Children's Privacy</h2>
-            <p>
-              Our Service is not intended for use by children under the age of 13. We do not knowingly collect personal information from children under 13. If we become aware that we have collected such information, we will take steps to delete it immediately.
-            </p>
-            <p className="mt-4">
-              If you believe we have collected information from a child under 13, please contact us at privacy@xtrasecurity.com.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">11. Changes to This Privacy Policy</h2>
-            <p>
-              We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify you of any material changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.
-            </p>
-            <p className="mt-4">
-              Your continued use of the Service following any changes constitutes your acceptance of the updated Privacy Policy.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">12. International Data Transfers</h2>
-            <p>
-              Your information may be transferred to, stored in, and processed in countries other than your country of residence. These countries may have data protection laws that differ from your home country.
-            </p>
-            <p className="mt-4">
-              By using XtraSecurity, you consent to the transfer of your information to countries outside your country of residence, which may include countries that may not have the same level of data protection.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">13. Data Breach Notification</h2>
-            <p>
-              In the event of a data breach or unauthorized access, we will notify affected users as required by law. However, XtraSecurity shall not be liable for any damages resulting from such breach.
-            </p>
-          </section>
-
-          <section className="mb-8">
-            <h2 className="text-2xl font-semibold mb-4">14. Contact Us</h2>
-            <p>
-              If you have any questions about this Privacy Policy or our privacy practices, please contact us at:
-            </p>
-            <div className="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded">
-              <p><strong>XtraSecurity</strong></p>
-              <p>Email: privacy@xtrasecurity.com</p>
-              <p>Email: support@xtrasecurity.com</p>
-              <p>Contact Form: Available on our website</p>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 mt-2">
+              <p><strong>Grievance Officer:</strong> XtraSecurity Privacy Team</p>
+              <p><strong>Email:</strong> privacy@xtrasecurity.com</p>
+              <p><strong>Response SLA:</strong> Within 30 days of receipt</p>
             </div>
           </section>
 
-          <div className="bg-red-50 dark:bg-red-900 border-l-4 border-red-400 p-4 mt-8">
-            <p className="text-sm font-semibold text-red-800 dark:text-red-200 mb-2">
-              CRITICAL DISCLAIMER:
+          {/* 2. Scope */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">2. Scope of this Policy</h2>
+            <p>
+              This Privacy Policy explains how we collect, use, store, share, and protect your personal data when you use our Service. It applies to:
             </p>
-            <p className="text-sm text-red-800 dark:text-red-200">
-              XtraSecurity is provided "AS IS" without any warranties. Despite reasonable security measures, we do not guarantee protection against data breaches, unauthorized access, or loss of information. You use XtraSecurity entirely at your own risk. XtraSecurity shall not be liable for any unauthorized access, data loss, or disclosure of your personal data or credentials. By using this Service, you assume full responsibility and risk for any consequences arising from the storage and use of your data.
+            <ul className="list-disc pl-6 mb-4">
+              <li>Visitors to our website</li>
+              <li>Registered users of the XtraSecurity dashboard</li>
+              <li>Users of our CLI, SDK, and VS Code extension</li>
+              <li>Customers who have purchased a subscription plan</li>
+            </ul>
+            <p>
+              This Policy does not apply to the <strong>content of secrets</strong> (API keys, tokens, credentials) you store in XtraSecurity. That content is encrypted under our zero-knowledge architecture and is treated as your property. See Section 6 for our cryptographic commitments.
             </p>
-          </div>
+          </section>
+
+          {/* 3. Data We Collect */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">3. Personal Data We Collect</h2>
+
+            <h3 className="text-xl font-semibold mb-3">3.1 Account & Identity Data</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Full name and email address (required for account creation)</li>
+              <li>Profile photo (if provided via Google/GitHub OAuth)</li>
+              <li>Hashed password (we never store plaintext passwords)</li>
+              <li>Two-factor authentication credentials (TOTP seeds, stored encrypted)</li>
+              <li>Company name (optional, for Pro/Enterprise plans)</li>
+            </ul>
+            <p className="text-sm text-gray-500 mb-4"><strong>Lawful basis (GDPR Art 6(1)(b)):</strong> Contract — necessary to provide the Service.</p>
+
+            <h3 className="text-xl font-semibold mb-3">3.2 Usage & Technical Data</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>IP address, browser type, operating system</li>
+              <li>Pages visited, features used, session duration</li>
+              <li>CLI version, Node.js version (for diagnostics and compatibility)</li>
+              <li>API request metadata (timestamp, endpoint, response code) — not secret content</li>
+              <li>Error logs and crash reports (anonymized where possible)</li>
+            </ul>
+            <p className="text-sm text-gray-500 mb-4"><strong>Lawful basis (GDPR Art 6(1)(f)):</strong> Legitimate interest — service performance, security, and fraud prevention.</p>
+
+            <h3 className="text-xl font-semibold mb-3">3.3 Payment & Billing Data</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Subscription tier, billing cycle, payment history</li>
+              <li>Invoice details (name, address, GSTIN for Indian customers)</li>
+              <li>Card details are <strong>never stored by XtraSecurity</strong> — they are processed directly by Razorpay (PCI-DSS certified) or Stripe</li>
+            </ul>
+            <p className="text-sm text-gray-500 mb-4"><strong>Lawful basis (GDPR Art 6(1)(b) and (c)):</strong> Contract and legal obligation (GST/tax records).</p>
+
+            <h3 className="text-xl font-semibold mb-3">3.4 Audit & Activity Logs</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Records of secret reads, writes, deletions, and role changes (by user ID)</li>
+              <li>Team invitations sent and accepted</li>
+              <li>Key rotation events</li>
+            </ul>
+            <p className="text-sm text-gray-500 mb-4"><strong>Lawful basis (GDPR Art 6(1)(b) and (f)):</strong> Contract (feature delivery) and legitimate interest (security integrity). Audit logs are immutable for security compliance and are pseudonymized upon account deletion requests.</p>
+
+            <h3 className="text-xl font-semibold mb-3">3.5 Communications Data</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Support ticket messages</li>
+              <li>Email correspondence with our team</li>
+              <li>Feedback and feature requests</li>
+            </ul>
+            <p className="text-sm text-gray-500 mb-4"><strong>Lawful basis (GDPR Art 6(1)(b)):</strong> Contract — provision of customer support.</p>
+
+            <h3 className="text-xl font-semibold mb-3">3.6 Data We Do NOT Collect</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li>The content of your secrets (API keys, tokens, passwords you store) — these are encrypted client-side and are never readable by XtraSecurity servers under Strict Zero-Knowledge mode</li>
+              <li>Sensitive special category data under GDPR Art 9 (health, biometric, racial, religious data)</li>
+              <li>Children&apos;s data — our Service is strictly for users aged 18 and above</li>
+            </ul>
+          </section>
+
+          {/* 4. Cookies */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">4. Cookies & Tracking Technologies</h2>
+            <p className="mb-4">We use the following types of cookies:</p>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mb-4">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-700">
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Type</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Purpose</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Consent Required?</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Essential</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Session authentication, CSRF protection</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">No (strictly necessary)</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Functional</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Theme preference, language settings</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">No (user-initiated)</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Analytics</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Service usage statistics (anonymized)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Yes — consent banner</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>You can manage cookie preferences at any time via our Cookie Settings panel accessible in the website footer.</p>
+          </section>
+
+          {/* 5. How We Use Your Data */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">5. How We Use Your Data</h2>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Providing, maintaining, and improving the Service</li>
+              <li>Processing subscription payments and issuing invoices/receipts</li>
+              <li>Sending transactional emails (account creation, password reset, invite notifications)</li>
+              <li>Providing customer support</li>
+              <li>Security monitoring, fraud detection, and abuse prevention</li>
+              <li>Complying with legal obligations (tax, regulatory reporting)</li>
+              <li>Sending product updates and newsletters (with opt-out available)</li>
+            </ul>
+            <p><strong>We do not sell your personal data.</strong> We do not share personal data with third parties for their direct marketing purposes.</p>
+          </section>
+
+          {/* 6. Zero-Knowledge Encryption */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">6. Zero-Knowledge Architecture & Your Secrets</h2>
+            <p className="mb-4">
+              XtraSecurity operates on a zero-knowledge encryption model for secrets stored in Strict E2EE mode (Level 3). This means:
+            </p>
+            <ul className="list-disc pl-6 mb-4">
+              <li>Your master vault passphrase is <strong>never transmitted to our servers</strong></li>
+              <li>Encryption and decryption of your secrets happens <strong>entirely in your browser</strong> using WebCrypto API</li>
+              <li>Our servers store only ciphertext blobs — we mathematically cannot read your secrets</li>
+              <li>If you lose your passphrase, we <strong>cannot recover your secrets</strong></li>
+            </ul>
+            <p className="mb-4">
+              Legacy secrets stored under Server AES (Level 1) are encrypted using a server-side key stored in our infrastructure. These are not zero-knowledge. We recommend migrating to Level 3 using the Vault Key Rotation feature.
+            </p>
+          </section>
+
+          {/* 7. Data Sharing & Sub-processors */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">7. Data Sharing & Sub-processors</h2>
+            <p className="mb-4">We share your data with the following third-party sub-processors who help us operate the Service:</p>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mb-4">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-700">
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Sub-processor</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Purpose</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Location</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Razorpay</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Payment processing</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">India</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Google (OAuth / SMTP)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Authentication & email</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">USA</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">GitHub (OAuth)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Authentication & GitHub sync</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">USA</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Vercel / Hosting Provider</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Cloud infrastructure</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">USA / Global</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p>
+              We do not sell, rent, or otherwise disclose personal data to other parties except as listed above or where required by law (e.g., valid court order, government request).
+            </p>
+          </section>
+
+          {/* 8. International Data Transfers */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">8. International Data Transfers</h2>
+            <p className="mb-4">
+              XtraSecurity is headquartered in India. If you access our Service from the European Economic Area (EEA), United Kingdom, or Switzerland, your personal data may be transferred to countries that may not provide the same level of data protection as your home country.
+            </p>
+            <p>
+              For such transfers, we rely on appropriate safeguards including Standard Contractual Clauses (SCCs) approved by the European Commission. You may request a copy of relevant transfer safeguards by contacting privacy@xtrasecurity.com.
+            </p>
+          </section>
+
+          {/* 9. Data Retention */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">9. Data Retention</h2>
+            <div className="overflow-x-auto">
+              <table className="w-full border-collapse border border-gray-300 dark:border-gray-600 mb-4">
+                <thead>
+                  <tr className="bg-gray-100 dark:bg-gray-700">
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Data Category</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Retention Period</th>
+                    <th className="border border-gray-300 dark:border-gray-600 p-2 text-left">Basis</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Account data</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Duration of account + 30 days</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Contract</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Secrets (encrypted)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Until deleted by user</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Contract</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Audit logs</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">1 year (Free), 5 years (Pro/Enterprise)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Legitimate interest / Legal</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Payment records</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">7 years</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Legal obligation (GST Act)</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Usage/technical logs</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">90 days (rolling)</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Legitimate interest</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Support communications</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">3 years after resolution</td>
+                    <td className="border border-gray-300 dark:border-gray-600 p-2">Legitimate interest</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          {/* 10. Your Rights */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">10. Your Rights</h2>
+            <p className="mb-4">Depending on your location, you may have the following rights:</p>
+
+            <h3 className="text-xl font-semibold mb-2">Under GDPR (EU/EEA/UK users):</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li><strong>Right to access</strong> — Request a copy of your personal data</li>
+              <li><strong>Right to rectification</strong> — Correct inaccurate personal data</li>
+              <li><strong>Right to erasure</strong> — Request deletion of your account and personal data (except where we have legal obligations to retain it)</li>
+              <li><strong>Right to restriction</strong> — Request limited processing in certain circumstances</li>
+              <li><strong>Right to data portability</strong> — Receive your account data in a machine-readable format</li>
+              <li><strong>Right to object</strong> — Object to processing based on legitimate interests</li>
+              <li><strong>Right not to be subject to automated decision-making</strong></li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mb-2">Under DPDP Act 2023 (India):</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li><strong>Right to access</strong> — Summary of personal data and processing activities</li>
+              <li><strong>Right to correction and erasure</strong></li>
+              <li><strong>Right to grievance redressal</strong> — Contact our Grievance Officer</li>
+              <li><strong>Right to nominate</strong> — Nominate another individual to exercise rights in the event of death or incapacity</li>
+            </ul>
+
+            <h3 className="text-xl font-semibold mb-2">Under CCPA (California users):</h3>
+            <ul className="list-disc pl-6 mb-4">
+              <li><strong>Right to know</strong> what personal information is collected</li>
+              <li><strong>Right to delete</strong> personal information</li>
+              <li><strong>Right to opt-out</strong> of sale or sharing of personal information</li>
+              <li><strong>Right to non-discrimination</strong> for exercising CCPA rights</li>
+            </ul>
+
+            <p>
+              To exercise any of these rights, contact us at <strong>privacy@xtrasecurity.com</strong>. We will respond within 30 days. You may also delete your account directly from Settings → Account → Delete Account.
+            </p>
+          </section>
+
+          {/* 11. Security */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">11. Security Measures</h2>
+            <ul className="list-disc pl-6 mb-4">
+              <li>AES-256-GCM encryption for all stored secrets</li>
+              <li>HKDF-SHA256 key derivation with per-project salts</li>
+              <li>TLS 1.3 in transit for all API communications</li>
+              <li>Bcrypt hashing for passwords</li>
+              <li>Role-based access control (RBAC) on all endpoints</li>
+              <li>IP restriction and 2FA enforcement per project</li>
+              <li>Immutable audit logs for all sensitive operations</li>
+              <li>Automated secret leak scanning on all git commits</li>
+            </ul>
+            <p>
+              In the event of a personal data breach affecting your rights and freedoms, we will notify affected users within 72 hours of becoming aware, and notify the applicable regulatory authority (Data Protection Board of India / relevant EU supervisory authority) as required by law.
+            </p>
+          </section>
+
+          {/* 12. Children */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">12. Children&apos;s Privacy</h2>
+            <p>
+              XtraSecurity is intended for users who are <strong>18 years of age or older</strong>. We do not knowingly collect personal data from persons under the age of 18. If you believe we have inadvertently collected data from a minor, please contact privacy@xtrasecurity.com and we will promptly delete it.
+            </p>
+          </section>
+
+          {/* 13. Changes */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">13. Changes to this Policy</h2>
+            <p>
+              We may update this Privacy Policy from time to time. We will notify registered users of material changes via email at least 14 days before the changes take effect. Continued use of the Service after the effective date constitutes acceptance of the updated Policy.
+            </p>
+          </section>
+
+          {/* 14. Contact */}
+          <section className="mb-8">
+            <h2 className="text-2xl font-semibold mb-4">14. Contact Us</h2>
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+              <p className="font-semibold mb-2">XtraSecurity — Privacy & Data Protection</p>
+              <p>Email: <a href="mailto:privacy@xtrasecurity.com" className="text-blue-600 dark:text-blue-400">privacy@xtrasecurity.com</a></p>
+              <p>Grievance Officer Email: <a href="mailto:grievance@xtrasecurity.com" className="text-blue-600 dark:text-blue-400">grievance@xtrasecurity.com</a></p>
+              <p className="mt-4 text-sm text-gray-500">
+                EU users may also lodge a complaint with your local data protection supervisory authority. A list of EU supervisory authorities is available at <a href="https://edpb.europa.eu" className="text-blue-600 dark:text-blue-400" target="_blank" rel="noopener noreferrer">edpb.europa.eu</a>.
+              </p>
+              <p className="mt-2 text-sm text-gray-500">
+                Indian users may escalate unresolved complaints to the Data Protection Board of India once established.
+              </p>
+            </div>
+          </section>
+
         </div>
       </div>
     </div>
