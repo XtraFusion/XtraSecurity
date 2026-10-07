@@ -165,6 +165,8 @@ export default function DocsPage() {
                       ]
                     : activeSection === 'security'
                     ? [
+                        { id: "e2ee", label: "End-to-End Encryption" },
+                        { id: "master-passphrase", label: "Master Passphrase" },
                         { id: "sharing", label: "Secret Sharing" },
                         { id: "jit", label: "JIT Access" },
                         { id: "rotation", label: "Secret Rotation" },
@@ -178,7 +180,7 @@ export default function DocsPage() {
                 activeSection === 'workflow' ? ["In-Memory Injection", "Live Reloading", "Offline Mode"] :
                 activeSection === 'cicd' ? ["GitHub Actions", "GitLab CI", "Docker Integration"] :
                 activeSection === 'vscode' ? ["Installation", "Features"] : 
-                activeSection === 'security' ? ["Secret Sharing", "JIT Access", "Secret Rotation", "Audit Logs"] : []
+                activeSection === 'security' ? ["End-to-End Encryption", "Master Passphrase", "Secret Sharing", "JIT Access", "Secret Rotation", "Audit Logs"] : []
             }
         >
             <AnimatePresence mode="wait">
@@ -812,6 +814,63 @@ RUN xtra run -e staging -- npm run build`, filename: "Dockerfile" },
                                     </div>
                                 </div>
                             </div>
+
+                            {/* E2EE */}
+                            <section id="e2ee" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Shield} title="End-to-End Encryption (E2EE)" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        XtraSecurity is built on a <strong>Strict Zero-Knowledge Architecture</strong>. This means your secrets are encrypted on your local device before they are ever transmitted to our servers.
+                                    </p>
+                                    
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 py-2">
+                                        <div className="p-4 rounded-xl border bg-muted/20 space-y-2">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">Local Encryption</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                All encryption happens on the client using <strong>AES-256-GCM</strong>. The server only receives and stores the resulting ciphertext and an initialization vector.
+                                            </p>
+                                        </div>
+                                        <div className="p-4 rounded-xl border bg-muted/20 space-y-2">
+                                            <h4 className="text-xs font-bold uppercase tracking-widest text-foreground">Zero Cloud Exposure</h4>
+                                            <p className="text-xs text-muted-foreground leading-relaxed">
+                                                Even if our database is fully compromised or subpoenaed, the attackers would only find mathematically unbreakable ciphertext. We literally cannot see your data.
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
+
+                            {/* Master Passphrase */}
+                            <section id="master-passphrase" className="space-y-6 scroll-mt-32">
+                                <SectionHeader icon={Key} title="Master Passphrase" />
+                                <div className="space-y-4 max-w-2xl">
+                                    <p className="text-sm sm:text-[15px] text-muted-foreground leading-relaxed">
+                                        The <strong>Master Passphrase</strong> is the cryptographic key that unlocks your vault. It is the cornerstone of our Zero-Knowledge security model.
+                                    </p>
+                                    
+                                    <PremiumCallout type="warning">
+                                        <strong>Never forget your Master Passphrase.</strong> We do not store it, we cannot reset it, and we cannot recover your data if you lose it. Store it safely in a password manager.
+                                    </PremiumCallout>
+
+                                    <div className="space-y-4 pt-2">
+                                        <div className="flex items-start gap-4 p-4 rounded-xl border bg-muted/30">
+                                            <div className="h-8 w-8 rounded bg-muted flex items-center justify-center shrink-0">
+                                                <Cpu className="h-4 w-4 text-muted-foreground" />
+                                            </div>
+                                            <div>
+                                                <h4 className="text-sm font-bold text-foreground">Argon2id Key Derivation</h4>
+                                                <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                                                    Your passphrase is never sent to our servers in plaintext. It is locally hashed using <strong>Argon2id</strong> (the industry standard for key stretching) to derive a 256-bit encryption key. This thwarts brute-force attacks.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </section>
+
+                            <div className="h-px bg-border/50" />
 
                             {/* Secret Sharing */}
                             <section id="sharing" className="space-y-6 scroll-mt-32">
