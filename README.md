@@ -52,11 +52,14 @@ xtra run npm start
 
 ## 🛡️ Core Security Concepts
 
+XtraSecurity is built on a **Strict Zero-Knowledge Architecture**. Your secrets are encrypted locally and we can never read them.
+
 | Concept | What it means for you |
 | :--- | :--- |
+| **End-to-End Encryption** | Client-side encryption using AES-256-GCM. The cloud only receives unbreakable ciphertext. |
+| **Master Passphrase** | Your local cryptographic key. Never sent to the server. Derived locally using Argon2id. **If you lose it, your data is unrecoverable.** |
 | **JIT Access** | "Just-In-Time" access. Request temporary 1-hour access to high-stakes secrets. Perfect for production bug fixing. |
 | **Zero-Disk** | Secrets stay in RAM. If your laptop is stolen, the secrets aren't on the hard drive. |
-| **Drift Detection** | The VS Code extension tells you if your local code is out of sync with the team's cloud secrets. |
 | **Machine-Locking** | Your local cache is encrypted using your motherboard's unique ID. It can't be stolen and used elsewhere. |
 
 ---
