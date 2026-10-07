@@ -4,7 +4,7 @@ import { POST as rollbackSecret } from "@/app/api/secret/rollback/route";
 import { POST as copySecrets } from "@/app/api/secret/copy/route";
 import { createMockRequest, createTestUser, createTestProject, createTestBranch, cleanupTestData } from "./helpers/test-utils";
 import prisma from "@/lib/db";
-import { decrypt } from "@/lib/encription";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 
 describe("E2E: Cryptographic Secret Lifecycle & State Machine", () => {
   const tracker: {
@@ -65,11 +65,11 @@ describe("E2E: Cryptographic Secret Lifecycle & State Machine", () => {
     // Verify ciphertext structure (iv + encryptedData + authTag)
     const parsedPayload = JSON.parse(dbSecret?.value[0] || "{}");
     expect(parsedPayload.iv).toBeDefined();
-    expect(parsedPayload.encryptedData).toBeDefined();
+    expect(parsedPayload.ciphertext).toBeDefined();
     expect(parsedPayload.authTag).toBeDefined();
 
     // Verify authenticated decryption returns exact original plaintext
-    const decrypted = decrypt(parsedPayload);
+    const decrypted = SecretCryptoStrategy.decryptValue(dbSecret?.value[0] || "{}", project.id);
     expect(decrypted).toBe(rawPlaintext);
   });
 

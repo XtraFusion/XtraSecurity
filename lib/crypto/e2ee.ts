@@ -176,7 +176,9 @@ function rawHmacSha256(key: Uint8Array, data: Uint8Array): Uint8Array {
 }
 
 function rawHkdfSha256(userSecret: string, salt: string, info: string): Uint8Array {
-  const enc = new TextEncoder();
+  const enc = typeof TextEncoder !== 'undefined' 
+    ? new TextEncoder() 
+    : { encode: (s: string) => Buffer.from(s, 'utf-8') };
   const prk = rawHmacSha256(enc.encode(salt), enc.encode(userSecret));
   const infoBytes = enc.encode(info);
   const payload = new Uint8Array(infoBytes.length + 1);
@@ -193,6 +195,10 @@ export function getMasterSecret(): string {
   if (typeof process !== 'undefined' && process.env) {
     if (process.env.XTRA_MASTER_SECRET) return process.env.XTRA_MASTER_SECRET;
     if (process.env.ENCRYPTION_KEY) return process.env.ENCRYPTION_KEY;
+
+    if (process.env.NODE_ENV === 'production') {
+      throw new Error("CRITICAL: XTRA_MASTER_SECRET or ENCRYPTION_KEY environment variable is missing in production.");
+    }
   }
   return 'xtra-zero-knowledge-master';
 }
@@ -287,7 +293,7 @@ function getNobleGcm() {
 export function encryptSecretValue(plaintext: string, projectKeyHex: string): EncryptedPayload {
   const ivHex = getRandomIvHex(12);
 
-  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.createCipheriv) {
+  if (typeof crypto !== 'undefined' && typeof crypto.createCipheriv === 'function') {
     const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
     const iv = Buffer.from(ivHex, 'hex');
     const cipher = crypto.createCipheriv('aes-256-gcm', key, iv);
@@ -380,7 +386,7 @@ export async function encryptSecretValueWebCrypto(plaintext: string, projectKeyH
  * Decrypt secret value locally using AES-256-GCM (Synchronous for Node.js / CLI & Browser)
  */
 export function decryptSecretValue(payload: EncryptedPayload, projectKeyHex: string): string {
-  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.createDecipheriv) {
+  if (typeof crypto !== 'undefined' && typeof crypto.createDecipheriv === 'function') {
     const key = Buffer.from(projectKeyHex.slice(0, 64).padEnd(64, '0'), 'hex');
     const iv = Buffer.from(payload.iv, 'hex');
     const authTag = Buffer.from(payload.authTag, 'hex');

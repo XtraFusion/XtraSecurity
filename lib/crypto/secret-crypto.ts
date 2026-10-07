@@ -4,7 +4,7 @@
  */
 
 import { encrypt, decrypt } from "@/lib/encription";
-import { decryptSecretValue, deriveProjectKey } from "@/lib/crypto/e2ee";
+import { decryptSecretValue, deriveProjectKey, encryptSecretValue } from "@/lib/crypto/e2ee";
 
 export interface DecryptedSecret {
   id: string;
@@ -21,9 +21,10 @@ export class SecretCryptoStrategy {
    * Encrypts a plaintext secret value for database storage.
    * Returns a JSON-serialized string of the encrypted payload.
    */
-  public static encryptValue(value: string): string {
-    const encrypted = encrypt(value);
-    return JSON.stringify(encrypted);
+  public static encryptValue(value: string, projectId: string): string {
+    const projectKey = deriveProjectKey(projectId);
+    const encrypted = encryptSecretValue(value, projectKey);
+    return JSON.stringify({ ...encrypted, projectId });
   }
 
   /**

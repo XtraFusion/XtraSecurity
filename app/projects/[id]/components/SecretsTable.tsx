@@ -1,5 +1,5 @@
 import { Secret } from '../types';
-import { Eye, EyeOff, Copy, Check, MoreHorizontal, Edit, History, Trash2 } from 'lucide-react';
+import { Lock, Unlock, Copy, Check, MoreHorizontal, Edit, History, Trash2 } from 'lucide-react';
 
 interface SecretsTableProps {
   secrets: Secret[];
@@ -49,12 +49,19 @@ export function SecretsTable({
                   </code>
                   <button
                     onClick={() => onToggleVisibility(secret.id)}
-                    className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                    className="flex items-center gap-1 p-1 px-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title={visibleSecrets.has(secret.id) ? "Hide secret value" : "Reveal secret value"}
                   >
                     {visibleSecrets.has(secret.id) ? (
-                      <EyeOff className="h-4 w-4" />
+                      <>
+                        <Unlock className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium">Unlock</span>
+                      </>
                     ) : (
-                      <Eye className="h-4 w-4" />
+                      <>
+                        <Lock className="h-3.5 w-3.5" />
+                        <span className="text-xs font-medium">Lock</span>
+                      </>
                     )}
                   </button>
                   <button

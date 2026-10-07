@@ -10,10 +10,12 @@ module.exports = {
         '^@/(.*)$': '<rootDir>/$1',
     },
     setupFilesAfterEnv: ['<rootDir>/jest.setup.js'],
-    testMatch: ['**/tests/**/*.test.ts', '**/tests-private/**/*.test.ts'],
+    testMatch: ['**/tests/**/*.test.ts', '**/tests/**/*.test.tsx', '**/tests-private/**/*.test.ts'],
     transform: {
         '^.+\\.tsx?$': ['ts-jest', {
-            tsconfig: 'tsconfig.json',
+            tsconfig: {
+                jsx: 'react-jsx',
+            },
         }],
     },
     testTimeout: 60000,

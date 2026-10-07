@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
-import { decrypt } from "@/lib/encription";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 import { randomBytes } from "crypto";
 
 // POST /api/secret/share — Create a time-limited share link
@@ -82,17 +82,7 @@ export async function GET(req: NextRequest) {
   // Decrypt the secret value
   let decryptedValue = "[Decryption failed]";
   try {
-    const encryptedString = share.secret.value[0];
-    const encryptedObject = JSON.parse(encryptedString);
-    if (encryptedObject.iv && encryptedObject.encryptedData && encryptedObject.authTag) {
-      decryptedValue = decrypt(encryptedObject);
-    } else if (encryptedObject.ciphertext && encryptedObject.iv) {
-      const { decryptSecretValue, deriveProjectKey } = require("@/lib/crypto/e2ee");
-      const projectKey = deriveProjectKey(share.secret.projectId);
-      decryptedValue = decryptSecretValue(encryptedObject, projectKey);
-    } else {
-      decryptedValue = encryptedString;
-    }
+    decryptedValue = SecretCryptoStrategy.decryptValue(share.secret.value[0], share.secret.projectId);
   } catch (e) {
     console.error("Failed to decrypt shared secret:", e);
   }

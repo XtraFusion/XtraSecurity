@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { withSecurity } from "@/lib/api-middleware";
-import { encrypt } from "@/lib/encription";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 
 export const dynamic = 'force-dynamic';
 
@@ -93,7 +93,7 @@ export const POST = withSecurity(async (req: NextRequest, context: any, session:
                 // If the value is not already an encrypted JSON object (v1 or v2 E2EE), encrypt it
                 const isAlreadyEncrypted = rawVal.startsWith("{") && (rawVal.includes("encryptedData") || rawVal.includes("ciphertext"));
                 if (!isAlreadyEncrypted) {
-                    encryptedString = JSON.stringify(encrypt(rawVal));
+                    encryptedString = SecretCryptoStrategy.encryptValue(rawVal, targetBranch.projectId);
                 }
 
                 if (existing) {

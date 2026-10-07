@@ -45,8 +45,9 @@ export async function triggerLazyRotation() {
            console.error("[LazyCron] Exception in background rotation task:", err);
         });
 
+      const lastCheckTime = lastCheck ? lastCheck.lastCheckedAt : new Date(now.getTime() - ROTATION_CHECK_THROTTLE);
       // Also check API key expirations
-      checkApiKeyExpirations()
+      checkApiKeyExpirations(lastCheckTime)
         .catch(err => console.error("[LazyCron] API Key expiration check failed:", err));
     }
   } catch (error) {

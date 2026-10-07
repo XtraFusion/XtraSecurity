@@ -5,6 +5,7 @@ import { GeistMono } from "geist/font/mono"
 import { Space_Grotesk, Inter } from "next/font/google"
 import { ThemeProvider } from "@/components/theme-provider" 
 import { UserProvider } from "@/hooks/useUser"
+import { WorkspaceVaultProvider } from "@/hooks/useWorkspaceVault"
 import { defaultMetadata } from "@/lib/seo"
 import {
   generateOrganizationSchema,
@@ -103,11 +104,13 @@ html {
       <body>
         <Provider>
           <UserProvider>
-            <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-              {children}
-              <Toaster />
-              <CustomToaster />
-            </ThemeProvider>
+            <WorkspaceVaultProvider>
+              <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+                {children}
+                <Toaster />
+                <CustomToaster />
+              </ThemeProvider>
+            </WorkspaceVaultProvider>
           </UserProvider>
         </Provider>
       </body>

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
-import { encrypt } from "@/lib/encription";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 import { withSecurity } from "@/lib/api-middleware";
 import { getUserProjectRole } from "@/lib/permissions";
 import { DAILY_LIMITS, Tier } from "@/lib/rate-limit-config";
@@ -77,8 +77,7 @@ export const POST = withSecurity(async (request, context, session) => {
         } else if (typeof secretInput.value === "string" && secretInput.value.startsWith("{") && (secretInput.value.includes("ciphertext") || secretInput.value.includes("encryptedData"))) {
             encryptedString = secretInput.value;
         } else {
-            const encryptedValue = encrypt(secretInput.value);
-            encryptedString = JSON.stringify(encryptedValue);
+            encryptedString = SecretCryptoStrategy.encryptValue(secretInput.value, projectId);
         }
 
         const newSecret = await prisma.secret.create({

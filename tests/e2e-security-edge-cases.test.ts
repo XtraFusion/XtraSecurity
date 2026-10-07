@@ -376,7 +376,7 @@ describe("E2E Security Edge Cases: Team Roles, IP Firewall, Account Invalidation
       for (const entry of v2History) {
         const encryptedJson = typeof entry.value === "string" ? entry.value : entry.value[0];
         const parsed = JSON.parse(encryptedJson);
-        expect(parsed.encryptedData).toBeDefined();
+        expect(parsed.ciphertext).toBeDefined();
         expect(parsed.iv).toBeDefined();
         expect(parsed.authTag).toBeDefined();
       }

@@ -4,23 +4,18 @@ import { createNotification } from "@/lib/notifications";
 /**
  * Scans for API keys that have expired or are about to expire and sends notifications.
  */
-export async function checkApiKeyExpirations() {
+export async function checkApiKeyExpirations(lastCheckTime: Date) {
   const now = new Date();
-  const warningWindow = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+  const warningWindowEnd = new Date(now.getTime() + 24 * 60 * 60 * 1000); // 24 hours from now
+  const prevWarningWindowEnd = new Date(lastCheckTime.getTime() + 24 * 60 * 60 * 1000);
 
   try {
-    // 1. Find keys that have expired but haven't been notified yet (we'll use a flag or just notify once)
-    // For simplicity, let's just find keys that expired in the last 24 hours and notify.
-    // A better way would be to track 'lastNotified' but let's stick to a simple check for now.
-    
+    // 1. Find keys that have expired since the last check
     const expiredKeys = await prisma.apiKey.findMany({
       where: {
         expiresAt: {
-          lt: now,
-          // We can use a custom field or just assume if it's recently expired we notify.
-          // To avoid spam, we should really have a 'notified' field.
-          // Since I can't easily change the schema right now without migrations, 
-          // I'll check for keys that expired recently (last 1 hour if this runs every 15 mins).
+          gt: lastCheckTime,
+          lte: now,
         },
         userId: { not: null }
       },
@@ -41,12 +36,12 @@ export async function checkApiKeyExpirations() {
       }
     }
 
-    // 2. Find keys about to expire (within 24 hours)
+    // 2. Find keys about to expire (entering the 24 hour warning window since last check)
     const upcomingExpirations = await prisma.apiKey.findMany({
       where: {
         expiresAt: {
-          gt: now,
-          lt: warningWindow
+          gt: prevWarningWindowEnd,
+          lte: warningWindowEnd
         },
         userId: { not: null }
       },

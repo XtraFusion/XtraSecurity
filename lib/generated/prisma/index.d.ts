@@ -9518,6 +9518,7 @@ export namespace Prisma {
     passwordExpiryDays: number | null
     auditLogging: boolean | null
     lastSecurityAudit: Date | null
+    deletedAt: Date | null
   }
 
   export type ProjectMaxAggregateOutputType = {
@@ -9539,6 +9540,7 @@ export namespace Prisma {
     passwordExpiryDays: number | null
     auditLogging: boolean | null
     lastSecurityAudit: Date | null
+    deletedAt: Date | null
   }
 
   export type ProjectCountAggregateOutputType = {
@@ -9561,6 +9563,7 @@ export namespace Prisma {
     ipRestrictions: number
     auditLogging: number
     lastSecurityAudit: number
+    deletedAt: number
     _all: number
   }
 
@@ -9594,6 +9597,7 @@ export namespace Prisma {
     passwordExpiryDays?: true
     auditLogging?: true
     lastSecurityAudit?: true
+    deletedAt?: true
   }
 
   export type ProjectMaxAggregateInputType = {
@@ -9615,6 +9619,7 @@ export namespace Prisma {
     passwordExpiryDays?: true
     auditLogging?: true
     lastSecurityAudit?: true
+    deletedAt?: true
   }
 
   export type ProjectCountAggregateInputType = {
@@ -9637,6 +9642,7 @@ export namespace Prisma {
     ipRestrictions?: true
     auditLogging?: true
     lastSecurityAudit?: true
+    deletedAt?: true
     _all?: true
   }
 
@@ -9746,6 +9752,7 @@ export namespace Prisma {
     ipRestrictions: JsonValue[]
     auditLogging: boolean
     lastSecurityAudit: Date | null
+    deletedAt: Date | null
     _count: ProjectCountAggregateOutputType | null
     _avg: ProjectAvgAggregateOutputType | null
     _sum: ProjectSumAggregateOutputType | null
@@ -9787,6 +9794,7 @@ export namespace Prisma {
     ipRestrictions?: boolean
     auditLogging?: boolean
     lastSecurityAudit?: boolean
+    deletedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
     workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
     branches?: boolean | Project$branchesArgs<ExtArgs>
@@ -9822,9 +9830,10 @@ export namespace Prisma {
     ipRestrictions?: boolean
     auditLogging?: boolean
     lastSecurityAudit?: boolean
+    deletedAt?: boolean
   }
 
-  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "status" | "userId" | "workspaceId" | "createdAt" | "updatedAt" | "accessControl" | "securityLevel" | "isBlocked" | "twoFactorRequired" | "passwordMinLength" | "passwordRequireSpecialChars" | "passwordRequireNumbers" | "passwordExpiryDays" | "ipRestrictions" | "auditLogging" | "lastSecurityAudit", ExtArgs["result"]["project"]>
+  export type ProjectOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "status" | "userId" | "workspaceId" | "createdAt" | "updatedAt" | "accessControl" | "securityLevel" | "isBlocked" | "twoFactorRequired" | "passwordMinLength" | "passwordRequireSpecialChars" | "passwordRequireNumbers" | "passwordExpiryDays" | "ipRestrictions" | "auditLogging" | "lastSecurityAudit" | "deletedAt", ExtArgs["result"]["project"]>
   export type ProjectInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     workspace?: boolean | WorkspaceDefaultArgs<ExtArgs>
@@ -9873,6 +9882,7 @@ export namespace Prisma {
       ipRestrictions: Prisma.JsonValue[]
       auditLogging: boolean
       lastSecurityAudit: Date | null
+      deletedAt: Date | null
     }, ExtArgs["result"]["project"]>
     composites: {}
   }
@@ -10294,6 +10304,7 @@ export namespace Prisma {
     readonly ipRestrictions: FieldRef<"Project", 'Json[]'>
     readonly auditLogging: FieldRef<"Project", 'Boolean'>
     readonly lastSecurityAudit: FieldRef<"Project", 'DateTime'>
+    readonly deletedAt: FieldRef<"Project", 'DateTime'>
   }
     
 
@@ -11935,6 +11946,7 @@ export namespace Prisma {
     updatedBy: string | null
     expiryDate: Date | null
     rotationPolicy: string | null
+    deletedAt: Date | null
     isReference: boolean | null
     sourceSecretId: string | null
   }
@@ -11952,6 +11964,7 @@ export namespace Prisma {
     updatedBy: string | null
     expiryDate: Date | null
     rotationPolicy: string | null
+    deletedAt: Date | null
     isReference: boolean | null
     sourceSecretId: string | null
   }
@@ -11972,6 +11985,7 @@ export namespace Prisma {
     permission: number
     expiryDate: number
     rotationPolicy: number
+    deletedAt: number
     isReference: number
     sourceSecretId: number
     shadowValue: number
@@ -11992,6 +12006,7 @@ export namespace Prisma {
     updatedBy?: true
     expiryDate?: true
     rotationPolicy?: true
+    deletedAt?: true
     isReference?: true
     sourceSecretId?: true
   }
@@ -12009,6 +12024,7 @@ export namespace Prisma {
     updatedBy?: true
     expiryDate?: true
     rotationPolicy?: true
+    deletedAt?: true
     isReference?: true
     sourceSecretId?: true
   }
@@ -12029,6 +12045,7 @@ export namespace Prisma {
     permission?: true
     expiryDate?: true
     rotationPolicy?: true
+    deletedAt?: true
     isReference?: true
     sourceSecretId?: true
     shadowValue?: true
@@ -12123,6 +12140,7 @@ export namespace Prisma {
     permission: string[]
     expiryDate: Date | null
     rotationPolicy: string
+    deletedAt: Date | null
     isReference: boolean
     sourceSecretId: string | null
     shadowValue: string[]
@@ -12161,6 +12179,7 @@ export namespace Prisma {
     permission?: boolean
     expiryDate?: boolean
     rotationPolicy?: boolean
+    deletedAt?: boolean
     isReference?: boolean
     sourceSecretId?: boolean
     shadowValue?: boolean
@@ -12192,12 +12211,13 @@ export namespace Prisma {
     permission?: boolean
     expiryDate?: boolean
     rotationPolicy?: boolean
+    deletedAt?: boolean
     isReference?: boolean
     sourceSecretId?: boolean
     shadowValue?: boolean
   }
 
-  export type SecretOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "description" | "environmentType" | "version" | "projectId" | "branchId" | "type" | "history" | "lastUpdated" | "updatedBy" | "permission" | "expiryDate" | "rotationPolicy" | "isReference" | "sourceSecretId" | "shadowValue", ExtArgs["result"]["secret"]>
+  export type SecretOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "key" | "value" | "description" | "environmentType" | "version" | "projectId" | "branchId" | "type" | "history" | "lastUpdated" | "updatedBy" | "permission" | "expiryDate" | "rotationPolicy" | "deletedAt" | "isReference" | "sourceSecretId" | "shadowValue", ExtArgs["result"]["secret"]>
   export type SecretInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
     branch?: boolean | Secret$branchArgs<ExtArgs>
@@ -12236,6 +12256,7 @@ export namespace Prisma {
       permission: string[]
       expiryDate: Date | null
       rotationPolicy: string
+      deletedAt: Date | null
       isReference: boolean
       sourceSecretId: string | null
       shadowValue: string[]
@@ -12653,6 +12674,7 @@ export namespace Prisma {
     readonly permission: FieldRef<"Secret", 'String[]'>
     readonly expiryDate: FieldRef<"Secret", 'DateTime'>
     readonly rotationPolicy: FieldRef<"Secret", 'String'>
+    readonly deletedAt: FieldRef<"Secret", 'DateTime'>
     readonly isReference: FieldRef<"Secret", 'Boolean'>
     readonly sourceSecretId: FieldRef<"Secret", 'String'>
     readonly shadowValue: FieldRef<"Secret", 'String[]'>
@@ -42895,7 +42917,8 @@ export namespace Prisma {
     passwordExpiryDays: 'passwordExpiryDays',
     ipRestrictions: 'ipRestrictions',
     auditLogging: 'auditLogging',
-    lastSecurityAudit: 'lastSecurityAudit'
+    lastSecurityAudit: 'lastSecurityAudit',
+    deletedAt: 'deletedAt'
   };
 
   export type ProjectScalarFieldEnum = (typeof ProjectScalarFieldEnum)[keyof typeof ProjectScalarFieldEnum]
@@ -42931,6 +42954,7 @@ export namespace Prisma {
     permission: 'permission',
     expiryDate: 'expiryDate',
     rotationPolicy: 'rotationPolicy',
+    deletedAt: 'deletedAt',
     isReference: 'isReference',
     sourceSecretId: 'sourceSecretId',
     shadowValue: 'shadowValue'
@@ -43975,6 +43999,7 @@ export namespace Prisma {
     ipRestrictions?: JsonNullableListFilter<"Project">
     auditLogging?: BoolFilter<"Project"> | boolean
     lastSecurityAudit?: DateTimeNullableFilter<"Project"> | Date | string | null
+    deletedAt?: DateTimeNullableFilter<"Project"> | Date | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     workspace?: XOR<WorkspaceScalarRelationFilter, WorkspaceWhereInput>
     branches?: BranchListRelationFilter
@@ -44007,6 +44032,7 @@ export namespace Prisma {
     ipRestrictions?: SortOrder
     auditLogging?: SortOrder
     lastSecurityAudit?: SortOrder
+    deletedAt?: SortOrder
     user?: UserOrderByWithRelationInput
     workspace?: WorkspaceOrderByWithRelationInput
     branches?: BranchOrderByRelationAggregateInput
@@ -44042,6 +44068,7 @@ export namespace Prisma {
     ipRestrictions?: JsonNullableListFilter<"Project">
     auditLogging?: BoolFilter<"Project"> | boolean
     lastSecurityAudit?: DateTimeNullableFilter<"Project"> | Date | string | null
+    deletedAt?: DateTimeNullableFilter<"Project"> | Date | string | null
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
     workspace?: XOR<WorkspaceScalarRelationFilter, WorkspaceWhereInput>
     branches?: BranchListRelationFilter
@@ -44074,6 +44101,7 @@ export namespace Prisma {
     ipRestrictions?: SortOrder
     auditLogging?: SortOrder
     lastSecurityAudit?: SortOrder
+    deletedAt?: SortOrder
     _count?: ProjectCountOrderByAggregateInput
     _avg?: ProjectAvgOrderByAggregateInput
     _max?: ProjectMaxOrderByAggregateInput
@@ -44104,6 +44132,7 @@ export namespace Prisma {
     ipRestrictions?: JsonNullableListFilter<"Project">
     auditLogging?: BoolWithAggregatesFilter<"Project"> | boolean
     lastSecurityAudit?: DateTimeNullableWithAggregatesFilter<"Project"> | Date | string | null
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"Project"> | Date | string | null
   }
 
   export type BranchWhereInput = {
@@ -44198,6 +44227,7 @@ export namespace Prisma {
     permission?: StringNullableListFilter<"Secret">
     expiryDate?: DateTimeNullableFilter<"Secret"> | Date | string | null
     rotationPolicy?: StringFilter<"Secret"> | string
+    deletedAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
@@ -44226,6 +44256,7 @@ export namespace Prisma {
     permission?: SortOrder
     expiryDate?: SortOrder
     rotationPolicy?: SortOrder
+    deletedAt?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
@@ -44257,6 +44288,7 @@ export namespace Prisma {
     permission?: StringNullableListFilter<"Secret">
     expiryDate?: DateTimeNullableFilter<"Secret"> | Date | string | null
     rotationPolicy?: StringFilter<"Secret"> | string
+    deletedAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
@@ -44285,6 +44317,7 @@ export namespace Prisma {
     permission?: SortOrder
     expiryDate?: SortOrder
     rotationPolicy?: SortOrder
+    deletedAt?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
@@ -44312,6 +44345,7 @@ export namespace Prisma {
     permission?: StringNullableListFilter<"Secret">
     expiryDate?: DateTimeNullableWithAggregatesFilter<"Secret"> | Date | string | null
     rotationPolicy?: StringWithAggregatesFilter<"Secret"> | string
+    deletedAt?: DateTimeNullableWithAggregatesFilter<"Secret"> | Date | string | null
     isReference?: BoolWithAggregatesFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableWithAggregatesFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
@@ -47028,6 +47062,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -47060,6 +47095,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -47087,6 +47123,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -47118,6 +47155,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -47148,6 +47186,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
   }
 
   export type ProjectUpdateManyMutationInput = {
@@ -47167,6 +47206,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type ProjectUncheckedUpdateManyInput = {
@@ -47188,6 +47228,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type BranchCreateInput = {
@@ -47280,6 +47321,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -47307,6 +47349,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -47329,6 +47372,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -47355,6 +47399,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -47380,6 +47425,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -47398,6 +47444,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
   }
@@ -47417,6 +47464,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -50295,6 +50343,7 @@ export namespace Prisma {
     ipRestrictions?: SortOrder
     auditLogging?: SortOrder
     lastSecurityAudit?: SortOrder
+    deletedAt?: SortOrder
   }
 
   export type ProjectAvgOrderByAggregateInput = {
@@ -50321,6 +50370,7 @@ export namespace Prisma {
     passwordExpiryDays?: SortOrder
     auditLogging?: SortOrder
     lastSecurityAudit?: SortOrder
+    deletedAt?: SortOrder
   }
 
   export type ProjectMinOrderByAggregateInput = {
@@ -50342,6 +50392,7 @@ export namespace Prisma {
     passwordExpiryDays?: SortOrder
     auditLogging?: SortOrder
     lastSecurityAudit?: SortOrder
+    deletedAt?: SortOrder
   }
 
   export type ProjectSumOrderByAggregateInput = {
@@ -50447,6 +50498,7 @@ export namespace Prisma {
     permission?: SortOrder
     expiryDate?: SortOrder
     rotationPolicy?: SortOrder
+    deletedAt?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
     shadowValue?: SortOrder
@@ -50465,6 +50517,7 @@ export namespace Prisma {
     updatedBy?: SortOrder
     expiryDate?: SortOrder
     rotationPolicy?: SortOrder
+    deletedAt?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
   }
@@ -50482,6 +50535,7 @@ export namespace Prisma {
     updatedBy?: SortOrder
     expiryDate?: SortOrder
     rotationPolicy?: SortOrder
+    deletedAt?: SortOrder
     isReference?: SortOrder
     sourceSecretId?: SortOrder
   }
@@ -54147,6 +54201,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
     secrets?: SecretCreateNestedManyWithoutProjectInput
@@ -54177,6 +54232,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -54714,6 +54770,7 @@ export namespace Prisma {
     ipRestrictions?: JsonNullableListFilter<"Project">
     auditLogging?: BoolFilter<"Project"> | boolean
     lastSecurityAudit?: DateTimeNullableFilter<"Project"> | Date | string | null
+    deletedAt?: DateTimeNullableFilter<"Project"> | Date | string | null
   }
 
   export type UserSubscriptionUpsertWithoutUserInput = {
@@ -55369,6 +55426,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
     secrets?: SecretCreateNestedManyWithoutProjectInput
@@ -55399,6 +55457,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -55670,6 +55729,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     branch?: BranchCreateNestedOneWithoutSecretsInput
@@ -55695,6 +55755,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -56066,6 +56127,7 @@ export namespace Prisma {
     permission?: StringNullableListFilter<"Secret">
     expiryDate?: DateTimeNullableFilter<"Secret"> | Date | string | null
     rotationPolicy?: StringFilter<"Secret"> | string
+    deletedAt?: DateTimeNullableFilter<"Secret"> | Date | string | null
     isReference?: BoolFilter<"Secret"> | boolean
     sourceSecretId?: StringNullableFilter<"Secret"> | string | null
     shadowValue?: StringNullableListFilter<"Secret">
@@ -56221,6 +56283,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     secrets?: SecretCreateNestedManyWithoutProjectInput
@@ -56252,6 +56315,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
     serviceAccounts?: ServiceAccountUncheckedCreateNestedManyWithoutProjectInput
@@ -56280,6 +56344,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -56305,6 +56370,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -56351,6 +56417,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     secrets?: SecretUpdateManyWithoutProjectNestedInput
@@ -56381,6 +56448,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
     serviceAccounts?: ServiceAccountUncheckedUpdateManyWithoutProjectNestedInput
@@ -56424,6 +56492,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -56455,6 +56524,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
     serviceAccounts?: ServiceAccountUncheckedCreateNestedManyWithoutProjectInput
@@ -56510,6 +56580,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -56536,6 +56607,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -56563,6 +56635,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -56589,6 +56662,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     referencedBy?: SecretUncheckedCreateNestedManyWithoutSourceSecretInput
@@ -56739,6 +56813,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -56769,6 +56844,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
     serviceAccounts?: ServiceAccountUncheckedUpdateManyWithoutProjectNestedInput
@@ -56833,6 +56909,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -56858,6 +56935,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -57002,6 +57080,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -57028,6 +57107,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -57065,6 +57145,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -57090,6 +57171,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -57112,6 +57194,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -57138,6 +57221,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -57175,6 +57259,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -57200,6 +57285,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -57222,6 +57308,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
     project: ProjectCreateNestedOneWithoutSecretsInput
@@ -57248,6 +57335,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -57310,6 +57398,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -57335,6 +57424,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -57794,6 +57884,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -57825,6 +57916,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     serviceAccounts?: ServiceAccountUncheckedCreateNestedManyWithoutProjectInput
@@ -57900,6 +57992,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -57930,6 +58023,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     serviceAccounts?: ServiceAccountUncheckedUpdateManyWithoutProjectNestedInput
@@ -59040,6 +59134,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -59071,6 +59166,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -59194,6 +59290,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -59224,6 +59321,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -59573,6 +59671,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -59604,6 +59703,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -59754,6 +59854,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -59784,6 +59885,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -59888,6 +59990,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -59919,6 +60022,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -60042,6 +60146,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -60072,6 +60177,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -60099,6 +60205,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -60130,6 +60237,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -60172,6 +60280,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -60202,6 +60311,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -60229,6 +60339,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     user: UserCreateNestedOneWithoutProjectsInput
     workspace: WorkspaceCreateNestedOneWithoutProjectsInput
     branches?: BranchCreateNestedManyWithoutProjectInput
@@ -60260,6 +60371,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
     branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
     secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
     teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
@@ -60335,6 +60447,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
@@ -60365,6 +60478,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -60903,6 +61017,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
   }
 
   export type WorkspaceCreateManyUserInput = {
@@ -61117,6 +61232,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
     secrets?: SecretUpdateManyWithoutProjectNestedInput
@@ -61146,6 +61262,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -61174,6 +61291,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type WorkspaceUpdateWithoutUserInput = {
@@ -61584,6 +61702,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
     auditLogging?: boolean
     lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
   }
 
   export type ProjectUpdateWithoutWorkspaceInput = {
@@ -61603,6 +61722,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     user?: UserUpdateOneRequiredWithoutProjectsNestedInput
     branches?: BranchUpdateManyWithoutProjectNestedInput
     secrets?: SecretUpdateManyWithoutProjectNestedInput
@@ -61632,6 +61752,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
     secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
     teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
@@ -61660,6 +61781,7 @@ export namespace Prisma {
     ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
     auditLogging?: BoolFieldUpdateOperationsInput | boolean
     lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
   }
 
   export type BranchCreateManyProjectInput = {
@@ -61687,6 +61809,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -61791,6 +61914,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     branch?: BranchUpdateOneWithoutSecretsNestedInput
@@ -61815,6 +61939,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -61838,6 +61963,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -62013,6 +62139,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     sourceSecretId?: string | null
     shadowValue?: SecretCreateshadowValueInput | string[]
@@ -62031,6 +62158,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -62055,6 +62183,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -62078,6 +62207,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     sourceSecretId?: NullableStringFieldUpdateOperationsInput | string | null
     shadowValue?: SecretUpdateshadowValueInput | string[]
@@ -62099,6 +62229,7 @@ export namespace Prisma {
     permission?: SecretCreatepermissionInput | string[]
     expiryDate?: Date | string | null
     rotationPolicy: string
+    deletedAt?: Date | string | null
     isReference?: boolean
     shadowValue?: SecretCreateshadowValueInput | string[]
   }
@@ -62141,6 +62272,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     project?: ProjectUpdateOneRequiredWithoutSecretsNestedInput
@@ -62166,6 +62298,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
     referencedBy?: SecretUncheckedUpdateManyWithoutSourceSecretNestedInput
@@ -62189,6 +62322,7 @@ export namespace Prisma {
     permission?: SecretUpdatepermissionInput | string[]
     expiryDate?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     rotationPolicy?: StringFieldUpdateOperationsInput | string
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     isReference?: BoolFieldUpdateOperationsInput | boolean
     shadowValue?: SecretUpdateshadowValueInput | string[]
   }

@@ -118,6 +118,13 @@ export async function GET(
         };
     });
 
+    // Ensure history is sorted descending by version (newest first)
+    formattedHistory.sort((a, b) => {
+        const vA = parseInt(a.version || "0");
+        const vB = parseInt(b.version || "0");
+        return vB - vA;
+    });
+
     return NextResponse.json({
         currentVersion: secret.version,
         history: formattedHistory

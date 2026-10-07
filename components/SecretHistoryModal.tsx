@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Dialog as CustomDialog } from "@/components/ui/dialog-custom";
+import { deriveProjectKey, decryptSecretValue } from "@/lib/crypto/e2ee";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -33,6 +34,7 @@ interface SecretHistoryModalProps {
     secretKey: string;
     secretId?: string;
     onRollbackSuccess?: () => void;
+    vaultPassphrase?: string | null;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -200,6 +202,7 @@ export function SecretHistoryModal({
     secretKey,
     secretId,
     onRollbackSuccess,
+    vaultPassphrase,
 }: SecretHistoryModalProps) {
     const { toast } = useToast();
     const [data, setData] = useState<SecretHistoryData | null>(null);
@@ -221,6 +224,39 @@ export function SecretHistoryModal({
                 throw new Error(errData.error || `HTTP ${res.status}`);
             }
             const resData = await res.json();
+            
+            // Decrypt history if E2EE is used
+            let projectKey: Uint8Array | null = null;
+            if (vaultPassphrase) {
+                try {
+                    projectKey = deriveProjectKey(projectId, vaultPassphrase);
+                } catch (e) {
+                    console.error("Failed to derive project key:", e);
+                }
+            }
+
+            if (resData.history && Array.isArray(resData.history)) {
+                resData.history = resData.history.map((entry: any) => {
+                    let val = entry.value;
+                    if (Array.isArray(val) && val.length > 0) {
+                        val = val[0];
+                    }
+                    if (typeof val === "string" && val.startsWith("{") && val.includes("ciphertext")) {
+                        if (projectKey) {
+                            try {
+                                const parsed = JSON.parse(val);
+                                if (parsed.ciphertext && parsed.iv) {
+                                    val = decryptSecretValue(parsed, projectKey);
+                                }
+                            } catch (e) {
+                                // Keep encrypted if decryption fails
+                            }
+                        }
+                    }
+                    return { ...entry, value: val };
+                });
+            }
+
             setData(resData);
         } catch (e: any) {
             console.error("History fetch error:", e);
@@ -228,7 +264,7 @@ export function SecretHistoryModal({
         } finally {
             setLoading(false);
         }
-    }, [open, projectId, env, secretKey, toast]);
+    }, [open, projectId, env, secretKey, vaultPassphrase, toast]);
 
     // Fetch when modal opens
     useEffect(() => {

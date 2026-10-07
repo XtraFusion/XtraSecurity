@@ -54,7 +54,7 @@ export async function POST(
             // Clear shadow
             shadowValue: [],
 
-            history: [...currentHistory, historyEntry],
+            history: [historyEntry, ...currentHistory],
             updatedBy: auth.userId
         }
     });

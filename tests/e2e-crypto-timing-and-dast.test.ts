@@ -106,7 +106,7 @@ describe("E2E: Cryptographic Integrity, Timing Attacks & DAST Hardening (Phase 4
     // 2. Tamper with ciphertext
     const tamperedCiphertext = {
       ...encrypted,
-      encryptedData: encrypted.encryptedData.slice(0, -2) + "ff",
+      ciphertext: encrypted.ciphertext.slice(0, -2) + "ff",
     };
     expect(() => decrypt(tamperedCiphertext)).toThrow();
 

@@ -320,7 +320,7 @@ describe("E2E Master Suite: Pro vs Free Tier Matrix & Production Security Scenar
 
       const parsedPayload = JSON.parse(dbSecret?.value[0] || "{}");
       expect(parsedPayload.iv).toBeDefined();
-      expect(parsedPayload.encryptedData).toBeDefined();
+      expect(parsedPayload.ciphertext).toBeDefined();
       expect(parsedPayload.authTag).toBeDefined();
 
       // Authenticated Decryption Verification

@@ -223,7 +223,7 @@ export class SecretService {
     }
 
     // Encrypt payload
-    const encryptedString = SecretCryptoStrategy.encryptValue(value);
+    const encryptedString = SecretCryptoStrategy.encryptValue(value, projectId);
 
     // Save to Database
     const newSecret = await prisma.secret.create({
@@ -365,7 +365,7 @@ export class SecretService {
 
     // Value Encryption
     if (value) {
-      const encryptedString = SecretCryptoStrategy.encryptValue(value);
+      const encryptedString = SecretCryptoStrategy.encryptValue(value, projectId);
       updateData.value = [encryptedString];
     }
 
@@ -373,7 +373,7 @@ export class SecretService {
     updateData.history = [
       {
         version: newVersion,
-        value: value ? [SecretCryptoStrategy.encryptValue(value)] : existingSecret.value || "[unchanged]",
+        value: value ? [SecretCryptoStrategy.encryptValue(value, projectId)] : existingSecret.value || "[unchanged]",
         description: description || existingSecret.description,
         updatedAt: new Date().toISOString(),
         updatedBy: session.email,

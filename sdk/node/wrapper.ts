@@ -21,12 +21,16 @@ export type EnvironmentType = 'development' | 'staging' | 'production';
 /**
  * Derives a deterministic 256-bit symmetric key from a projectId and optional vault passphrase using HKDF-SHA256
  */
-export function deriveProjectKey(projectId: string, userSecret: string = "xtra-zero-knowledge-master"): string {
+export function deriveProjectKey(projectId: string, userSecret?: string): string {
+    const finalSecret = userSecret || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
+    if (!finalSecret) {
+        throw new Error("Vault Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.");
+    }
     const salt = Buffer.from(`project_salt_${projectId}`);
     const info = Buffer.from('xtra-e2ee-project-key-v2');
     const key = crypto.hkdfSync(
         'sha256',
-        Buffer.from(userSecret, 'utf-8'),
+        Buffer.from(finalSecret, 'utf-8'),
         salt,
         info,
         32
@@ -164,6 +168,47 @@ export class XtraClient {
         this.audit = new AuditApi(config);
         this.branches = new BranchesApi(config);
         this.notifications = new NotificationsApi(config);
+
+        // Transparent E2EE Interceptor for SecretsApi
+        this.secrets = new SecretsApi(config);
+        
+        const originalGetSecrets = this.secrets.getSecrets.bind(this.secrets);
+        this.secrets.getSecrets = async (projectId: string, env: any, branch?: string, includeVersions?: boolean, options?: any) => {
+            const response = await originalGetSecrets(projectId, env, branch, includeVersions, options);
+            if (response && response.data) {
+                const projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
+                const data = response.data as any;
+                for (const [k, v] of Object.entries(data)) {
+                    if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
+                        try {
+                            const parsed = JSON.parse(v);
+                            if (parsed.ciphertext && parsed.iv) {
+                                data[k] = decryptSecretValue(parsed, projectKey);
+                            }
+                        } catch (_) {}
+                    }
+                }
+            }
+            return response;
+        };
+
+        const originalUpsert = this.secrets.upsertSecrets.bind(this.secrets);
+        this.secrets.upsertSecrets = async (projectId: string, env: any, req: any, options?: any) => {
+            if (req && req.secrets) {
+                const projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
+                const encryptedSecrets: Record<string, string> = {};
+                for (const [key, val] of Object.entries(req.secrets)) {
+                    if (typeof val === 'string' && val.startsWith('{') && val.includes('ciphertext')) {
+                        encryptedSecrets[key] = val as string;
+                    } else {
+                        const enc = encryptSecretValue(val as string, projectKey);
+                        encryptedSecrets[key] = JSON.stringify(enc);
+                    }
+                }
+                req.secrets = encryptedSecrets;
+            }
+            return originalUpsert(projectId, env, req, options);
+        };
     }
 
     /**

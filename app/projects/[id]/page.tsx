@@ -93,6 +93,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/hooks/useUser";
+import { useWorkspaceVault } from "@/hooks/useWorkspaceVault";
 import { ProjectController } from "@/util/ProjectController";
 import axios from "axios";
 import { motion, AnimatePresence } from "framer-motion";
@@ -103,6 +104,7 @@ import { JitGenerateModal } from "@/components/JitGenerateModal";
 import { BreakGlassModal } from "@/components/BreakGlassModal";
 import { SyncTargetsModal } from "@/components/SyncTargetsModal";
 import { ShareSecretModal } from "@/components/ShareSecretModal";
+import { RotateMasterKeyModal } from "@/components/RotateMasterKeyModal";
 
 // --- Types ---
 
@@ -486,25 +488,67 @@ const VaultManager: React.FC = () => {
   const [historySecret, setHistorySecret] = React.useState<Secret | null>(null);
   const [requestAccessSecret, setRequestAccessSecret] = React.useState<Secret | null>(null);
 
+  const { workspacePassphrase, unlockWorkspace } = useWorkspaceVault();
+
   // Level 3 Strict Zero-Knowledge Vault State
   const [vaultPassphrase, setVaultPassphrase] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
-      return sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`) || "";
+      const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+      if (projKey) return projKey;
+      const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+      if (wsId) {
+        const wsKey = sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`);
+        if (wsKey) return wsKey;
+      }
+      return sessionStorage.getItem("xtra_global_vault_passphrase") || localStorage.getItem("xtra_global_vault_passphrase") || "";
     }
     return "";
   });
-  const [isVaultUnlocked, setIsVaultUnlocked] = React.useState<boolean>(() => {
+
+  const [isUnlockedViaWorkspace, setIsUnlockedViaWorkspace] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
-      return Boolean(sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`));
+      const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+      if (!projKey) {
+        const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+        const wsKey = wsId ? (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`)) : null;
+        const globalKey = sessionStorage.getItem("xtra_global_vault_passphrase") || localStorage.getItem("xtra_global_vault_passphrase");
+        return Boolean(wsKey || globalKey);
+      }
     }
     return false;
   });
+
+  const [isVaultUnlocked, setIsVaultUnlocked] = React.useState<boolean>(() => {
+    if (typeof window !== "undefined") {
+      const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+      const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+      const wsKey = wsId ? (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`)) : null;
+      const globalKey = sessionStorage.getItem("xtra_global_vault_passphrase") || localStorage.getItem("xtra_global_vault_passphrase");
+      return Boolean(projKey || wsKey || globalKey);
+    }
+    return false;
+  });
+
+  // Sync with workspace master key if individual project key not explicitly set
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      const hasProjKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+      if (!hasProjKey && workspacePassphrase) {
+        setVaultPassphrase(workspacePassphrase);
+        setIsVaultUnlocked(true);
+        setIsUnlockedViaWorkspace(true);
+      }
+    }
+  }, [workspacePassphrase, projectId]);
+
   const [isUnlockModalOpen, setIsUnlockModalOpen] = React.useState(false);
+  const [isRotateKeyModalOpen, setIsRotateKeyModalOpen] = React.useState(false);
   const [unlockInputPassphrase, setUnlockInputPassphrase] = React.useState("");
   const [unlockError, setUnlockError] = React.useState<string | null>(null);
   const [recoveryMnemonic, setRecoveryMnemonic] = React.useState<string | null>(null);
   const [isUnlockingVault, setIsUnlockingVault] = React.useState(false);
   const [rememberDevice, setRememberDevice] = React.useState(true);
+  const [applyToWorkspace, setApplyToWorkspace] = React.useState(true);
 
   const [notification, setNotification] = React.useState<{ type: "default" | "destructive"; message: string } | null>(null);
 
@@ -842,6 +886,19 @@ const VaultManager: React.FC = () => {
         } else {
           localStorage.removeItem(`xtra_vault_${projectId}`);
         }
+
+        if (applyToWorkspace) {
+          const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+          if (wsId) {
+            sessionStorage.setItem(`xtra_ws_vault_${wsId}`, inputKey);
+            if (rememberDevice) {
+              localStorage.setItem(`xtra_ws_vault_${wsId}`, inputKey);
+              localStorage.setItem("xtra_global_vault_passphrase", inputKey);
+            }
+          }
+          unlockWorkspace(inputKey, rememberDevice);
+          setIsUnlockedViaWorkspace(true);
+        }
       }
       setUnlockError(null);
       setIsUnlockModalOpen(false);
@@ -851,7 +908,12 @@ const VaultManager: React.FC = () => {
       const decrypted = decryptClientSecretList(selectedBranch?.secrets || [], projectId as string, inputKey);
       setSecrets(decrypted);
       if (!legacyMatched) {
-        setNotification({ type: "default", message: "✓ Vault unlocked. Secrets decrypted locally." });
+        setNotification({
+          type: "default",
+          message: applyToWorkspace
+            ? "✓ Vault unlocked & set as Workspace Master Key for all projects."
+            : "✓ Vault unlocked. Secrets decrypted locally."
+        });
       }
     } catch (err: any) {
       setUnlockError(err.message || "Failed to unlock vault.");
@@ -863,6 +925,7 @@ const VaultManager: React.FC = () => {
   const handleLockVault = () => {
     setVaultPassphrase("");
     setIsVaultUnlocked(false);
+    setIsUnlockedViaWorkspace(false);
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(`xtra_vault_${projectId}`);
       localStorage.removeItem(`xtra_vault_${projectId}`);
@@ -906,7 +969,6 @@ const VaultManager: React.FC = () => {
     try {
       let createdSecret: any = null;
 
-      try {
         // Zero-Knowledge Client-Side Encryption (E2EE) in Browser
         const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encrypted = await encryptSecretValueWebCrypto(newSecret.value, projectKey);
@@ -940,11 +1002,6 @@ const VaultManager: React.FC = () => {
           isZeroKnowledge: true,
           updatedAt: new Date().toISOString()
         };
-      } catch (v2Error) {
-        // Fallback to v1 endpoint if v2 endpoint is unreachable or error occurs
-        const v1Response = await axios.post("/api/secret", secretData);
-        createdSecret = v1Response.data;
-      }
 
       // Add the created secret to local state
       setSecrets((prev) => [createdSecret, ...prev]);
@@ -1018,7 +1075,6 @@ const VaultManager: React.FC = () => {
     try {
       let createdSecrets: any[] = [];
 
-      try {
         // Zero-Knowledge Client Bulk Encryption
         const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encryptedSecrets = await Promise.all(
@@ -1056,15 +1112,6 @@ const VaultManager: React.FC = () => {
           version: "1",
           updatedAt: resSec.updatedAt || new Date().toISOString()
         }));
-      } catch (v2Err) {
-        // Fallback to legacy v1 bulk endpoint
-        const response = await axios.post("/api/secret/bulk", {
-          projectId: projectId as string,
-          branchId: selectedBranch.id,
-          secrets: parsedSecrets,
-        });
-        createdSecrets = response.data.secrets || [];
-      }
 
       // Add the created secrets to local state
       setSecrets((prev) => [...createdSecrets, ...prev]);
@@ -1095,33 +1142,59 @@ const VaultManager: React.FC = () => {
 
     setIsEditingSecret(true);
     try {
-      try {
-        // Zero-Knowledge Client Secret Encryption
+        const action = (editingSecret as any).actionType || "update";
         const projectKey = deriveProjectKey(projectId as string, vaultPassphrase || undefined);
         const encrypted = await encryptSecretValueWebCrypto(editingSecret.value, projectKey);
 
-        await axios.put(`/api/v2/secret?id=${editingSecret.id}`, {
-          id: editingSecret.id,
-          ciphertext: encrypted.ciphertext,
-          iv: encrypted.iv,
-          authTag: encrypted.authTag,
-          description: editingSecret.description,
-          environmentType: editingSecret.environmentType,
-          changeReason: editingSecret.changeReason
-        });
-      } catch (v2Error) {
-        // Fallback to v1 endpoint
-        await axios.put(`/api/secret?id=${editingSecret.id}`, {
-          ...editingSecret,
-          changeReason: editingSecret.changeReason
-        });
-      }
+        if (action === "copy") {
+          const v2Payload = {
+            key: editingSecret.key,
+            ciphertext: encrypted.ciphertext,
+            iv: encrypted.iv,
+            authTag: encrypted.authTag,
+            description: editingSecret.description,
+            environmentType: editingSecret.environmentType,
+            projectId: projectId as string,
+            branchId: editingSecret.branchId,
+            rotationPolicy: editingSecret.rotationPolicy || "manual",
+            rotationType: editingSecret.rotationType || "",
+          };
+          const response = await axios.post("/api/v2/secret", v2Payload);
+          
+          if (editingSecret.branchId === selectedBranch?.id && (filterEnv === "all" || filterEnv === editingSecret.environmentType)) {
+             const createdSecret = {
+                ...editingSecret,
+                id: response.data.id || Date.now().toString(),
+                version: "1",
+                isZeroKnowledge: true,
+                updatedAt: new Date().toISOString()
+             };
+             setSecrets((prev) => [createdSecret, ...prev]);
+          }
+          setNotification({ type: "default", message: "✓ Secret successfully copied to target" });
+        } else {
+          await axios.put(`/api/v2/secret?id=${editingSecret.id}`, {
+            id: editingSecret.id,
+            ciphertext: encrypted.ciphertext,
+            iv: encrypted.iv,
+            authTag: encrypted.authTag,
+            description: editingSecret.description,
+            environmentType: editingSecret.environmentType,
+            branchId: editingSecret.branchId,
+            changeReason: editingSecret.changeReason
+          });
+          
+          if (action === "transfer" && (editingSecret.branchId !== selectedBranch?.id || (filterEnv !== "all" && filterEnv !== editingSecret.environmentType))) {
+             setSecrets((prev) => prev.filter((s) => s.id !== editingSecret.id));
+          } else {
+             setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, isZeroKnowledge: true, changeReason: "" } : s)));
+          }
+          setNotification({ type: "default", message: action === "transfer" ? "✓ Secret transferred successfully" : "✓ Secret updated with Zero-Knowledge encryption" });
+        }
 
-      setSecrets((prev) => prev.map((s) => (s.id === editingSecret.id ? { ...editingSecret, isZeroKnowledge: true, changeReason: "" } : s)));
       setIsEditSecretOpen(false);
-      setNotification({ type: "default", message: "✓ Secret updated with Zero-Knowledge encryption" });
     } catch (error: any) {
-      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to update secret";
+      const errorMsg = error.response?.data?.message || error.response?.data?.error || "Failed to modify secret";
       setNotification({ type: "destructive", message: `✗ ${errorMsg}` });
     } finally {
       setIsEditingSecret(false);
@@ -1131,11 +1204,7 @@ const VaultManager: React.FC = () => {
   const handleDeleteSecret = async (secretId: string) => {
     setDeletingSecretId(secretId);
     try {
-      try {
         await axios.delete(`/api/v2/secret?id=${secretId}`);
-      } catch (v2Err) {
-        await axios.delete(`/api/secret?id=${secretId}`);
-      }
       setSecrets((prev) => prev.filter((s) => s.id !== secretId));
       setNotification({ type: "default", message: "✓ Secret deleted successfully" });
       setSecretToDelete(null);
@@ -1246,7 +1315,7 @@ const VaultManager: React.FC = () => {
           try {
             await axios.delete(`/api/v2/secret?id=${id}&projectId=${projectId}`);
           } catch {
-            await axios.delete(`/api/secret?id=${id}`);
+            await axios.delete(`/api/v2/secret?id=${id}`);
           }
           successCount++;
         } catch (e) {
@@ -1500,6 +1569,12 @@ const VaultManager: React.FC = () => {
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Zero-Knowledge E2EE Active
               </Badge>
+              {isUnlockedViaWorkspace && (
+                <Badge variant="outline" className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 gap-1.5 py-1 text-xs">
+                  <ShieldCheck className="h-3.5 w-3.5" />
+                  Unlocked via Workspace Master Key
+                </Badge>
+              )}
             </div>
             <p className="text-muted-foreground mt-1">{project?.description}</p>
           </div>
@@ -1554,6 +1629,16 @@ const VaultManager: React.FC = () => {
                 Unlock Vault
               </Button>
             )}
+            {project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin' ? (
+              <Button 
+                variant="outline" 
+                onClick={() => setIsRotateKeyModalOpen(true)}
+                className="text-primary hover:text-primary hover:bg-primary/10"
+              >
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Rotate Key
+              </Button>
+            ) : null}
             {project?.currentUserRole !== 'viewer' && (
               <Button onClick={() => setIsAddSecretOpen(true)}>
                 <Plus className="h-4 w-4 mr-2" />
@@ -2198,6 +2283,60 @@ const VaultManager: React.FC = () => {
                 onChange={(e) => setEditingSecret({ ...editingSecret, changeReason: e.target.value })} 
               />
             </div>
+            
+            <div className="space-y-2 pt-2 border-t">
+              <Label>Action Type</Label>
+              <Select
+                value={(editingSecret as any).actionType || "update"}
+                onValueChange={(value) => setEditingSecret({ ...editingSecret, actionType: value } as any)}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="update">Update Current Location</SelectItem>
+                  <SelectItem value="transfer">Transfer (Move) to Target</SelectItem>
+                  <SelectItem value="copy">Copy (Duplicate) to Target</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {((editingSecret as any).actionType === "transfer" || (editingSecret as any).actionType === "copy") && (
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Target Branch</Label>
+                  <Select
+                    value={editingSecret.branchId}
+                    onValueChange={(value) => setEditingSecret({ ...editingSecret, branchId: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target branch" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {branches.map(b => (
+                        <SelectItem key={b.id} value={b.id}>{b.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Target Environment</Label>
+                  <Select
+                    value={editingSecret.environmentType}
+                    onValueChange={(value) => setEditingSecret({ ...editingSecret, environmentType: value as any })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select target environment" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="development">Development</SelectItem>
+                      <SelectItem value="staging">Staging</SelectItem>
+                      <SelectItem value="production">Production</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            )}
             <div className="flex justify-end gap-2 mt-6">
               <Button variant="outline" onClick={() => { setIsEditSecretOpen(false); setEditingSecret(null); }}>
                 Cancel
@@ -2838,6 +2977,18 @@ const VaultManager: React.FC = () => {
                 Remember on this device (stay unlocked across browser sessions)
               </label>
             </div>
+            <div className="flex items-center space-x-2 pt-0.5">
+              <input
+                type="checkbox"
+                id="apply-to-workspace"
+                checked={applyToWorkspace}
+                onChange={(e) => setApplyToWorkspace(e.target.checked)}
+                className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+              />
+              <label htmlFor="apply-to-workspace" className="text-[11px] font-medium text-foreground cursor-pointer select-none">
+                Apply as Workspace Master Key (auto-unlock all projects in this workspace)
+              </label>
+            </div>
           </div>
 
           {recoveryMnemonic && (
@@ -2916,18 +3067,6 @@ const VaultManager: React.FC = () => {
               >
                 <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
               </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  handleUnlockVault("xtra-zero-knowledge-master");
-                }}
-                title="Unlock using default system key if no custom passphrase was set"
-              >
-                Use Default Key
-              </Button>
             </div>
             <div className="flex gap-2 justify-end">
               <Button
@@ -2961,6 +3100,18 @@ const VaultManager: React.FC = () => {
         </div>
       </CustomDialog>
 
+      {/* Rotate Master Key Modal */}
+      <RotateMasterKeyModal
+        isOpen={isRotateKeyModalOpen}
+        onClose={() => setIsRotateKeyModalOpen(false)}
+        projectId={projectId as string}
+        onSuccess={(newPassphrase) => {
+          setVaultPassphrase(newPassphrase);
+          setIsVaultUnlocked(true);
+          loadProject(true);
+        }}
+      />
+
       {/* Break Glass Modal */}
       <BreakGlassModal
         open={isBreakGlassOpen}
@@ -2989,6 +3140,7 @@ const VaultManager: React.FC = () => {
           secretKey={historySecret.key}
           secretId={historySecret.id}
           onRollbackSuccess={handleRefresh}
+          vaultPassphrase={vaultPassphrase}
         />
       )}
     </DashboardLayout>

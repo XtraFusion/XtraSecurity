@@ -7,6 +7,15 @@ if (fs.existsSync(uriFile)) {
   process.env.DATABASE_URL = fs.readFileSync(uriFile, 'utf8').trim();
 }
 
+// Polyfill TextEncoder and TextDecoder for jsdom test environments
+const { TextEncoder, TextDecoder } = require('util');
+if (typeof global.TextEncoder === 'undefined') {
+  global.TextEncoder = TextEncoder;
+}
+if (typeof global.TextDecoder === 'undefined') {
+  global.TextDecoder = TextDecoder;
+}
+
 // Ensure test encryption key and secret keys are available
 if (!process.env.ENCRYPTION_KEY) {
     process.env.ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';

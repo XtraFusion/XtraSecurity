@@ -27,8 +27,15 @@ import {
   Clock,
   ShieldOff,
   ShieldCheck,
-  Loader2
+  Loader2,
+  Lock,
+  Unlock,
+  Copy,
+  Download,
+  ShieldAlert
 } from "lucide-react";
+import { useWorkspaceVault } from "@/hooks/useWorkspaceVault";
+import { generateRecoveryMnemonic } from "@/lib/crypto/e2ee";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -74,6 +81,14 @@ export default function ProjectsPage() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isCreating, setIsCreating] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
+
+  // Workspace Master Vault State
+  const { isWorkspaceUnlocked, unlockWorkspace, lockWorkspace } = useWorkspaceVault();
+  const [isWsUnlockModalOpen, setIsWsUnlockModalOpen] = useState(false);
+  const [wsPassphraseInput, setWsPassphraseInput] = useState("");
+  const [wsRememberDevice, setWsRememberDevice] = useState(true);
+  const [wsRecoveryMnemonic, setWsRecoveryMnemonic] = useState<string | null>(null);
+  const [wsUnlockError, setWsUnlockError] = useState<string | null>(null);
 
   const loadProjects = async () => {
     setIsLoading(true);
@@ -243,6 +258,34 @@ export default function ProjectsPage() {
               </Button>
             </div>
 
+            {isWorkspaceUnlocked ? (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 border-emerald-500/30 bg-emerald-500/10 text-emerald-600 hover:bg-destructive hover:text-destructive-foreground hover:border-destructive transition-colors shrink-0 shadow-sm"
+                title={`Workspace Vault Unlocked. All ${projects.length} projects are automatically decrypted. Click to lock and purge passphrase from memory.`}
+                onClick={() => {
+                  lockWorkspace();
+                  toast.success("Workspace vault locked. Passphrase purged from memory.");
+                }}
+              >
+                <Unlock className="h-5 w-5" />
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                size="icon"
+                className="h-10 w-10 border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 shrink-0 shadow-sm"
+                title={`Workspace Vault Locked. Click to unlock all ${projects.length} projects simultaneously.`}
+                onClick={() => {
+                  setIsWsUnlockModalOpen(true);
+                  setWsUnlockError(null);
+                }}
+              >
+                <Lock className="h-5 w-5" />
+              </Button>
+            )}
+
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <DialogTrigger asChild>
                 <Button className="h-10 shadow-md">
@@ -300,6 +343,178 @@ export default function ProjectsPage() {
             </Dialog>
           </div>
         </div>
+
+
+
+        {/* Workspace Vault Unlock Modal */}
+        <Dialog open={isWsUnlockModalOpen} onOpenChange={setIsWsUnlockModalOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                  <Key className="h-5 w-5" />
+                </div>
+                <div>
+                  <DialogTitle>Unlock Workspace Master Vault</DialogTitle>
+                  <DialogDescription className="text-xs mt-0.5">
+                    Unlock all projects in {selectedWorkspace?.name || "this workspace"} simultaneously.
+                  </DialogDescription>
+                </div>
+              </div>
+            </DialogHeader>
+
+            <div className="space-y-4 pt-2">
+              {wsUnlockError && (
+                <div className="p-2.5 rounded bg-destructive/10 border border-destructive/20 text-destructive text-xs">
+                  {wsUnlockError}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <Label htmlFor="ws-passphrase" className="text-xs font-semibold">
+                  Workspace Master Passphrase or Mnemonic
+                </Label>
+                <Input
+                  id="ws-passphrase"
+                  type="password"
+                  placeholder="Enter master passphrase or 24-word recovery phrase..."
+                  value={wsPassphraseInput}
+                  onChange={(e) => {
+                    setWsPassphraseInput(e.target.value);
+                    setWsUnlockError(null);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && wsPassphraseInput.trim()) {
+                      unlockWorkspace(wsPassphraseInput.trim(), wsRememberDevice);
+                      setIsWsUnlockModalOpen(false);
+                      setWsPassphraseInput("");
+                      toast.success("Workspace vault unlocked! All projects are now accessible.");
+                    }
+                  }}
+                  className="font-mono text-sm"
+                  autoFocus
+                />
+                <div className="flex items-center space-x-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="ws-remember-device"
+                    checked={wsRememberDevice}
+                    onChange={(e) => setWsRememberDevice(e.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+                  />
+                  <label htmlFor="ws-remember-device" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+                    Remember on this device (stay unlocked across browser sessions)
+                  </label>
+                </div>
+              </div>
+
+              {wsRecoveryMnemonic && (
+                <div className="p-3 bg-muted/60 rounded-lg border space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-semibold text-primary">Generated 24-Word Phrase:</span>
+                    <div className="flex items-center gap-1">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs"
+                        onClick={() => {
+                          navigator.clipboard.writeText(wsRecoveryMnemonic);
+                          toast.success("Recovery phrase copied to clipboard");
+                        }}
+                      >
+                        <Copy className="h-3 w-3 mr-1" /> Copy
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        className="h-7 text-xs text-primary"
+                        onClick={() => {
+                          const content = [
+                            "====================================================",
+                            "  XtraSecurity Workspace Master Vault Recovery Kit",
+                            "====================================================",
+                            "",
+                            `Workspace: ${selectedWorkspace?.name || "Workspace"} (${selectedWorkspace?.id || "N/A"})`,
+                            `Generated At: ${new Date().toISOString()}`,
+                            "",
+                            "24-WORD RECOVERY PASSPHRASE:",
+                            wsRecoveryMnemonic,
+                            "",
+                            "SECURITY NOTICE:",
+                            "- Derives unique project keys for all projects under this workspace.",
+                            "- XtraSecurity servers NEVER store or receive this phrase (Zero-Knowledge).",
+                            "- Save this securely in a password manager (Bitwarden, 1Password, etc.)."
+                          ].join("\n");
+                          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `xtra-workspace-recovery-kit-${(selectedWorkspace?.name || "workspace").toLowerCase().replace(/[^a-z0-9]/g, "-")}.txt`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success("Recovery kit downloaded");
+                        }}
+                      >
+                        <Download className="h-3 w-3 mr-1" /> Download (.txt)
+                      </Button>
+                    </div>
+                  </div>
+                  <p className="font-mono text-xs p-2 bg-background rounded border text-muted-foreground break-all select-all">
+                    {wsRecoveryMnemonic}
+                  </p>
+                </div>
+              )}
+
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 border-t gap-2">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      const result = generateRecoveryMnemonic();
+                      setWsRecoveryMnemonic(result.mnemonic);
+                      setWsPassphraseInput(result.mnemonic);
+                    }}
+                  >
+                    <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Phrase
+                  </Button>
+                </div>
+
+                <div className="flex gap-2 justify-end">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => {
+                      setIsWsUnlockModalOpen(false);
+                      setWsUnlockError(null);
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    size="sm"
+                    className="bg-primary hover:bg-primary/90"
+                    disabled={!wsPassphraseInput.trim()}
+                    onClick={() => {
+                      if (!wsPassphraseInput.trim()) {
+                        setWsUnlockError("Please enter a valid master passphrase.");
+                        return;
+                      }
+                      unlockWorkspace(wsPassphraseInput.trim(), wsRememberDevice);
+                      setIsWsUnlockModalOpen(false);
+                      setWsPassphraseInput("");
+                      toast.success("✓ Workspace vault unlocked. All projects are now accessible.");
+                    }}
+                  >
+                    <Unlock className="h-3.5 w-3.5 mr-1.5" /> Unlock All Projects
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
 
         {/* Projects Grid */}
         {filteredProjects.length > 0 ? (

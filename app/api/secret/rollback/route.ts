@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { verifyAuth } from "@/lib/server-auth";
-import { encrypt } from "@/lib/encription";
+import { SecretCryptoStrategy } from "@/lib/crypto/secret-crypto";
 import { triggerWebhooks } from "@/lib/webhook";
 import { getUserProjectRole } from "@/lib/permissions";
 import { notify } from "@/lib/notifications/engine";
@@ -82,35 +82,16 @@ export async function POST(req: NextRequest) {
     // Based on app/api/secret/route.ts, the main 'value' field is expected to be a String[]
     // where entry [0] is a JSON string of the encrypted object.
     
-    let plainValue = "";
+    // In a Zero-Knowledge E2EE system, the server cannot decrypt the payload.
+    // It must simply copy the encrypted payload from history to the new active version.
     let encryptedValueToStore: string[] = [];
-
-    // Extract plain value for webhook and history metadata
-    if (typeof targetEntry.value === "string") {
-      plainValue = targetEntry.value;
-    } else if (Array.isArray(targetEntry.value) && targetEntry.value.length > 0) {
-      // It's likely already an encrypted array from a previous version
-      const val = targetEntry.value[0];
-      try {
-        const parsed = JSON.parse(val);
-        if (parsed.iv && parsed.encryptedData) {
-          const { decrypt } = await import("@/lib/encription");
-          plainValue = decrypt(parsed);
-        } else if (parsed.ciphertext && parsed.iv) {
-          const { decryptSecretValue, deriveProjectKey } = await import("@/lib/crypto/e2ee");
-          const projectKey = deriveProjectKey(secret.projectId);
-          plainValue = decryptSecretValue(parsed, projectKey);
-        } else {
-          plainValue = val;
-        }
-      } catch (e) {
-        plainValue = val;
-      }
+    if (Array.isArray(targetEntry.value)) {
+      encryptedValueToStore = targetEntry.value;
+    } else if (typeof targetEntry.value === "string") {
+      encryptedValueToStore = [targetEntry.value];
+    } else {
+      encryptedValueToStore = [JSON.stringify(targetEntry.value)];
     }
-
-    // Re-encrypt to ensure freshness of IV/AuthTag
-    const reEncrypted = encrypt(plainValue);
-    encryptedValueToStore = [JSON.stringify(reEncrypted)];
 
     // 5. Update the Database
     const newHistoryEntry = {

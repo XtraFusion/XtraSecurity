@@ -253,6 +253,7 @@ export const PUT = withSecurity(async (request, context, session) => {
       authTag,
       description,
       environmentType,
+      branchId,
       changeReason,
       workloadEnvelopes = []
     } = body;
@@ -312,6 +313,7 @@ export const PUT = withSecurity(async (request, context, session) => {
         history: currentHistory,
         description: description !== undefined ? description : existingSecret.description,
         environmentType: environmentType || existingSecret.environmentType,
+        branchId: branchId || existingSecret.branchId,
         updatedBy: session.email
       }
     });

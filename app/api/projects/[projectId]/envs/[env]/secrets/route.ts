@@ -396,7 +396,7 @@ export const POST = withSecurity(async (
                 updatedBy: userId,
                 // Ensure branchId is set
                 branchId: existing.branchId || targetBranchId, 
-                history: [...currentHistory, historyEntry] // Append new version
+                history: [historyEntry, ...currentHistory] // Prepend new version
             }
         });
         

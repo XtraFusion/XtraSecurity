@@ -13,6 +13,10 @@ import hashlib
 from typing import Dict, Optional, Any, Callable
 from contextlib import contextmanager
 
+from cryptography.hazmat.primitives.kdf.hkdf import HKDF
+from cryptography.hazmat.primitives import hashes
+from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+
 from openapi_client.api_client import ApiClient
 from openapi_client.configuration import Configuration
 from openapi_client.api.secrets_api import SecretsApi
@@ -38,7 +42,8 @@ class XtraClient:
         fallback_env: Optional[str] = None,
         offline_disk_cache: bool = True,
         max_retries: int = 3,
-        on_telemetry: Optional[Callable[[Dict[str, Any]], None]] = None
+        on_telemetry: Optional[Callable[[Dict[str, Any]], None]] = None,
+        vault_passphrase: Optional[str] = None
     ):
         self.token = token or os.getenv("XTRA_TOKEN")
         if not self.token:
@@ -52,6 +57,7 @@ class XtraClient:
         self.offline_disk_cache = offline_disk_cache
         self.max_retries = max_retries
         self.on_telemetry = on_telemetry
+        self.vault_passphrase = vault_passphrase or os.getenv("XTRA_VAULT_PASSPHRASE") or os.getenv("XTRA_MASTER_SECRET")
 
         config = Configuration(host=self.api_url)
         config.api_key['BearerAuth'] = f"Bearer {self.token}"
@@ -77,6 +83,30 @@ class XtraClient:
         encrypted = bytes.fromhex(payload_hex)
         decrypted = bytes([b ^ key[i % len(key)] for i, b in enumerate(encrypted)])
         return json.loads(decrypted.decode("utf-8"))
+
+    def derive_project_key(self, project_id: str) -> bytes:
+        user_secret = self.vault_passphrase or os.getenv("XTRA_VAULT_PASSPHRASE") or os.getenv("XTRA_MASTER_SECRET")
+        if not user_secret:
+            raise XtraError("Vault Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.")
+        salt = f"project_salt_{project_id}".encode("utf-8")
+        info = b"xtra-e2ee-project-key-v2"
+        hkdf = HKDF(algorithm=hashes.SHA256(), length=32, salt=salt, info=info)
+        return hkdf.derive(user_secret.encode("utf-8"))
+
+    def encrypt_secret_value(self, plaintext: str, project_key: bytes) -> Dict[str, str]:
+        aesgcm = AESGCM(project_key)
+        iv = os.urandom(12)
+        ciphertext_with_tag = aesgcm.encrypt(iv, plaintext.encode("utf-8"), None)
+        ciphertext = ciphertext_with_tag[:-16].hex()
+        auth_tag = ciphertext_with_tag[-16:].hex()
+        return {"ciphertext": ciphertext, "iv": iv.hex(), "authTag": auth_tag}
+
+    def decrypt_secret_value(self, payload: Dict[str, Any], project_key: bytes) -> str:
+        aesgcm = AESGCM(project_key)
+        iv = bytes.fromhex(payload["iv"])
+        ciphertext = bytes.fromhex(payload["ciphertext"])
+        auth_tag = bytes.fromhex(payload.get("authTag", payload.get("tag", "")))
+        return aesgcm.decrypt(iv, ciphertext + auth_tag, None).decode("utf-8")
 
     def _get_disk_cache_path(self, pid: str, env: str) -> str:
         home_dir = os.path.expanduser("~")
@@ -158,6 +188,16 @@ class XtraClient:
             )
             data = dict(response) if isinstance(response, dict) else (response.to_dict() if hasattr(response, 'to_dict') else {})
             
+            project_key = self.derive_project_key(pid)
+            for k, v in data.items():
+                if isinstance(v, str) and v.startswith('{') and 'ciphertext' in v:
+                    try:
+                        parsed = json.loads(v)
+                        if 'ciphertext' in parsed and 'iv' in parsed:
+                            data[k] = self.decrypt_secret_value(parsed, project_key)
+                    except Exception:
+                        pass
+            
             # Multi-Environment Fallback Resolution (Task A33)
             active_fallback = fallback_env or self.fallback_env
             if active_fallback and active_fallback != env:
@@ -215,6 +255,36 @@ class XtraClient:
     ) -> Optional[str]:
         secrets = self.get_secrets(env=env, project_id=project_id, branch=branch)
         return secrets.get(key, default)
+
+    def upsert_secrets(
+        self,
+        env: str,
+        secrets: Dict[str, str],
+        project_id: Optional[str] = None
+    ) -> Any:
+        pid = project_id or self.project_id
+        if not pid:
+            raise XtraError("Project ID is required.")
+        
+        project_key = self.derive_project_key(pid)
+        encrypted_secrets = {}
+        for k, v in secrets.items():
+            if isinstance(v, str) and v.startswith('{') and 'ciphertext' in v:
+                encrypted_secrets[k] = v
+            else:
+                enc = self.encrypt_secret_value(str(v), project_key)
+                encrypted_secrets[k] = json.dumps(enc)
+                
+        # OpenAPI expects UpsertSecretsRequest with a 'secrets' dict.
+        # But we pass the dict to the api method directly usually via kwargs.
+        response, _ = self._execute_with_retry(
+            lambda: self.secrets_api.upsert_secrets(
+                project_id=pid,
+                env=env,
+                upsert_secrets_request={"secrets": encrypted_secrets}
+            )
+        )
+        return response
 
     def inject_secrets(
         self,
