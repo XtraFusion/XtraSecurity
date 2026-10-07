@@ -938,6 +938,10 @@ const VaultManager: React.FC = () => {
   // --- Handlers ---
 
   const handleAddSecret = async () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     // Validation
     if (!newSecret.key.trim()) {
       setNotification({ type: "destructive", message: "Secret key is required" });
@@ -1026,6 +1030,10 @@ const VaultManager: React.FC = () => {
   };
 
   const handleBulkImport = async () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     if (!envImportText.trim()) {
       setNotification({ type: "destructive", message: "Please paste .env content to import" });
       return;
@@ -1128,6 +1136,10 @@ const VaultManager: React.FC = () => {
   };
 
   const handleEditSecret = async () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     if (!editingSecret) return;
 
     // Validation
@@ -1202,6 +1214,10 @@ const VaultManager: React.FC = () => {
   };
 
   const handleDeleteSecret = async (secretId: string) => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     setDeletingSecretId(secretId);
     try {
         await axios.delete(`/api/v2/secret?id=${secretId}`);
@@ -1222,6 +1238,10 @@ const VaultManager: React.FC = () => {
 
   // Feature 1: Export as .env
   const handleExportEnv = () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     const secretsToExport = filteredSecrets.length > 0 ? filteredSecrets : secrets;
     if (secretsToExport.length === 0) {
       setNotification({ type: "destructive", message: "No secrets to export" });
@@ -1249,6 +1269,10 @@ const VaultManager: React.FC = () => {
 
   // Feature 1b: Export as .env.example
   const handleExportEnvExample = () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     const secretsToExport = filteredSecrets.length > 0 ? filteredSecrets : secrets;
     if (secretsToExport.length === 0) {
       setNotification({ type: "destructive", message: "No secrets to export" });
@@ -1301,6 +1325,10 @@ const VaultManager: React.FC = () => {
   };
 
   const handleBulkDelete = () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     if (selectedSecretIds.size === 0) return;
     setIsBulkDeleteConfirmOpen(true); // show confirm first
   };
@@ -1335,6 +1363,10 @@ const VaultManager: React.FC = () => {
 
   // Copy Secrets Feature
   const handleCopySecrets = async () => {
+    if (!isVaultUnlocked) {
+      setNotification({ type: "destructive", message: "Vault is locked. Please unlock the vault first." });
+      return;
+    }
     if (!selectedBranch) return;
     if (!copyTargetBranch) {
       setNotification({ type: "destructive", message: "Please select a target branch" });
@@ -1640,7 +1672,7 @@ const VaultManager: React.FC = () => {
               </Button>
             ) : null}
             {project?.currentUserRole !== 'viewer' && (
-              <Button onClick={() => setIsAddSecretOpen(true)}>
+              <Button onClick={() => setIsAddSecretOpen(true)} disabled={!isVaultUnlocked}>
                 <Plus className="h-4 w-4 mr-2" />
                 Add Secret
               </Button>
@@ -1789,33 +1821,33 @@ const VaultManager: React.FC = () => {
                 <>
                   {project?.currentUserRole !== 'viewer' && (
                     <>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnv}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnv} disabled={!isVaultUnlocked}>
                         <Download className="h-4 w-4 mr-2 text-muted-foreground" /> Export .env
                       </Button>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnvExample}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={handleExportEnvExample} disabled={!isVaultUnlocked}>
                         <FileText className="h-4 w-4 mr-2 text-muted-foreground" /> .env.example
                       </Button>
                     </>
                   )}
                   {project?.currentUserRole !== 'viewer' && (
                     <>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsEnvSyncOpen(true)}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsEnvSyncOpen(true)} disabled={!isVaultUnlocked}>
                         <Activity className="h-4 w-4 mr-2 text-muted-foreground" /> Env Sync
                       </Button>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCopyModalOpen(true)}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCopyModalOpen(true)} disabled={!isVaultUnlocked}>
                         <Copy className="h-4 w-4 mr-2 text-muted-foreground" /> Copy
                       </Button>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={toggleBulkSelect}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={toggleBulkSelect} disabled={!isVaultUnlocked}>
                         <CheckSquare className="h-4 w-4 mr-2 text-muted-foreground" /> Select
                       </Button>
                     </>
                   )}
                   {project?.currentUserRole !== 'viewer' && (
                     <>
-                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCompareModalOpen(true)}>
+                      <Button variant="outline" size="sm" className="h-9 border-border/50 bg-background/50 hover:bg-muted/50 font-medium" onClick={() => setIsCompareModalOpen(true)} disabled={!isVaultUnlocked}>
                         <GitCompare className="h-4 w-4 mr-2 text-muted-foreground" /> Compare
                       </Button>
-                      <Button variant="outline" size="sm" className="h-9 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 font-medium" onClick={() => setIsJitModalOpen(true)}>
+                      <Button variant="outline" size="sm" className="h-9 border-amber-500/30 bg-amber-500/5 hover:bg-amber-500/10 text-amber-600 font-medium" onClick={() => setIsJitModalOpen(true)} disabled={!isVaultUnlocked}>
                         <Shield className="h-4 w-4 mr-2" /> JIT Link
                         <Badge variant="outline" className="ml-1.5 text-[9px] h-4 px-1 border-amber-500/50 text-amber-500">PRO</Badge>
                       </Button>
@@ -1992,19 +2024,20 @@ const VaultManager: React.FC = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
-                                    <DropdownMenuItem onClick={() => { setEditingSecret(secret); setIsEditSecretOpen(true); }}>
+                                    <DropdownMenuItem onClick={() => { setEditingSecret(secret); setIsEditSecretOpen(true); }} disabled={!isVaultUnlocked}>
                                       <Edit2 className="h-4 w-4 mr-2" /> Edit
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }}>
+                                    <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }} disabled={!isVaultUnlocked}>
                                       <History className="h-4 w-4 mr-2" /> History
                                     </DropdownMenuItem>
-                                    <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600">
+                                    <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600" disabled={!isVaultUnlocked}>
                                       <Shield className="h-4 w-4 mr-2" /> Generate JIT Link
                                     </DropdownMenuItem>
                                     <DropdownMenuSeparator />
                                     <DropdownMenuItem
                                       onClick={() => setSecretToDelete(secret)}
                                       className="text-destructive cursor-pointer"
+                                      disabled={!isVaultUnlocked}
                                     >
                                       <Trash2 className="h-4 w-4 mr-2" /> Delete
                                     </DropdownMenuItem>
