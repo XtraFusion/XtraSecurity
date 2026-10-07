@@ -444,7 +444,7 @@ function Navbar() {
         }`}
     >
       {/* Logo */}
-      <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline">
+      <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline" style={{ fontFamily: "var(--font-space-grotesk)" }}>
         <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo - Best Free Environment Manager" width={28} height={28} className="rounded-md" priority />
         <span className="text-white">Xtra<span className="text-cyan-400">Security</span></span>
       </Link>
@@ -455,7 +455,7 @@ function Navbar() {
           <li key={l.href}>
             <button
               onClick={() => handleNav(l.href)}
-              className="px-4 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer bg-transparent border-none font-[inherit]"
+              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer bg-transparent border-none font-[inherit]"
             >
               {l.label}
             </button>
@@ -472,21 +472,22 @@ function Navbar() {
           </div>
         ) : session ? (
           <div className="hidden md:flex items-center gap-2">
-            <Link href="/dashboard" className="px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all no-underline"
-              style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)" }}>
+            <Link href="/dashboard" className="px-4 py-2.5 rounded-xl text-sm font-bold text-white transition-all no-underline tracking-wide"
+              style={{ background: "linear-gradient(135deg, #0ea5e9, #0284c7)", boxShadow: "0 0 20px rgba(14,165,233,0.3)", fontFamily: "var(--font-space-grotesk)" }}>
               Go to Dashboard →
             </Link>
             <button
               onClick={() => signOut({ callbackUrl: "/" })}
-              className="px-3 py-2 rounded-lg text-sm font-medium text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer bg-transparent"
+              className="px-4 py-2.5 rounded-xl text-sm font-bold text-slate-400 hover:text-red-400 hover:bg-red-500/10 border border-white/10 hover:border-red-500/30 transition-all cursor-pointer bg-transparent tracking-wide"
               title="Sign out"
+              style={{ fontFamily: "var(--font-space-grotesk)" }}
             >
               Sign out
             </button>
           </div>
         ) : (
-          <Link href="/login" className="hidden md:flex px-4 py-2 rounded-lg text-sm font-bold text-[#002022] transition-all no-underline hover:brightness-110"
-            style={{ background: "linear-gradient(135deg, #00f2ff, #0284c7)", boxShadow: "0 0 20px rgba(0,242,255,0.4)" }}>
+          <Link href="/login" className="hidden md:flex px-5 py-2.5 rounded-xl text-sm font-bold text-[#002022] transition-all no-underline hover:brightness-110 tracking-wide"
+            style={{ background: "linear-gradient(135deg, #00f2ff, #0284c7)", boxShadow: "0 0 20px rgba(0,242,255,0.4)", fontFamily: "var(--font-space-grotesk)" }}>
             Get started →
           </Link>
         )}
@@ -645,10 +646,11 @@ function HeroSection() {
           href="/login"
           whileHover={{ scale: 1.03, y: -2 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-[#002022] no-underline hover:brightness-110"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-[#002022] no-underline hover:brightness-110 tracking-wide"
           style={{
             background: "linear-gradient(135deg, #00f2ff, #0284c7)",
             boxShadow: "0 0 30px rgba(0,242,255,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
+            fontFamily: "var(--font-space-grotesk)",
           }}
         >
           Start for free
@@ -657,7 +659,8 @@ function HeroSection() {
           href="/login"
           whileHover={{ scale: 1.02, y: -1 }}
           whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-7 py-3.5 rounded-xl text-base font-bold text-white border border-white/15 hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline"
+          className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-white border border-white/15 hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline tracking-wide"
+          style={{ fontFamily: "var(--font-space-grotesk)" }}
         >
           Log into workspace →
         </motion.a>
@@ -1002,10 +1005,10 @@ function SecurityFortress() {
             </p>
 
             <div className="flex flex-wrap items-center gap-4">
-              <Link href="/docs" className="px-6 py-3 rounded-lg bg-[#1a1a1a] border border-white/10 hover:bg-black text-white font-bold text-sm transition-colors shadow-xl">
+              <Link href="/docs" className="px-6 py-3.5 rounded-xl bg-[#1a1a1a] border border-white/10 hover:bg-black text-white font-bold text-sm transition-colors shadow-xl tracking-wide" style={{ fontFamily: "var(--font-space-grotesk)" }}>
                 Try for free!
               </Link>
-              <Link href="/docs/cli" className="px-6 py-3 rounded-lg bg-transparent hover:bg-white/5 text-slate-300 font-bold text-sm transition-colors">
+              <Link href="/docs/cli" className="px-6 py-3.5 rounded-xl bg-transparent hover:bg-white/5 text-slate-300 font-bold text-sm transition-colors tracking-wide" style={{ fontFamily: "var(--font-space-grotesk)" }}>
                 View Demo &gt;
               </Link>
             </div>
@@ -1215,15 +1218,17 @@ function PricingSection() {
                     href={plan.plan === "Enterprise" ? "/contact" : "/login"}
                     whileHover={{ scale: 1.02 }}
                     whileTap={{ scale: 0.98 }}
-                    className="flex items-center justify-center w-full py-3.5 rounded-xl text-sm font-bold no-underline transition-all"
+                    className="flex items-center justify-center w-full py-3.5 rounded-xl text-sm font-bold no-underline transition-all tracking-wide"
                     style={plan.featured ? {
                       background: "linear-gradient(90deg, #b8860b, #f5c842, #d4a017)",
                       color: "#0d0b00",
                       letterSpacing: "0.02em",
+                      fontFamily: "var(--font-space-grotesk)"
                     } : {
                       background: "rgba(255,255,255,0.05)",
                       color: "#94a3b8",
                       border: "1px solid rgba(255,255,255,0.1)",
+                      fontFamily: "var(--font-space-grotesk)"
                     }}
                   >
                     {plan.cta}
@@ -1543,10 +1548,11 @@ function CtaSection() {
               href="#pricing"
               whileHover={{ scale: 1.04, y: -3 }}
               whileTap={{ scale: 0.97 }}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white no-underline"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white no-underline tracking-wide"
               style={{
                 background: "linear-gradient(135deg, hsl(220 90% 50%), hsl(220 90% 38%), hsl(45 100% 45%))",
                 boxShadow: "0 4px 32px rgba(37,99,235,0.4), 0 0 0 1px rgba(255,255,255,0.08)",
+                fontFamily: "var(--font-space-grotesk)"
               }}
             >
               Start for free — no card needed
@@ -1554,7 +1560,8 @@ function CtaSection() {
             <motion.a
               href="/book-demo"
               whileHover={{ scale: 1.02, y: -1 }}
-              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white border border-white/[0.12] hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline"
+              className="flex items-center gap-2 px-8 py-4 rounded-xl text-base font-bold text-white border border-white/[0.12] hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline tracking-wide"
+              style={{ fontFamily: "var(--font-space-grotesk)" }}
             >
               Book a demo →
             </motion.a>
@@ -1579,7 +1586,7 @@ function Footer() {
     <footer className="border-t border-white/[0.06] bg-white/[0.015] py-12 px-6">
       <div className="max-w-6xl mx-auto">
         <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-8 mb-10">
-          <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline">
+          <Link href="/" className="flex items-center gap-2.5 font-bold text-xl tracking-tight text-white no-underline" style={{ fontFamily: "var(--font-space-grotesk)" }}>
             <Image src="/apple-touch-icon.png" alt="XtraSecurity Logo" width={28} height={28} className="rounded-md" />
             <span className="text-white">Xtra<span className="text-cyan-400">Security</span></span>
           </Link>
@@ -1724,7 +1731,8 @@ function LiveDemoWidget() {
 
           <Link
             href="/login"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline"
+            className="inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline tracking-wide"
+            style={{ fontFamily: "var(--font-space-grotesk)" }}
           >
             Try it free →
           </Link>
@@ -1915,7 +1923,8 @@ function UseCaseSection() {
               </p>
               <Link
                 href={current.href}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl text-sm font-bold text-black bg-cyan-400 hover:bg-cyan-300 transition-all no-underline tracking-wide"
+                style={{ fontFamily: "var(--font-space-grotesk)" }}
               >
                 {current.cta}
               </Link>
