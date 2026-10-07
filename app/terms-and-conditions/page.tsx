@@ -130,9 +130,22 @@ export default function TermsAndConditions() {
             <p className="mb-4">
               By using the Service, you grant XtraSecurity a limited, non-exclusive licence to store, process, and transmit Customer Content solely to the extent necessary to provide the Service to you. We will not access, use, or disclose Customer Content for any other purpose without your explicit consent.
             </p>
-            <p className="mb-4">
-              <strong>Zero-Knowledge commitment:</strong> Secrets stored under Strict Zero-Knowledge (E2EE Level 3) mode are technically inaccessible to XtraSecurity. We cannot read, copy, or disclose such secrets. You are solely responsible for maintaining and safeguarding your vault passphrase. We cannot recover lost passphrases or the secrets encrypted under them.
-            </p>
+            <div className="bg-slate-100 dark:bg-slate-900 border-l-4 border-cyan-500 p-4 mb-4">
+              <p className="font-semibold text-lg mb-2">
+                Zero-Knowledge Commitment & Waiver of Recovery
+              </p>
+              <p className="text-sm">
+                Secrets stored under Strict Zero-Knowledge (E2EE Level 3) mode are mathematically inaccessible to XtraSecurity. We cannot read, copy, decrypt, or disclose such secrets. 
+                <br /><br />
+                <strong>By enabling Zero-Knowledge mode, you acknowledge and agree that:</strong>
+                <ul className="list-disc pl-5 mt-2">
+                  <li>You are solely responsible for maintaining and safeguarding your Master Vault Passphrase.</li>
+                  <li>XtraSecurity does not possess your passphrase and cannot reset it.</li>
+                  <li>XtraSecurity is legally and technically incapable of recovering secrets if your passphrase is lost, forgotten, or destroyed.</li>
+                  <li>You waive any claims against XtraSecurity for data loss resulting from a lost Master Passphrase.</li>
+                </ul>
+              </p>
+            </div>
             <p>
               You are responsible for ensuring that Customer Content you upload does not violate any applicable laws or third-party rights.
             </p>

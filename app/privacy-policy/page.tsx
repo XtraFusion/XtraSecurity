@@ -152,16 +152,17 @@ export default function PrivacyPolicy() {
           <section className="mb-8">
             <h2 className="text-2xl font-semibold mb-4">6. Zero-Knowledge Architecture & Your Secrets</h2>
             <p className="mb-4">
-              XtraSecurity operates on a zero-knowledge encryption model for secrets stored in Strict E2EE mode (Level 3). This means:
+              XtraSecurity operates on a strict zero-knowledge encryption model for secrets stored in Strict E2EE mode (Level 3). This means:
             </p>
             <ul className="list-disc pl-6 mb-4">
-              <li>Your master vault passphrase is <strong>never transmitted to our servers</strong></li>
-              <li>Encryption and decryption of your secrets happens <strong>entirely in your browser</strong> using WebCrypto API</li>
-              <li>Our servers store only ciphertext blobs — we mathematically cannot read your secrets</li>
-              <li>If you lose your passphrase, we <strong>cannot recover your secrets</strong></li>
+              <li>Your Master Vault Passphrase is <strong>never transmitted to our servers</strong> in plaintext.</li>
+              <li>Encryption and decryption of your secrets happens <strong>entirely locally on your device</strong> (via the CLI, SDK, VS Code extension, or WebCrypto API in the browser).</li>
+              <li>Your Master Passphrase may be cached locally in your device&apos;s native Hardware Keyring (e.g., Windows DPAPI, macOS Keychain). We do not have access to this local hardware cache.</li>
+              <li>Our servers store only ciphertext blobs — we mathematically cannot read, copy, or distribute your secrets.</li>
+              <li><strong>Absolute Non-Recovery:</strong> If you lose your Master Passphrase, we <strong>cannot recover your secrets under any circumstances</strong>, including pursuant to lawful subpoenas, as we do not possess the decryption keys.</li>
             </ul>
             <p className="mb-4">
-              Legacy secrets stored under Server AES (Level 1) are encrypted using a server-side key stored in our infrastructure. These are not zero-knowledge. We recommend migrating to Level 3 using the Vault Key Rotation feature.
+              Legacy secrets stored under Server AES (Level 1) are encrypted using a server-side key stored in our infrastructure. These are not zero-knowledge. We strongly recommend migrating to Level 3 using the Vault Key Rotation feature.
             </p>
           </section>
 

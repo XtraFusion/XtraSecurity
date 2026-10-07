@@ -29,24 +29,25 @@ Authenticate your computer with the cloud.
 xtra login
 ```
 
-### Step 2: Initialize Your Project
-Go to your project folder and link it to XtraSecurity.
+### Step 3: Link Your Project
+Go to your project folder and set the active project. **You will be prompted to enter your Zero-Knowledge Vault Passphrase**.
 ```bash
-xtra init
+xtra project set
 ```
+*Note: Your passphrase is never sent to our servers. It is securely cached in your local OS Hardware Keyring for seamless future use.*
 
-### Step 3: Set Your First Secret
+### Step 4: Set Your First Secret
 Forget manual `.env` edits. Set secrets from the command line:
 ```bash
 xtra secrets set API_KEY=sk_test_4eC39...
 ```
 
-### Step 4: Run Your App (The "Magic" Part)
+### Step 5: Run Your App (The "Magic" Part)
 Stop hardcoding secrets! Use `xtra run` to inject them directly into your app's memory:
 ```bash
-xtra run npm start
+xtra run -- npm start
 ```
-*Note: Your application will see `process.env.API_KEY` perfectly, but no `.env` file ever exists on your disk!*
+*Note: Your application will see `process.env.API_KEY` perfectly, but no `.env` file ever exists on your disk! The CLI decrypts secrets on-the-fly using the cached passphrase in your OS Keyring.*
 
 ---
 
@@ -54,13 +55,22 @@ xtra run npm start
 
 XtraSecurity is built on a **Strict Zero-Knowledge Architecture**. Your secrets are encrypted locally and we can never read them.
 
+### Master Passphrase & Hardware Keyring
+When you create a project, you generate a **Vault Passphrase**. This passphrase is the mathematical key used to encrypt and decrypt all your environment variables. 
+- **Zero-Knowledge**: This passphrase is *never* sent to our servers. We only store an Argon2id hash for login verification. If you lose your passphrase, **your secrets are permanently unrecoverable by us or anyone else**.
+- **Hardware Keyring**: You don't have to type your passphrase every time. When you run `xtra project set` or log into the VS Code extension, your passphrase is encrypted with a machine-bound hardware fingerprint and stored in your OS's native secure keychain (Windows DPAPI, macOS Keychain, Linux Secret Service). 
+
+### How Clients Decrypt Secrets Under the Hood
+1. **The CLI (`xtra run`)**: Intercepts `getSecrets` API calls. The server returns AES-256-GCM ciphertext. The CLI transparently loads your passphrase from the hardware keyring, decrypts the payload in RAM, and spawns your application with the plaintext environment variables.
+2. **Node SDK**: If you use our official SDK (`XtraClient`), it fetches the encrypted blobs and decrypts them directly within your Node.js process using `XTRA_VAULT_PASSPHRASE`. If the passphrase is missing, it will loudly fail with a Zero-Knowledge Error to prevent misconfiguration.
+3. **VS Code Extension**: Fetches ciphertext and decrypts it locally within the extension host. It requires you to run the `Xtra: Set Vault Passphrase` command once per project. It provides live hover decryption and secret scanning without ever logging plaintext to the local filesystem.
+
 | Concept | What it means for you |
 | :--- | :--- |
 | **End-to-End Encryption** | Client-side encryption using AES-256-GCM. The cloud only receives unbreakable ciphertext. |
-| **Master Passphrase** | Your local cryptographic key. Never sent to the server. Derived locally using Argon2id. **If you lose it, your data is unrecoverable.** |
 | **JIT Access** | "Just-In-Time" access. Request temporary 1-hour access to high-stakes secrets. Perfect for production bug fixing. |
 | **Zero-Disk** | Secrets stay in RAM. If your laptop is stolen, the secrets aren't on the hard drive. |
-| **Machine-Locking** | Your local cache is encrypted using your motherboard's unique ID. It can't be stolen and used elsewhere. |
+| **Machine-Locking** | Your local cache is encrypted using your motherboard's unique hardware ID. It can't be stolen and used elsewhere. |
 
 ---
 
