@@ -10,8 +10,9 @@ const securityLevelSchema = z.object({
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const auth = await verifyAuth(request);
     if (!auth) {
@@ -20,7 +21,7 @@ export async function PUT(
 
     const project = await prisma.project.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: auth.userId
       }
     });
@@ -33,7 +34,7 @@ export async function PUT(
     const { securityLevel } = securityLevelSchema.parse(body);
 
     const updatedProject = await prisma.project.update({
-      where: { id: params.id },
+      where: { id: id },
       data: { securityLevel }
     });
 
@@ -41,7 +42,7 @@ export async function PUT(
       await logAudit(
         "PROJECT_SECURITY_LEVEL_UPDATED",
         auth.userId,
-        params.id,
+        id,
         { previousSecurityLevel: project.securityLevel, newSecurityLevel: securityLevel },
         project.workspaceId || undefined
       );

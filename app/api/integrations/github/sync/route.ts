@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
     // Get secrets for the project — match environment case-insensitively
     const allSecrets = await prisma.secret.findMany({
       where: { projectId },
-      select: { key: true, value: true, environmentType: true }
+      select: { key: true, value: true, environmentType: true, projectId: true }
     });
 
     // Filter by environment (case-insensitive)

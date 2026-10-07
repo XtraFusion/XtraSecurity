@@ -5,15 +5,14 @@ import { verifyAuth } from "@/lib/server-auth";
 // GET /api/jit/[token] — Get JIT link metadata (for claim page)
 export async function GET(
   req: NextRequest,
-  { params }: { params: { token: string } }
+  { params }: { params: Promise<{ token: string }> }
 ) {
+  const { token } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized — please log in" }, { status: 401 });
     }
-
-    const { token } = params;
 
     const jitLink = await prisma.jitLink.findUnique({
       where: { token },

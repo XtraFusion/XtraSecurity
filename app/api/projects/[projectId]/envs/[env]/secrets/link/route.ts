@@ -6,8 +6,9 @@ import { logAudit } from "@/lib/audit";
 // POST /api/projects/:projectId/envs/:env/secrets/link
 export async function POST(
   req: NextRequest,
-  { params }: { params: { projectId: string; env: string } }
+  { params }: { params: Promise<{ projectId: string; env: string }> }
 ) {
+  const { projectId, env } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
@@ -66,8 +67,8 @@ export async function POST(
         key,
         value: [], // Empty value for reference
         description: `Linked to ${sourceProject.name}:${sourceEnv}:${sourceKey}`,
-        projectId: params.projectId,
-        environmentType: params.env,
+        projectId: projectId,
+        environmentType: env,
         version: "1",
         type: "reference",
         isReference: true,
@@ -80,7 +81,7 @@ export async function POST(
 
     // Audit Log
     const destinationProject = await prisma.project.findUnique({ 
-      where: { id: params.projectId }, 
+      where: { id: projectId }, 
       select: { workspaceId: true } 
     });
 

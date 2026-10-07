@@ -11,8 +11,9 @@ const ipRestrictionSchema = z.object({
 
 export async function POST(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const auth = await verifyAuth(request);
     if (!auth) {
@@ -21,7 +22,7 @@ export async function POST(
 
     const project = await prisma.project.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: auth.userId
       }
     });
@@ -34,7 +35,7 @@ export async function POST(
     const ipRestriction = ipRestrictionSchema.parse(body);
 
     const updatedProject = await prisma.project.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ipRestrictions: {
           push: ipRestriction
@@ -46,7 +47,7 @@ export async function POST(
       await logAudit(
         "PROJECT_IP_ADDED",
         auth.userId,
-        params.id,
+        id,
         { ip: ipRestriction.ip, description: ipRestriction.description },
         project.workspaceId || undefined
       );
@@ -68,8 +69,10 @@ export async function POST(
 
 export async function DELETE(
   request: Request,
-  { params }: { params: { id: string; ip?: string } }
+  { params }: { params: Promise<{ id: string; ip?: string }> }
 ) {
+  const resolvedParams = await params;
+  const id = resolvedParams.id;
   try {
     const auth = await verifyAuth(request);
     if (!auth) {
@@ -78,7 +81,7 @@ export async function DELETE(
 
     const project = await prisma.project.findFirst({
       where: {
-        id: params.id,
+        id: id,
         userId: auth.userId
       }
     });
@@ -88,7 +91,7 @@ export async function DELETE(
     }
 
     const url = new URL(request.url);
-    const ip = url.searchParams.get("ip") || params.ip;
+    const ip = url.searchParams.get("ip") || resolvedParams.ip;
 
     if (!ip) {
       return NextResponse.json({ error: 'IP parameter is required' }, { status: 400 });
@@ -99,7 +102,7 @@ export async function DELETE(
     ) || [];
 
     const updatedProject = await prisma.project.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         ipRestrictions: updatedRestrictions as any
       }
@@ -109,7 +112,7 @@ export async function DELETE(
       await logAudit(
         "PROJECT_IP_REMOVED",
         auth.userId,
-        params.id,
+        id,
         { ip },
         project.workspaceId || undefined
       );

@@ -126,8 +126,8 @@ export class SecretService {
           return SecretCryptoStrategy.redactForViewer(secret);
         }
 
-        const decryptedValue = SecretCryptoStrategy.decryptValue(secret.value, secret.projectId);
-        const decryptedHistory = SecretCryptoStrategy.decryptHistory(secret.history, secret.projectId);
+        const decryptedValue = SecretCryptoStrategy.decryptValue(secret.value as any, secret.projectId);
+        const decryptedHistory = SecretCryptoStrategy.decryptHistory(secret.history as any[], secret.projectId);
 
         return {
           ...secret,
@@ -246,7 +246,7 @@ export class SecretService {
             updatedBy: session.email,
           },
         ],
-        updatedBy: session.email,
+        updatedBy: session.email || "system",
         permission,
         expiryDate: expiryDate ? new Date(expiryDate) : null,
       },

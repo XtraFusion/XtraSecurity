@@ -4,8 +4,9 @@ import { verifyAuth } from "@/lib/server-auth";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   const auth = await verifyAuth(req);
   if (!auth || !auth.email) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -22,7 +23,7 @@ export async function DELETE(
   // Ensure the key belongs to the user
   const count = await prisma.apiKey.count({
     where: {
-      id: params.id,
+      id: id,
       userId: user.id,
     },
   });
@@ -32,7 +33,7 @@ export async function DELETE(
   }
 
   await prisma.apiKey.delete({
-    where: { id: params.id },
+    where: { id: id },
   });
 
   return NextResponse.json({ success: true });

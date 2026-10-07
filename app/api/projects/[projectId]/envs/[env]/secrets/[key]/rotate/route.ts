@@ -6,15 +6,15 @@ import { encrypt } from "@/lib/encription";
 // POST /api/projects/:pid/envs/:env/secrets/:key/rotate
 export async function POST(
   req: NextRequest,
-  { params }: { params: { projectId: string; env: string; key: string } }
+  { params }: { params: Promise<{ projectId: string; env: string; key: string }> }
 ) {
+  const { projectId, env, key } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { projectId, env, key } = params;
     const body = await req.json();
     const { strategy, parsedNewValue } = body;
 

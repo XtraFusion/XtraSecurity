@@ -36,7 +36,7 @@ export const POST = withSecurity(async (request, context, session) => {
           data: {
             value: update.value,
             history: update.history, // Overwrite history with re-encrypted history
-            updatedBy: session.email,
+            updatedBy: session.email || "system",
           },
         })
       )

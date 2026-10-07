@@ -4,8 +4,9 @@ import { verifyAuth } from '@/lib/server-auth';
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { branchId: string } }
+  { params }: { params: Promise<{ branchId: string }> }
 ) {
+  const { branchId } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
@@ -13,7 +14,7 @@ export async function DELETE(
     }
 
     const branch = await prisma.branch.findUnique({
-      where: { id: params.branchId },
+      where: { id: branchId },
       include: { project: true }
     });
 
@@ -46,10 +47,10 @@ export async function DELETE(
     // Delete the branch and its secrets
     await prisma.$transaction([
       prisma.secret.deleteMany({
-        where: { branchId: params.branchId }
+        where: { branchId: branchId }
       }),
       prisma.branch.delete({
-        where: { id: params.branchId }
+        where: { id: branchId }
       })
     ]);
 

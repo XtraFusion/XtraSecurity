@@ -226,7 +226,7 @@ export function SecretHistoryModal({
             const resData = await res.json();
             
             // Decrypt history if E2EE is used
-            let projectKey: Uint8Array | null = null;
+            let projectKey: string | null = null;
             if (vaultPassphrase) {
                 try {
                     projectKey = deriveProjectKey(projectId, vaultPassphrase);

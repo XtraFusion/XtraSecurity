@@ -5,8 +5,9 @@ import { logAudit } from "@/lib/audit";
 
 export async function POST(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
@@ -14,7 +15,7 @@ export async function POST(
     }
 
     const project = await prisma.project.findUnique({
-      where: { id: params.id },
+      where: { id: id },
     });
 
     if (!project) {
@@ -28,13 +29,13 @@ export async function POST(
 
     // Toggle block status
     const updatedProject = await prisma.project.update({
-      where: { id: params.id },
+      where: { id: id },
       data: {
         status: project.status === 'blocked' ? 'active' : 'blocked'
       },
     });
 
-    try { await logAudit(updatedProject.status === 'blocked' ? 'PROJECT_BLOCKED' : 'PROJECT_UNBLOCKED', auth.userId, params.id, { status: updatedProject.status }, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json(updatedProject);
+    try { await logAudit(updatedProject.status === 'blocked' ? 'PROJECT_BLOCKED' : 'PROJECT_UNBLOCKED', auth.userId, id, { status: updatedProject.status }, project.workspaceId || undefined); } catch (auditErr) { console.error("Failed to write audit log:", auditErr); } return NextResponse.json(updatedProject);
   } catch (error) {
     console.error("[PROJECT_TOGGLE_BLOCK]", error);
     return new NextResponse("Internal Error", { status: 500 });

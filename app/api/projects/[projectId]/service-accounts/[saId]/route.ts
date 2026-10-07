@@ -5,8 +5,9 @@ import { logAudit } from "@/lib/audit";
 
 export async function DELETE(
   req: NextRequest,
-  { params }: { params: { projectId: string; saId: string } }
+  { params }: { params: Promise<{ projectId: string; saId: string }> }
 ) {
+  const resolvedParams = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
@@ -17,7 +18,7 @@ export async function DELETE(
       return NextResponse.json({ error: "Service accounts cannot manage other service accounts" }, { status: 403 });
     }
 
-    const { projectId, saId } = params;
+    const { projectId, saId } = resolvedParams;
 
     // Verify project access
     const project = await prisma.project.findFirst({
@@ -85,8 +86,9 @@ export async function DELETE(
 
 export async function PATCH(
     req: NextRequest,
-    { params }: { params: { projectId: string; saId: string } }
+    { params }: { params: Promise<{ projectId: string; saId: string }> }
   ) {
+    const resolvedParams = await params;
     try {
       const auth = await verifyAuth(req);
       if (!auth) {
@@ -97,7 +99,7 @@ export async function PATCH(
         return NextResponse.json({ error: "Service accounts cannot manage other service accounts" }, { status: 403 });
       }
   
-      const { projectId, saId } = params;
+      const { projectId, saId } = resolvedParams;
       const body = await req.json();
       const { name, permissions } = body;
   

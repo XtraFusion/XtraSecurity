@@ -486,7 +486,7 @@ describe("E2E Adversarial, Fuzzing & High-Security System Scenarios (35 Scenario
         url: `http://localhost:3000/api/project/${project.id}/toggle-block`,
         token: enterpriseOwner.token,
       });
-      const res = await toggleProjectBlock(req, { params: { id: project.id } });
+      const res = await toggleProjectBlock(req, { params: Promise.resolve({ id: project.id }) });
       expect(res.status).toBe(200);
 
       const updated = await prisma.project.findUnique({ where: { id: project.id } });
@@ -532,7 +532,7 @@ describe("E2E Adversarial, Fuzzing & High-Security System Scenarios (35 Scenario
         url: `http://localhost:3000/api/project/${project.id}/toggle-block`,
         token: devSenior.token,
       });
-      const res = await toggleProjectBlock(req, { params: { id: project.id } });
+      const res = await toggleProjectBlock(req, { params: Promise.resolve({ id: project.id }) });
       expect([401, 403]).toContain(res.status);
     });
 

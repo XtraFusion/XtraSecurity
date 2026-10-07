@@ -106,14 +106,14 @@ describe("E2E: Cryptographic Integrity, Timing Attacks & DAST Hardening (Phase 4
     // 2. Tamper with ciphertext
     const tamperedCiphertext = {
       ...encrypted,
-      ciphertext: encrypted.ciphertext.slice(0, -2) + "ff",
+      encryptedData: encrypted.encryptedData.slice(0, -2) + "ff",
     };
     expect(() => decrypt(tamperedCiphertext)).toThrow();
 
     // 3. Tamper with auth tag
     const tamperedAuthTag = {
       ...encrypted,
-      authTag: encrypted.authTag.slice(0, -2) + "00",
+      authTag: encrypted.authTag?.slice(0, -2) + "00",
     };
     expect(() => decrypt(tamperedAuthTag)).toThrow();
 

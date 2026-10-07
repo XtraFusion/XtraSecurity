@@ -8,8 +8,10 @@ import { logAudit } from "@/lib/audit";
 
 export async function GET(
   req: NextRequest,
-  { params }: { params: { projectId: string; env: string; key: string } }
+  { params }: { params: Promise<{ projectId: string; env: string; key: string }> }
 ) {
+  const resolvedParams = await params;
+  const { projectId, env, key } = resolvedParams;
   // 1. Authentication
   const auth = await verifyAuth(req);
   if (!auth) {
@@ -20,7 +22,7 @@ export async function GET(
   // 2. Access Control
   const project = await prisma.project.findFirst({
     where: {
-      id: params.projectId,
+      id: projectId,
     },
     select: { id: true, workspaceId: true }
   });
@@ -32,9 +34,9 @@ export async function GET(
   // 3. Fetch Secret
   const secret = await prisma.secret.findFirst({
     where: {
-      projectId: params.projectId,
-      environmentType: params.env,
-      key: params.key
+      projectId: projectId,
+      environmentType: env,
+      key: key
     }
   });
 
@@ -45,10 +47,10 @@ export async function GET(
   // 4. Authorization via Policy Engine
   const decision = await PolicyEngine.authorize({
     userId,
-    projectId: params.projectId,
+    projectId: projectId,
     resource: "secret",
     action: "value.read",
-    environment: params.env,
+    environment: env,
     context: { secretId: secret.id } 
   });
 
@@ -82,7 +84,7 @@ export async function GET(
           "SECRET_READ",
           userId,
           secret.id,
-          { key: params.key, env: params.env },
+          { key: key, env: env },
           wsId
       )
     );

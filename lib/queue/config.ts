@@ -25,5 +25,5 @@ export const connection: ConnectionOptions | undefined = redisUrl ? parseRedisCo
 if (!connection) {
   console.warn('REDIS_URL not found or invalid. BullMQ will not be able to connect to Redis.');
 } else {
-  console.log(`[Queue] Initializing connection to ${connection.host}:${connection.port} (TLS: ${!!connection.tls})`);
+  console.log(`[Queue] Initializing connection to ${(connection as any).host}:${(connection as any).port} (TLS: ${!!(connection as any).tls})`);
 }

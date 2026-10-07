@@ -4,8 +4,9 @@ import { verifyAuth } from "@/lib/server-auth";
 
 export async function POST(
   req: Request,
-  { params }: { params: { branchId: string } }
+  { params }: { params: Promise<{ branchId: string }> }
 ) {
+  const { branchId } = await params;
   try {
     const auth = await verifyAuth(req);
     if (!auth) {
@@ -13,7 +14,7 @@ export async function POST(
     }
 
     const branch = await prisma.branch.findUnique({
-      where: { id: params.branchId },
+      where: { id: branchId },
       include: { project: true }
     });
 
@@ -29,7 +30,7 @@ export async function POST(
     // Delete all secrets in the branch
     await prisma.secret.deleteMany({
       where: {
-        branchId: params.branchId
+        branchId: branchId
       }
     });
 

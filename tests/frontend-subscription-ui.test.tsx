@@ -38,7 +38,8 @@ describe('Frontend SubscriptionUI Component Integration Tests', () => {
         success: true,
         remaining: 80,
         limit: 100,
-        reset: Date.now() + 3600000
+        reset: Date.now() + 3600000,
+        tier: 'free' as const,
     };
 
     const mockResourceUsage = {
