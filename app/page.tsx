@@ -623,7 +623,7 @@ function HeroSection() {
         className="relative z-10 text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-5xl mb-6"
         style={{ fontFamily: "var(--font-space-grotesk)" }}
       >
-        <span className="text-white">Secure Your Infrastructure.</span>
+        <span className="text-white">Ditch your .env files forever.</span>
         <br />
         <span style={{
           background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
@@ -631,7 +631,7 @@ function HeroSection() {
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          The Zero-Knowledge Secrets Engine.
+          Sync secrets seamlessly across your entire stack.
         </span>
       </h1>
 
