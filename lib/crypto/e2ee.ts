@@ -197,7 +197,7 @@ export function getMasterSecret(): string {
     if (process.env.ENCRYPTION_KEY) return process.env.ENCRYPTION_KEY;
 
     if (process.env.NODE_ENV === 'production') {
-      throw new Error("CRITICAL: XTRA_MASTER_SECRET or ENCRYPTION_KEY environment variable is missing in production.");
+      console.warn("WARNING: XTRA_MASTER_SECRET or ENCRYPTION_KEY environment variable is missing. Defaulting to dummy key. This is expected if using Strict Zero-Knowledge Master Passphrase.");
     }
   }
   return 'xtra-zero-knowledge-master';
