@@ -394,7 +394,10 @@ function SectionHeader({
         {icon && <div className="text-cyan-400 flex items-center justify-center">{getIcon(icon, 24)}</div>}
         <SectionLabel>{label}</SectionLabel>
       </div>
-      <h2 className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4 leading-[1.1] max-w-2xl mx-auto">
+      <h2 
+        className="text-3xl md:text-4xl font-black tracking-tight text-white mb-4 leading-[1.1] max-w-2xl mx-auto"
+        style={{ fontFamily: "var(--font-space-grotesk)" }}
+      >
         {title}
       </h2>
       {sub && (
@@ -615,8 +618,11 @@ function HeroSection() {
       </div>
 
       {/* H1 */}
-      <h1 className="relative z-10 text-5xl md:text-8xl font-black tracking-tight leading-[0.9] max-w-4xl mb-8">
-        <span className="text-white">Stop Committing Secrets</span>
+      <h1 
+        className="relative z-10 text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-5xl mb-6"
+        style={{ fontFamily: "var(--font-space-grotesk)" }}
+      >
+        <span className="text-white">Secure Your Infrastructure.</span>
         <br />
         <span style={{
           background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
@@ -624,14 +630,13 @@ function HeroSection() {
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          The vault your team actually uses.
+          The Zero-Knowledge Secrets Engine.
         </span>
       </h1>
 
       {/* Sub */}
-      <p className="relative z-10 text-lg md:text-xl text-slate-400 max-w-2xl mb-12 leading-relaxed font-medium">
-        Manage your environment variables and .env files securely. 
-        Collaborate with your team using an encrypted vault designed for modern engineering.
+      <p className="relative z-10 text-lg md:text-xl text-slate-400 max-w-3xl mb-12 leading-relaxed font-medium">
+        Stop leaking credentials. Manage your environment variables, API keys, and infrastructure secrets in a centralized vault that your team will actually love to use.
       </p>
 
       {/* CTAs */}
@@ -746,7 +751,7 @@ function FeaturesSection() {
     <section id="features" className="py-32 px-6 bg-[#0a0f1e]">
       <div className="max-w-[1200px] mx-auto">
         <div className="text-center mb-20">
-          <h2 className="text-4xl md:text-5xl font-medium text-white mb-6 tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)" }}>
             Everything your team needs. Nothing you don&apos;t.
           </h2>
           <p className="text-slate-400 text-lg md:text-xl max-w-2xl mx-auto leading-relaxed">
@@ -902,7 +907,7 @@ function HowItWorksSection() {
           <p className="text-[11px] font-bold uppercase tracking-[0.25em] text-slate-400 mb-4">
             HOW XTRASECURITY WORKS
           </p>
-          <h2 className="text-4xl md:text-5xl font-medium text-white tracking-tight">
+          <h2 className="text-4xl md:text-5xl font-bold text-white tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)" }}>
             Four steps to absolute security
           </h2>
         </div>
@@ -988,7 +993,7 @@ function SecurityFortress() {
               </span>
             </div>
             
-            <h2 className="text-4xl md:text-[3.25rem] font-medium text-white mb-6 leading-[1.1] tracking-tight">
+            <h2 className="text-4xl md:text-[3.25rem] font-bold text-white mb-6 leading-[1.1] tracking-tight" style={{ fontFamily: "var(--font-space-grotesk)" }}>
               Assume Breach.<br /><span className="bg-clip-text text-transparent bg-gradient-to-r from-pink-400 to-cyan-400">Stay Secure.</span>
             </h2>
             
@@ -1518,6 +1523,7 @@ function CtaSection() {
           <motion.h2
             variants={fadeUp}
             className="text-5xl md:text-6xl font-black tracking-tight text-white mb-5 leading-[1.05]"
+            style={{ fontFamily: "var(--font-space-grotesk)" }}
           >
             Stop leaking secrets to GitHub{" "}
             <span style={{
