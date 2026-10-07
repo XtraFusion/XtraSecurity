@@ -1939,32 +1939,8 @@ function UseCaseSection() {
 // ─────────────────────────────────────────────
 
 export default function Page() {
-
   return (
-    <div
-      className="min-h-screen"
-      style={{
-        background: "#080e1e",
-        color: "#f1f5f9",
-        fontFamily: "'Instrument Sans', sans-serif",
-      }}
-    >
-      {/* Google Fonts */}
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap');
-        * { box-sizing: border-box; }
-        html { scroll-behavior: smooth; }
-        body { overflow-x: hidden; }
-        ::selection { background: rgba(14,165,233,0.3); }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #080e1e; }
-        ::-webkit-scrollbar-thumb { background: rgba(14,165,233,0.3); border-radius: 3px; }
-        @keyframes shimmer {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 300% 50%; }
-        }
-      `}</style>
-
+    <div className="min-h-screen bg-[#080e1e] text-slate-100 font-sans">
       <Navbar />
       <HeroSection />
       <LiveDemoWidget />
