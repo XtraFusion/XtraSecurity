@@ -12,7 +12,7 @@ const getLegacyKey = () => {
   const envKey = process.env.ENCRYPTION_KEY;
   if (!envKey) {
     if (process.env.NODE_ENV === 'production') {
-      throw new Error('FATAL: ENCRYPTION_KEY environment variable is required in production mode for legacy fallback.');
+      throw new Error("Internal Server Error: Legacy encryption fallback is unconfigured. Please contact the support team.");
     }
     const devFallbackKey = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
     cachedLegacyKey = Buffer.from(devFallbackKey, 'hex');
@@ -50,7 +50,7 @@ export function decrypt(encrypted: {
   const projectId = encrypted.projectId || fallbackProjectId;
 
   if (!encryptedData || !iv || !authTag) {
-    throw new Error("Invalid encrypted payload: missing iv, encryptedData/ciphertext, or authTag");
+    throw new Error("Data Integrity Error: The requested secret payload is malformed or incomplete. Please contact the support team.");
   }
 
   // 1. Try E2EE Decryption (The new standard)
@@ -72,7 +72,7 @@ export function decrypt(encrypted: {
       decrypted += decipher.final('utf8');
       return decrypted;
     } catch (legacyError) {
-      throw new Error("Decryption failed for both E2EE and Legacy fallback.");
+      throw new Error("Decryption Error: Unable to unlock this secret. The master passphrase may be incorrect or the payload is corrupted. Please contact the support team.");
     }
   }
 }
