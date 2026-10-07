@@ -62,25 +62,10 @@ Examples:
         ];
 
         Object.entries(secrets).forEach(([key, value]) => {
-            let displayVal = value;
-            if (typeof value === "string" && value.startsWith("{")) {
-                try {
-                    const parsed = JSON.parse(value);
-                    if (parsed.ciphertext && parsed.iv) {
-                        try {
-                            const { deriveProjectKey, decryptSecretValue, resolveVaultPassphrase } = require("../lib/crypto");
-                            const activePassphrase = resolveVaultPassphrase(options.passphrase || parentOpts.passphrase, project);
-                            const projectKey = deriveProjectKey(project, activePassphrase);
-                            displayVal = decryptSecretValue(parsed, projectKey);
-                        } catch (decryptErr: any) {
-                            displayVal = chalk.yellow("[Decryption Failed: " + decryptErr.message + "]");
-                        }
-                    }
-                } catch (_) {}
-            }
+
             data.push([
                 key, 
-                show ? displayVal : "********", 
+                show ? value : "********", 
                 env
             ]);
         });
@@ -95,7 +80,12 @@ Examples:
 
     } catch (error: any) {
         spinner.fail("Failed to fetch secrets");
-        console.error(chalk.red(error?.response?.data?.error || "An unexpected error occurred"));
+        if (error.message && error.message.includes('Zero-Knowledge')) {
+            console.error(chalk.red("\n[Decryption Error] " + error.message));
+            console.log(chalk.yellow("Hint: Use 'xtra project set' to save your passphrase, or pass it using --passphrase"));
+        } else {
+            console.error(chalk.red(error?.response?.data?.error || "An unexpected error occurred"));
+        }
     }
   });
 
