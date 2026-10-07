@@ -176,16 +176,23 @@ export class XtraClient {
         this.secrets.getSecrets = async (projectId: string, env: any, branch?: string, includeVersions?: boolean, options?: any) => {
             const response = await originalGetSecrets(projectId, env, branch, includeVersions, options);
             if (response && response.data) {
-                const projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
+                let projectKey: string | null = null;
                 const data = response.data as any;
                 for (const [k, v] of Object.entries(data)) {
                     if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
                         try {
                             const parsed = JSON.parse(v);
                             if (parsed.ciphertext && parsed.iv) {
+                                if (!projectKey) {
+                                    projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
+                                }
                                 data[k] = decryptSecretValue(parsed, projectKey);
                             }
-                        } catch (_) {}
+                        } catch (err: any) {
+                            if (err.message && err.message.includes('Zero-Knowledge')) {
+                                throw err;
+                            }
+                        }
                     }
                 }
             }
