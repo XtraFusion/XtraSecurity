@@ -103,7 +103,7 @@ import { AccessRequestAdmin } from "@/components/AccessRequestAdmin";
 import { JitGenerateModal } from "@/components/JitGenerateModal";
 import { BreakGlassModal } from "@/components/BreakGlassModal";
 import { SyncTargetsModal } from "@/components/SyncTargetsModal";
-import { ShareSecretModal } from "@/components/ShareSecretModal";
+
 import { RotateMasterKeyModal } from "@/components/RotateMasterKeyModal";
 
 // --- Types ---
@@ -596,8 +596,7 @@ const VaultManager: React.FC = () => {
   const [isEnvSyncOpen, setIsEnvSyncOpen] = React.useState(false);
 
   // Share State
-  const [shareSecret, setShareSecret] = React.useState<Secret | null>(null);
-  const [isShareOpen, setIsShareOpen] = React.useState(false);
+
 
   // JIT Generate Modal State
   const [isJitModalOpen, setIsJitModalOpen] = React.useState(false);
@@ -1296,10 +1295,7 @@ const VaultManager: React.FC = () => {
     setNotification({ type: "default", message: `✓ .env.example exported with ${secretsToExport.length} keys` });
   };
 
-  const handleShare = (secret: Secret) => {
-    setShareSecret(secret);
-    setIsShareOpen(true);
-  };
+
 
   // Feature 2: Bulk Delete
   const toggleBulkSelect = () => {
@@ -1935,7 +1931,6 @@ const VaultManager: React.FC = () => {
                           setRequestAccessSecret(secret);
                           setIsAccessRequestOpen(true);
                         }}
-                        onShare={() => handleShare(secret)}
                         onGenerateJit={() => setIsJitModalOpen(true)}
                         onSyncTargets={() => {
                           setSyncTargetSecret({ id: secret.id, key: secret.key });
@@ -2716,15 +2711,6 @@ const VaultManager: React.FC = () => {
         </div>
       </CustomDialog>
 
-
-      {/* Share Secret Modal */}
-      <ShareSecretModal
-        isOpen={isShareOpen}
-        onClose={() => setIsShareOpen(false)}
-        secret={shareSecret}
-        onSuccess={(msg) => setNotification({ type: "default", message: msg })}
-        onError={(msg) => setNotification({ type: "destructive", message: msg })}
-      />
 
       {/* Copy Secrets Modal */}
       <CustomDialog
