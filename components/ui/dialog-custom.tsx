@@ -49,7 +49,7 @@ export function Dialog({ isOpen, onClose, title, description, className, noPaddi
             {/* Dialog Content */}
             <div
                 className={cn(
-                    "relative z-50 w-full max-w-lg mx-4 bg-background rounded-lg border shadow-lg flex flex-col max-h-[90vh]",
+                    "relative z-50 w-full max-w-lg mx-4 bg-[#0a0d14] rounded-xl border border-white/5 shadow-2xl flex flex-col max-h-[90vh]",
                     "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200",
                     className
                 )}
@@ -74,12 +74,12 @@ export function Dialog({ isOpen, onClose, title, description, className, noPaddi
                     noPadding && "p-0"
                 )}>
                     {title && (
-                        <h2 id="dialog-title" className="text-lg font-semibold leading-none tracking-tight">
+                        <h2 id="dialog-title" className="text-xl font-bold leading-none tracking-tight text-white">
                             {title}
                         </h2>
                     )}
                     {description && (
-                        <p id="dialog-description" className="text-sm text-muted-foreground mt-2">
+                        <p id="dialog-description" className="text-sm text-slate-400 mt-2">
                             {description}
                         </p>
                     )}
