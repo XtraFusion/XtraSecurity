@@ -1,0 +1,33 @@
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy CLI package dependencies
+COPY package.json package-lock.json ./
+RUN npm ci
+
+# Copy CLI source
+COPY xtra-cli ./xtra-cli
+
+# Install dependencies specifically for the CLI
+WORKDIR /app/xtra-cli
+RUN npm ci
+
+# Build the CLI
+RUN npm run build
+
+# Create minimal production image
+FROM node:20-alpine AS runner
+
+WORKDIR /usr/local/bin
+
+COPY --from=builder /app/xtra-cli/dist /app/xtra-cli/dist
+COPY --from=builder /app/xtra-cli/package.json /app/xtra-cli/package.json
+COPY --from=builder /app/xtra-cli/node_modules /app/xtra-cli/node_modules
+
+# Create a global symlink so users can run `xtra`
+RUN ln -s /app/xtra-cli/dist/bin/xtra.js /usr/local/bin/xtra
+RUN chmod +x /app/xtra-cli/dist/bin/xtra.js
+
+ENTRYPOINT ["xtra"]
+CMD ["--help"]
