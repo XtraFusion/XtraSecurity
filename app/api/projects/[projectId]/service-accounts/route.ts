@@ -18,6 +18,8 @@ export async function GET(
     }
 
     const { projectId } = await params;
+    const url = new URL(req.url);
+    const type = url.searchParams.get("type"); // 'agent' or 'service-account'
 
     // Verify project access
     const project = await prisma.project.findFirst({
@@ -47,8 +49,15 @@ export async function GET(
       return NextResponse.json({ error: "Project not found or access denied" }, { status: 404 });
     }
 
+    const whereClause: any = { projectId };
+    if (type === "agent") {
+      whereClause.isAgent = true;
+    } else if (type === "service-account") {
+      whereClause.isAgent = false;
+    }
+
     const serviceAccounts = await prisma.serviceAccount.findMany({
-      where: { projectId },
+      where: whereClause,
       include: {
         _count: {
           select: { apiKeys: true }

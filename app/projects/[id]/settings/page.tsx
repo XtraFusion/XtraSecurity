@@ -40,6 +40,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { useToast } from '@/hooks/use-toast';
 import axios from '@/lib/axios';
 import { ServiceAccountsTab } from './service-accounts-tab';
+import { AgentsTab } from './agents-tab';
 import { WebhooksTab } from './webhooks-tab';
 import { DashboardLayout } from "@/components/dashboard-layout";
 
@@ -450,6 +451,7 @@ export default function ProjectSettings() {
         <TabsList className="grid w-full grid-cols-8">
           <TabsTrigger value="teams">Teams</TabsTrigger>
           <TabsTrigger value="service-accounts">Service Accounts</TabsTrigger>
+          <TabsTrigger value="agents">AI Agents</TabsTrigger>
           <TabsTrigger value="branches">Branches</TabsTrigger>
           <TabsTrigger value="security">Security</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
@@ -532,6 +534,10 @@ export default function ProjectSettings() {
               </Table>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="agents">
+          <AgentsTab />
         </TabsContent>
 
         <TabsContent value="branches">

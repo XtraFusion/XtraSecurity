@@ -79,7 +79,7 @@ export function ServiceAccountsTab() {
     const fetchServiceAccounts = async () => {
         try {
             setIsLoading(true);
-            const res = await axios.get(`/api/projects/${projectId}/service-accounts`);
+            const res = await axios.get(`/api/projects/${projectId}/service-accounts?type=service-account`);
             setServiceAccounts(res.data);
         } catch (error) {
             console.error(error);
