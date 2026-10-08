@@ -3,15 +3,14 @@ FROM node:20-alpine AS builder
 WORKDIR /app
 
 # Copy CLI package dependencies
-COPY package.json package-lock.json ./
-RUN npm install
-
-# Copy CLI source
-COPY xtra-cli ./xtra-cli
+COPY xtra-cli/package.json xtra-cli/package-lock.json* ./xtra-cli/
 
 # Install dependencies specifically for the CLI
 WORKDIR /app/xtra-cli
 RUN npm install
+
+# Copy CLI source
+COPY xtra-cli .
 
 # Build the CLI
 RUN npm run build
