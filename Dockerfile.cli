@@ -4,14 +4,14 @@ WORKDIR /app
 
 # Copy CLI package dependencies
 COPY package.json package-lock.json ./
-RUN npm ci
+RUN npm install
 
 # Copy CLI source
 COPY xtra-cli ./xtra-cli
 
 # Install dependencies specifically for the CLI
 WORKDIR /app/xtra-cli
-RUN npm ci
+RUN npm install
 
 # Build the CLI
 RUN npm run build
