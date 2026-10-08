@@ -1,8 +1,8 @@
 "use client";
 
 // Bypass button import temporarily
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "../../components/ui/card";
+import { Badge } from "../../components/ui/badge";
 import { ArrowRight, Linkedin, Github, Mail, Award, Zap, Shield } from "lucide-react";
 import Link from "next/link";
 
