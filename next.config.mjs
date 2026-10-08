@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // CACHE BUSTER: 2026-10-08
   output: "standalone",
   eslint: {
     ignoreDuringBuilds: true,
