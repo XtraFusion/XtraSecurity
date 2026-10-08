@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+// Bypass button import temporarily
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ArrowRight, Linkedin, Github, Mail, Award, Zap, Shield } from "lucide-react";
@@ -80,16 +80,16 @@ export default function AboutPage() {
                     </div>
                     <div className="flex gap-4">
                       <a href={teamMembers[0].linkedin} target="_blank" rel="noopener noreferrer">
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <button className="gap-2">
                           <Linkedin className="w-4 h-4" />
                           LinkedIn
-                        </Button>
+                        </button>
                       </a>
                       <a href={`mailto:${teamMembers[0].email}`}>
-                        <Button variant="outline" size="sm" className="gap-2">
+                        <button className="gap-2">
                           <Mail className="w-4 h-4" />
                           Email
-                        </Button>
+                        </button>
                       </a>
                     </div>
                   </div>
@@ -261,15 +261,15 @@ export default function AboutPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/register">
-              <Button size="lg" className="gap-2 text-base">
+              <button className="gap-2 text-base">
                 Get Started Free
                 <ArrowRight className="w-4 h-4" />
-              </Button>
+              </button>
             </Link>
             <Link href="/contact">
-              <Button size="lg" variant="outline" className="gap-2 text-base">
+              <button className="gap-2 text-base border">
                 Schedule Demo
-              </Button>
+              </button>
             </Link>
           </div>
         </div>
