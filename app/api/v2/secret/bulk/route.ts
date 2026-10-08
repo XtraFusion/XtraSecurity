@@ -67,6 +67,17 @@ export const POST = withSecurity(async (request, context, session) => {
       }
     }
 
+    // IP Restriction Enforcement
+    if (projectRecord.ipRestrictions && projectRecord.ipRestrictions.length > 0) {
+      const { getClientIp } = require("@/lib/rate-limit");
+      const { isIpAllowed } = require("@/lib/ip-check");
+      const clientIp = getClientIp(request);
+      
+      if (!isIpAllowed(clientIp, projectRecord.ipRestrictions as any)) {
+        return NextResponse.json({ error: "Access Denied by IP Restriction Policy" }, { status: 403 });
+      }
+    }
+
     // Process and create pre-encrypted secrets
     const createdSecrets = [];
     for (const item of secrets) {

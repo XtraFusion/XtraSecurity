@@ -78,6 +78,17 @@ export const GET = withSecurity(async (
 
   if (!project) return NextResponse.json({ error: "Project not found" }, { status: 404 });
 
+  // 4.1 Enforce IP Restrictions
+  if (project.ipRestrictions && project.ipRestrictions.length > 0) {
+    const { getClientIp } = require("@/lib/rate-limit");
+    const { isIpAllowed } = require("@/lib/ip-check");
+    const clientIp = getClientIp(req);
+    
+    // Typecast to any due to Prisma Json type mapping
+    if (!isIpAllowed(clientIp, project.ipRestrictions as any)) {
+      return NextResponse.json({ error: "Access Denied by IP Restriction Policy" }, { status: 403 });
+    }
+  }
 
   // 3. Filter Secrets
   const branchName = req.nextUrl.searchParams.get("branch") || "main";

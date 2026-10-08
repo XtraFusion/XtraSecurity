@@ -103,7 +103,7 @@ import { AccessRequestAdmin } from "@/components/AccessRequestAdmin";
 import { JitGenerateModal } from "@/components/JitGenerateModal";
 import { BreakGlassModal } from "@/components/BreakGlassModal";
 import { SyncTargetsModal } from "@/components/SyncTargetsModal";
-
+import { ShareSecretModal } from "@/components/ShareSecretModal";
 import { RotateMasterKeyModal } from "@/components/RotateMasterKeyModal";
 
 // --- Types ---
@@ -596,9 +596,8 @@ const VaultManager: React.FC = () => {
   const [isEnvSyncOpen, setIsEnvSyncOpen] = React.useState(false);
 
   // Share State
-
-
-  // JIT Generate Modal State
+  const [isShareModalOpen, setIsShareModalOpen] = React.useState(false);
+  const [shareSecret, setShareSecret] = React.useState<any>(null);  // JIT Generate Modal State
   const [isJitModalOpen, setIsJitModalOpen] = React.useState(false);
 
   // Copy & Compare Modals State
@@ -1936,6 +1935,10 @@ const VaultManager: React.FC = () => {
                           setSyncTargetSecret({ id: secret.id, key: secret.key });
                           setIsSyncTargetsOpen(true);
                         }}
+                        onShare={() => {
+                          setShareSecret(secret);
+                          setIsShareModalOpen(true);
+                        }}
                         isViewer={project?.currentUserRole === 'viewer'}
                       />
                     </div>
@@ -2024,6 +2027,9 @@ const VaultManager: React.FC = () => {
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => { setHistorySecret(secret); setIsHistoryOpen(true); }} disabled={!isVaultUnlocked}>
                                       <History className="h-4 w-4 mr-2" /> History
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem onClick={() => { setShareSecret(secret); setIsShareModalOpen(true); }} disabled={!isVaultUnlocked} className="text-primary">
+                                      <Share2 className="h-4 w-4 mr-2" /> Share Secret
                                     </DropdownMenuItem>
                                     <DropdownMenuItem onClick={() => setIsJitModalOpen(true)} className="text-amber-600" disabled={!isVaultUnlocked}>
                                       <Shield className="h-4 w-4 mr-2" /> Generate JIT Link
@@ -2938,6 +2944,12 @@ const VaultManager: React.FC = () => {
         <AccessRequestAdmin projectId={projectId} />
       </CustomDialog>
 
+      {/* Share Secret Modal */}
+      <ShareSecretModal
+        isOpen={isShareModalOpen}
+        onClose={() => setIsShareModalOpen(false)}
+        secret={shareSecret}
+      />
 
       {/* Unlock Vault Modal (Level 3 Strict Zero-Knowledge) */}
       <CustomDialog

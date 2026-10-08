@@ -51,6 +51,14 @@ const FEATURES = [
     color: "#a855f7",
   },
   {
+    icon: "bot",
+    title: "AI Agent Contexts",
+    desc: "Generate ephemeral, highly-scoped API keys for autonomous AI agents.",
+    details: "Give autonomous LLM agents the credentials they need without risk. Ephemeral tokens automatically expire after a set time (e.g. 15 mins) and enforce strict mathematically-proven Zero-Knowledge bounds.",
+    chips: ["Ephemeral Tokens", "Zero-Knowledge", "Auto-Expiry"],
+    color: "#f59e0b",
+  },
+  {
     icon: "puzzle",
     title: "Developer First",
     desc: "Native VS Code extension, multi-env sync, and a CLI that injects secrets in-memory.",
@@ -620,49 +628,48 @@ function HeroSection() {
 
       {/* H1 */}
       <h1 
-        className="relative z-10 text-5xl md:text-7xl font-extrabold tracking-tight leading-tight max-w-5xl mb-6"
+        className="relative z-10 text-5xl md:text-7xl lg:text-[5.5rem] font-black tracking-tighter leading-[1.05] max-w-5xl mb-8 drop-shadow-2xl"
         style={{ fontFamily: "var(--font-space-grotesk)" }}
       >
-        <span className="text-white">Ditch your .env files forever.</span>
+        <span className="text-white">We can&apos;t read your secrets.</span>
         <br />
         <span style={{
-          background: "linear-gradient(135deg, #38bdf8, #818cf8, #c084fc)",
+          background: "linear-gradient(135deg, #00f2ff 0%, #3b82f6 50%, #a855f7 100%)",
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
           backgroundClip: "text",
         }}>
-          Sync secrets seamlessly across your entire stack.
+          Neither can hackers.
         </span>
       </h1>
 
       {/* Sub */}
-      <p className="relative z-10 text-lg md:text-xl text-slate-400 max-w-3xl mb-12 leading-relaxed font-medium">
-        Stop leaking credentials. Manage your environment variables, API keys, and infrastructure secrets in a centralized vault that your team will actually love to use.
+      <p className="relative z-10 text-xl md:text-2xl text-slate-300 max-w-3xl mb-12 leading-relaxed font-medium">
+        Welcome to the <strong className="text-cyan-400 font-bold drop-shadow-sm">Zero-Knowledge Engine</strong>. Your environment variables are mathematically locked on your device before syncing. <strong className="text-white">Absolute privacy, zero compromises.</strong>
       </p>
 
       {/* CTAs */}
-      <div className="relative z-10 flex flex-wrap items-center justify-center gap-3 mb-10">
+      <div className="relative z-10 flex flex-wrap items-center justify-center gap-5 mb-12">
         <motion.a
           href="/login"
-          whileHover={{ scale: 1.03, y: -2 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-[#002022] no-underline hover:brightness-110 tracking-wide"
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 px-10 py-4 rounded-2xl text-lg font-black text-[#002022] no-underline transition-all shadow-[0_0_40px_rgba(0,242,255,0.4)] hover:shadow-[0_0_60px_rgba(0,242,255,0.6)]"
           style={{
             background: "linear-gradient(135deg, #00f2ff, #0284c7)",
-            boxShadow: "0 0 30px rgba(0,242,255,0.45), 0 0 0 1px rgba(255,255,255,0.1)",
             fontFamily: "var(--font-space-grotesk)",
           }}
         >
           Start for free
         </motion.a>
         <motion.a
-          href="/login"
-          whileHover={{ scale: 1.02, y: -1 }}
-          whileTap={{ scale: 0.98 }}
-          className="flex items-center gap-2 px-8 py-3.5 rounded-xl text-base font-bold text-white border border-white/15 hover:border-white/25 hover:bg-white/[0.04] transition-all no-underline tracking-wide"
+          href="/docs"
+          whileHover={{ scale: 1.05, y: -2 }}
+          whileTap={{ scale: 0.95 }}
+          className="flex items-center gap-2 px-10 py-4 rounded-2xl text-lg font-bold text-white border-2 border-white/20 hover:border-white/40 hover:bg-white/[0.05] transition-all no-underline"
           style={{ fontFamily: "var(--font-space-grotesk)" }}
         >
-          Log into workspace →
+          Read the Docs
         </motion.a>
       </div>
 

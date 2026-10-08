@@ -7,9 +7,9 @@ const pkg = JSON.parse(
   fs.readFileSync(path.join(__dirname, "../../package.json"), "utf-8")
 );
 
-const getClient = () => {
+const getClient = (ephemeralToken?: string | null) => {
   const { apiUrl } = getConfig();
-  const token = getAuthToken();
+  const token = ephemeralToken || getAuthToken();
 
   const client = axios.create({
     baseURL: apiUrl,
@@ -32,14 +32,25 @@ export const api = {
     });
     return response.data;
   },
+  exchangeOidcToken: async (provider: string, token: string) => {
+    const response = await getClient().post("/v2/auth/oidc/token", { provider, token });
+    return {
+      accessToken: response.data.access_token,
+      envelope: response.data.envelope
+    };
+  },
+  spawnAgentContext: async (data: { projectId: string, agentName: string, scopes: string[], durationMinutes: number }) => {
+    const response = await getClient().post("/agents/ephemeral-context", data);
+    return response.data;
+  },
   // Placeholders for future methods
-  getSecrets: async (projectId: string, env: string, branch: string = "main", passphrase?: string) => {
-     const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets?branch=${branch}`);
+  getSecrets: async (projectId: string, env: string, branch: string = "main", passphrase?: string, ephemeralToken?: string | null, workloadEnvelope?: any) => {
+     const response = await getClient(ephemeralToken).get(`/projects/${projectId}/envs/${env}/secrets?branch=${branch}`);
      const secrets = response.data;
      
      if (secrets && typeof secrets === 'object') {
        let projectKey: string | null = null;
-       const { deriveProjectKey, decryptSecretValue, resolveVaultPassphrase } = require("./crypto");
+       const { deriveProjectKey, decryptSecretValue, resolveVaultPassphrase, decryptWorkloadKeyEnvelope } = require("./crypto");
 
        for (const [k, v] of Object.entries(secrets)) {
          if (typeof v === 'string' && v.startsWith('{')) {
@@ -47,8 +58,13 @@ export const api = {
              const parsed = JSON.parse(v);
              if (parsed.ciphertext && parsed.iv) {
                if (!projectKey) {
-                 const activePassphrase = resolveVaultPassphrase(passphrase, projectId);
-                 projectKey = deriveProjectKey(projectId, activePassphrase);
+                 // Phase 3: Workload Key Envelope decryption
+                 if (workloadEnvelope && process.env.XTRA_WORKLOAD_PRIVATE_KEY) {
+                   projectKey = decryptWorkloadKeyEnvelope(workloadEnvelope, process.env.XTRA_WORKLOAD_PRIVATE_KEY);
+                 } else {
+                   const activePassphrase = resolveVaultPassphrase(passphrase, projectId);
+                   projectKey = deriveProjectKey(projectId, activePassphrase);
+                 }
                }
                secrets[k] = decryptSecretValue(parsed, projectKey);
              }

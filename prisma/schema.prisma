@@ -185,6 +185,7 @@ model Project {
   breakGlassSessions BreakGlassSession[]
   webhooks           Webhook[]
   accessRequests     AccessRequest[]
+  oidcTrustPolicies  OidcTrustPolicy[]
 
   // Optimization Compound Indexes (N30)
   @@index([userId, workspaceId])
@@ -282,7 +283,11 @@ model SecretShare {
   viewCount  Int      @default(0)
   isRevoked  Boolean  @default(false)
   createdAt  DateTime @default(now())
-  // Store the decrypted value at time of share creation for security audit
+  
+  // Zero-Knowledge E2EE Sharing Fields
+  encryptedPayload String? // Client-side encrypted ciphertext
+  iv               String? // Client-side generated IV
+  
   label      String?  // optional note e.g. "for new dev"
 }
 
@@ -626,6 +631,8 @@ model ServiceAccount {
   project     Project  @relation(fields: [projectId], references: [id])
   permissions String[]
   
+  isAgent     Boolean  @default(false)
+  
   apiKeys     ApiKey[]
   
   createdBy   String?
@@ -681,4 +688,34 @@ model GlobalState {
   value             Json?    // Optional detailed payload
   lastCheckedAt     DateTime @default(now())
   updatedAt         DateTime @updatedAt
+}
+
+// OIDC WORKLOAD IDENTITY FEDERATION MODEL
+model OidcTrustPolicy {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  projectId       String   @db.ObjectId
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  
+  // E.g. "github", "gitlab"
+  provider        String
+  
+  // E.g. "XtraFusion/MyFrontendApp" (for GitHub)
+  subject         String
+  
+  // The environment this policy grants access to (e.g. "production")
+  environmentType String
+  
+  // Branch/version access
+  branchName      String   @default("main")
+  
+  // Phase 3: Workload Key Envelope
+  workloadPublicKey   String?
+  encryptedProjectKey String?
+  envelopeIv          String?
+  envelopeAuthTag     String?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId, provider, subject])
 }

@@ -47,6 +47,17 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Forbidden: No access to this project" }, { status: 403 });
     }
 
+    // Security Constraint: Enforce IP Restrictions
+    if (secret.project.ipRestrictions && secret.project.ipRestrictions.length > 0) {
+      const { getClientIp } = require("@/lib/rate-limit");
+      const { isIpAllowed } = require("@/lib/ip-check");
+      const clientIp = getClientIp(req);
+      
+      if (!isIpAllowed(clientIp, secret.project.ipRestrictions as any)) {
+        return NextResponse.json({ error: "Access Denied by IP Restriction Policy" }, { status: 403 });
+      }
+    }
+
     // Security Constraint: Viewers cannot rollback
     if (role === "viewer") {
       return NextResponse.json({ error: "Forbidden: Viewers cannot rollback secrets" }, { status: 403 });

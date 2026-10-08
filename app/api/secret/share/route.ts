@@ -10,9 +10,12 @@ export async function POST(req: NextRequest) {
   if (!auth) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json();
-  const { secretId, expiresInHours = 24, maxViews = null, label = "" } = body;
+  const { secretId, expiresInHours = 24, maxViews = null, label = "", encryptedPayload, iv } = body;
 
   if (!secretId) return NextResponse.json({ error: "secretId is required" }, { status: 400 });
+  if (!encryptedPayload || !iv) {
+    return NextResponse.json({ error: "Zero-Knowledge share requires encryptedPayload and iv" }, { status: 400 });
+  }
 
   // Verify the secret belongs to a project the user has access to
   const secret = await prisma.secret.findUnique({ where: { id: secretId }, include: { project: true } });
@@ -37,6 +40,8 @@ export async function POST(req: NextRequest) {
       expiresAt,
       maxViews: maxViews ? parseInt(maxViews) : null,
       label: label || null,
+      encryptedPayload,
+      iv,
     },
   });
 
@@ -46,7 +51,20 @@ export async function POST(req: NextRequest) {
 }
 
 // GET /api/secret/share?token=xxx — View a shared secret (public endpoint)
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
 export async function GET(req: NextRequest) {
+  const ip = getClientIp(req as any);
+  // Prevent token brute-forcing: 10 attempts per minute per IP
+  const rateLimitResult = await rateLimit(ip, 'secret_share_view', 10, 60);
+  
+  if (!rateLimitResult.success) {
+    return NextResponse.json(
+      { error: 'Rate limit exceeded. Please try again later.' },
+      { status: 429 }
+    );
+  }
+
   const token = req.nextUrl.searchParams.get("token");
   if (!token) return NextResponse.json({ error: "Token is required" }, { status: 400 });
 
@@ -79,18 +97,14 @@ export async function GET(req: NextRequest) {
     });
   }
 
-  // Decrypt the secret value
-  let decryptedValue = "[Decryption failed]";
-  try {
-    decryptedValue = SecretCryptoStrategy.decryptValue(share.secret.value[0], share.secret.projectId);
-  } catch (e) {
-    console.error("Failed to decrypt shared secret:", e);
-  }
+  // We no longer decrypt on the server for Zero-Knowledge sharing!
+  // The client will use the ephemeral key from the URL hash to decrypt the payload.
 
   return NextResponse.json({
-    key: share.secret.key,
-    value: decryptedValue,
-    environmentType: share.secret.environmentType,
+    key: share.secret?.key || "Shared Secret",
+    encryptedPayload: share.encryptedPayload,
+    iv: share.iv,
+    environmentType: share.secret?.environmentType || "Unknown",
     label: share.label,
     viewCount: (share.viewCount || 0) + 1,
     maxViews: share.maxViews,

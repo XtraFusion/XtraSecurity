@@ -42,6 +42,17 @@ export const GET = withSecurity(async (request, context, session) => {
         if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
 
+      // IP Restriction Enforcement
+      if (secret.project.ipRestrictions && secret.project.ipRestrictions.length > 0) {
+        const { getClientIp } = require("@/lib/rate-limit");
+        const { isIpAllowed } = require("@/lib/ip-check");
+        const clientIp = getClientIp(request);
+        
+        if (!isIpAllowed(clientIp, secret.project.ipRestrictions as any)) {
+          return NextResponse.json({ error: "Access Denied by IP Restriction Policy" }, { status: 403 });
+        }
+      }
+
       let e2eePayload: any = null;
       try {
         const rawVal = secret.value[0];
@@ -78,6 +89,22 @@ export const GET = withSecurity(async (request, context, session) => {
     } else {
       const role = await getUserProjectRole(session.userId, projectId!);
       if (!role) return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+    }
+
+    // IP Restriction Enforcement
+    const project = await prisma.project.findUnique({
+      where: { id: projectId! },
+      select: { ipRestrictions: true }
+    });
+
+    if (project?.ipRestrictions && project.ipRestrictions.length > 0) {
+      const { getClientIp } = require("@/lib/rate-limit");
+      const { isIpAllowed } = require("@/lib/ip-check");
+      const clientIp = getClientIp(request);
+      
+      if (!isIpAllowed(clientIp, project.ipRestrictions as any)) {
+        return NextResponse.json({ error: "Access Denied by IP Restriction Policy" }, { status: 403 });
+      }
     }
 
     const query: any = { projectId };

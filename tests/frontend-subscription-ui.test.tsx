@@ -1,3 +1,4 @@
+/** @jest-environment jsdom */
 import React from 'react';
 
 // Mock UI Dialog component BEFORE importing SubscriptionUI

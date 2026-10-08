@@ -1,19 +1,48 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import prisma from "@/lib/db";
 import { compare, hash } from "bcryptjs";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { z } from 'zod';
 
-export async function POST(req: Request) {
+const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(8, "Password must be at least 8 characters"),
+});
+
+export async function POST(req: NextRequest) {
   try {
-    const { email, password } = await req.json();
-
-    if (!email || !password) {
+    const ip = getClientIp(req);
+    // Strict rate limit for web login: 5 attempts per 15 minutes
+    const rateLimitResult = await rateLimit(ip, 'web_login', 5, 900);
+    
+    if (!rateLimitResult.success) {
       return NextResponse.json(
-        { message: "Email and password are required" },
+        { message: 'Too many login attempts. Please try again in 15 minutes.' },
+        { 
+          status: 429, 
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString()
+          }
+        }
+      );
+    }
+
+    const body = await req.json();
+    
+    // Zod Validation
+    const parsed = loginSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { message: parsed.error.errors[0].message },
         { status: 400 }
       );
     }
+    
+    const { email, password } = parsed.data;
 
     // 1. Find user by email
     let user = await prisma.user.findUnique({

@@ -14,16 +14,50 @@ export default function SharePage({ params }: { params: { token: string } }) {
     const [revealed, setRevealed] = useState(false);
 
     useEffect(() => {
+        const hash = window.location.hash;
+        const keyMatch = hash.match(/#key=([a-f0-9]+)/);
+        const sharedKeyHex = keyMatch ? keyMatch[1] : null;
+
         fetch(`/api/secret/share?token=${params.token}`)
             .then((r) => r.json())
-            .then((d) => {
+            .then(async (d) => {
                 if (d.error) {
                     setError(d.error);
                     setState("error");
-                } else {
-                    setData(d);
-                    setState("success");
+                    return;
                 }
+
+                if (d.encryptedPayload && d.iv) {
+                    if (!sharedKeyHex) {
+                        setError("Decryption key missing from URL. Cannot decrypt Zero-Knowledge share.");
+                        setState("error");
+                        return;
+                    }
+
+                    try {
+                        const keyBuffer = new Uint8Array(sharedKeyHex.match(/.{1,2}/g)!.map(byte => parseInt(byte, 16)));
+                        const key = await crypto.subtle.importKey("raw", keyBuffer, { name: "AES-GCM" }, false, ["decrypt"]);
+                        
+                        const ivBuffer = Uint8Array.from(atob(d.iv), c => c.charCodeAt(0));
+                        const ciphertextBuffer = Uint8Array.from(atob(d.encryptedPayload), c => c.charCodeAt(0));
+                        
+                        const decryptedBuffer = await crypto.subtle.decrypt(
+                            { name: "AES-GCM", iv: ivBuffer },
+                            key,
+                            ciphertextBuffer
+                        );
+                        
+                        d.value = new TextDecoder().decode(decryptedBuffer);
+                    } catch (e) {
+                        console.error("Decryption failed:", e);
+                        setError("Failed to decrypt secret locally. Invalid key.");
+                        setState("error");
+                        return;
+                    }
+                }
+
+                setData(d);
+                setState("success");
             })
             .catch(() => {
                 setError("Failed to load secret");

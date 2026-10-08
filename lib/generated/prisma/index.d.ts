@@ -193,6 +193,11 @@ export type JitLink = $Result.DefaultSelection<Prisma.$JitLinkPayload>
  * 
  */
 export type GlobalState = $Result.DefaultSelection<Prisma.$GlobalStatePayload>
+/**
+ * Model OidcTrustPolicy
+ * 
+ */
+export type OidcTrustPolicy = $Result.DefaultSelection<Prisma.$OidcTrustPolicyPayload>
 
 /**
  * ##  Prisma Client ʲˢ
@@ -638,6 +643,16 @@ export class PrismaClient<
     * ```
     */
   get globalState(): Prisma.GlobalStateDelegate<ExtArgs, ClientOptions>;
+
+  /**
+   * `prisma.oidcTrustPolicy`: Exposes CRUD operations for the **OidcTrustPolicy** model.
+    * Example usage:
+    * ```ts
+    * // Fetch zero or more OidcTrustPolicies
+    * const oidcTrustPolicies = await prisma.oidcTrustPolicy.findMany()
+    * ```
+    */
+  get oidcTrustPolicy(): Prisma.OidcTrustPolicyDelegate<ExtArgs, ClientOptions>;
 }
 
 export namespace Prisma {
@@ -1113,7 +1128,8 @@ export namespace Prisma {
     ServiceAccount: 'ServiceAccount',
     AccessReview: 'AccessReview',
     JitLink: 'JitLink',
-    GlobalState: 'GlobalState'
+    GlobalState: 'GlobalState',
+    OidcTrustPolicy: 'OidcTrustPolicy'
   };
 
   export type ModelName = (typeof ModelName)[keyof typeof ModelName]
@@ -1132,7 +1148,7 @@ export namespace Prisma {
       omit: GlobalOmitOptions
     }
     meta: {
-      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretSync" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "globalState"
+      modelProps: "user" | "securityEvent" | "userSubscription" | "workspace" | "project" | "branch" | "secret" | "secretSync" | "secretShare" | "rotationSchedule" | "rotationLog" | "team" | "teamUser" | "teamProject" | "account" | "session" | "verificationToken" | "notification" | "notificationRule" | "notificationChannel" | "auditLog" | "teamSSO" | "integration" | "apiKey" | "accessRequest" | "role" | "permission" | "rolePermission" | "userRole" | "abacPolicy" | "breakGlassSession" | "webhook" | "serviceAccount" | "accessReview" | "jitLink" | "globalState" | "oidcTrustPolicy"
       txIsolationLevel: never
     }
     model: {
@@ -3800,6 +3816,80 @@ export namespace Prisma {
           }
         }
       }
+      OidcTrustPolicy: {
+        payload: Prisma.$OidcTrustPolicyPayload<ExtArgs>
+        fields: Prisma.OidcTrustPolicyFieldRefs
+        operations: {
+          findUnique: {
+            args: Prisma.OidcTrustPolicyFindUniqueArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload> | null
+          }
+          findUniqueOrThrow: {
+            args: Prisma.OidcTrustPolicyFindUniqueOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          findFirst: {
+            args: Prisma.OidcTrustPolicyFindFirstArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload> | null
+          }
+          findFirstOrThrow: {
+            args: Prisma.OidcTrustPolicyFindFirstOrThrowArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          findMany: {
+            args: Prisma.OidcTrustPolicyFindManyArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>[]
+          }
+          create: {
+            args: Prisma.OidcTrustPolicyCreateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          createMany: {
+            args: Prisma.OidcTrustPolicyCreateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          delete: {
+            args: Prisma.OidcTrustPolicyDeleteArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          update: {
+            args: Prisma.OidcTrustPolicyUpdateArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          deleteMany: {
+            args: Prisma.OidcTrustPolicyDeleteManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          updateMany: {
+            args: Prisma.OidcTrustPolicyUpdateManyArgs<ExtArgs>
+            result: BatchPayload
+          }
+          upsert: {
+            args: Prisma.OidcTrustPolicyUpsertArgs<ExtArgs>
+            result: $Utils.PayloadToResult<Prisma.$OidcTrustPolicyPayload>
+          }
+          aggregate: {
+            args: Prisma.OidcTrustPolicyAggregateArgs<ExtArgs>
+            result: $Utils.Optional<AggregateOidcTrustPolicy>
+          }
+          groupBy: {
+            args: Prisma.OidcTrustPolicyGroupByArgs<ExtArgs>
+            result: $Utils.Optional<OidcTrustPolicyGroupByOutputType>[]
+          }
+          findRaw: {
+            args: Prisma.OidcTrustPolicyFindRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          aggregateRaw: {
+            args: Prisma.OidcTrustPolicyAggregateRawArgs<ExtArgs>
+            result: JsonObject
+          }
+          count: {
+            args: Prisma.OidcTrustPolicyCountArgs<ExtArgs>
+            result: $Utils.Optional<OidcTrustPolicyCountAggregateOutputType> | number
+          }
+        }
+      }
     }
   } & {
     other: {
@@ -3915,6 +4005,7 @@ export namespace Prisma {
     accessReview?: AccessReviewOmit
     jitLink?: JitLinkOmit
     globalState?: GlobalStateOmit
+    oidcTrustPolicy?: OidcTrustPolicyOmit
   }
 
   /* Types for Logging */
@@ -4191,6 +4282,7 @@ export namespace Prisma {
     breakGlassSessions: number
     webhooks: number
     accessRequests: number
+    oidcTrustPolicies: number
   }
 
   export type ProjectCountOutputTypeSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
@@ -4202,6 +4294,7 @@ export namespace Prisma {
     breakGlassSessions?: boolean | ProjectCountOutputTypeCountBreakGlassSessionsArgs
     webhooks?: boolean | ProjectCountOutputTypeCountWebhooksArgs
     accessRequests?: boolean | ProjectCountOutputTypeCountAccessRequestsArgs
+    oidcTrustPolicies?: boolean | ProjectCountOutputTypeCountOidcTrustPoliciesArgs
   }
 
   // Custom InputTypes
@@ -4269,6 +4362,13 @@ export namespace Prisma {
    */
   export type ProjectCountOutputTypeCountAccessRequestsArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     where?: AccessRequestWhereInput
+  }
+
+  /**
+   * ProjectCountOutputType without action
+   */
+  export type ProjectCountOutputTypeCountOidcTrustPoliciesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OidcTrustPolicyWhereInput
   }
 
 
@@ -9805,6 +9905,7 @@ export namespace Prisma {
     breakGlassSessions?: boolean | Project$breakGlassSessionsArgs<ExtArgs>
     webhooks?: boolean | Project$webhooksArgs<ExtArgs>
     accessRequests?: boolean | Project$accessRequestsArgs<ExtArgs>
+    oidcTrustPolicies?: boolean | Project$oidcTrustPoliciesArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["project"]>
 
@@ -9845,6 +9946,7 @@ export namespace Prisma {
     breakGlassSessions?: boolean | Project$breakGlassSessionsArgs<ExtArgs>
     webhooks?: boolean | Project$webhooksArgs<ExtArgs>
     accessRequests?: boolean | Project$accessRequestsArgs<ExtArgs>
+    oidcTrustPolicies?: boolean | Project$oidcTrustPoliciesArgs<ExtArgs>
     _count?: boolean | ProjectCountOutputTypeDefaultArgs<ExtArgs>
   }
 
@@ -9861,6 +9963,7 @@ export namespace Prisma {
       breakGlassSessions: Prisma.$BreakGlassSessionPayload<ExtArgs>[]
       webhooks: Prisma.$WebhookPayload<ExtArgs>[]
       accessRequests: Prisma.$AccessRequestPayload<ExtArgs>[]
+      oidcTrustPolicies: Prisma.$OidcTrustPolicyPayload<ExtArgs>[]
     }
     scalars: $Extensions.GetPayloadResult<{
       id: string
@@ -10256,6 +10359,7 @@ export namespace Prisma {
     breakGlassSessions<T extends Project$breakGlassSessionsArgs<ExtArgs> = {}>(args?: Subset<T, Project$breakGlassSessionsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$BreakGlassSessionPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     webhooks<T extends Project$webhooksArgs<ExtArgs> = {}>(args?: Subset<T, Project$webhooksArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$WebhookPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     accessRequests<T extends Project$accessRequestsArgs<ExtArgs> = {}>(args?: Subset<T, Project$accessRequestsArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$AccessRequestPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
+    oidcTrustPolicies<T extends Project$oidcTrustPoliciesArgs<ExtArgs> = {}>(args?: Subset<T, Project$oidcTrustPoliciesArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions> | Null>
     /**
      * Attaches callbacks for the resolution and/or rejection of the Promise.
      * @param onfulfilled The callback to execute when the Promise is resolved.
@@ -10864,6 +10968,30 @@ export namespace Prisma {
     take?: number
     skip?: number
     distinct?: AccessRequestScalarFieldEnum | AccessRequestScalarFieldEnum[]
+  }
+
+  /**
+   * Project.oidcTrustPolicies
+   */
+  export type Project$oidcTrustPoliciesArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    where?: OidcTrustPolicyWhereInput
+    orderBy?: OidcTrustPolicyOrderByWithRelationInput | OidcTrustPolicyOrderByWithRelationInput[]
+    cursor?: OidcTrustPolicyWhereUniqueInput
+    take?: number
+    skip?: number
+    distinct?: OidcTrustPolicyScalarFieldEnum | OidcTrustPolicyScalarFieldEnum[]
   }
 
   /**
@@ -14268,6 +14396,8 @@ export namespace Prisma {
     viewCount: number | null
     isRevoked: boolean | null
     createdAt: Date | null
+    encryptedPayload: string | null
+    iv: string | null
     label: string | null
   }
 
@@ -14281,6 +14411,8 @@ export namespace Prisma {
     viewCount: number | null
     isRevoked: boolean | null
     createdAt: Date | null
+    encryptedPayload: string | null
+    iv: string | null
     label: string | null
   }
 
@@ -14294,6 +14426,8 @@ export namespace Prisma {
     viewCount: number
     isRevoked: number
     createdAt: number
+    encryptedPayload: number
+    iv: number
     label: number
     _all: number
   }
@@ -14319,6 +14453,8 @@ export namespace Prisma {
     viewCount?: true
     isRevoked?: true
     createdAt?: true
+    encryptedPayload?: true
+    iv?: true
     label?: true
   }
 
@@ -14332,6 +14468,8 @@ export namespace Prisma {
     viewCount?: true
     isRevoked?: true
     createdAt?: true
+    encryptedPayload?: true
+    iv?: true
     label?: true
   }
 
@@ -14345,6 +14483,8 @@ export namespace Prisma {
     viewCount?: true
     isRevoked?: true
     createdAt?: true
+    encryptedPayload?: true
+    iv?: true
     label?: true
     _all?: true
   }
@@ -14445,6 +14585,8 @@ export namespace Prisma {
     viewCount: number
     isRevoked: boolean
     createdAt: Date
+    encryptedPayload: string | null
+    iv: string | null
     label: string | null
     _count: SecretShareCountAggregateOutputType | null
     _avg: SecretShareAvgAggregateOutputType | null
@@ -14477,6 +14619,8 @@ export namespace Prisma {
     viewCount?: boolean
     isRevoked?: boolean
     createdAt?: boolean
+    encryptedPayload?: boolean
+    iv?: boolean
     label?: boolean
     secret?: boolean | SecretDefaultArgs<ExtArgs>
   }, ExtArgs["result"]["secretShare"]>
@@ -14493,10 +14637,12 @@ export namespace Prisma {
     viewCount?: boolean
     isRevoked?: boolean
     createdAt?: boolean
+    encryptedPayload?: boolean
+    iv?: boolean
     label?: boolean
   }
 
-  export type SecretShareOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "secretId" | "token" | "createdBy" | "expiresAt" | "maxViews" | "viewCount" | "isRevoked" | "createdAt" | "label", ExtArgs["result"]["secretShare"]>
+  export type SecretShareOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "secretId" | "token" | "createdBy" | "expiresAt" | "maxViews" | "viewCount" | "isRevoked" | "createdAt" | "encryptedPayload" | "iv" | "label", ExtArgs["result"]["secretShare"]>
   export type SecretShareInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     secret?: boolean | SecretDefaultArgs<ExtArgs>
   }
@@ -14516,6 +14662,8 @@ export namespace Prisma {
       viewCount: number
       isRevoked: boolean
       createdAt: Date
+      encryptedPayload: string | null
+      iv: string | null
       label: string | null
     }, ExtArgs["result"]["secretShare"]>
     composites: {}
@@ -14919,6 +15067,8 @@ export namespace Prisma {
     readonly viewCount: FieldRef<"SecretShare", 'Int'>
     readonly isRevoked: FieldRef<"SecretShare", 'Boolean'>
     readonly createdAt: FieldRef<"SecretShare", 'DateTime'>
+    readonly encryptedPayload: FieldRef<"SecretShare", 'String'>
+    readonly iv: FieldRef<"SecretShare", 'String'>
     readonly label: FieldRef<"SecretShare", 'String'>
   }
     
@@ -38721,6 +38871,7 @@ export namespace Prisma {
     name: string | null
     description: string | null
     projectId: string | null
+    isAgent: boolean | null
     createdBy: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -38731,6 +38882,7 @@ export namespace Prisma {
     name: string | null
     description: string | null
     projectId: string | null
+    isAgent: boolean | null
     createdBy: string | null
     createdAt: Date | null
     updatedAt: Date | null
@@ -38742,6 +38894,7 @@ export namespace Prisma {
     description: number
     projectId: number
     permissions: number
+    isAgent: number
     createdBy: number
     createdAt: number
     updatedAt: number
@@ -38754,6 +38907,7 @@ export namespace Prisma {
     name?: true
     description?: true
     projectId?: true
+    isAgent?: true
     createdBy?: true
     createdAt?: true
     updatedAt?: true
@@ -38764,6 +38918,7 @@ export namespace Prisma {
     name?: true
     description?: true
     projectId?: true
+    isAgent?: true
     createdBy?: true
     createdAt?: true
     updatedAt?: true
@@ -38775,6 +38930,7 @@ export namespace Prisma {
     description?: true
     projectId?: true
     permissions?: true
+    isAgent?: true
     createdBy?: true
     createdAt?: true
     updatedAt?: true
@@ -38859,6 +39015,7 @@ export namespace Prisma {
     description: string | null
     projectId: string
     permissions: string[]
+    isAgent: boolean
     createdBy: string | null
     createdAt: Date
     updatedAt: Date
@@ -38887,6 +39044,7 @@ export namespace Prisma {
     description?: boolean
     projectId?: boolean
     permissions?: boolean
+    isAgent?: boolean
     createdBy?: boolean
     createdAt?: boolean
     updatedAt?: boolean
@@ -38903,12 +39061,13 @@ export namespace Prisma {
     description?: boolean
     projectId?: boolean
     permissions?: boolean
+    isAgent?: boolean
     createdBy?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type ServiceAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "projectId" | "permissions" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["serviceAccount"]>
+  export type ServiceAccountOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "projectId" | "permissions" | "isAgent" | "createdBy" | "createdAt" | "updatedAt", ExtArgs["result"]["serviceAccount"]>
   export type ServiceAccountInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     project?: boolean | ProjectDefaultArgs<ExtArgs>
     apiKeys?: boolean | ServiceAccount$apiKeysArgs<ExtArgs>
@@ -38927,6 +39086,7 @@ export namespace Prisma {
       description: string | null
       projectId: string
       permissions: string[]
+      isAgent: boolean
       createdBy: string | null
       createdAt: Date
       updatedAt: Date
@@ -39329,6 +39489,7 @@ export namespace Prisma {
     readonly description: FieldRef<"ServiceAccount", 'String'>
     readonly projectId: FieldRef<"ServiceAccount", 'String'>
     readonly permissions: FieldRef<"ServiceAccount", 'String[]'>
+    readonly isAgent: FieldRef<"ServiceAccount", 'Boolean'>
     readonly createdBy: FieldRef<"ServiceAccount", 'String'>
     readonly createdAt: FieldRef<"ServiceAccount", 'DateTime'>
     readonly updatedAt: FieldRef<"ServiceAccount", 'DateTime'>
@@ -42805,6 +42966,1062 @@ export namespace Prisma {
 
 
   /**
+   * Model OidcTrustPolicy
+   */
+
+  export type AggregateOidcTrustPolicy = {
+    _count: OidcTrustPolicyCountAggregateOutputType | null
+    _min: OidcTrustPolicyMinAggregateOutputType | null
+    _max: OidcTrustPolicyMaxAggregateOutputType | null
+  }
+
+  export type OidcTrustPolicyMinAggregateOutputType = {
+    id: string | null
+    projectId: string | null
+    provider: string | null
+    subject: string | null
+    environmentType: string | null
+    branchName: string | null
+    workloadPublicKey: string | null
+    encryptedProjectKey: string | null
+    envelopeIv: string | null
+    envelopeAuthTag: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OidcTrustPolicyMaxAggregateOutputType = {
+    id: string | null
+    projectId: string | null
+    provider: string | null
+    subject: string | null
+    environmentType: string | null
+    branchName: string | null
+    workloadPublicKey: string | null
+    encryptedProjectKey: string | null
+    envelopeIv: string | null
+    envelopeAuthTag: string | null
+    createdAt: Date | null
+    updatedAt: Date | null
+  }
+
+  export type OidcTrustPolicyCountAggregateOutputType = {
+    id: number
+    projectId: number
+    provider: number
+    subject: number
+    environmentType: number
+    branchName: number
+    workloadPublicKey: number
+    encryptedProjectKey: number
+    envelopeIv: number
+    envelopeAuthTag: number
+    createdAt: number
+    updatedAt: number
+    _all: number
+  }
+
+
+  export type OidcTrustPolicyMinAggregateInputType = {
+    id?: true
+    projectId?: true
+    provider?: true
+    subject?: true
+    environmentType?: true
+    branchName?: true
+    workloadPublicKey?: true
+    encryptedProjectKey?: true
+    envelopeIv?: true
+    envelopeAuthTag?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OidcTrustPolicyMaxAggregateInputType = {
+    id?: true
+    projectId?: true
+    provider?: true
+    subject?: true
+    environmentType?: true
+    branchName?: true
+    workloadPublicKey?: true
+    encryptedProjectKey?: true
+    envelopeIv?: true
+    envelopeAuthTag?: true
+    createdAt?: true
+    updatedAt?: true
+  }
+
+  export type OidcTrustPolicyCountAggregateInputType = {
+    id?: true
+    projectId?: true
+    provider?: true
+    subject?: true
+    environmentType?: true
+    branchName?: true
+    workloadPublicKey?: true
+    encryptedProjectKey?: true
+    envelopeIv?: true
+    envelopeAuthTag?: true
+    createdAt?: true
+    updatedAt?: true
+    _all?: true
+  }
+
+  export type OidcTrustPolicyAggregateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OidcTrustPolicy to aggregate.
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcTrustPolicies to fetch.
+     */
+    orderBy?: OidcTrustPolicyOrderByWithRelationInput | OidcTrustPolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the start position
+     */
+    cursor?: OidcTrustPolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcTrustPolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcTrustPolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Count returned OidcTrustPolicies
+    **/
+    _count?: true | OidcTrustPolicyCountAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the minimum value
+    **/
+    _min?: OidcTrustPolicyMinAggregateInputType
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/aggregations Aggregation Docs}
+     * 
+     * Select which fields to find the maximum value
+    **/
+    _max?: OidcTrustPolicyMaxAggregateInputType
+  }
+
+  export type GetOidcTrustPolicyAggregateType<T extends OidcTrustPolicyAggregateArgs> = {
+        [P in keyof T & keyof AggregateOidcTrustPolicy]: P extends '_count' | 'count'
+      ? T[P] extends true
+        ? number
+        : GetScalarType<T[P], AggregateOidcTrustPolicy[P]>
+      : GetScalarType<T[P], AggregateOidcTrustPolicy[P]>
+  }
+
+
+
+
+  export type OidcTrustPolicyGroupByArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    where?: OidcTrustPolicyWhereInput
+    orderBy?: OidcTrustPolicyOrderByWithAggregationInput | OidcTrustPolicyOrderByWithAggregationInput[]
+    by: OidcTrustPolicyScalarFieldEnum[] | OidcTrustPolicyScalarFieldEnum
+    having?: OidcTrustPolicyScalarWhereWithAggregatesInput
+    take?: number
+    skip?: number
+    _count?: OidcTrustPolicyCountAggregateInputType | true
+    _min?: OidcTrustPolicyMinAggregateInputType
+    _max?: OidcTrustPolicyMaxAggregateInputType
+  }
+
+  export type OidcTrustPolicyGroupByOutputType = {
+    id: string
+    projectId: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName: string
+    workloadPublicKey: string | null
+    encryptedProjectKey: string | null
+    envelopeIv: string | null
+    envelopeAuthTag: string | null
+    createdAt: Date
+    updatedAt: Date
+    _count: OidcTrustPolicyCountAggregateOutputType | null
+    _min: OidcTrustPolicyMinAggregateOutputType | null
+    _max: OidcTrustPolicyMaxAggregateOutputType | null
+  }
+
+  type GetOidcTrustPolicyGroupByPayload<T extends OidcTrustPolicyGroupByArgs> = Prisma.PrismaPromise<
+    Array<
+      PickEnumerable<OidcTrustPolicyGroupByOutputType, T['by']> &
+        {
+          [P in ((keyof T) & (keyof OidcTrustPolicyGroupByOutputType))]: P extends '_count'
+            ? T[P] extends boolean
+              ? number
+              : GetScalarType<T[P], OidcTrustPolicyGroupByOutputType[P]>
+            : GetScalarType<T[P], OidcTrustPolicyGroupByOutputType[P]>
+        }
+      >
+    >
+
+
+  export type OidcTrustPolicySelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
+    id?: boolean
+    projectId?: boolean
+    provider?: boolean
+    subject?: boolean
+    environmentType?: boolean
+    branchName?: boolean
+    workloadPublicKey?: boolean
+    encryptedProjectKey?: boolean
+    envelopeIv?: boolean
+    envelopeAuthTag?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }, ExtArgs["result"]["oidcTrustPolicy"]>
+
+
+
+  export type OidcTrustPolicySelectScalar = {
+    id?: boolean
+    projectId?: boolean
+    provider?: boolean
+    subject?: boolean
+    environmentType?: boolean
+    branchName?: boolean
+    workloadPublicKey?: boolean
+    encryptedProjectKey?: boolean
+    envelopeIv?: boolean
+    envelopeAuthTag?: boolean
+    createdAt?: boolean
+    updatedAt?: boolean
+  }
+
+  export type OidcTrustPolicyOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "projectId" | "provider" | "subject" | "environmentType" | "branchName" | "workloadPublicKey" | "encryptedProjectKey" | "envelopeIv" | "envelopeAuthTag" | "createdAt" | "updatedAt", ExtArgs["result"]["oidcTrustPolicy"]>
+  export type OidcTrustPolicyInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    project?: boolean | ProjectDefaultArgs<ExtArgs>
+  }
+
+  export type $OidcTrustPolicyPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    name: "OidcTrustPolicy"
+    objects: {
+      project: Prisma.$ProjectPayload<ExtArgs>
+    }
+    scalars: $Extensions.GetPayloadResult<{
+      id: string
+      projectId: string
+      provider: string
+      subject: string
+      environmentType: string
+      branchName: string
+      workloadPublicKey: string | null
+      encryptedProjectKey: string | null
+      envelopeIv: string | null
+      envelopeAuthTag: string | null
+      createdAt: Date
+      updatedAt: Date
+    }, ExtArgs["result"]["oidcTrustPolicy"]>
+    composites: {}
+  }
+
+  type OidcTrustPolicyGetPayload<S extends boolean | null | undefined | OidcTrustPolicyDefaultArgs> = $Result.GetResult<Prisma.$OidcTrustPolicyPayload, S>
+
+  type OidcTrustPolicyCountArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> =
+    Omit<OidcTrustPolicyFindManyArgs, 'select' | 'include' | 'distinct' | 'omit'> & {
+      select?: OidcTrustPolicyCountAggregateInputType | true
+    }
+
+  export interface OidcTrustPolicyDelegate<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> {
+    [K: symbol]: { types: Prisma.TypeMap<ExtArgs>['model']['OidcTrustPolicy'], meta: { name: 'OidcTrustPolicy' } }
+    /**
+     * Find zero or one OidcTrustPolicy that matches the filter.
+     * @param {OidcTrustPolicyFindUniqueArgs} args - Arguments to find a OidcTrustPolicy
+     * @example
+     * // Get one OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.findUnique({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUnique<T extends OidcTrustPolicyFindUniqueArgs>(args: SelectSubset<T, OidcTrustPolicyFindUniqueArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findUnique", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find one OidcTrustPolicy that matches the filter or throw an error with `error.code='P2025'`
+     * if no matches were found.
+     * @param {OidcTrustPolicyFindUniqueOrThrowArgs} args - Arguments to find a OidcTrustPolicy
+     * @example
+     * // Get one OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.findUniqueOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findUniqueOrThrow<T extends OidcTrustPolicyFindUniqueOrThrowArgs>(args: SelectSubset<T, OidcTrustPolicyFindUniqueOrThrowArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OidcTrustPolicy that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyFindFirstArgs} args - Arguments to find a OidcTrustPolicy
+     * @example
+     * // Get one OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.findFirst({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirst<T extends OidcTrustPolicyFindFirstArgs>(args?: SelectSubset<T, OidcTrustPolicyFindFirstArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findFirst", GlobalOmitOptions> | null, null, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find the first OidcTrustPolicy that matches the filter or
+     * throw `PrismaKnownClientError` with `P2025` code if no matches were found.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyFindFirstOrThrowArgs} args - Arguments to find a OidcTrustPolicy
+     * @example
+     * // Get one OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.findFirstOrThrow({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     */
+    findFirstOrThrow<T extends OidcTrustPolicyFindFirstOrThrowArgs>(args?: SelectSubset<T, OidcTrustPolicyFindFirstOrThrowArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findFirstOrThrow", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OidcTrustPolicies that matches the filter.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyFindManyArgs} args - Arguments to filter and select certain fields only.
+     * @example
+     * // Get all OidcTrustPolicies
+     * const oidcTrustPolicies = await prisma.oidcTrustPolicy.findMany()
+     * 
+     * // Get first 10 OidcTrustPolicies
+     * const oidcTrustPolicies = await prisma.oidcTrustPolicy.findMany({ take: 10 })
+     * 
+     * // Only select the `id`
+     * const oidcTrustPolicyWithIdOnly = await prisma.oidcTrustPolicy.findMany({ select: { id: true } })
+     * 
+     */
+    findMany<T extends OidcTrustPolicyFindManyArgs>(args?: SelectSubset<T, OidcTrustPolicyFindManyArgs<ExtArgs>>): Prisma.PrismaPromise<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "findMany", GlobalOmitOptions>>
+
+    /**
+     * Create a OidcTrustPolicy.
+     * @param {OidcTrustPolicyCreateArgs} args - Arguments to create a OidcTrustPolicy.
+     * @example
+     * // Create one OidcTrustPolicy
+     * const OidcTrustPolicy = await prisma.oidcTrustPolicy.create({
+     *   data: {
+     *     // ... data to create a OidcTrustPolicy
+     *   }
+     * })
+     * 
+     */
+    create<T extends OidcTrustPolicyCreateArgs>(args: SelectSubset<T, OidcTrustPolicyCreateArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "create", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Create many OidcTrustPolicies.
+     * @param {OidcTrustPolicyCreateManyArgs} args - Arguments to create many OidcTrustPolicies.
+     * @example
+     * // Create many OidcTrustPolicies
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.createMany({
+     *   data: [
+     *     // ... provide data here
+     *   ]
+     * })
+     *     
+     */
+    createMany<T extends OidcTrustPolicyCreateManyArgs>(args?: SelectSubset<T, OidcTrustPolicyCreateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Delete a OidcTrustPolicy.
+     * @param {OidcTrustPolicyDeleteArgs} args - Arguments to delete one OidcTrustPolicy.
+     * @example
+     * // Delete one OidcTrustPolicy
+     * const OidcTrustPolicy = await prisma.oidcTrustPolicy.delete({
+     *   where: {
+     *     // ... filter to delete one OidcTrustPolicy
+     *   }
+     * })
+     * 
+     */
+    delete<T extends OidcTrustPolicyDeleteArgs>(args: SelectSubset<T, OidcTrustPolicyDeleteArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "delete", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Update one OidcTrustPolicy.
+     * @param {OidcTrustPolicyUpdateArgs} args - Arguments to update one OidcTrustPolicy.
+     * @example
+     * // Update one OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.update({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    update<T extends OidcTrustPolicyUpdateArgs>(args: SelectSubset<T, OidcTrustPolicyUpdateArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "update", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Delete zero or more OidcTrustPolicies.
+     * @param {OidcTrustPolicyDeleteManyArgs} args - Arguments to filter OidcTrustPolicies to delete.
+     * @example
+     * // Delete a few OidcTrustPolicies
+     * const { count } = await prisma.oidcTrustPolicy.deleteMany({
+     *   where: {
+     *     // ... provide filter here
+     *   }
+     * })
+     * 
+     */
+    deleteMany<T extends OidcTrustPolicyDeleteManyArgs>(args?: SelectSubset<T, OidcTrustPolicyDeleteManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Update zero or more OidcTrustPolicies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyUpdateManyArgs} args - Arguments to update one or more rows.
+     * @example
+     * // Update many OidcTrustPolicies
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.updateMany({
+     *   where: {
+     *     // ... provide filter here
+     *   },
+     *   data: {
+     *     // ... provide data here
+     *   }
+     * })
+     * 
+     */
+    updateMany<T extends OidcTrustPolicyUpdateManyArgs>(args: SelectSubset<T, OidcTrustPolicyUpdateManyArgs<ExtArgs>>): Prisma.PrismaPromise<BatchPayload>
+
+    /**
+     * Create or update one OidcTrustPolicy.
+     * @param {OidcTrustPolicyUpsertArgs} args - Arguments to update or create a OidcTrustPolicy.
+     * @example
+     * // Update or create a OidcTrustPolicy
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.upsert({
+     *   create: {
+     *     // ... data to create a OidcTrustPolicy
+     *   },
+     *   update: {
+     *     // ... in case it already exists, update
+     *   },
+     *   where: {
+     *     // ... the filter for the OidcTrustPolicy we want to update
+     *   }
+     * })
+     */
+    upsert<T extends OidcTrustPolicyUpsertArgs>(args: SelectSubset<T, OidcTrustPolicyUpsertArgs<ExtArgs>>): Prisma__OidcTrustPolicyClient<$Result.GetResult<Prisma.$OidcTrustPolicyPayload<ExtArgs>, T, "upsert", GlobalOmitOptions>, never, ExtArgs, GlobalOmitOptions>
+
+    /**
+     * Find zero or more OidcTrustPolicies that matches the filter.
+     * @param {OidcTrustPolicyFindRawArgs} args - Select which filters you would like to apply.
+     * @example
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.findRaw({
+     *   filter: { age: { $gt: 25 } }
+     * })
+     */
+    findRaw(args?: OidcTrustPolicyFindRawArgs): Prisma.PrismaPromise<JsonObject>
+
+    /**
+     * Perform aggregation operations on a OidcTrustPolicy.
+     * @param {OidcTrustPolicyAggregateRawArgs} args - Select which aggregations you would like to apply.
+     * @example
+     * const oidcTrustPolicy = await prisma.oidcTrustPolicy.aggregateRaw({
+     *   pipeline: [
+     *     { $match: { status: "registered" } },
+     *     { $group: { _id: "$country", total: { $sum: 1 } } }
+     *   ]
+     * })
+     */
+    aggregateRaw(args?: OidcTrustPolicyAggregateRawArgs): Prisma.PrismaPromise<JsonObject>
+
+
+    /**
+     * Count the number of OidcTrustPolicies.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyCountArgs} args - Arguments to filter OidcTrustPolicies to count.
+     * @example
+     * // Count the number of OidcTrustPolicies
+     * const count = await prisma.oidcTrustPolicy.count({
+     *   where: {
+     *     // ... the filter for the OidcTrustPolicies we want to count
+     *   }
+     * })
+    **/
+    count<T extends OidcTrustPolicyCountArgs>(
+      args?: Subset<T, OidcTrustPolicyCountArgs>,
+    ): Prisma.PrismaPromise<
+      T extends $Utils.Record<'select', any>
+        ? T['select'] extends true
+          ? number
+          : GetScalarType<T['select'], OidcTrustPolicyCountAggregateOutputType>
+        : number
+    >
+
+    /**
+     * Allows you to perform aggregations operations on a OidcTrustPolicy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyAggregateArgs} args - Select which aggregations you would like to apply and on what fields.
+     * @example
+     * // Ordered by age ascending
+     * // Where email contains prisma.io
+     * // Limited to the 10 users
+     * const aggregations = await prisma.user.aggregate({
+     *   _avg: {
+     *     age: true,
+     *   },
+     *   where: {
+     *     email: {
+     *       contains: "prisma.io",
+     *     },
+     *   },
+     *   orderBy: {
+     *     age: "asc",
+     *   },
+     *   take: 10,
+     * })
+    **/
+    aggregate<T extends OidcTrustPolicyAggregateArgs>(args: Subset<T, OidcTrustPolicyAggregateArgs>): Prisma.PrismaPromise<GetOidcTrustPolicyAggregateType<T>>
+
+    /**
+     * Group by OidcTrustPolicy.
+     * Note, that providing `undefined` is treated as the value not being there.
+     * Read more here: https://pris.ly/d/null-undefined
+     * @param {OidcTrustPolicyGroupByArgs} args - Group by arguments.
+     * @example
+     * // Group by city, order by createdAt, get count
+     * const result = await prisma.user.groupBy({
+     *   by: ['city', 'createdAt'],
+     *   orderBy: {
+     *     createdAt: true
+     *   },
+     *   _count: {
+     *     _all: true
+     *   },
+     * })
+     * 
+    **/
+    groupBy<
+      T extends OidcTrustPolicyGroupByArgs,
+      HasSelectOrTake extends Or<
+        Extends<'skip', Keys<T>>,
+        Extends<'take', Keys<T>>
+      >,
+      OrderByArg extends True extends HasSelectOrTake
+        ? { orderBy: OidcTrustPolicyGroupByArgs['orderBy'] }
+        : { orderBy?: OidcTrustPolicyGroupByArgs['orderBy'] },
+      OrderFields extends ExcludeUnderscoreKeys<Keys<MaybeTupleToUnion<T['orderBy']>>>,
+      ByFields extends MaybeTupleToUnion<T['by']>,
+      ByValid extends Has<ByFields, OrderFields>,
+      HavingFields extends GetHavingFields<T['having']>,
+      HavingValid extends Has<ByFields, HavingFields>,
+      ByEmpty extends T['by'] extends never[] ? True : False,
+      InputErrors extends ByEmpty extends True
+      ? `Error: "by" must not be empty.`
+      : HavingValid extends False
+      ? {
+          [P in HavingFields]: P extends ByFields
+            ? never
+            : P extends string
+            ? `Error: Field "${P}" used in "having" needs to be provided in "by".`
+            : [
+                Error,
+                'Field ',
+                P,
+                ` in "having" needs to be provided in "by"`,
+              ]
+        }[HavingFields]
+      : 'take' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "take", you also need to provide "orderBy"'
+      : 'skip' extends Keys<T>
+      ? 'orderBy' extends Keys<T>
+        ? ByValid extends True
+          ? {}
+          : {
+              [P in OrderFields]: P extends ByFields
+                ? never
+                : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+            }[OrderFields]
+        : 'Error: If you provide "skip", you also need to provide "orderBy"'
+      : ByValid extends True
+      ? {}
+      : {
+          [P in OrderFields]: P extends ByFields
+            ? never
+            : `Error: Field "${P}" in "orderBy" needs to be provided in "by"`
+        }[OrderFields]
+    >(args: SubsetIntersection<T, OidcTrustPolicyGroupByArgs, OrderByArg> & InputErrors): {} extends InputErrors ? GetOidcTrustPolicyGroupByPayload<T> : Prisma.PrismaPromise<InputErrors>
+  /**
+   * Fields of the OidcTrustPolicy model
+   */
+  readonly fields: OidcTrustPolicyFieldRefs;
+  }
+
+  /**
+   * The delegate class that acts as a "Promise-like" for OidcTrustPolicy.
+   * Why is this prefixed with `Prisma__`?
+   * Because we want to prevent naming conflicts as mentioned in
+   * https://github.com/prisma/prisma-client-js/issues/707
+   */
+  export interface Prisma__OidcTrustPolicyClient<T, Null = never, ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs, GlobalOmitOptions = {}> extends Prisma.PrismaPromise<T> {
+    readonly [Symbol.toStringTag]: "PrismaPromise"
+    project<T extends ProjectDefaultArgs<ExtArgs> = {}>(args?: Subset<T, ProjectDefaultArgs<ExtArgs>>): Prisma__ProjectClient<$Result.GetResult<Prisma.$ProjectPayload<ExtArgs>, T, "findUniqueOrThrow", GlobalOmitOptions> | Null, Null, ExtArgs, GlobalOmitOptions>
+    /**
+     * Attaches callbacks for the resolution and/or rejection of the Promise.
+     * @param onfulfilled The callback to execute when the Promise is resolved.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of which ever callback is executed.
+     */
+    then<TResult1 = T, TResult2 = never>(onfulfilled?: ((value: T) => TResult1 | PromiseLike<TResult1>) | undefined | null, onrejected?: ((reason: any) => TResult2 | PromiseLike<TResult2>) | undefined | null): $Utils.JsPromise<TResult1 | TResult2>
+    /**
+     * Attaches a callback for only the rejection of the Promise.
+     * @param onrejected The callback to execute when the Promise is rejected.
+     * @returns A Promise for the completion of the callback.
+     */
+    catch<TResult = never>(onrejected?: ((reason: any) => TResult | PromiseLike<TResult>) | undefined | null): $Utils.JsPromise<T | TResult>
+    /**
+     * Attaches a callback that is invoked when the Promise is settled (fulfilled or rejected). The
+     * resolved value cannot be modified from the callback.
+     * @param onfinally The callback to execute when the Promise is settled (fulfilled or rejected).
+     * @returns A Promise for the completion of the callback.
+     */
+    finally(onfinally?: (() => void) | undefined | null): $Utils.JsPromise<T>
+  }
+
+
+
+
+  /**
+   * Fields of the OidcTrustPolicy model
+   */
+  interface OidcTrustPolicyFieldRefs {
+    readonly id: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly projectId: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly provider: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly subject: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly environmentType: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly branchName: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly workloadPublicKey: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly encryptedProjectKey: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly envelopeIv: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly envelopeAuthTag: FieldRef<"OidcTrustPolicy", 'String'>
+    readonly createdAt: FieldRef<"OidcTrustPolicy", 'DateTime'>
+    readonly updatedAt: FieldRef<"OidcTrustPolicy", 'DateTime'>
+  }
+    
+
+  // Custom InputTypes
+  /**
+   * OidcTrustPolicy findUnique
+   */
+  export type OidcTrustPolicyFindUniqueArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter, which OidcTrustPolicy to fetch.
+     */
+    where: OidcTrustPolicyWhereUniqueInput
+  }
+
+  /**
+   * OidcTrustPolicy findUniqueOrThrow
+   */
+  export type OidcTrustPolicyFindUniqueOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter, which OidcTrustPolicy to fetch.
+     */
+    where: OidcTrustPolicyWhereUniqueInput
+  }
+
+  /**
+   * OidcTrustPolicy findFirst
+   */
+  export type OidcTrustPolicyFindFirstArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter, which OidcTrustPolicy to fetch.
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcTrustPolicies to fetch.
+     */
+    orderBy?: OidcTrustPolicyOrderByWithRelationInput | OidcTrustPolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OidcTrustPolicies.
+     */
+    cursor?: OidcTrustPolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcTrustPolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcTrustPolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OidcTrustPolicies.
+     */
+    distinct?: OidcTrustPolicyScalarFieldEnum | OidcTrustPolicyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcTrustPolicy findFirstOrThrow
+   */
+  export type OidcTrustPolicyFindFirstOrThrowArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter, which OidcTrustPolicy to fetch.
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcTrustPolicies to fetch.
+     */
+    orderBy?: OidcTrustPolicyOrderByWithRelationInput | OidcTrustPolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for searching for OidcTrustPolicies.
+     */
+    cursor?: OidcTrustPolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcTrustPolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcTrustPolicies.
+     */
+    skip?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/distinct Distinct Docs}
+     * 
+     * Filter by unique combinations of OidcTrustPolicies.
+     */
+    distinct?: OidcTrustPolicyScalarFieldEnum | OidcTrustPolicyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcTrustPolicy findMany
+   */
+  export type OidcTrustPolicyFindManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter, which OidcTrustPolicies to fetch.
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/sorting Sorting Docs}
+     * 
+     * Determine the order of OidcTrustPolicies to fetch.
+     */
+    orderBy?: OidcTrustPolicyOrderByWithRelationInput | OidcTrustPolicyOrderByWithRelationInput[]
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination#cursor-based-pagination Cursor Docs}
+     * 
+     * Sets the position for listing OidcTrustPolicies.
+     */
+    cursor?: OidcTrustPolicyWhereUniqueInput
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Take `±n` OidcTrustPolicies from the position of the cursor.
+     */
+    take?: number
+    /**
+     * {@link https://www.prisma.io/docs/concepts/components/prisma-client/pagination Pagination Docs}
+     * 
+     * Skip the first `n` OidcTrustPolicies.
+     */
+    skip?: number
+    distinct?: OidcTrustPolicyScalarFieldEnum | OidcTrustPolicyScalarFieldEnum[]
+  }
+
+  /**
+   * OidcTrustPolicy create
+   */
+  export type OidcTrustPolicyCreateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * The data needed to create a OidcTrustPolicy.
+     */
+    data: XOR<OidcTrustPolicyCreateInput, OidcTrustPolicyUncheckedCreateInput>
+  }
+
+  /**
+   * OidcTrustPolicy createMany
+   */
+  export type OidcTrustPolicyCreateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to create many OidcTrustPolicies.
+     */
+    data: OidcTrustPolicyCreateManyInput | OidcTrustPolicyCreateManyInput[]
+  }
+
+  /**
+   * OidcTrustPolicy update
+   */
+  export type OidcTrustPolicyUpdateArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * The data needed to update a OidcTrustPolicy.
+     */
+    data: XOR<OidcTrustPolicyUpdateInput, OidcTrustPolicyUncheckedUpdateInput>
+    /**
+     * Choose, which OidcTrustPolicy to update.
+     */
+    where: OidcTrustPolicyWhereUniqueInput
+  }
+
+  /**
+   * OidcTrustPolicy updateMany
+   */
+  export type OidcTrustPolicyUpdateManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The data used to update OidcTrustPolicies.
+     */
+    data: XOR<OidcTrustPolicyUpdateManyMutationInput, OidcTrustPolicyUncheckedUpdateManyInput>
+    /**
+     * Filter which OidcTrustPolicies to update
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * Limit how many OidcTrustPolicies to update.
+     */
+    limit?: number
+  }
+
+  /**
+   * OidcTrustPolicy upsert
+   */
+  export type OidcTrustPolicyUpsertArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * The filter to search for the OidcTrustPolicy to update in case it exists.
+     */
+    where: OidcTrustPolicyWhereUniqueInput
+    /**
+     * In case the OidcTrustPolicy found by the `where` argument doesn't exist, create a new OidcTrustPolicy with this data.
+     */
+    create: XOR<OidcTrustPolicyCreateInput, OidcTrustPolicyUncheckedCreateInput>
+    /**
+     * In case the OidcTrustPolicy was found with the provided `where` argument, update it with this data.
+     */
+    update: XOR<OidcTrustPolicyUpdateInput, OidcTrustPolicyUncheckedUpdateInput>
+  }
+
+  /**
+   * OidcTrustPolicy delete
+   */
+  export type OidcTrustPolicyDeleteArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+    /**
+     * Filter which OidcTrustPolicy to delete.
+     */
+    where: OidcTrustPolicyWhereUniqueInput
+  }
+
+  /**
+   * OidcTrustPolicy deleteMany
+   */
+  export type OidcTrustPolicyDeleteManyArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Filter which OidcTrustPolicies to delete
+     */
+    where?: OidcTrustPolicyWhereInput
+    /**
+     * Limit how many OidcTrustPolicies to delete.
+     */
+    limit?: number
+  }
+
+  /**
+   * OidcTrustPolicy findRaw
+   */
+  export type OidcTrustPolicyFindRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * The query predicate filter. If unspecified, then all documents in the collection will match the predicate. ${@link https://docs.mongodb.com/manual/reference/operator/query MongoDB Docs}.
+     */
+    filter?: InputJsonValue
+    /**
+     * Additional options to pass to the `find` command ${@link https://docs.mongodb.com/manual/reference/command/find/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * OidcTrustPolicy aggregateRaw
+   */
+  export type OidcTrustPolicyAggregateRawArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * An array of aggregation stages to process and transform the document stream via the aggregation pipeline. ${@link https://docs.mongodb.com/manual/reference/operator/aggregation-pipeline MongoDB Docs}.
+     */
+    pipeline?: InputJsonValue[]
+    /**
+     * Additional options to pass to the `aggregate` command ${@link https://docs.mongodb.com/manual/reference/command/aggregate/#command-fields MongoDB Docs}.
+     */
+    options?: InputJsonValue
+  }
+
+  /**
+   * OidcTrustPolicy without action
+   */
+  export type OidcTrustPolicyDefaultArgs<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
+    /**
+     * Select specific fields to fetch from the OidcTrustPolicy
+     */
+    select?: OidcTrustPolicySelect<ExtArgs> | null
+    /**
+     * Omit specific fields from the OidcTrustPolicy
+     */
+    omit?: OidcTrustPolicyOmit<ExtArgs> | null
+    /**
+     * Choose, which related nodes to fetch as well
+     */
+    include?: OidcTrustPolicyInclude<ExtArgs> | null
+  }
+
+
+  /**
    * Enums
    */
 
@@ -42990,6 +44207,8 @@ export namespace Prisma {
     viewCount: 'viewCount',
     isRevoked: 'isRevoked',
     createdAt: 'createdAt',
+    encryptedPayload: 'encryptedPayload',
+    iv: 'iv',
     label: 'label'
   };
 
@@ -43321,6 +44540,7 @@ export namespace Prisma {
     description: 'description',
     projectId: 'projectId',
     permissions: 'permissions',
+    isAgent: 'isAgent',
     createdBy: 'createdBy',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
@@ -43372,6 +44592,24 @@ export namespace Prisma {
   };
 
   export type GlobalStateScalarFieldEnum = (typeof GlobalStateScalarFieldEnum)[keyof typeof GlobalStateScalarFieldEnum]
+
+
+  export const OidcTrustPolicyScalarFieldEnum: {
+    id: 'id',
+    projectId: 'projectId',
+    provider: 'provider',
+    subject: 'subject',
+    environmentType: 'environmentType',
+    branchName: 'branchName',
+    workloadPublicKey: 'workloadPublicKey',
+    encryptedProjectKey: 'encryptedProjectKey',
+    envelopeIv: 'envelopeIv',
+    envelopeAuthTag: 'envelopeAuthTag',
+    createdAt: 'createdAt',
+    updatedAt: 'updatedAt'
+  };
+
+  export type OidcTrustPolicyScalarFieldEnum = (typeof OidcTrustPolicyScalarFieldEnum)[keyof typeof OidcTrustPolicyScalarFieldEnum]
 
 
   export const SortOrder: {
@@ -44010,6 +45248,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionListRelationFilter
     webhooks?: WebhookListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
+    oidcTrustPolicies?: OidcTrustPolicyListRelationFilter
   }
 
   export type ProjectOrderByWithRelationInput = {
@@ -44043,6 +45282,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionOrderByRelationAggregateInput
     webhooks?: WebhookOrderByRelationAggregateInput
     accessRequests?: AccessRequestOrderByRelationAggregateInput
+    oidcTrustPolicies?: OidcTrustPolicyOrderByRelationAggregateInput
   }
 
   export type ProjectWhereUniqueInput = Prisma.AtLeast<{
@@ -44079,6 +45319,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionListRelationFilter
     webhooks?: WebhookListRelationFilter
     accessRequests?: AccessRequestListRelationFilter
+    oidcTrustPolicies?: OidcTrustPolicyListRelationFilter
   }, "id">
 
   export type ProjectOrderByWithAggregationInput = {
@@ -44450,6 +45691,8 @@ export namespace Prisma {
     viewCount?: IntFilter<"SecretShare"> | number
     isRevoked?: BoolFilter<"SecretShare"> | boolean
     createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    encryptedPayload?: StringNullableFilter<"SecretShare"> | string | null
+    iv?: StringNullableFilter<"SecretShare"> | string | null
     label?: StringNullableFilter<"SecretShare"> | string | null
     secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
   }
@@ -44464,6 +45707,8 @@ export namespace Prisma {
     viewCount?: SortOrder
     isRevoked?: SortOrder
     createdAt?: SortOrder
+    encryptedPayload?: SortOrder
+    iv?: SortOrder
     label?: SortOrder
     secret?: SecretOrderByWithRelationInput
   }
@@ -44481,6 +45726,8 @@ export namespace Prisma {
     viewCount?: IntFilter<"SecretShare"> | number
     isRevoked?: BoolFilter<"SecretShare"> | boolean
     createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    encryptedPayload?: StringNullableFilter<"SecretShare"> | string | null
+    iv?: StringNullableFilter<"SecretShare"> | string | null
     label?: StringNullableFilter<"SecretShare"> | string | null
     secret?: XOR<SecretScalarRelationFilter, SecretWhereInput>
   }, "id" | "token">
@@ -44495,6 +45742,8 @@ export namespace Prisma {
     viewCount?: SortOrder
     isRevoked?: SortOrder
     createdAt?: SortOrder
+    encryptedPayload?: SortOrder
+    iv?: SortOrder
     label?: SortOrder
     _count?: SecretShareCountOrderByAggregateInput
     _avg?: SecretShareAvgOrderByAggregateInput
@@ -44516,6 +45765,8 @@ export namespace Prisma {
     viewCount?: IntWithAggregatesFilter<"SecretShare"> | number
     isRevoked?: BoolWithAggregatesFilter<"SecretShare"> | boolean
     createdAt?: DateTimeWithAggregatesFilter<"SecretShare"> | Date | string
+    encryptedPayload?: StringNullableWithAggregatesFilter<"SecretShare"> | string | null
+    iv?: StringNullableWithAggregatesFilter<"SecretShare"> | string | null
     label?: StringNullableWithAggregatesFilter<"SecretShare"> | string | null
   }
 
@@ -46157,6 +47408,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"ServiceAccount"> | string | null
     projectId?: StringFilter<"ServiceAccount"> | string
     permissions?: StringNullableListFilter<"ServiceAccount">
+    isAgent?: BoolFilter<"ServiceAccount"> | boolean
     createdBy?: StringNullableFilter<"ServiceAccount"> | string | null
     createdAt?: DateTimeFilter<"ServiceAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ServiceAccount"> | Date | string
@@ -46170,6 +47422,7 @@ export namespace Prisma {
     description?: SortOrder
     projectId?: SortOrder
     permissions?: SortOrder
+    isAgent?: SortOrder
     createdBy?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -46186,6 +47439,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"ServiceAccount"> | string | null
     projectId?: StringFilter<"ServiceAccount"> | string
     permissions?: StringNullableListFilter<"ServiceAccount">
+    isAgent?: BoolFilter<"ServiceAccount"> | boolean
     createdBy?: StringNullableFilter<"ServiceAccount"> | string | null
     createdAt?: DateTimeFilter<"ServiceAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ServiceAccount"> | Date | string
@@ -46199,6 +47453,7 @@ export namespace Prisma {
     description?: SortOrder
     projectId?: SortOrder
     permissions?: SortOrder
+    isAgent?: SortOrder
     createdBy?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -46216,6 +47471,7 @@ export namespace Prisma {
     description?: StringNullableWithAggregatesFilter<"ServiceAccount"> | string | null
     projectId?: StringWithAggregatesFilter<"ServiceAccount"> | string
     permissions?: StringNullableListFilter<"ServiceAccount">
+    isAgent?: BoolWithAggregatesFilter<"ServiceAccount"> | boolean
     createdBy?: StringNullableWithAggregatesFilter<"ServiceAccount"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"ServiceAccount"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"ServiceAccount"> | Date | string
@@ -46446,6 +47702,96 @@ export namespace Prisma {
     value?: JsonNullableWithAggregatesFilter<"GlobalState">
     lastCheckedAt?: DateTimeWithAggregatesFilter<"GlobalState"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"GlobalState"> | Date | string
+  }
+
+  export type OidcTrustPolicyWhereInput = {
+    AND?: OidcTrustPolicyWhereInput | OidcTrustPolicyWhereInput[]
+    OR?: OidcTrustPolicyWhereInput[]
+    NOT?: OidcTrustPolicyWhereInput | OidcTrustPolicyWhereInput[]
+    id?: StringFilter<"OidcTrustPolicy"> | string
+    projectId?: StringFilter<"OidcTrustPolicy"> | string
+    provider?: StringFilter<"OidcTrustPolicy"> | string
+    subject?: StringFilter<"OidcTrustPolicy"> | string
+    environmentType?: StringFilter<"OidcTrustPolicy"> | string
+    branchName?: StringFilter<"OidcTrustPolicy"> | string
+    workloadPublicKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    encryptedProjectKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeIv?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeAuthTag?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    createdAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+    updatedAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+  }
+
+  export type OidcTrustPolicyOrderByWithRelationInput = {
+    id?: SortOrder
+    projectId?: SortOrder
+    provider?: SortOrder
+    subject?: SortOrder
+    environmentType?: SortOrder
+    branchName?: SortOrder
+    workloadPublicKey?: SortOrder
+    encryptedProjectKey?: SortOrder
+    envelopeIv?: SortOrder
+    envelopeAuthTag?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    project?: ProjectOrderByWithRelationInput
+  }
+
+  export type OidcTrustPolicyWhereUniqueInput = Prisma.AtLeast<{
+    id?: string
+    AND?: OidcTrustPolicyWhereInput | OidcTrustPolicyWhereInput[]
+    OR?: OidcTrustPolicyWhereInput[]
+    NOT?: OidcTrustPolicyWhereInput | OidcTrustPolicyWhereInput[]
+    projectId?: StringFilter<"OidcTrustPolicy"> | string
+    provider?: StringFilter<"OidcTrustPolicy"> | string
+    subject?: StringFilter<"OidcTrustPolicy"> | string
+    environmentType?: StringFilter<"OidcTrustPolicy"> | string
+    branchName?: StringFilter<"OidcTrustPolicy"> | string
+    workloadPublicKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    encryptedProjectKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeIv?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeAuthTag?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    createdAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+    updatedAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+    project?: XOR<ProjectScalarRelationFilter, ProjectWhereInput>
+  }, "id">
+
+  export type OidcTrustPolicyOrderByWithAggregationInput = {
+    id?: SortOrder
+    projectId?: SortOrder
+    provider?: SortOrder
+    subject?: SortOrder
+    environmentType?: SortOrder
+    branchName?: SortOrder
+    workloadPublicKey?: SortOrder
+    encryptedProjectKey?: SortOrder
+    envelopeIv?: SortOrder
+    envelopeAuthTag?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+    _count?: OidcTrustPolicyCountOrderByAggregateInput
+    _max?: OidcTrustPolicyMaxOrderByAggregateInput
+    _min?: OidcTrustPolicyMinOrderByAggregateInput
+  }
+
+  export type OidcTrustPolicyScalarWhereWithAggregatesInput = {
+    AND?: OidcTrustPolicyScalarWhereWithAggregatesInput | OidcTrustPolicyScalarWhereWithAggregatesInput[]
+    OR?: OidcTrustPolicyScalarWhereWithAggregatesInput[]
+    NOT?: OidcTrustPolicyScalarWhereWithAggregatesInput | OidcTrustPolicyScalarWhereWithAggregatesInput[]
+    id?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    projectId?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    provider?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    subject?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    environmentType?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    branchName?: StringWithAggregatesFilter<"OidcTrustPolicy"> | string
+    workloadPublicKey?: StringNullableWithAggregatesFilter<"OidcTrustPolicy"> | string | null
+    encryptedProjectKey?: StringNullableWithAggregatesFilter<"OidcTrustPolicy"> | string | null
+    envelopeIv?: StringNullableWithAggregatesFilter<"OidcTrustPolicy"> | string | null
+    envelopeAuthTag?: StringNullableWithAggregatesFilter<"OidcTrustPolicy"> | string | null
+    createdAt?: DateTimeWithAggregatesFilter<"OidcTrustPolicy"> | Date | string
+    updatedAt?: DateTimeWithAggregatesFilter<"OidcTrustPolicy"> | Date | string
   }
 
   export type UserCreateInput = {
@@ -47073,6 +48419,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateInput = {
@@ -47104,6 +48451,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUpdateInput = {
@@ -47134,6 +48482,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateInput = {
@@ -47164,6 +48513,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateManyInput = {
@@ -47572,6 +48922,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
     secret: SecretCreateNestedOneWithoutSharesInput
   }
@@ -47586,6 +48938,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
   }
 
@@ -47597,6 +48951,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
     secret?: SecretUpdateOneRequiredWithoutSharesNestedInput
   }
@@ -47610,6 +48966,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -47623,6 +48981,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
   }
 
@@ -47634,6 +48994,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -47646,6 +49008,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -49314,6 +50678,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49327,6 +50692,7 @@ export namespace Prisma {
     description?: string | null
     projectId: string
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49337,6 +50703,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49349,6 +50716,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: StringFieldUpdateOperationsInput | string
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49361,6 +50729,7 @@ export namespace Prisma {
     description?: string | null
     projectId: string
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -49370,6 +50739,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49380,6 +50750,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: StringFieldUpdateOperationsInput | string
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -49619,6 +50990,106 @@ export namespace Prisma {
     key?: StringFieldUpdateOperationsInput | string
     value?: InputJsonValue | InputJsonValue | null
     lastCheckedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OidcTrustPolicyCreateInput = {
+    id?: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    project: ProjectCreateNestedOneWithoutOidcTrustPoliciesInput
+  }
+
+  export type OidcTrustPolicyUncheckedCreateInput = {
+    id?: string
+    projectId: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OidcTrustPolicyUpdateInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    project?: ProjectUpdateOneRequiredWithoutOidcTrustPoliciesNestedInput
+  }
+
+  export type OidcTrustPolicyUncheckedUpdateInput = {
+    projectId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OidcTrustPolicyCreateManyInput = {
+    id?: string
+    projectId: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OidcTrustPolicyUpdateManyMutationInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OidcTrustPolicyUncheckedUpdateManyInput = {
+    projectId?: StringFieldUpdateOperationsInput | string
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
@@ -50303,6 +51774,12 @@ export namespace Prisma {
     none?: WebhookWhereInput
   }
 
+  export type OidcTrustPolicyListRelationFilter = {
+    every?: OidcTrustPolicyWhereInput
+    some?: OidcTrustPolicyWhereInput
+    none?: OidcTrustPolicyWhereInput
+  }
+
   export type BranchOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
@@ -50320,6 +51797,10 @@ export namespace Prisma {
   }
 
   export type WebhookOrderByRelationAggregateInput = {
+    _count?: SortOrder
+  }
+
+  export type OidcTrustPolicyOrderByRelationAggregateInput = {
     _count?: SortOrder
   }
 
@@ -50615,6 +52096,8 @@ export namespace Prisma {
     viewCount?: SortOrder
     isRevoked?: SortOrder
     createdAt?: SortOrder
+    encryptedPayload?: SortOrder
+    iv?: SortOrder
     label?: SortOrder
   }
 
@@ -50633,6 +52116,8 @@ export namespace Prisma {
     viewCount?: SortOrder
     isRevoked?: SortOrder
     createdAt?: SortOrder
+    encryptedPayload?: SortOrder
+    iv?: SortOrder
     label?: SortOrder
   }
 
@@ -50646,6 +52131,8 @@ export namespace Prisma {
     viewCount?: SortOrder
     isRevoked?: SortOrder
     createdAt?: SortOrder
+    encryptedPayload?: SortOrder
+    iv?: SortOrder
     label?: SortOrder
   }
 
@@ -51511,6 +52998,7 @@ export namespace Prisma {
     description?: SortOrder
     projectId?: SortOrder
     permissions?: SortOrder
+    isAgent?: SortOrder
     createdBy?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -51521,6 +53009,7 @@ export namespace Prisma {
     name?: SortOrder
     description?: SortOrder
     projectId?: SortOrder
+    isAgent?: SortOrder
     createdBy?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -51531,6 +53020,7 @@ export namespace Prisma {
     name?: SortOrder
     description?: SortOrder
     projectId?: SortOrder
+    isAgent?: SortOrder
     createdBy?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
@@ -51649,6 +53139,51 @@ export namespace Prisma {
     id?: SortOrder
     key?: SortOrder
     lastCheckedAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OidcTrustPolicyCountOrderByAggregateInput = {
+    id?: SortOrder
+    projectId?: SortOrder
+    provider?: SortOrder
+    subject?: SortOrder
+    environmentType?: SortOrder
+    branchName?: SortOrder
+    workloadPublicKey?: SortOrder
+    encryptedProjectKey?: SortOrder
+    envelopeIv?: SortOrder
+    envelopeAuthTag?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OidcTrustPolicyMaxOrderByAggregateInput = {
+    id?: SortOrder
+    projectId?: SortOrder
+    provider?: SortOrder
+    subject?: SortOrder
+    environmentType?: SortOrder
+    branchName?: SortOrder
+    workloadPublicKey?: SortOrder
+    encryptedProjectKey?: SortOrder
+    envelopeIv?: SortOrder
+    envelopeAuthTag?: SortOrder
+    createdAt?: SortOrder
+    updatedAt?: SortOrder
+  }
+
+  export type OidcTrustPolicyMinOrderByAggregateInput = {
+    id?: SortOrder
+    projectId?: SortOrder
+    provider?: SortOrder
+    subject?: SortOrder
+    environmentType?: SortOrder
+    branchName?: SortOrder
+    workloadPublicKey?: SortOrder
+    encryptedProjectKey?: SortOrder
+    envelopeIv?: SortOrder
+    envelopeAuthTag?: SortOrder
+    createdAt?: SortOrder
     updatedAt?: SortOrder
   }
 
@@ -52522,6 +54057,13 @@ export namespace Prisma {
     connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
   }
 
+  export type OidcTrustPolicyCreateNestedManyWithoutProjectInput = {
+    create?: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput> | OidcTrustPolicyCreateWithoutProjectInput[] | OidcTrustPolicyUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: OidcTrustPolicyCreateOrConnectWithoutProjectInput | OidcTrustPolicyCreateOrConnectWithoutProjectInput[]
+    createMany?: OidcTrustPolicyCreateManyProjectInputEnvelope
+    connect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+  }
+
   export type BranchUncheckedCreateNestedManyWithoutProjectInput = {
     create?: XOR<BranchCreateWithoutProjectInput, BranchUncheckedCreateWithoutProjectInput> | BranchCreateWithoutProjectInput[] | BranchUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: BranchCreateOrConnectWithoutProjectInput | BranchCreateOrConnectWithoutProjectInput[]
@@ -52576,6 +54118,13 @@ export namespace Prisma {
     connectOrCreate?: AccessRequestCreateOrConnectWithoutProjectInput | AccessRequestCreateOrConnectWithoutProjectInput[]
     createMany?: AccessRequestCreateManyProjectInputEnvelope
     connect?: AccessRequestWhereUniqueInput | AccessRequestWhereUniqueInput[]
+  }
+
+  export type OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput = {
+    create?: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput> | OidcTrustPolicyCreateWithoutProjectInput[] | OidcTrustPolicyUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: OidcTrustPolicyCreateOrConnectWithoutProjectInput | OidcTrustPolicyCreateOrConnectWithoutProjectInput[]
+    createMany?: OidcTrustPolicyCreateManyProjectInputEnvelope
+    connect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
   }
 
   export type ProjectUpdateipRestrictionsInput = {
@@ -52711,6 +54260,20 @@ export namespace Prisma {
     deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
   }
 
+  export type OidcTrustPolicyUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput> | OidcTrustPolicyCreateWithoutProjectInput[] | OidcTrustPolicyUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: OidcTrustPolicyCreateOrConnectWithoutProjectInput | OidcTrustPolicyCreateOrConnectWithoutProjectInput[]
+    upsert?: OidcTrustPolicyUpsertWithWhereUniqueWithoutProjectInput | OidcTrustPolicyUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: OidcTrustPolicyCreateManyProjectInputEnvelope
+    set?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    disconnect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    delete?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    connect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    update?: OidcTrustPolicyUpdateWithWhereUniqueWithoutProjectInput | OidcTrustPolicyUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: OidcTrustPolicyUpdateManyWithWhereWithoutProjectInput | OidcTrustPolicyUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: OidcTrustPolicyScalarWhereInput | OidcTrustPolicyScalarWhereInput[]
+  }
+
   export type BranchUncheckedUpdateManyWithoutProjectNestedInput = {
     create?: XOR<BranchCreateWithoutProjectInput, BranchUncheckedCreateWithoutProjectInput> | BranchCreateWithoutProjectInput[] | BranchUncheckedCreateWithoutProjectInput[]
     connectOrCreate?: BranchCreateOrConnectWithoutProjectInput | BranchCreateOrConnectWithoutProjectInput[]
@@ -52821,6 +54384,20 @@ export namespace Prisma {
     update?: AccessRequestUpdateWithWhereUniqueWithoutProjectInput | AccessRequestUpdateWithWhereUniqueWithoutProjectInput[]
     updateMany?: AccessRequestUpdateManyWithWhereWithoutProjectInput | AccessRequestUpdateManyWithWhereWithoutProjectInput[]
     deleteMany?: AccessRequestScalarWhereInput | AccessRequestScalarWhereInput[]
+  }
+
+  export type OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput = {
+    create?: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput> | OidcTrustPolicyCreateWithoutProjectInput[] | OidcTrustPolicyUncheckedCreateWithoutProjectInput[]
+    connectOrCreate?: OidcTrustPolicyCreateOrConnectWithoutProjectInput | OidcTrustPolicyCreateOrConnectWithoutProjectInput[]
+    upsert?: OidcTrustPolicyUpsertWithWhereUniqueWithoutProjectInput | OidcTrustPolicyUpsertWithWhereUniqueWithoutProjectInput[]
+    createMany?: OidcTrustPolicyCreateManyProjectInputEnvelope
+    set?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    disconnect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    delete?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    connect?: OidcTrustPolicyWhereUniqueInput | OidcTrustPolicyWhereUniqueInput[]
+    update?: OidcTrustPolicyUpdateWithWhereUniqueWithoutProjectInput | OidcTrustPolicyUpdateWithWhereUniqueWithoutProjectInput[]
+    updateMany?: OidcTrustPolicyUpdateManyWithWhereWithoutProjectInput | OidcTrustPolicyUpdateManyWithWhereWithoutProjectInput[]
+    deleteMany?: OidcTrustPolicyScalarWhereInput | OidcTrustPolicyScalarWhereInput[]
   }
 
   export type BranchCreatepermissionsInput = {
@@ -53894,6 +55471,20 @@ export namespace Prisma {
     update?: XOR<XOR<UserUpdateToOneWithWhereWithoutJitLinksInput, UserUpdateWithoutJitLinksInput>, UserUncheckedUpdateWithoutJitLinksInput>
   }
 
+  export type ProjectCreateNestedOneWithoutOidcTrustPoliciesInput = {
+    create?: XOR<ProjectCreateWithoutOidcTrustPoliciesInput, ProjectUncheckedCreateWithoutOidcTrustPoliciesInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutOidcTrustPoliciesInput
+    connect?: ProjectWhereUniqueInput
+  }
+
+  export type ProjectUpdateOneRequiredWithoutOidcTrustPoliciesNestedInput = {
+    create?: XOR<ProjectCreateWithoutOidcTrustPoliciesInput, ProjectUncheckedCreateWithoutOidcTrustPoliciesInput>
+    connectOrCreate?: ProjectCreateOrConnectWithoutOidcTrustPoliciesInput
+    upsert?: ProjectUpsertWithoutOidcTrustPoliciesInput
+    connect?: ProjectWhereUniqueInput
+    update?: XOR<XOR<ProjectUpdateToOneWithWhereWithoutOidcTrustPoliciesInput, ProjectUpdateWithoutOidcTrustPoliciesInput>, ProjectUncheckedUpdateWithoutOidcTrustPoliciesInput>
+  }
+
   export type NestedStringFilter<$PrismaModel = never> = {
     equals?: string | StringFieldRefInput<$PrismaModel>
     in?: string[] | ListStringFieldRefInput<$PrismaModel>
@@ -54211,6 +55802,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutUserInput = {
@@ -54241,6 +55833,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutUserInput = {
@@ -55436,6 +57029,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutWorkspaceInput = {
@@ -55466,6 +57060,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutWorkspaceInput = {
@@ -55798,6 +57393,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -55809,6 +57405,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -55942,6 +57539,43 @@ export namespace Prisma {
 
   export type AccessRequestCreateManyProjectInputEnvelope = {
     data: AccessRequestCreateManyProjectInput | AccessRequestCreateManyProjectInput[]
+  }
+
+  export type OidcTrustPolicyCreateWithoutProjectInput = {
+    id?: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OidcTrustPolicyUncheckedCreateWithoutProjectInput = {
+    id?: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
+  }
+
+  export type OidcTrustPolicyCreateOrConnectWithoutProjectInput = {
+    where: OidcTrustPolicyWhereUniqueInput
+    create: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput>
+  }
+
+  export type OidcTrustPolicyCreateManyProjectInputEnvelope = {
+    data: OidcTrustPolicyCreateManyProjectInput | OidcTrustPolicyCreateManyProjectInput[]
   }
 
   export type UserUpsertWithoutProjectsInput = {
@@ -56183,6 +57817,7 @@ export namespace Prisma {
     description?: StringNullableFilter<"ServiceAccount"> | string | null
     projectId?: StringFilter<"ServiceAccount"> | string
     permissions?: StringNullableListFilter<"ServiceAccount">
+    isAgent?: BoolFilter<"ServiceAccount"> | boolean
     createdBy?: StringNullableFilter<"ServiceAccount"> | string | null
     createdAt?: DateTimeFilter<"ServiceAccount"> | Date | string
     updatedAt?: DateTimeFilter<"ServiceAccount"> | Date | string
@@ -56265,6 +57900,40 @@ export namespace Prisma {
     data: XOR<AccessRequestUpdateManyMutationInput, AccessRequestUncheckedUpdateManyWithoutProjectInput>
   }
 
+  export type OidcTrustPolicyUpsertWithWhereUniqueWithoutProjectInput = {
+    where: OidcTrustPolicyWhereUniqueInput
+    update: XOR<OidcTrustPolicyUpdateWithoutProjectInput, OidcTrustPolicyUncheckedUpdateWithoutProjectInput>
+    create: XOR<OidcTrustPolicyCreateWithoutProjectInput, OidcTrustPolicyUncheckedCreateWithoutProjectInput>
+  }
+
+  export type OidcTrustPolicyUpdateWithWhereUniqueWithoutProjectInput = {
+    where: OidcTrustPolicyWhereUniqueInput
+    data: XOR<OidcTrustPolicyUpdateWithoutProjectInput, OidcTrustPolicyUncheckedUpdateWithoutProjectInput>
+  }
+
+  export type OidcTrustPolicyUpdateManyWithWhereWithoutProjectInput = {
+    where: OidcTrustPolicyScalarWhereInput
+    data: XOR<OidcTrustPolicyUpdateManyMutationInput, OidcTrustPolicyUncheckedUpdateManyWithoutProjectInput>
+  }
+
+  export type OidcTrustPolicyScalarWhereInput = {
+    AND?: OidcTrustPolicyScalarWhereInput | OidcTrustPolicyScalarWhereInput[]
+    OR?: OidcTrustPolicyScalarWhereInput[]
+    NOT?: OidcTrustPolicyScalarWhereInput | OidcTrustPolicyScalarWhereInput[]
+    id?: StringFilter<"OidcTrustPolicy"> | string
+    projectId?: StringFilter<"OidcTrustPolicy"> | string
+    provider?: StringFilter<"OidcTrustPolicy"> | string
+    subject?: StringFilter<"OidcTrustPolicy"> | string
+    environmentType?: StringFilter<"OidcTrustPolicy"> | string
+    branchName?: StringFilter<"OidcTrustPolicy"> | string
+    workloadPublicKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    encryptedProjectKey?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeIv?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    envelopeAuthTag?: StringNullableFilter<"OidcTrustPolicy"> | string | null
+    createdAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+    updatedAt?: DateTimeFilter<"OidcTrustPolicy"> | Date | string
+  }
+
   export type ProjectCreateWithoutBranchesInput = {
     id?: string
     name: string
@@ -56293,6 +57962,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutBranchesInput = {
@@ -56323,6 +57993,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutBranchesInput = {
@@ -56427,6 +58098,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutBranchesInput = {
@@ -56456,6 +58128,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type SecretUpsertWithWhereUniqueWithoutBranchInput = {
@@ -56502,6 +58175,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutSecretsInput = {
@@ -56532,6 +58206,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutSecretsInput = {
@@ -56726,6 +58401,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
   }
 
@@ -56738,6 +58415,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
   }
 
@@ -56823,6 +58502,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutSecretsInput = {
@@ -56852,6 +58532,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type BranchUpsertWithoutSecretsInput = {
@@ -57030,6 +58711,8 @@ export namespace Prisma {
     viewCount?: IntFilter<"SecretShare"> | number
     isRevoked?: BoolFilter<"SecretShare"> | boolean
     createdAt?: DateTimeFilter<"SecretShare"> | Date | string
+    encryptedPayload?: StringNullableFilter<"SecretShare"> | string | null
+    iv?: StringNullableFilter<"SecretShare"> | string | null
     label?: StringNullableFilter<"SecretShare"> | string | null
   }
 
@@ -57894,6 +59577,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutTeamProjectsInput = {
@@ -57924,6 +59608,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutTeamProjectsInput = {
@@ -58002,6 +59687,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutTeamProjectsInput = {
@@ -58031,6 +59717,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type UserCreateWithoutAccountsInput = {
@@ -58905,6 +60592,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -58917,6 +60605,7 @@ export namespace Prisma {
     description?: string | null
     projectId: string
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -59023,6 +60712,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59034,6 +60724,7 @@ export namespace Prisma {
     description?: NullableStringFieldUpdateOperationsInput | string | null
     projectId?: StringFieldUpdateOperationsInput | string
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -59144,6 +60835,7 @@ export namespace Prisma {
     userRoles?: UserRoleCreateNestedManyWithoutProjectInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutAccessRequestsInput = {
@@ -59174,6 +60866,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutProjectInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutAccessRequestsInput = {
@@ -59300,6 +60993,7 @@ export namespace Prisma {
     userRoles?: UserRoleUpdateManyWithoutProjectNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutAccessRequestsInput = {
@@ -59329,6 +61023,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedUpdateManyWithoutProjectNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type RolePermissionCreateWithoutRoleInput = {
@@ -59681,6 +61376,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutUserRolesInput = {
@@ -59711,6 +61407,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutUserRolesInput = {
@@ -59864,6 +61561,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutUserRolesInput = {
@@ -59893,6 +61591,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type UserCreateWithoutBreakGlassSessionsInput = {
@@ -60000,6 +61699,7 @@ export namespace Prisma {
     userRoles?: UserRoleCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutBreakGlassSessionsInput = {
@@ -60030,6 +61730,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutBreakGlassSessionsInput = {
@@ -60156,6 +61857,7 @@ export namespace Prisma {
     userRoles?: UserRoleUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutBreakGlassSessionsInput = {
@@ -60185,6 +61887,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateWithoutWebhooksInput = {
@@ -60215,6 +61918,7 @@ export namespace Prisma {
     userRoles?: UserRoleCreateNestedManyWithoutProjectInput
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutWebhooksInput = {
@@ -60245,6 +61949,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedCreateNestedManyWithoutProjectInput
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutWebhooksInput = {
@@ -60290,6 +61995,7 @@ export namespace Prisma {
     userRoles?: UserRoleUpdateManyWithoutProjectNestedInput
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutWebhooksInput = {
@@ -60319,6 +62025,7 @@ export namespace Prisma {
     userRoles?: UserRoleUncheckedUpdateManyWithoutProjectNestedInput
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectCreateWithoutServiceAccountsInput = {
@@ -60349,6 +62056,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
     webhooks?: WebhookCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectUncheckedCreateWithoutServiceAccountsInput = {
@@ -60379,6 +62087,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
     webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
     accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedCreateNestedManyWithoutProjectInput
   }
 
   export type ProjectCreateOrConnectWithoutServiceAccountsInput = {
@@ -60457,6 +62166,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutServiceAccountsInput = {
@@ -60486,6 +62196,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ApiKeyUpsertWithWhereUniqueWithoutServiceAccountInput = {
@@ -60978,6 +62689,144 @@ export namespace Prisma {
     reviewsGiven?: AccessReviewUncheckedUpdateManyWithoutReviewerNestedInput
   }
 
+  export type ProjectCreateWithoutOidcTrustPoliciesInput = {
+    id?: string
+    name: string
+    description: string
+    status?: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accessControl?: string | null
+    securityLevel?: string | null
+    isBlocked?: boolean
+    twoFactorRequired?: boolean
+    passwordMinLength?: number
+    passwordRequireSpecialChars?: boolean
+    passwordRequireNumbers?: boolean
+    passwordExpiryDays?: number
+    ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
+    auditLogging?: boolean
+    lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
+    user: UserCreateNestedOneWithoutProjectsInput
+    workspace: WorkspaceCreateNestedOneWithoutProjectsInput
+    branches?: BranchCreateNestedManyWithoutProjectInput
+    secrets?: SecretCreateNestedManyWithoutProjectInput
+    teamProjects?: TeamProjectCreateNestedManyWithoutProjectInput
+    serviceAccounts?: ServiceAccountCreateNestedManyWithoutProjectInput
+    userRoles?: UserRoleCreateNestedManyWithoutProjectInput
+    breakGlassSessions?: BreakGlassSessionCreateNestedManyWithoutProjectInput
+    webhooks?: WebhookCreateNestedManyWithoutProjectInput
+    accessRequests?: AccessRequestCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectUncheckedCreateWithoutOidcTrustPoliciesInput = {
+    id?: string
+    name: string
+    description: string
+    status?: string
+    userId: string
+    workspaceId: string
+    createdAt?: Date | string
+    updatedAt?: Date | string
+    accessControl?: string | null
+    securityLevel?: string | null
+    isBlocked?: boolean
+    twoFactorRequired?: boolean
+    passwordMinLength?: number
+    passwordRequireSpecialChars?: boolean
+    passwordRequireNumbers?: boolean
+    passwordExpiryDays?: number
+    ipRestrictions?: ProjectCreateipRestrictionsInput | InputJsonValue[]
+    auditLogging?: boolean
+    lastSecurityAudit?: Date | string | null
+    deletedAt?: Date | string | null
+    branches?: BranchUncheckedCreateNestedManyWithoutProjectInput
+    secrets?: SecretUncheckedCreateNestedManyWithoutProjectInput
+    teamProjects?: TeamProjectUncheckedCreateNestedManyWithoutProjectInput
+    serviceAccounts?: ServiceAccountUncheckedCreateNestedManyWithoutProjectInput
+    userRoles?: UserRoleUncheckedCreateNestedManyWithoutProjectInput
+    breakGlassSessions?: BreakGlassSessionUncheckedCreateNestedManyWithoutProjectInput
+    webhooks?: WebhookUncheckedCreateNestedManyWithoutProjectInput
+    accessRequests?: AccessRequestUncheckedCreateNestedManyWithoutProjectInput
+  }
+
+  export type ProjectCreateOrConnectWithoutOidcTrustPoliciesInput = {
+    where: ProjectWhereUniqueInput
+    create: XOR<ProjectCreateWithoutOidcTrustPoliciesInput, ProjectUncheckedCreateWithoutOidcTrustPoliciesInput>
+  }
+
+  export type ProjectUpsertWithoutOidcTrustPoliciesInput = {
+    update: XOR<ProjectUpdateWithoutOidcTrustPoliciesInput, ProjectUncheckedUpdateWithoutOidcTrustPoliciesInput>
+    create: XOR<ProjectCreateWithoutOidcTrustPoliciesInput, ProjectUncheckedCreateWithoutOidcTrustPoliciesInput>
+    where?: ProjectWhereInput
+  }
+
+  export type ProjectUpdateToOneWithWhereWithoutOidcTrustPoliciesInput = {
+    where?: ProjectWhereInput
+    data: XOR<ProjectUpdateWithoutOidcTrustPoliciesInput, ProjectUncheckedUpdateWithoutOidcTrustPoliciesInput>
+  }
+
+  export type ProjectUpdateWithoutOidcTrustPoliciesInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accessControl?: NullableStringFieldUpdateOperationsInput | string | null
+    securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    twoFactorRequired?: BoolFieldUpdateOperationsInput | boolean
+    passwordMinLength?: IntFieldUpdateOperationsInput | number
+    passwordRequireSpecialChars?: BoolFieldUpdateOperationsInput | boolean
+    passwordRequireNumbers?: BoolFieldUpdateOperationsInput | boolean
+    passwordExpiryDays?: IntFieldUpdateOperationsInput | number
+    ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
+    auditLogging?: BoolFieldUpdateOperationsInput | boolean
+    lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    user?: UserUpdateOneRequiredWithoutProjectsNestedInput
+    workspace?: WorkspaceUpdateOneRequiredWithoutProjectsNestedInput
+    branches?: BranchUpdateManyWithoutProjectNestedInput
+    secrets?: SecretUpdateManyWithoutProjectNestedInput
+    teamProjects?: TeamProjectUpdateManyWithoutProjectNestedInput
+    serviceAccounts?: ServiceAccountUpdateManyWithoutProjectNestedInput
+    userRoles?: UserRoleUpdateManyWithoutProjectNestedInput
+    breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
+    webhooks?: WebhookUpdateManyWithoutProjectNestedInput
+    accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+  }
+
+  export type ProjectUncheckedUpdateWithoutOidcTrustPoliciesInput = {
+    name?: StringFieldUpdateOperationsInput | string
+    description?: StringFieldUpdateOperationsInput | string
+    status?: StringFieldUpdateOperationsInput | string
+    userId?: StringFieldUpdateOperationsInput | string
+    workspaceId?: StringFieldUpdateOperationsInput | string
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    accessControl?: NullableStringFieldUpdateOperationsInput | string | null
+    securityLevel?: NullableStringFieldUpdateOperationsInput | string | null
+    isBlocked?: BoolFieldUpdateOperationsInput | boolean
+    twoFactorRequired?: BoolFieldUpdateOperationsInput | boolean
+    passwordMinLength?: IntFieldUpdateOperationsInput | number
+    passwordRequireSpecialChars?: BoolFieldUpdateOperationsInput | boolean
+    passwordRequireNumbers?: BoolFieldUpdateOperationsInput | boolean
+    passwordExpiryDays?: IntFieldUpdateOperationsInput | number
+    ipRestrictions?: ProjectUpdateipRestrictionsInput | InputJsonValue[]
+    auditLogging?: BoolFieldUpdateOperationsInput | boolean
+    lastSecurityAudit?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    deletedAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    branches?: BranchUncheckedUpdateManyWithoutProjectNestedInput
+    secrets?: SecretUncheckedUpdateManyWithoutProjectNestedInput
+    teamProjects?: TeamProjectUncheckedUpdateManyWithoutProjectNestedInput
+    serviceAccounts?: ServiceAccountUncheckedUpdateManyWithoutProjectNestedInput
+    userRoles?: UserRoleUncheckedUpdateManyWithoutProjectNestedInput
+    breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
+    webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
+    accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+  }
+
   export type AccountCreateManyUserInput = {
     id?: string
     type: string
@@ -61242,6 +63091,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutUserInput = {
@@ -61271,6 +63121,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateManyWithoutUserInput = {
@@ -61732,6 +63583,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateWithoutWorkspaceInput = {
@@ -61761,6 +63613,7 @@ export namespace Prisma {
     breakGlassSessions?: BreakGlassSessionUncheckedUpdateManyWithoutProjectNestedInput
     webhooks?: WebhookUncheckedUpdateManyWithoutProjectNestedInput
     accessRequests?: AccessRequestUncheckedUpdateManyWithoutProjectNestedInput
+    oidcTrustPolicies?: OidcTrustPolicyUncheckedUpdateManyWithoutProjectNestedInput
   }
 
   export type ProjectUncheckedUpdateManyWithoutWorkspaceInput = {
@@ -61825,6 +63678,7 @@ export namespace Prisma {
     name: string
     description?: string | null
     permissions?: ServiceAccountCreatepermissionsInput | string[]
+    isAgent?: boolean
     createdBy?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
@@ -61870,6 +63724,20 @@ export namespace Prisma {
     expiresAt?: Date | string | null
     requestedAt?: Date | string
     workspaceId?: string | null
+  }
+
+  export type OidcTrustPolicyCreateManyProjectInput = {
+    id?: string
+    provider: string
+    subject: string
+    environmentType: string
+    branchName?: string
+    workloadPublicKey?: string | null
+    encryptedProjectKey?: string | null
+    envelopeIv?: string | null
+    envelopeAuthTag?: string | null
+    createdAt?: Date | string
+    updatedAt?: Date | string
   }
 
   export type BranchUpdateWithoutProjectInput = {
@@ -61985,6 +63853,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -61995,6 +63864,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62005,6 +63875,7 @@ export namespace Prisma {
     name?: StringFieldUpdateOperationsInput | string
     description?: NullableStringFieldUpdateOperationsInput | string | null
     permissions?: ServiceAccountUpdatepermissionsInput | string[]
+    isAgent?: BoolFieldUpdateOperationsInput | boolean
     createdBy?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
@@ -62122,6 +63993,45 @@ export namespace Prisma {
     expiresAt?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
     requestedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     workspaceId?: NullableStringFieldUpdateOperationsInput | string | null
+  }
+
+  export type OidcTrustPolicyUpdateWithoutProjectInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OidcTrustPolicyUncheckedUpdateWithoutProjectInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
+  }
+
+  export type OidcTrustPolicyUncheckedUpdateManyWithoutProjectInput = {
+    provider?: StringFieldUpdateOperationsInput | string
+    subject?: StringFieldUpdateOperationsInput | string
+    environmentType?: StringFieldUpdateOperationsInput | string
+    branchName?: StringFieldUpdateOperationsInput | string
+    workloadPublicKey?: NullableStringFieldUpdateOperationsInput | string | null
+    encryptedProjectKey?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeIv?: NullableStringFieldUpdateOperationsInput | string | null
+    envelopeAuthTag?: NullableStringFieldUpdateOperationsInput | string | null
+    createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
 
   export type SecretCreateManyBranchInput = {
@@ -62243,6 +64153,8 @@ export namespace Prisma {
     viewCount?: number
     isRevoked?: boolean
     createdAt?: Date | string
+    encryptedPayload?: string | null
+    iv?: string | null
     label?: string | null
   }
 
@@ -62335,6 +64247,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -62346,6 +64260,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 
@@ -62357,6 +64273,8 @@ export namespace Prisma {
     viewCount?: IntFieldUpdateOperationsInput | number
     isRevoked?: BoolFieldUpdateOperationsInput | boolean
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
+    encryptedPayload?: NullableStringFieldUpdateOperationsInput | string | null
+    iv?: NullableStringFieldUpdateOperationsInput | string | null
     label?: NullableStringFieldUpdateOperationsInput | string | null
   }
 

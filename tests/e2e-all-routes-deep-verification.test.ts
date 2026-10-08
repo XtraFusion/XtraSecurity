@@ -472,6 +472,8 @@ describe("E2E Full System & Route-by-Route Deep Feature Audit", () => {
           expiresInHours: 12,
           maxViews: 3,
           label: "Temporary DB credentials for contractor",
+          encryptedPayload: "mock_encrypted_payload_base64",
+          iv: "mock_iv_base64"
         },
       });
       const res = await createSecretShare(req);
@@ -505,7 +507,9 @@ describe("E2E Full System & Route-by-Route Deep Feature Audit", () => {
       const shareDetails = await publicRes.json();
       expect(publicRes.status).toBe(200);
       expect(shareDetails.key).toBe("DATABASE_CONNECTION_STRING");
-      expect(shareDetails.value).toBe("postgres://dev_user:pass123@internal-db:5432/app");
+      expect(shareDetails.encryptedPayload).toBe("mock_encrypted_payload_base64");
+      expect(shareDetails.iv).toBe("mock_iv_base64");
+      expect(shareDetails.value).toBeUndefined(); // Plaintext should not be exposed
     });
 
     it("DEV SENIOR: Updates secret to version v2 and performs rollback", async () => {

@@ -58,7 +58,13 @@ XtraSecurity is built on a **Strict Zero-Knowledge Architecture**. Your secrets 
 ### Master Passphrase & Hardware Keyring
 When you create a project, you generate a **Vault Passphrase**. This passphrase is the mathematical key used to encrypt and decrypt all your environment variables. 
 - **Zero-Knowledge**: This passphrase is *never* sent to our servers. We only store an Argon2id hash for login verification. If you lose your passphrase, **your secrets are permanently unrecoverable by us or anyone else**.
-- **Hardware Keyring**: You don't have to type your passphrase every time. When you run `xtra project set` or log into the VS Code extension, your passphrase is encrypted with a machine-bound hardware fingerprint and stored in your OS's native secure keychain (Windows DPAPI, macOS Keychain, Linux Secret Service). 
+- **OS Native Hardware Keyring (Phase 4)**: You don't have to type your passphrase every time. When you run `xtra project set` or log into the VS Code extension, your passphrase is encrypted and stored in your OS's native secure keychain (Windows Credential Manager, macOS Keychain, Linux Secret Service). 
+- **Headless Fallback**: If running in a headless environment without a native keyring, we securely cache your passphrase using a machine-bound hardware fingerprint derived from your OS and motherboard ID.
+
+### CI/CD Workload Envelopes (Phase 3)
+Because the server never holds your Project Keys, automated CI/CD pipelines (like GitHub Actions) cannot normally decrypt secrets. XtraSecurity solves this using the **Workload Key Envelope Protocol**.
+
+When you link a CI/CD pipeline using the new `xtra oidc-link` command, the CLI automatically generates an X25519 Asymmetric Keypair for the workload, encrypts your Project AES Key using the workload's public key (creating an "Envelope"), and saves this to the server. Your CI runner then securely fetches the envelope, proves its identity via OIDC, and decrypts the Project Key entirely within CI memory. No static API keys required!
 
 ### How Clients Decrypt Secrets Under the Hood
 1. **The CLI (`xtra run`)**: Intercepts `getSecrets` API calls. The server returns AES-256-GCM ciphertext. The CLI transparently loads your passphrase from the hardware keyring, decrypts the payload in RAM, and spawns your application with the plaintext environment variables.

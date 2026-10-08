@@ -1,78 +1,124 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/db';
 import { verifyOidcToken } from '@/lib/auth/oidc';
-import jwt from 'jsonwebtoken';
+import * as crypto from 'crypto';
+import { redis } from '@/lib/redis';
 
-const JWT_SECRET = process.env.NEXTAUTH_SECRET || process.env.ENCRYPTION_KEY || 'default-xtra-jwt-secret';
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import * as zlib from 'zlib';
 
-/**
- * POST /api/v2/auth/oidc/token
- * Accepts third-party OIDC JWT (GitHub Actions, GitLab CI, Kubernetes)
- * Returns a 5-minute ephemeral access token + encrypted workload key envelope for zero-knowledge decryption.
- */
-export async function POST(req: NextRequest) {
+export async function POST(req: Request) {
   try {
-    const body = await req.json();
-    const { oidcToken, projectId, expectedAudience = 'https://api.xtrasecurity.com' } = body;
-
-    if (!oidcToken) {
+    // 20 requests per minute per IP for OIDC (CI/CD environments)
+    const ip = getClientIp(req as any);
+    const rateLimitResult = await rateLimit(ip, 'oidc_token', 20, 60);
+    
+    if (!rateLimitResult.success) {
       return NextResponse.json(
-        { error: 'Missing required field: oidcToken' },
-        { status: 400 }
+        { error: 'Too many OIDC requests. Please try again later.' },
+        { 
+          status: 429, 
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString()
+          }
+        }
       );
     }
 
-    // 1. Verify OIDC JWT Signature, Expiry, Audience & Replay
-    const decodedPayload = await verifyOidcToken(oidcToken, {
-      expectedAudience,
-      maxClockSkewSec: 60
-    });
+    const body = await req.json();
+    const { provider, token } = body;
 
-    // 2. Derive Machine Identity Claims
-    const workloadId = decodedPayload.sub;
-    const repo = decodedPayload.repository || decodedPayload.sub;
-
-    // 3. Generate Ephemeral Access Token (5-minute TTL)
-    const ephemeralToken = jwt.sign(
-      {
-        sub: `workload_${workloadId}`,
-        type: 'oidc_workload',
-        projectId,
-        repository: repo,
-        iss: 'xtrasecurity-api-v2'
-      },
-      JWT_SECRET,
-      { expiresIn: '5m' }
-    );
-
-    // 4. Generate Workload Envelope if workload public key is provided
-    let envelope = null;
-    if (body.workloadPublicKey && projectId) {
-      try {
-        const { deriveProjectKey, createWorkloadKeyEnvelope } = await import('@/lib/crypto/e2ee');
-        const projectKey = deriveProjectKey(projectId);
-        envelope = createWorkloadKeyEnvelope(projectKey, body.workloadPublicKey);
-      } catch (envErr: any) {
-        console.warn('[OIDC] Could not generate workload key envelope:', envErr.message);
-      }
+    if (!provider || !token) {
+      return NextResponse.json({ error: 'Missing provider or token' }, { status: 400 });
     }
 
+    // 1. Verify the OIDC Token signature and replay protection
+    const verification = await verifyOidcToken(token, provider);
+    
+    if (!verification.isValid || !verification.subject) {
+      return NextResponse.json({ error: verification.error || 'Invalid token' }, { status: 401 });
+    }
+
+    const { subject } = verification;
+
+    // 2. Find matching OidcTrustPolicy
+    // Since we need to match the subject which might be complex, we fetch all policies for this provider
+    // and see if the token's subject satisfies one.
+    // E.g. GitHub sub: repo:XtraFusion/MyFrontendApp:ref:refs/heads/main
+    
+    const policies = await prisma.oidcTrustPolicy.findMany({
+      where: { provider },
+      include: { project: true }
+    });
+
+    const matchedPolicy = policies.find(p => {
+      if (provider === 'github') {
+        // match "repo:org/repo:..."
+        return subject.startsWith(`repo:${p.subject}:`);
+      }
+      if (provider === 'gitlab') {
+        // match "project_path:org/repo:..."
+        return subject.startsWith(`project_path:${p.subject}:`);
+      }
+      return subject === p.subject;
+    });
+
+    if (!matchedPolicy) {
+      return NextResponse.json({ error: 'No trust policy matches this workload identity' }, { status: 403 });
+    }
+
+    // 3. Generate Ephemeral Token (5-minute TTL) with CRC32 Checksum (SEC-002)
+    const rawEntropy = crypto.randomBytes(32).toString('hex');
+    const checksum = zlib.crc32(rawEntropy).toString(16).padStart(8, '0');
+    const ephemeralToken = `xtra_eph_${rawEntropy}${checksum}`;
+    
+    const tokenKey = `ephemeral_token:${ephemeralToken}`;
+    
+    // Store in Redis with 5 min expiry
+    const tokenData = {
+      projectId: matchedPolicy.projectId,
+      environmentType: matchedPolicy.environmentType,
+      branchName: matchedPolicy.branchName,
+      policyId: matchedPolicy.id,
+      createdAt: Date.now()
+    };
+    
+    await redis.setex(tokenKey, 300, JSON.stringify(tokenData));
+
+    // Audit log
+    await prisma.securityEvent.create({
+      data: {
+        eventId: crypto.randomUUID(),
+        method: 'POST',
+        endpoint: '/api/v2/auth/oidc/token',
+        statusCode: 200,
+        duration: 0,
+        projectId: matchedPolicy.projectId,
+        environment: matchedPolicy.environmentType,
+        errorMessage: `OIDC Token issued for ${provider} workload: ${subject}`
+      }
+    });
+
     return NextResponse.json({
-      success: true,
-      tokenType: 'Bearer',
-      expiresIn: 300, // 5 minutes
-      accessToken: ephemeralToken,
-      workload: {
-        id: workloadId,
-        repository: repo,
-        issuer: decodedPayload.iss
+      access_token: ephemeralToken,
+      token_type: 'Bearer',
+      expires_in: 300,
+      project: {
+        id: matchedPolicy.projectId,
+        environment: matchedPolicy.environmentType,
+        branch: matchedPolicy.branchName
       },
-      envelope
+      envelope: matchedPolicy.workloadPublicKey ? {
+        targetPublicKey: matchedPolicy.workloadPublicKey,
+        encryptedProjectKey: matchedPolicy.encryptedProjectKey,
+        iv: matchedPolicy.envelopeIv,
+        authTag: matchedPolicy.envelopeAuthTag
+      } : null
     });
   } catch (error: any) {
-    console.error('[API v2 OIDC] Authentication failed:', error.message);
-    return NextResponse.json(
-      { success: false, error: error.message || 'OIDC Authentication Failed' },
-      { status: 401 }
-    );
+    console.error('OIDC Token Error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

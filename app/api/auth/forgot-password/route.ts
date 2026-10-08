@@ -3,8 +3,28 @@ import prisma from "@/lib/db";
 import crypto from "crypto";
 import { sendEmail } from "@/lib/email";
 
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+
 export async function POST(req: Request) {
   try {
+    const ip = getClientIp(req as any);
+    // Strict rate limit: 3 attempts per 15 minutes per IP
+    const rateLimitResult = await rateLimit(ip, 'forgot_password', 3, 900);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { message: 'Too many requests. Please try again later.' },
+        { 
+          status: 429, 
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString()
+          }
+        }
+      );
+    }
+
     const { email } = await req.json();
     if (!email) {
       return NextResponse.json({ message: "Email is required" }, { status: 400 });

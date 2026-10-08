@@ -30,3 +30,31 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json(user,{status:200})
 }
+
+export async function DELETE(req: NextRequest) {
+    const auth = await verifyAuth(req);
+    if (!auth?.email) {
+        return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    try {
+        // Find user first to get ID
+        const user = await prisma.user.findUnique({
+            where: { email: auth.email }
+        });
+
+        if (!user) {
+            return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
+        // Delete user (cascade delete should handle related records in schema, or they can be manually cleaned up)
+        await prisma.user.delete({
+            where: { id: user.id }
+        });
+
+        return NextResponse.json({ message: "Account deleted successfully" }, { status: 200 });
+    } catch (error) {
+        console.error("Account Deletion Error:", error);
+        return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+    }
+}

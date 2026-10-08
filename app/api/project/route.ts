@@ -13,8 +13,6 @@ export const GET = withSecurity(async (request: NextRequest, context: any, sessi
   try {
     const userId = session?.userId;
     const userEmail = session?.email;
-    
-    console.log("DEBUG /api/project GET -> Session:", session);
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -425,6 +423,14 @@ export const DELETE = withSecurity(async (request: NextRequest, context: any, se
       await prisma.teamProject.deleteMany({
         where: { projectId: id },
       });
+
+      // Fix missing cascade deletions to prevent orphaned DB records or FK errors
+      await prisma.webhook.deleteMany({ where: { projectId: id } });
+      await prisma.serviceAccount.deleteMany({ where: { projectId: id } });
+      await prisma.oidcTrustPolicy.deleteMany({ where: { projectId: id } });
+      await prisma.accessRequest.deleteMany({ where: { projectId: id } });
+      await prisma.userRole.deleteMany({ where: { projectId: id } });
+      await prisma.breakGlassSession.deleteMany({ where: { projectId: id } });
 
       // Delete project itself (inside transaction to prevent orphaned data)
       await prisma.project.delete({

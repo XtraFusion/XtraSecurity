@@ -14,108 +14,93 @@ import {
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen w-full bg-[#05090e] text-white flex flex-col justify-between p-6 sm:p-10 font-sans relative overflow-hidden select-none">
+    <div className="min-h-screen w-full bg-[#030712] text-white flex flex-col justify-between p-6 sm:p-10 relative overflow-hidden select-none">
       
       {/* Top Left Breadcrumb */}
-      <div className="flex items-center gap-2 text-xs font-medium text-slate-400 z-10">
-        <div className="w-5 h-5 rounded-full bg-slate-800/80 border border-slate-700 flex items-center justify-center text-slate-300">
-          <Home className="w-3 h-3" />
-        </div>
-        <Link href="/dashboard" className="hover:text-cyan-400 transition-colors text-slate-300 font-medium no-underline">
+      <div className="flex items-center gap-2 text-sm font-medium text-slate-400 z-10">
+        <Link href="/dashboard" className="flex items-center gap-2 hover:text-cyan-400 transition-colors text-slate-400 no-underline">
+          <Home className="w-4 h-4" />
           Dashboard
         </Link>
-        <ChevronRight className="w-3.5 h-3.5 text-slate-600" />
-        <span className="text-slate-400 font-semibold">404 Not Found</span>
+        <ChevronRight className="w-4 h-4 text-slate-600" />
+        <span className="text-white font-semibold">404 Not Found</span>
       </div>
 
-      {/* Main Centered Bento Glass Card */}
+      {/* Main Centered Box */}
       <div className="flex-1 flex items-center justify-center my-8 z-10">
-        <div className="w-full max-w-[540px] bg-[#0a1117] border border-[#14232a] rounded-[28px] p-8 md:p-9 shadow-2xl space-y-6">
+        <div className="w-full max-w-[600px] bg-[#0a0d14] border border-white/5 rounded-2xl p-10 shadow-2xl space-y-8 relative overflow-hidden">
+          
+          {/* Subtle Glow */}
+          <div className="absolute -top-32 -right-32 w-64 h-64 bg-amber-500/10 blur-[80px] rounded-full pointer-events-none" />
           
           {/* Card Header Info */}
-          <div className="flex items-start gap-4">
-            {/* Amber Squircle Icon Badge with Glowing Green Dot */}
-            <div className="relative flex-shrink-0">
-              <div className="w-13 h-13 sm:w-14 sm:h-14 rounded-2xl bg-[#18160c] border border-[#362f18] flex items-center justify-center text-[#f59e0b] shadow-md">
-                <FileSearch className="w-7 h-7 stroke-[1.75]" />
-              </div>
-              <span className="w-3 h-3 bg-[#10b981] rounded-full border-2 border-[#0a1117] absolute -bottom-0.5 -right-0.5 shadow-sm" />
+          <div className="flex items-center gap-4">
+            <div className="w-14 h-14 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-500 shadow-lg">
+              <FileSearch className="w-7 h-7" />
             </div>
-
-            {/* Badge Labels */}
-            <div className="flex flex-col justify-center pt-1 font-mono">
-              <div className="text-[#f59e0b] text-xs font-bold tracking-widest uppercase">
-                404 · ROUTE UNRESOLVABLE
+            <div>
+              <div className="text-amber-500 text-xs font-bold tracking-widest uppercase">
+                404 · Route Unresolvable
               </div>
-              <div className="text-slate-500 text-[10px] tracking-wider uppercase font-semibold mt-0.5">
-                SECURITY ROUTE INSPECTION
+              <div className="text-slate-400 text-sm mt-1">
+                Security Route Inspection
               </div>
             </div>
           </div>
 
           {/* Headline & Subtitle */}
-          <div className="space-y-2 pt-1">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white font-sans leading-tight">
+          <div className="space-y-3 pt-2">
+            <h1 className="text-3xl md:text-4xl font-bold tracking-tight text-white leading-tight" style={{ fontFamily: "var(--font-space-grotesk)" }}>
               Page or Secret Route Not Found
             </h1>
-            <p className="text-slate-400 text-sm leading-relaxed font-sans max-w-md">
+            <p className="text-slate-400 text-base leading-relaxed max-w-lg">
               The vault node or environment endpoint you requested does not exist or has been relocated.
             </p>
           </div>
 
           {/* CLI Terminal Box */}
-          <div className="bg-[#05080c] border border-[#14232a] rounded-2xl p-5 font-mono text-xs space-y-3 shadow-inner">
-            <div className="flex items-center justify-between text-[11px] font-mono border-b border-[#101b22] pb-2.5">
-              <span className="text-[#00f2ff] font-bold flex items-center gap-1.5">
-                <Terminal className="w-3.5 h-3.5" />
+          {/* CLI Terminal Box */}
+          <div className="bg-[#030712] border border-white/5 rounded-xl p-5 font-mono text-sm space-y-3 shadow-inner">
+            <div className="flex items-center justify-between text-xs font-mono border-b border-white/5 pb-3">
+              <span className="text-cyan-400 font-bold flex items-center gap-2">
+                <Terminal className="w-4 h-4" />
                 CLI INSPECTION
               </span>
-              <span className="text-[#10b981] font-semibold flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#10b981]" />
+              <span className="text-emerald-400 font-semibold flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
                 Zero Leaks
               </span>
             </div>
 
-            <p className="text-slate-200 text-xs font-medium pt-0.5">
-              <span className="text-[#00f2ff] font-bold">$</span> xtra lookup --path &quot;{typeof window !== "undefined" ? window.location.pathname : "/unknown-route"}&quot;
+            <p className="text-slate-300 font-medium pt-2">
+              <span className="text-cyan-400 font-bold mr-2">$</span>
+              xtra lookup --path &quot;{typeof window !== "undefined" ? window.location.pathname : "/unknown-route"}&quot;
             </p>
 
-            <p className="text-[#f59e0b] font-semibold text-xs">
+            <p className="text-amber-400 font-medium mt-2">
               [error] 404_NOT_FOUND: Target endpoint does not exist.
             </p>
-
-            <div className="border-t border-[#101b22] pt-2.5 text-[#00f2ff] text-[11px] font-mono flex items-center gap-1">
-              <span>→ Session ID: 0x7f884a0a</span>
-              <span className="text-slate-600">·</span>
-              <span>Hardware Lock Active</span>
-            </div>
           </div>
 
           {/* Action Buttons Row */}
-          <div className="flex flex-wrap items-center gap-3 pt-2">
+          <div className="flex flex-wrap items-center gap-4 pt-4">
             <Link
               href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl text-xs font-bold bg-[#00d8a7] hover:bg-[#00c295] text-[#05090e] transition-all no-underline shadow-md cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold bg-white hover:bg-slate-200 text-black transition-all no-underline shadow-[0_0_20px_rgba(255,255,255,0.15)]"
+              style={{ fontFamily: "var(--font-space-grotesk)" }}
             >
               <LayoutGrid className="w-4 h-4" />
               Go to Dashboard
             </Link>
 
             <Link
-              href="/dashboard"
-              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold bg-[#111921] hover:bg-[#16212c] text-white border border-[#1b2a36] transition-all no-underline cursor-pointer"
-            >
-              <FolderKanban className="w-4 h-4 text-slate-300" />
-              Projects
-            </Link>
-
-            <Link
               href="/docs"
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-medium text-slate-400 hover:text-white transition-all no-underline cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl text-sm font-bold text-white border border-white/10 hover:border-white/20 hover:bg-white/5 transition-all no-underline"
+              style={{ fontFamily: "var(--font-space-grotesk)" }}
             >
               <BookOpen className="w-4 h-4" />
               <span>Documentation</span>
-              <ArrowRight className="w-3.5 h-3.5 ml-0.5" />
+              <ArrowRight className="w-4 h-4" />
             </Link>
           </div>
 

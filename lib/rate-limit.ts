@@ -1,143 +1,116 @@
-import { RateLimiterMemory, RateLimiterRedis, RateLimiterRes } from 'rate-limiter-flexible';
-import Redis from 'ioredis';
-import { 
-  Tier, 
-  RateLimitResult, 
-  DAILY_LIMITS, 
-  BURST_LIMITS 
-} from './rate-limit-config';
+import { redis } from '@/lib/redis';
+import { NextRequest } from 'next/server';
+import { Tier, DAILY_LIMITS, RateLimitResult as ConfigRateLimitResult } from './rate-limit-config';
 
-export type { Tier, RateLimitResult };
-
-declare global {
-  var _rateLimiterDaily: RateLimiterRedis | RateLimiterMemory | undefined;
-  var _rateLimiterBurst: RateLimiterRedis | RateLimiterMemory | undefined;
+export interface RateLimitResult {
+  success: boolean;
+  limit: number;
+  remaining: number;
+  reset: number;
 }
 
-const redisUrl = process.env.REDIS_URL;
-
-const MAX_POINTS = 999999999; 
-
-if (!global._rateLimiterDaily || !global._rateLimiterBurst) {
-  if (redisUrl) {
-    console.log('Initializing Rate Limiter with Redis');
-    const redisClient = new Redis(redisUrl, {
-      enableOfflineQueue: false,
-      connectTimeout: 5000,
-      maxRetriesPerRequest: 1,
-    });
-
-    redisClient.on('error', (err) => {});
-
-    global._rateLimiterDaily = new RateLimiterRedis({
-      storeClient: redisClient,
-      keyPrefix: 'rl_daily',
-      points: MAX_POINTS,
-      duration: 86400, // 24h
-    });
-
-    global._rateLimiterBurst = new RateLimiterRedis({
-      storeClient: redisClient,
-      keyPrefix: 'rl_burst',
-      points: MAX_POINTS,
-      duration: 60, // 1m
-    });
-
-  } else {
-    console.log('Initializing Rate Limiter with Memory (No REDIS_URL found)');
-    global._rateLimiterDaily = new RateLimiterMemory({
-      keyPrefix: 'rl_daily',
-      points: MAX_POINTS,
-      duration: 86400,
-    });
-    global._rateLimiterBurst = new RateLimiterMemory({
-      keyPrefix: 'rl_burst',
-      points: MAX_POINTS,
-      duration: 60,
-    });
+/**
+ * A Fixed Window Rate Limiter using Redis.
+ * @param key Unique identifier (e.g., IP address or user ID)
+ * @param action Name of the action (e.g., "login", "api_call")
+ * @param limit Maximum number of requests allowed in the window
+ * @param windowSeconds Duration of the window in seconds
+ */
+export async function rateLimit(
+  key: string,
+  action: string,
+  limit: number,
+  windowSeconds: number
+): Promise<RateLimitResult> {
+  if (!redis) {
+    // Graceful fallback if Redis is not configured (e.g., local development without Redis)
+    return { success: true, limit, remaining: limit - 1, reset: Date.now() + windowSeconds * 1000 };
   }
-}
 
-export const rateLimiterDaily = global._rateLimiterDaily!;
-export const rateLimiterBurst = global._rateLimiterBurst!;
-
-export async function checkRateLimit(userId: string, tier: Tier = 'free'): Promise<RateLimitResult> {
-  const dailyConfig = DAILY_LIMITS[tier];
-  const burstConfig = BURST_LIMITS[tier];
+  const now = Math.floor(Date.now() / 1000);
+  const currentWindow = Math.floor(now / windowSeconds);
+  const redisKey = `ratelimit:${action}:${key}:${currentWindow}`;
 
   try {
-    // 1. Check Burst (Minute)
-    const burstRes = await rateLimiterBurst.consume(userId, 1);
+    const pipeline = redis.pipeline();
+    pipeline.incr(redisKey);
+    pipeline.expire(redisKey, windowSeconds * 2); // Ensure cleanup
+
+    const results = await pipeline.exec();
     
-    if (burstRes.consumedPoints > burstConfig.points) {
-       return {
-         success: false,
-         limit: burstConfig.points,
-         remaining: 0,
-         reset: Math.floor(Date.now() / 1000) + Math.round(burstRes.msBeforeNext / 1000),
-         tier
-       };
-    }
-
-    // 2. Check Daily
-    const dailyRes = await rateLimiterDaily.consume(userId, 1);
-
-    if (dailyRes.consumedPoints > dailyConfig.points) {
-        return {
-            success: false,
-            limit: dailyConfig.points,
-            remaining: 0,
-            reset: Math.floor(Date.now() / 1000) + Math.round(dailyRes.msBeforeNext / 1000),
-            tier
-        };
-    }
+    // results[0][1] contains the result of the INCR command
+    const count = results?.[0]?.[1] as number || 1;
 
     return {
-        success: true,
-        limit: dailyConfig.points,
-        remaining: Math.max(0, dailyConfig.points - dailyRes.consumedPoints),
-        reset: Math.floor(Date.now() / 1000) + Math.round(dailyRes.msBeforeNext / 1000),
-        tier
+      success: count <= limit,
+      limit,
+      remaining: Math.max(0, limit - count),
+      reset: (currentWindow + 1) * windowSeconds * 1000
     };
-
-  } catch (err: any) {
-    if (err && err.message && !err.message.includes("Stream isn't writeable")) {
-        console.error('Rate Limit Error:', err);
-    }
-    return {
-        success: true,
-        limit: dailyConfig.points,
-        remaining: 1,
-        reset: 0,
-        tier
-    };
+  } catch (error) {
+    console.error('Rate Limiter Error:', error);
+    // Fail open to avoid blocking legitimate users if Redis hiccups
+    return { success: true, limit, remaining: limit - 1, reset: Date.now() + windowSeconds * 1000 };
   }
 }
 
-export async function getRateLimitStats(userId: string, tier: Tier = 'free'): Promise<RateLimitResult> {
-  const dailyConfig = DAILY_LIMITS[tier];
+/**
+ * Extracts the client IP from a NextRequest.
+ */
+export function getClientIp(req: NextRequest): string {
+  const forwardedFor = req.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    return forwardedFor.split(',')[0].trim();
+  }
+  const realIp = req.headers.get('x-real-ip');
+  if (realIp) {
+    return realIp;
+  }
+  return '127.0.0.1'; // Fallback
+}
+
+export async function checkRateLimit(
+  userId: string,
+  tier: Tier
+): Promise<ConfigRateLimitResult> {
+  const config = DAILY_LIMITS[tier] || DAILY_LIMITS.free;
+  
+  const res = await rateLimit(userId, "api_call", config.points, config.duration);
+  
+  return {
+    success: res.success,
+    limit: res.limit,
+    remaining: res.remaining,
+    reset: res.reset,
+    tier
+  };
+}
+
+export async function getRateLimitStats(
+  userId: string,
+  tier: Tier
+): Promise<ConfigRateLimitResult> {
+  const config = DAILY_LIMITS[tier] || DAILY_LIMITS.free;
+  if (!redis) {
+    return { success: true, limit: config.points, remaining: config.points, reset: Date.now() + config.duration * 1000, tier };
+  }
+  const now = Math.floor(Date.now() / 1000);
+  const currentWindow = Math.floor(now / config.duration);
+  const redisKey = `ratelimit:api_call:${userId}:${currentWindow}`;
   
   try {
-    const dailyRes = await rateLimiterDaily.get(userId);
-    
+    const countStr = await redis.get(redisKey);
+    const count = countStr ? parseInt(countStr, 10) : 0;
     return {
-      success: true,
-      limit: dailyConfig.points,
-      remaining: dailyRes ? Math.max(0, dailyConfig.points - dailyRes.consumedPoints) : dailyConfig.points,
-      reset: dailyRes ? Math.floor(Date.now() / 1000) + Math.round(dailyRes.msBeforeNext / 1000) : 0,
+      success: count <= config.points,
+      limit: config.points,
+      remaining: Math.max(0, config.points - count),
+      reset: (currentWindow + 1) * config.duration * 1000,
       tier
     };
-
-  } catch (err: any) {
-    if (err && err.message && !err.message.includes("Stream isn't writeable")) {
-        console.error('Rate Limit Stats Error:', err);
-    }
-    return {
-        success: true,
-        limit: dailyConfig.points,
-        remaining: dailyConfig.points,
-        reset: 0,
-        tier
-    };
+  } catch (error) {
+    console.error('getRateLimitStats Error:', error);
+    return { success: true, limit: config.points, remaining: config.points, reset: Date.now() + config.duration * 1000, tier };
   }
 }
+

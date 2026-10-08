@@ -5,11 +5,51 @@ import { logAudit } from "@/lib/audit";
 import { validateApiKey, hashApiKey } from "@/lib/auth/service-account";
 // import { sign } from "jsonwebtoken"; // If separate JWT needed, but for now we might simple return a session token or basic mimic
 
+import { rateLimit, getClientIp } from '@/lib/rate-limit';
+import { z } from 'zod';
+
 const SECRET_KEY = process.env.NEXTAUTH_SECRET;
+
+const cliLoginSchema = z.object({
+  email: z.string().email("Invalid email address").optional(),
+  password: z.string().optional(),
+  apiKey: z.string().optional(),
+  totpCode: z.string().optional(),
+  backupCode: z.string().optional()
+}).refine(data => data.apiKey || (data.email && data.password), {
+  message: "Must provide either apiKey or (email and password)"
+});
 
 export async function POST(req: NextRequest) {
   try {
-    const { email, password, apiKey, totpCode, backupCode } = await req.json();
+    const ip = getClientIp(req);
+    // 10 attempts per 15 minutes (900 seconds)
+    const rateLimitResult = await rateLimit(ip, 'cli_login', 10, 900);
+    
+    if (!rateLimitResult.success) {
+      return NextResponse.json(
+        { error: 'Too many login attempts. Please try again in 15 minutes.' },
+        { 
+          status: 429, 
+          headers: {
+            'X-RateLimit-Limit': rateLimitResult.limit.toString(),
+            'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
+            'X-RateLimit-Reset': rateLimitResult.reset.toString()
+          }
+        }
+      );
+    }
+
+    const body = await req.json();
+    const parsed = cliLoginSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.errors[0].message },
+        { status: 400 }
+      );
+    }
+
+    const { email, password, apiKey, totpCode, backupCode } = parsed.data;
 
     if (apiKey) {
       // Clean up the key first

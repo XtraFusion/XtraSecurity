@@ -1,7 +1,7 @@
 {
   "projectId": "proj_export_123",
   "environment": "development",
-  "lastSyncedAt": "2026-09-14T15:02:14.173Z",
+  "lastSyncedAt": "2026-10-08T10:57:05.995Z",
   "secrets": {
     "GOOGLE_CLIENT_SECRET": {
       "hash": "067f88de5c4f895035bf7fc2d42ce59d2d23563c255d40b95c36d9c9ef8b6358",
@@ -85,19 +85,19 @@
     },
     "DB_HOST": {
       "hash": "abaf3bf9cbcc200730e174454af0d3604d15fcea4b3552d2a3779754e6278ce4",
-      "updatedAt": "2026-09-14T15:02:06.122Z"
+      "updatedAt": "2026-10-08T10:56:25.863Z"
     },
     "API_KEY": {
       "hash": "f1077a03ecfb4bb7af4bdc078ce79afba72f36df54d8ee31dfc9e028483a72fb",
-      "updatedAt": "2026-09-14T15:02:06.122Z"
+      "updatedAt": "2026-10-08T10:56:25.863Z"
     },
     "AWS_REGION": {
       "hash": "487d653406a6aebc3146cb844a4ce50265da74db272ee1c6002294850ef2e187",
-      "updatedAt": "2026-09-14T15:02:14.173Z"
+      "updatedAt": "2026-10-08T10:57:05.996Z"
     },
     "MAX_CONNECTIONS": {
       "hash": "f5ca38f748a1d6eaf726b8a42fb575c3c71f1864a8143301782de13da2d9202b",
-      "updatedAt": "2026-09-14T15:02:14.173Z"
+      "updatedAt": "2026-10-08T10:57:05.996Z"
     },
     "TEST_WRITE_KEY": {
       "hash": "9c51d0b0f64dfb3662ed85ce945dd1e8f6130665c289754e4e9257a58013e61d",

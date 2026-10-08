@@ -16,12 +16,15 @@ export const runCommand = new Command("run")
   .option("-b, --branch <branchName>", "Branch Name")
   .option("--shell", "Enable shell mode (needed for npm run, shell built-ins on Windows)", false)
   .option("--passphrase <passphrase>", "Vault passphrase for Level 3 Zero-Knowledge decryption")
+  .option("--oidc-provider <provider>", "OIDC Provider (e.g., github, gitlab)")
+  .option("--oidc-token <token>", "OIDC JWT Token")
   .argument("<command>", "Command to run")
   .argument("[args...]", "Command arguments")
   .addHelpText("after", `
 Examples:
   $ xtra run npm start
   $ xtra run -e production -- npm run build
+  $ xtra run --oidc-provider github --oidc-token $JWT_TOKEN -- npm start
   $ xtra run -p proj_123 -b feature-branch -- python script.py
   $ xtra run --shell "echo $SECRET_KEY"
 `)
@@ -66,8 +69,20 @@ Examples:
       spinner.succeed(chalk.yellow(`🔌 Local mode: loaded ${Object.keys(secrets).length} secrets from .env.local`));
     } else {
     try {
+      // OIDC Flow: Exchange OIDC Token for Ephemeral Token
+      let ephemeralAuthToken = null;
+      let workloadEnvelope = null;
+      if (options.oidcProvider && options.oidcToken) {
+        spinner.text = `Exchanging OIDC Token via ${options.oidcProvider}...`;
+        const result = await api.exchangeOidcToken(options.oidcProvider, options.oidcToken);
+        ephemeralAuthToken = result.accessToken;
+        workloadEnvelope = result.envelope;
+        spinner.succeed(chalk.green("OIDC Ephemeral Token issued."));
+        spinner.start(`Fetching secrets for ${env} (branch: ${branch})...`);
+      }
+
       // 1. Fetch Secrets
-      secrets = await api.getSecrets(project, env, branch, options.passphrase);
+      secrets = await api.getSecrets(project, env, branch, options.passphrase, ephemeralAuthToken, workloadEnvelope);
       
       if (!secrets || Object.keys(secrets).length === 0) {
         spinner.warn(chalk.yellow("No secrets found for this environment."));

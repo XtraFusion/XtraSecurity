@@ -138,6 +138,18 @@ export class XtraClient {
     private cache: Map<string, { data: Record<string, string>; expiresAt: number }> = new Map();
     private autoRefreshTimer?: NodeJS.Timeout;
 
+    /**
+     * Bootstraps an AI Agent context dynamically from an ephemeral token.
+     * This ensures the agent is explicitly authenticated without relying on implicit global ENV variables.
+     */
+    public static forAgent(agentToken: string, projectKey: string, options: Partial<XtraClientOptions> = {}): XtraClient {
+        return new XtraClient({
+            ...options,
+            token: agentToken,
+            vaultPassphrase: projectKey
+        });
+    }
+
     constructor(options: XtraClientOptions = {}) {
         const token = options.token || process.env.XTRA_TOKEN;
         if (!token) {
@@ -199,23 +211,25 @@ export class XtraClient {
             return response;
         };
 
-        const originalUpsert = this.secrets.upsertSecrets.bind(this.secrets);
-        this.secrets.upsertSecrets = async (projectId: string, env: any, req: any, options?: any) => {
-            if (req && req.secrets) {
-                const projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
-                const encryptedSecrets: Record<string, string> = {};
-                for (const [key, val] of Object.entries(req.secrets)) {
-                    if (typeof val === 'string' && val.startsWith('{') && val.includes('ciphertext')) {
-                        encryptedSecrets[key] = val as string;
-                    } else {
-                        const enc = encryptSecretValue(val as string, projectKey);
-                        encryptedSecrets[key] = JSON.stringify(enc);
+        if (typeof this.secrets.upsertSecrets === 'function') {
+            const originalUpsert = this.secrets.upsertSecrets.bind(this.secrets);
+            this.secrets.upsertSecrets = async (projectId: string, env: any, req: any, options?: any) => {
+                if (req && req.secrets) {
+                    const projectKey = deriveProjectKey(projectId, this.vaultPassphrase);
+                    const encryptedSecrets: Record<string, string> = {};
+                    for (const [key, val] of Object.entries(req.secrets)) {
+                        if (typeof val === 'string' && val.startsWith('{') && val.includes('ciphertext')) {
+                            encryptedSecrets[key] = val as string;
+                        } else {
+                            const enc = encryptSecretValue(val as string, projectKey);
+                            encryptedSecrets[key] = JSON.stringify(enc);
+                        }
                     }
+                    req.secrets = encryptedSecrets;
                 }
-                req.secrets = encryptedSecrets;
-            }
-            return originalUpsert(projectId, env, req, options);
-        };
+                return originalUpsert(projectId, env, req, options);
+            };
+        }
     }
 
     /**
@@ -352,19 +366,6 @@ export class XtraClient {
             );
 
             let data: Record<string, string> = (response.data as any) || {};
-
-            // Transparently decrypt any v2/v3 Zero-Knowledge E2EE payloads
-            const projectKey = deriveProjectKey(pid, this.vaultPassphrase);
-            for (const [k, v] of Object.entries(data)) {
-                if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
-                    try {
-                        const parsed = JSON.parse(v);
-                        if (parsed.ciphertext && parsed.iv) {
-                            data[k] = decryptSecretValue(parsed, projectKey);
-                        }
-                    } catch (_) {}
-                }
-            }
 
             // Multi-Environment Fallback Resolution (Task A33)
             const activeFallback = fallbackEnv || this.fallbackEnv;

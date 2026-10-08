@@ -140,8 +140,8 @@ Use platform-native keyring bindings to secure cached tokens and keys:
 * **Linux:** Secret Service API / `libsecret`
 
 ### Implementation Checklist
-- [ ] Integrate keytar / native OS keychain storage into `xtra-cli`.
-- [ ] Add fallback encrypted cache for headless CI environments.
+- [x] Integrate keytar / native OS keychain storage into `xtra-cli`.
+- [x] Add fallback encrypted cache for headless CI environments (Hardware Fingerprint).
 - [ ] Add step-up MFA verification for high-risk CLI operations.
 
 ---
