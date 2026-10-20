@@ -5,10 +5,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, RefreshCw, AlertCircle, Check, Loader2 } from "lucide-react";
+import { Key, RefreshCw, AlertCircle, Check, Loader2, Download, Copy, CheckCircle2 } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
-import { deriveProjectKey, decryptSecretValue, encryptSecretValueWebCrypto, generateRecoveryMnemonic, validateProjectPassphrase } from "@/lib/crypto/e2ee";
+import { deriveProjectKey, decryptSecretValue, encryptSecretValueWebCrypto, generateRecoveryMnemonic, validateProjectPassphrase, downloadRecoveryKit } from "@/lib/crypto/e2ee";
 import { useGlobalContext } from "@/hooks/useUser";
 
 interface RotateMasterKeyModalProps {
@@ -36,6 +36,9 @@ export function RotateMasterKeyModal({
   const [isRotating, setIsRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
+  const [autoDownloaded, setAutoDownloaded] = useState<boolean>(false);
+  const [lastDownloadedKey, setLastDownloadedKey] = useState<string>("");
+  const [copied, setCopied] = useState<boolean>(false);
 
   const { selectedWorkspace } = useGlobalContext();
 
@@ -51,6 +54,33 @@ export function RotateMasterKeyModal({
     const result = generateRecoveryMnemonic();
     setNewPassphrase(result.mnemonic);
     setConfirmPassphrase(result.mnemonic);
+
+    downloadRecoveryKit({
+      passphrase: result.mnemonic,
+      projectName,
+      projectId,
+      workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+      scope: targetScope
+    });
+    setAutoDownloaded(true);
+    setLastDownloadedKey(result.mnemonic);
+  };
+
+  const handleNewPassphrasePaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData("text")?.trim();
+    if (pasted && pasted.length >= 6) {
+      setNewPassphrase(pasted);
+      setConfirmPassphrase(pasted);
+      downloadRecoveryKit({
+        passphrase: pasted,
+        projectName,
+        projectId,
+        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+        scope: targetScope
+      });
+      setAutoDownloaded(true);
+      setLastDownloadedKey(pasted);
+    }
   };
 
   const handleRotate = async (e: React.FormEvent) => {
@@ -178,6 +208,19 @@ export function RotateMasterKeyModal({
 
       setProgress("Rotation successful!");
       
+      // Auto-download recovery kit for the new passphrase if not already downloaded
+      if (lastDownloadedKey !== newPassphrase) {
+        downloadRecoveryKit({
+          passphrase: newPassphrase,
+          projectName,
+          projectId,
+          workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+          scope: targetScope
+        });
+        setAutoDownloaded(true);
+        setLastDownloadedKey(newPassphrase);
+      }
+
       persistRotatedKey(newPassphrase);
       
       onSuccess(newPassphrase);
@@ -255,19 +298,78 @@ export function RotateMasterKeyModal({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold">New Master Passphrase or Mnemonic</Label>
-              <Button type="button" variant="ghost" size="sm" onClick={handleGenerate} className="h-6 text-xs px-2 text-primary">
-                <Key className="h-3 w-3 mr-1" /> Generate 24-Word Phrase
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={handleGenerate}
+                className="h-6 text-xs px-2 text-primary font-medium hover:text-primary hover:bg-primary/10 transition-colors"
+                title="Generate secure 24-word phrase and auto-download recovery kit"
+              >
+                <Key className="h-3 w-3 mr-1" /> Generate Secure Phrase
               </Button>
             </div>
             <Input
               type="password"
-              placeholder="Enter or generate new passphrase..."
+              placeholder="Enter or paste new passphrase..."
               value={newPassphrase}
               onChange={(e) => setNewPassphrase(e.target.value)}
+              onPaste={handleNewPassphrasePaste}
               required
               className="font-mono text-sm"
             />
           </div>
+
+          {newPassphrase && (
+            <div className="p-2.5 bg-muted/40 border border-border/80 rounded-lg space-y-2 text-xs animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <span className="font-semibold text-emerald-500 flex items-center gap-1.5">
+                  <CheckCircle2 className="h-3.5 w-3.5" />
+                  Recovery Kit {autoDownloaded ? "Auto-Downloaded (.txt)" : "Ready"}
+                </span>
+                <div className="flex items-center gap-1">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-[11px] px-2 text-muted-foreground hover:text-foreground"
+                    onClick={() => {
+                      navigator.clipboard.writeText(newPassphrase);
+                      setCopied(true);
+                      setTimeout(() => setCopied(false), 2000);
+                    }}
+                  >
+                    {copied ? <Check className="h-3 w-3 mr-1 text-emerald-500" /> : <Copy className="h-3 w-3 mr-1" />}
+                    {copied ? "Copied" : "Copy"}
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="ghost"
+                    className="h-6 text-[11px] px-2 text-primary hover:text-primary hover:bg-primary/10"
+                    onClick={() => {
+                      downloadRecoveryKit({
+                        passphrase: newPassphrase,
+                        projectName,
+                        projectId,
+                        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                        scope: targetScope
+                      });
+                      setAutoDownloaded(true);
+                    }}
+                  >
+                    <Download className="h-3 w-3 mr-1" /> Download (.txt)
+                  </Button>
+                </div>
+              </div>
+              <p className="font-mono text-[11px] text-muted-foreground break-all bg-background/90 p-2 rounded border border-border/50 select-all">
+                {newPassphrase}
+              </p>
+              <p className="text-[10px] text-muted-foreground">
+                Your recovery kit has been automatically downloaded to your computer as a text file. Please store it securely in your password manager.
+              </p>
+            </div>
+          )}
 
           <div className="space-y-2">
             <Label className="text-xs font-semibold">Confirm New Passphrase</Label>

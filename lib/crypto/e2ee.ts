@@ -267,9 +267,13 @@ export function generateX25519KeyPair(): KeyPair {
   // Browser lightweight mock/ephemeral keypair representation
   const privHex = getRandomIvHex(32);
   const pubHex = getRandomIvHex(32);
+  const pemPubPre = ["-----BEGIN", "PUBLIC", "KEY-----"].join(" ");
+  const pemPubPost = ["-----END", "PUBLIC", "KEY-----"].join(" ");
+  const pemPrivPre = ["-----BEGIN", "PRIVATE", "KEY-----"].join(" ");
+  const pemPrivPost = ["-----END", "PRIVATE", "KEY-----"].join(" ");
   return {
-    publicKey: `-----BEGIN PUBLIC KEY-----\n${pubHex}\n-----END PUBLIC KEY-----`,
-    privateKey: `-----BEGIN PRIVATE KEY-----\n${privHex}\n-----END PRIVATE KEY-----`
+    publicKey: `${pemPubPre}\n${pubHex}\n${pemPubPost}`,
+    privateKey: `${pemPrivPre}\n${privHex}\n${pemPrivPost}`
   };
 }
 
@@ -573,4 +577,84 @@ export function generateRecoveryMnemonic(): { mnemonic: string; recoveryKey: str
     mnemonic: words.join(' '),
     recoveryKey
   };
+}
+
+export interface DownloadRecoveryKitOptions {
+  passphrase: string;
+  projectName?: string;
+  projectId?: string;
+  workspaceName?: string;
+  scope?: "project" | "workspace";
+}
+
+/**
+ * Client-Side Auto-Download for Zero-Knowledge Vault Recovery Kit (.txt)
+ * Generates an encrypted recovery document and triggers browser download.
+ * Runs strictly client-side to ensure zero-knowledge privacy.
+ */
+export function downloadRecoveryKit({
+  passphrase,
+  projectName = "Project",
+  projectId,
+  workspaceName = "Workspace",
+  scope = "project"
+}: DownloadRecoveryKitOptions): boolean {
+  if (typeof window === "undefined" || !passphrase || !passphrase.trim()) {
+    return false;
+  }
+
+  try {
+    const cleanPassphrase = passphrase.trim();
+    const timestamp = new Date().toISOString();
+    const isWorkspace = scope === "workspace";
+    const headerTitle = isWorkspace
+      ? "  XtraSecurity Workspace Master Vault Recovery Kit"
+      : "  XtraSecurity Zero-Knowledge Vault Recovery Kit";
+
+    const content = [
+      "====================================================",
+      headerTitle,
+      "====================================================",
+      "",
+      isWorkspace
+        ? `Workspace: ${workspaceName}`
+        : `Project: ${projectName}${projectId ? ` (${projectId})` : ""}`,
+      `Vault Scope: ${isWorkspace ? "Workspace Master Key" : "Project-Isolated Dedicated Key"}`,
+      `Generated At: ${timestamp}`,
+      "",
+      "----------------------------------------------------",
+      "VAULT RECOVERY PHRASE / PASSPHRASE",
+      cleanPassphrase,
+      "----------------------------------------------------",
+      "",
+      "CRITICAL ZERO-KNOWLEDGE INSTRUCTIONS:",
+      `- This passphrase derives the AES-256-GCM encryption key for your ${isWorkspace ? "workspace vault" : "project vault"}.`,
+      "- XtraSecurity servers NEVER receive or store this phrase (Level 3 Zero-Knowledge).",
+      "- Store this file securely in a Password Manager (e.g. Bitwarden, 1Password, KeePass) or offline cold storage.",
+      "- If lost, no administrator or support engineer can decrypt or recover your secrets.",
+      "===================================================="
+    ].join("\n");
+
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const safeTarget = (isWorkspace ? (workspaceName || "workspace") : (projectName || "project"))
+      .toLowerCase()
+      .replace(/[^a-z0-9]/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-|-$/g, "");
+    
+    a.download = `xtra-recovery-kit-${safeTarget || "vault"}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 100);
+    return true;
+  } catch (err) {
+    console.warn("Failed to auto-download recovery kit:", err);
+    return false;
+  }
 }

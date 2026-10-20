@@ -8,7 +8,8 @@ import {
   decryptSecretValueWebCrypto,
   deriveProjectKey,
   generateRecoveryMnemonic,
-  validateProjectPassphrase
+  validateProjectPassphrase,
+  downloadRecoveryKit
 } from "@/lib/crypto/e2ee";
 import {
   Search,
@@ -3054,11 +3055,24 @@ const VaultManager: React.FC = () => {
             <Input
               id="vault-passphrase"
               type="password"
-              placeholder="Enter your master passphrase..."
+              placeholder="Enter or paste your master passphrase..."
               value={unlockInputPassphrase}
               onChange={(e) => {
                 setUnlockInputPassphrase(e.target.value);
                 setUnlockError(null);
+              }}
+              onPaste={(e) => {
+                const pasted = e.clipboardData.getData("text")?.trim();
+                if (pasted && pasted.length >= 6) {
+                  downloadRecoveryKit({
+                    passphrase: pasted,
+                    projectName: project?.name || "Project",
+                    projectId,
+                    workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                    scope: passphraseScope === "workspace" ? "workspace" : "project"
+                  });
+                  setNotification({ type: "default", message: "✓ Pasted key detected — recovery kit auto-downloaded (.txt)" });
+                }
               }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
@@ -3154,31 +3168,14 @@ const VaultManager: React.FC = () => {
                     variant="ghost"
                     className="h-7 text-xs text-primary"
                     onClick={() => {
-                      const content = [
-                        "====================================================",
-                        "  XtraSecurity Zero-Knowledge Vault Recovery Kit",
-                        "====================================================",
-                        "",
-                        `Project: ${project?.name || "Project"} (${projectId})`,
-                        `Generated At: ${new Date().toISOString()}`,
-                        "",
-                        "24-WORD RECOVERY PASSPHRASE:",
-                        recoveryMnemonic,
-                        "",
-                        "SECURITY INSTRUCTIONS:",
-                        "- This recovery phrase derives the AES-256-GCM encryption key for this project.",
-                        "- XtraSecurity servers NEVER receive or store this phrase (Zero-Knowledge).",
-                        "- Store this file securely in a Password Manager (Bitwarden, 1Password, etc.).",
-                        "- If lost, no administrator can recover your encrypted secrets."
-                      ].join("\n");
-                      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-                      const url = URL.createObjectURL(blob);
-                      const a = document.createElement("a");
-                      a.href = url;
-                      a.download = `xtra-recovery-kit-${(project?.name || "project").toLowerCase().replace(/[^a-z0-9]/g, "-")}.txt`;
-                      a.click();
-                      URL.revokeObjectURL(url);
-                      setNotification({ type: "default", message: "✓ Recovery kit downloaded" });
+                      downloadRecoveryKit({
+                        passphrase: recoveryMnemonic,
+                        projectName: project?.name || "Project",
+                        projectId,
+                        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                        scope: passphraseScope === "workspace" ? "workspace" : "project"
+                      });
+                      setNotification({ type: "default", message: "✓ Recovery kit downloaded (.txt)" });
                     }}
                   >
                     <Download className="h-3 w-3 mr-1" /> Download (.txt)
@@ -3228,6 +3225,14 @@ const VaultManager: React.FC = () => {
                   const result = generateRecoveryMnemonic();
                   setRecoveryMnemonic(result.mnemonic);
                   setUnlockInputPassphrase(result.mnemonic);
+                  downloadRecoveryKit({
+                    passphrase: result.mnemonic,
+                    projectName: project?.name || "Project",
+                    projectId,
+                    workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                    scope: passphraseScope === "workspace" ? "workspace" : "project"
+                  });
+                  setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
                 }}
               >
                 <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase

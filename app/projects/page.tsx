@@ -35,7 +35,7 @@ import {
   ShieldAlert
 } from "lucide-react";
 import { useWorkspaceVault } from "@/hooks/useWorkspaceVault";
-import { generateRecoveryMnemonic } from "@/lib/crypto/e2ee";
+import { generateRecoveryMnemonic, downloadRecoveryKit } from "@/lib/crypto/e2ee";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -377,11 +377,22 @@ export default function ProjectsPage() {
                 <Input
                   id="ws-passphrase"
                   type="password"
-                  placeholder="Enter master passphrase or 24-word recovery phrase..."
+                  placeholder="Enter or paste master passphrase or 24-word recovery phrase..."
                   value={wsPassphraseInput}
                   onChange={(e) => {
                     setWsPassphraseInput(e.target.value);
                     setWsUnlockError(null);
+                  }}
+                  onPaste={(e) => {
+                    const pasted = e.clipboardData.getData("text")?.trim();
+                    if (pasted && pasted.length >= 6) {
+                      downloadRecoveryKit({
+                        passphrase: pasted,
+                        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                        scope: "workspace"
+                      });
+                      toast.success("✓ Pasted key detected — recovery kit auto-downloaded (.txt)");
+                    }
                   }}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && wsPassphraseInput.trim()) {
@@ -429,30 +440,12 @@ export default function ProjectsPage() {
                         variant="ghost"
                         className="h-7 text-xs text-primary"
                         onClick={() => {
-                          const content = [
-                            "====================================================",
-                            "  XtraSecurity Workspace Master Vault Recovery Kit",
-                            "====================================================",
-                            "",
-                            `Workspace: ${selectedWorkspace?.name || "Workspace"} (${selectedWorkspace?.id || "N/A"})`,
-                            `Generated At: ${new Date().toISOString()}`,
-                            "",
-                            "24-WORD RECOVERY PASSPHRASE:",
-                            wsRecoveryMnemonic,
-                            "",
-                            "SECURITY NOTICE:",
-                            "- Derives unique project keys for all projects under this workspace.",
-                            "- XtraSecurity servers NEVER store or receive this phrase (Zero-Knowledge).",
-                            "- Save this securely in a password manager (Bitwarden, 1Password, etc.)."
-                          ].join("\n");
-                          const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
-                          const url = URL.createObjectURL(blob);
-                          const a = document.createElement("a");
-                          a.href = url;
-                          a.download = `xtra-workspace-recovery-kit-${(selectedWorkspace?.name || "workspace").toLowerCase().replace(/[^a-z0-9]/g, "-")}.txt`;
-                          a.click();
-                          URL.revokeObjectURL(url);
-                          toast.success("Recovery kit downloaded");
+                          downloadRecoveryKit({
+                            passphrase: wsRecoveryMnemonic,
+                            workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                            scope: "workspace"
+                          });
+                          toast.success("Recovery kit downloaded (.txt)");
                         }}
                       >
                         <Download className="h-3 w-3 mr-1" /> Download (.txt)
@@ -476,6 +469,12 @@ export default function ProjectsPage() {
                       const result = generateRecoveryMnemonic();
                       setWsRecoveryMnemonic(result.mnemonic);
                       setWsPassphraseInput(result.mnemonic);
+                      downloadRecoveryKit({
+                        passphrase: result.mnemonic,
+                        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                        scope: "workspace"
+                      });
+                      toast.success("✓ Generated 24-word phrase & auto-downloaded recovery kit (.txt)");
                     }}
                   >
                     <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Phrase

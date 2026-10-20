@@ -5,7 +5,7 @@
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { WorkspaceVaultProvider, useWorkspaceVault, STORAGE_PREFIX } from "@/hooks/useWorkspaceVault";
-import { deriveProjectKey, encryptSecretValue, decryptSecretValue } from "@/lib/crypto/e2ee";
+import { deriveProjectKey, encryptSecretValue, decryptSecretValue, downloadRecoveryKit } from "@/lib/crypto/e2ee";
 
 // Mock useGlobalContext
 const mockWorkspace = { id: "ws_test_enterprise_123", name: "Enterprise Workspace" };
@@ -162,4 +162,28 @@ describe("Workspace-Level Master Vault Passphrase System", () => {
     expect(revertedStatus.source).toBe("workspace");
     expect(revertedStatus.passphrase).toBe("company-workspace-passphrase");
   });
+
+  it("7. downloadRecoveryKit generates zero-knowledge recovery text file and triggers browser download", () => {
+    const mockCreateObjectURL = jest.fn(() => "blob:mock-url");
+    const mockRevokeObjectURL = jest.fn();
+    window.URL.createObjectURL = mockCreateObjectURL;
+    window.URL.revokeObjectURL = mockRevokeObjectURL;
+
+    const clickSpy = jest.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(() => {});
+
+    const success = downloadRecoveryKit({
+      passphrase: "apple banana cherry date elderberry fig grape hazelnut iris jungle kiwi lemon mango nectarine orange papaya quince raspberry strawberry tangerine umbrella vanilla walnut youth",
+      projectName: "Production Backend",
+      projectId: "proj_prod_001",
+      workspaceName: "SmartTech Enterprise",
+      scope: "project"
+    });
+
+    expect(success).toBe(true);
+    expect(mockCreateObjectURL).toHaveBeenCalled();
+    expect(clickSpy).toHaveBeenCalled();
+
+    clickSpy.mockRestore();
+  });
 });
+
