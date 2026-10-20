@@ -45,68 +45,68 @@ export const api = {
   },
   // Placeholders for future methods
   getSecrets: async (projectId: string, env: string, branch: string = "main", passphrase?: string, ephemeralToken?: string | null, workloadEnvelope?: any) => {
-     const response = await getClient(ephemeralToken).get(`/projects/${projectId}/envs/${env}/secrets?branch=${branch}`);
-     const secrets = response.data;
-     
-     if (secrets && typeof secrets === 'object') {
-       let projectKey: string | null = null;
-       const { deriveProjectKey, decryptSecretValue, resolveVaultPassphrase, decryptWorkloadKeyEnvelope } = require("./crypto");
+    const response = await getClient(ephemeralToken).get(`/projects/${projectId}/envs/${env}/secrets?branch=${branch}`);
+    const secrets = response.data;
 
-       for (const [k, v] of Object.entries(secrets)) {
-         if (typeof v === 'string' && v.startsWith('{')) {
-           try {
-             const parsed = JSON.parse(v);
-             if (parsed.ciphertext && parsed.iv) {
-               if (!projectKey) {
-                 // Phase 3: Workload Key Envelope decryption
-                 if (workloadEnvelope && process.env.XTRA_WORKLOAD_PRIVATE_KEY) {
-                   projectKey = decryptWorkloadKeyEnvelope(workloadEnvelope, process.env.XTRA_WORKLOAD_PRIVATE_KEY);
-                 } else {
-                   const activePassphrase = resolveVaultPassphrase(passphrase, projectId);
-                   projectKey = deriveProjectKey(projectId, activePassphrase);
-                 }
-               }
-               secrets[k] = decryptSecretValue(parsed, projectKey);
-             }
-           } catch (err: any) {
-             // If JSON parse fails, it's just a string that happens to start with {
-             // If resolveVaultPassphrase or decryptSecretValue throws, we should fail loudly!
-             if (err.message && err.message.includes('Zero-Knowledge')) {
-               throw err;
-             }
-           }
-         }
-       }
-     }
-     
-     return secrets;
-  },
-  getSecretVersions: async (projectId: string, env: string, branch: string = "main") => {
-      const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets?includeVersions=true&branch=${branch}`);
-      return response.data;
-  },
-  setSecrets: async (projectId: string, env: string, secrets: Record<string, string>, expectedVersions?: Record<string, string>, branch: string = "main") => {
-      // Zero-Knowledge E2EE: Encrypt plaintext before sending
-      const { deriveProjectKey, encryptSecretValue, resolveVaultPassphrase } = require("./crypto");
-      const activePassphrase = resolveVaultPassphrase(undefined, projectId);
-      const projectKey = deriveProjectKey(projectId, activePassphrase);
+    if (secrets && typeof secrets === 'object') {
+      let projectKey: string | null = null;
+      const { deriveProjectKey, decryptSecretValue, resolveVaultPassphrase, decryptWorkloadKeyEnvelope } = require("./crypto");
 
-      const encryptedSecrets: Record<string, string> = {};
-      for (const [key, val] of Object.entries(secrets)) {
-        if (typeof val === "string" && val.startsWith("{") && val.includes("ciphertext")) {
-          encryptedSecrets[key] = val; // Already encrypted
-        } else {
-          const enc = encryptSecretValue(val, projectKey);
-          encryptedSecrets[key] = JSON.stringify(enc);
+      for (const [k, v] of Object.entries(secrets)) {
+        if (typeof v === 'string' && v.startsWith('{')) {
+          try {
+            const parsed = JSON.parse(v);
+            if (parsed.ciphertext && parsed.iv) {
+              if (!projectKey) {
+                // Phase 3: Workload Key Envelope decryption
+                if (workloadEnvelope && process.env.XTRA_WORKLOAD_PRIVATE_KEY) {
+                  projectKey = decryptWorkloadKeyEnvelope(workloadEnvelope, process.env.XTRA_WORKLOAD_PRIVATE_KEY);
+                } else {
+                  const activePassphrase = resolveVaultPassphrase(passphrase, projectId);
+                  projectKey = deriveProjectKey(projectId, activePassphrase);
+                }
+              }
+              secrets[k] = decryptSecretValue(parsed, projectKey);
+            }
+          } catch (err: any) {
+            // If JSON parse fails, it's just a string that happens to start with {
+            // If resolveVaultPassphrase or decryptSecretValue throws, we should fail loudly!
+            if (err.message && err.message.includes('Zero-Knowledge')) {
+              throw err;
+            }
+          }
         }
       }
+    }
 
-      const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets`, { secrets: encryptedSecrets, expectedVersions, branch });
-      return response.data;
+    return secrets;
+  },
+  getSecretVersions: async (projectId: string, env: string, branch: string = "main") => {
+    const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets?includeVersions=true&branch=${branch}`);
+    return response.data;
+  },
+  setSecrets: async (projectId: string, env: string, secrets: Record<string, string>, expectedVersions?: Record<string, string>, branch: string = "main") => {
+    // Zero-Knowledge E2EE: Encrypt plaintext before sending
+    const { deriveProjectKey, encryptSecretValue, resolveVaultPassphrase } = require("./crypto");
+    const activePassphrase = resolveVaultPassphrase(undefined, projectId);
+    const projectKey = deriveProjectKey(projectId, activePassphrase);
+
+    const encryptedSecrets: Record<string, string> = {};
+    for (const [key, val] of Object.entries(secrets)) {
+      if (typeof val === "string" && val.startsWith("{") && val.includes("ciphertext")) {
+        encryptedSecrets[key] = val; // Already encrypted
+      } else {
+        const enc = encryptSecretValue(val, projectKey);
+        encryptedSecrets[key] = JSON.stringify(enc);
+      }
+    }
+
+    const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets`, { secrets: encryptedSecrets, expectedVersions, branch });
+    return response.data;
   },
   getSecretDetails: async (projectId: string, env: string, key: string, branch: string = "main") => {
-      const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets/${key}?branch=${branch}`);
-      return response.data;
+    const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets/${key}?branch=${branch}`);
+    return response.data;
   },
   // Phase 3: Zero-Knowledge E2EE endpoints
   getSecretsV2: async (projectId: string, branchId?: string) => {
@@ -159,98 +159,98 @@ export const api = {
     return response.data;
   },
   syncLogs: async (logs: any[]) => {
-      const response = await getClient().post("/audit/cli-logs", { logs });
-      return response.data;
+    const response = await getClient().post("/audit/cli-logs", { logs });
+    return response.data;
   },
   linkSecret: async (projectId: string, env: string, key: string, sourceProjectId: string, sourceEnv: string, sourceKey: string) => {
-      const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/link`, {
-          key,
-          sourceProjectId,
-          sourceEnv,
-          sourceKey
-      });
-      return response.data;
+    const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/link`, {
+      key,
+      sourceProjectId,
+      sourceEnv,
+      sourceKey
+    });
+    return response.data;
   },
   rotateSecret: async (projectId: string, env: string, key: string, strategy: string, parsedNewValue?: string) => {
-      const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/${key}/rotate`, {
-          strategy,
-          parsedNewValue
-      });
-      return response.data;
+    const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/${key}/rotate`, {
+      strategy,
+      parsedNewValue
+    });
+    return response.data;
   },
   promoteSecret: async (projectId: string, env: string, key: string) => {
-      const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/${key}/promote`, {});
-      return response.data;
+    const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets/${key}/promote`, {});
+    return response.data;
   },
   verifyAuditLogs: async () => {
-      const response = await getClient().get("/audit/verify");
-      return response.data;
+    const response = await getClient().get("/audit/verify");
+    return response.data;
   },
   exportAuditLogs: async (format: "json" | "csv", start?: string, end?: string, projectId?: string) => {
-      const body: any = { format };
-      if (start) body.startDate = start;
-      if (end) body.endDate = end;
-      if (projectId) body.projectId = projectId;
+    const body: any = { format };
+    if (start) body.startDate = start;
+    if (end) body.endDate = end;
+    if (projectId) body.projectId = projectId;
 
-      const response = await getClient().post("/audit/export", body, { responseType: format === "csv" ? "text" : "json" });
-      return response.data;
+    const response = await getClient().post("/audit/export", body, { responseType: format === "csv" ? "text" : "json" });
+    return response.data;
   },
   // JIT Access
   requestAccess: async (projectId: string, reason: string, duration: number, secretId?: string) => {
-      const response = await getClient().post("/access/request", { projectId, secretId, reason, duration });
-      return response.data;
+    const response = await getClient().post("/access/request", { projectId, secretId, reason, duration });
+    return response.data;
   },
   approveAccess: async (requestId: string, decision: "approved" | "rejected") => {
-      const response = await getClient().post("/access/approve", { requestId, decision });
-      return response.data;
+    const response = await getClient().post("/access/approve", { requestId, decision });
+    return response.data;
   },
   listAccessRequests: async (mode: "my" | "pending") => {
-      const { workspace } = getConfig();
-      const workspaceParam = workspace ? `&workspaceId=${workspace}` : "";
-      const response = await getClient().get(`/access/list?mode=${mode}${workspaceParam}`);
-      return response.data;
+    const { workspace } = getConfig();
+    const workspaceParam = workspace ? `&workspaceId=${workspace}` : "";
+    const response = await getClient().get(`/access/list?mode=${mode}${workspaceParam}`);
+    return response.data;
   },
   getAccessRequestStatus: async (requestId: string) => {
-      const response = await getClient().get(`/access/request?id=${requestId}`);
-      return response.data;
+    const response = await getClient().get(`/access/request?id=${requestId}`);
+    return response.data;
   },
   // Project Management
   getProjects: async () => {
-      const { workspace } = getConfig();
-      const url = workspace ? `/project?workspaceId=${workspace}` : "/project";
-      const response = await getClient().get(url);
-      return response.data;
+    const { workspace } = getConfig();
+    const url = workspace ? `/project?workspaceId=${workspace}` : "/project";
+    const response = await getClient().get(url);
+    return response.data;
   },
   // Branch Management
   getBranches: async (projectId: string) => {
-      const response = await getClient().get(`/branch?projectId=${projectId}`);
-      return response.data;
+    const response = await getClient().get(`/branch?projectId=${projectId}`);
+    return response.data;
   },
   createBranch: async (projectId: string, name: string, description?: string) => {
-      const response = await getClient().post("/branch", { projectId, name, description });
-      return response.data;
+    const response = await getClient().post("/branch", { projectId, name, description });
+    return response.data;
   },
   deleteBranch: async (branchId: string) => {
-     const response = await getClient().delete(`/branch/${branchId}`);
-     return response.data;
+    const response = await getClient().delete(`/branch/${branchId}`);
+    return response.data;
   },
   updateBranch: async (branchId: string, updates: { name?: string, description?: string }) => {
-      const response = await getClient().put("/branch", { id: branchId, ...updates });
-      return response.data;
+    const response = await getClient().put("/branch", { id: branchId, ...updates });
+    return response.data;
   },
   // Admin - Role Management
   getRoles: async () => {
-      const response = await getClient().get("/admin/roles");
-      return response.data;
+    const response = await getClient().get("/admin/roles");
+    return response.data;
   },
   getUsers: async (teamId?: string) => {
-      const params = teamId ? `?teamId=${teamId}` : "";
-      const response = await getClient().get(`/admin/users${params}`);
-      return response.data;
+    const params = teamId ? `?teamId=${teamId}` : "";
+    const response = await getClient().get(`/admin/users${params}`);
+    return response.data;
   },
   setUserRole: async (email: string, role: string, teamId?: string) => {
-      const response = await getClient().put("/admin/users/role", { email, role, teamId });
-      return response.data;
+    const response = await getClient().put("/admin/users/role", { email, role, teamId });
+    return response.data;
   },
   // Integrations
   getIntegrationStatus: async (provider: string) => {
@@ -270,7 +270,7 @@ export const api = {
     const response = await getClient().get(`/projects/${projectId}/kubernetes?${query}`);
     return response.data; // This returns the YAML string directly
   },
-  
+
   // Advanced Features
   getSecretHistory: async (projectId: string, env: string, key: string) => {
     const response = await getClient().get(`/projects/${projectId}/envs/${env}/secrets/${key}/history`);
@@ -307,7 +307,7 @@ export const api = {
     const response = await getClient().get(`/jit/${token}`);
     return response.data;
   },
-  
+
   // Service Account Management
   getServiceAccounts: async (projectId: string) => {
     const response = await getClient().get(`/projects/${projectId}/service-accounts`);

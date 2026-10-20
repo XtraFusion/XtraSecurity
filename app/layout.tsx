@@ -69,8 +69,8 @@ export default async function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" 
         />
         <style>{`
-html {
-  font-family: ${inter.style.fontFamily};
+html, body, button, input, select, textarea {
+  font-family: ${inter.style.fontFamily}, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-sans: ${inter.variable};
   --font-mono: ${GeistMono.variable};
   --font-space-grotesk: ${spaceGrotesk.style.fontFamily};
@@ -101,7 +101,7 @@ html {
 
       </head>
 
-      <body>
+      <body className={`${inter.className} font-sans antialiased selection:bg-cyan-500/20 selection:text-cyan-200`}>
         <Provider>
           <UserProvider>
             <WorkspaceVaultProvider>

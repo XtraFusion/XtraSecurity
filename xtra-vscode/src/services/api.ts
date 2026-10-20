@@ -138,6 +138,7 @@ export class XtraApiService {
         
         if (secrets && typeof secrets === 'object') {
             let projectKey: string | null = null;
+            let triedFallback = false;
             
             for (const [k, v] of Object.entries(secrets)) {
                 if (typeof v === 'string' && v.startsWith('{') && v.includes('ciphertext')) {
@@ -148,7 +149,20 @@ export class XtraApiService {
                                 const vaultPassphrase = await this.getVaultPassphrase(projectId);
                                 projectKey = deriveProjectKey(projectId, vaultPassphrase);
                             }
-                            secrets[k] = decryptSecretValue(parsed, projectKey);
+                            try {
+                                secrets[k] = decryptSecretValue(parsed, projectKey);
+                            } catch (decErr) {
+                                if (!triedFallback) {
+                                    try {
+                                        const defaultKey = deriveProjectKey(projectId, "xtra-zero-knowledge-master");
+                                        secrets[k] = decryptSecretValue(parsed, defaultKey);
+                                        projectKey = defaultKey;
+                                        triedFallback = true;
+                                        continue;
+                                    } catch (_) {}
+                                }
+                                throw decErr;
+                            }
                         }
                     } catch (err: any) {
                         if (err.message && err.message.includes('Zero-Knowledge')) {

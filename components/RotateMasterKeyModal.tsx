@@ -15,18 +15,37 @@ interface RotateMasterKeyModalProps {
   isOpen: boolean;
   onClose: () => void;
   projectId: string;
+  projectName?: string;
+  initialNewPassphrase?: string;
   onSuccess: (newPassphrase: string) => void;
 }
 
-export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: RotateMasterKeyModalProps) {
+export function RotateMasterKeyModal({
+  isOpen,
+  onClose,
+  projectId,
+  projectName = "this project",
+  initialNewPassphrase = "",
+  onSuccess
+}: RotateMasterKeyModalProps) {
   const [currentPassphrase, setCurrentPassphrase] = useState("");
-  const [newPassphrase, setNewPassphrase] = useState("");
-  const [confirmPassphrase, setConfirmPassphrase] = useState("");
+  const [newPassphrase, setNewPassphrase] = useState(initialNewPassphrase);
+  const [confirmPassphrase, setConfirmPassphrase] = useState(initialNewPassphrase);
+  const [targetScope, setTargetScope] = useState<"project" | "workspace">("project");
+  const [rememberDevice, setRememberDevice] = useState(true);
   const [isRotating, setIsRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<string | null>(null);
 
   const { selectedWorkspace } = useGlobalContext();
+
+  // Sync initial phrase if passed
+  React.useEffect(() => {
+    if (initialNewPassphrase) {
+      setNewPassphrase(initialNewPassphrase);
+      setConfirmPassphrase(initialNewPassphrase);
+    }
+  }, [initialNewPassphrase]);
 
   const handleGenerate = () => {
     const result = generateRecoveryMnemonic();
@@ -62,6 +81,7 @@ export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: 
 
       if (rawSecrets.length === 0) {
         setProgress("No secrets found. Updating master key...");
+        persistRotatedKey(newPassphrase);
         onSuccess(newPassphrase);
         onClose();
         setIsRotating(false);
@@ -158,8 +178,7 @@ export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: 
 
       setProgress("Rotation successful!");
       
-      // Update local storage for project (and workspace if applicable)
-      sessionStorage.setItem(`xtra_vault_${projectId}`, newPassphrase);
+      persistRotatedKey(newPassphrase);
       
       onSuccess(newPassphrase);
       onClose();
@@ -168,18 +187,47 @@ export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: 
     } finally {
       setIsRotating(false);
     }
-  }
+  };
+
+  const persistRotatedKey = (pass: string) => {
+    if (typeof window === "undefined") return;
+
+    // Save project-specific key
+    sessionStorage.setItem(`xtra_vault_${projectId}`, pass);
+    if (rememberDevice) {
+      localStorage.setItem(`xtra_vault_${projectId}`, pass);
+    } else {
+      localStorage.removeItem(`xtra_vault_${projectId}`);
+    }
+
+    // If workspace scope chosen, also apply as workspace master key
+    if (targetScope === "workspace") {
+      const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+      if (wsId) {
+        sessionStorage.setItem(`xtra_ws_vault_${wsId}`, pass);
+        if (rememberDevice) {
+          localStorage.setItem(`xtra_ws_vault_${wsId}`, pass);
+          localStorage.setItem("xtra_global_vault_passphrase", pass);
+        } else {
+          localStorage.removeItem(`xtra_ws_vault_${wsId}`);
+        }
+      }
+      window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { workspaceId: wsId, scope: "workspace" } }));
+    } else {
+      window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { projectId, scope: "project" } }));
+    }
+  };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 text-primary" />
             Rotate Master Passphrase
           </DialogTitle>
           <DialogDescription>
-            This action will decrypt all secrets in this project and re-encrypt them with your new master passphrase.
+            This action will decrypt all secrets in {projectName} and re-encrypt them with your new master passphrase.
           </DialogDescription>
         </DialogHeader>
 
@@ -190,50 +238,119 @@ export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: 
           </Alert>
         )}
 
-        <form onSubmit={handleRotate} className="space-y-4 py-4">
+        <form onSubmit={handleRotate} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label>Current Master Passphrase</Label>
+            <Label className="text-xs font-semibold">Current Master Passphrase</Label>
             <Input
               type="password"
-              placeholder="Enter current passphrase"
+              placeholder="Enter current passphrase to decrypt existing secrets..."
               value={currentPassphrase}
               onChange={(e) => setCurrentPassphrase(e.target.value)}
               required
+              className="font-mono text-sm"
+              autoFocus
             />
           </div>
 
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <Label>New Master Passphrase</Label>
+              <Label className="text-xs font-semibold">New Master Passphrase or Mnemonic</Label>
               <Button type="button" variant="ghost" size="sm" onClick={handleGenerate} className="h-6 text-xs px-2 text-primary">
-                Generate Secure Phrase
+                <Key className="h-3 w-3 mr-1" /> Generate 24-Word Phrase
               </Button>
             </div>
             <Input
               type="password"
-              placeholder="Enter new passphrase"
+              placeholder="Enter or generate new passphrase..."
               value={newPassphrase}
               onChange={(e) => setNewPassphrase(e.target.value)}
               required
+              className="font-mono text-sm"
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Confirm New Passphrase</Label>
+            <Label className="text-xs font-semibold">Confirm New Passphrase</Label>
             <Input
               type="password"
-              placeholder="Confirm new passphrase"
+              placeholder="Confirm new passphrase..."
               value={confirmPassphrase}
               onChange={(e) => setConfirmPassphrase(e.target.value)}
               required
+              className="font-mono text-sm"
             />
           </div>
 
-          <DialogFooter className="pt-4">
-            <Button type="button" variant="ghost" onClick={onClose} disabled={isRotating}>
+          {/* Key Scope Selection */}
+          <div className="space-y-2 pt-2 border-t">
+            <Label className="text-xs font-semibold">Passphrase Scope</Label>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+              <label
+                className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                  targetScope === "project"
+                    ? "border-primary bg-primary/5 text-foreground"
+                    : "border-border hover:border-primary/40 text-muted-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="project"
+                    checked={targetScope === "project"}
+                    onChange={() => setTargetScope("project")}
+                    className="text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-foreground">Project Only (Isolated)</span>
+                </div>
+                <span className="text-[11px] text-muted-foreground mt-1 ml-5">
+                  Re-encrypts this project. Other projects in the workspace remain unaffected.
+                </span>
+              </label>
+
+              <label
+                className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                  targetScope === "workspace"
+                    ? "border-primary bg-primary/5 text-foreground"
+                    : "border-border hover:border-primary/40 text-muted-foreground"
+                }`}
+              >
+                <div className="flex items-center gap-2">
+                  <input
+                    type="radio"
+                    name="scope"
+                    value="workspace"
+                    checked={targetScope === "workspace"}
+                    onChange={() => setTargetScope("workspace")}
+                    className="text-primary focus:ring-primary"
+                  />
+                  <span className="font-semibold text-foreground">Workspace Master</span>
+                </div>
+                <span className="text-[11px] text-muted-foreground mt-1 ml-5">
+                  Applies this key as the Workspace Master Key for all projects in this workspace.
+                </span>
+              </label>
+            </div>
+          </div>
+
+          <div className="flex items-center space-x-2 pt-1">
+            <input
+              type="checkbox"
+              id="rotate-remember-device"
+              checked={rememberDevice}
+              onChange={(e) => setRememberDevice(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-gray-300 text-primary focus:ring-primary cursor-pointer"
+            />
+            <label htmlFor="rotate-remember-device" className="text-[11px] text-muted-foreground cursor-pointer select-none">
+              Remember on this device across browser sessions
+            </label>
+          </div>
+
+          <DialogFooter className="pt-3">
+            <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isRotating}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isRotating}>
+            <Button type="submit" size="sm" disabled={isRotating}>
               {isRotating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -242,7 +359,7 @@ export function RotateMasterKeyModal({ isOpen, onClose, projectId, onSuccess }: 
               ) : (
                 <>
                   <Check className="mr-2 h-4 w-4" />
-                  Rotate Passphrase
+                  Rotate & Re-encrypt
                 </>
               )}
             </Button>

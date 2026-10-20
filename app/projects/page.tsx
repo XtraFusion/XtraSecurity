@@ -83,7 +83,7 @@ export default function ProjectsPage() {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
 
   // Workspace Master Vault State
-  const { isWorkspaceUnlocked, unlockWorkspace, lockWorkspace } = useWorkspaceVault();
+  const { isWorkspaceUnlocked, unlockWorkspace, lockWorkspace, getProjectVaultStatus } = useWorkspaceVault();
   const [isWsUnlockModalOpen, setIsWsUnlockModalOpen] = useState(false);
   const [wsPassphraseInput, setWsPassphraseInput] = useState("");
   const [wsRememberDevice, setWsRememberDevice] = useState(true);
@@ -533,10 +533,20 @@ export default function ProjectsPage() {
                 <CardHeader className={viewMode === "list" ? "flex-1 pb-6" : "pb-4"}>
                   <div className="flex justify-between items-start">
                     <div className="space-y-1.5 min-w-0">
-                      <div className="flex items-center gap-2 min-w-0">
+                      <div className="flex items-center gap-2 min-w-0 flex-wrap">
                         <CardTitle className="text-lg font-semibold truncate min-w-0">{project.name}</CardTitle>
                         {project.status === 'archived' && <Badge variant="secondary" className="text-[10px] shrink-0">Archived</Badge>}
                         {project.isBlocked && <Badge variant="destructive" className="text-[10px] shrink-0">Blocked</Badge>}
+                        {(() => {
+                          const status = getProjectVaultStatus ? getProjectVaultStatus(project.id) : null;
+                          if (status?.isDedicatedProjectKey) {
+                            return <Badge variant="outline" className="text-[10px] bg-purple-500/10 text-purple-600 dark:text-purple-400 border-purple-500/30 shrink-0">Custom Key</Badge>;
+                          }
+                          if (status?.isUnlocked && status.source === "workspace") {
+                            return <Badge variant="outline" className="text-[10px] bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30 shrink-0">Workspace Master</Badge>;
+                          }
+                          return null;
+                        })()}
                       </div>
                       <CardDescription className="line-clamp-2 min-h-[40px] text-sm">
                         {project.description || "No description provided for this project."}

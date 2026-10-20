@@ -118,4 +118,48 @@ describe("Workspace-Level Master Vault Passphrase System", () => {
     // All 50 derived keys must be distinct
     expect(derivedKeys.size).toBe(projectCount);
   });
+
+  it("6. Explicit project-specific key management (setProjectPassphrase & clearProjectPassphrase)", () => {
+    const { result } = renderHook(() => useWorkspaceVault(), { wrapper });
+
+    act(() => {
+      result.current.unlockWorkspace("company-workspace-passphrase", true);
+    });
+
+    // Check status before setting dedicated key: inherits from workspace
+    const initialStatus = result.current.getProjectVaultStatus("proj_custom_101");
+    expect(initialStatus.isUnlocked).toBe(true);
+    expect(initialStatus.isDedicatedProjectKey).toBe(false);
+    expect(initialStatus.source).toBe("workspace");
+    expect(initialStatus.passphrase).toBe("company-workspace-passphrase");
+
+    // Set dedicated project key
+    act(() => {
+      result.current.setProjectPassphrase("proj_custom_101", "isolated-project-secret-key", true);
+    });
+
+    // Status after setting dedicated key: now dedicated project key
+    const customStatus = result.current.getProjectVaultStatus("proj_custom_101");
+    expect(customStatus.isUnlocked).toBe(true);
+    expect(customStatus.isDedicatedProjectKey).toBe(true);
+    expect(customStatus.source).toBe("project");
+    expect(customStatus.passphrase).toBe("isolated-project-secret-key");
+
+    // Verify workspace passphrase for other projects did NOT change
+    const otherStatus = result.current.getProjectVaultStatus("proj_other_202");
+    expect(otherStatus.isDedicatedProjectKey).toBe(false);
+    expect(otherStatus.passphrase).toBe("company-workspace-passphrase");
+
+    // Revert/clear project key back to workspace key
+    act(() => {
+      result.current.clearProjectPassphrase("proj_custom_101");
+    });
+
+    // Project seamlessly falls back to workspace master key
+    const revertedStatus = result.current.getProjectVaultStatus("proj_custom_101");
+    expect(revertedStatus.isUnlocked).toBe(true);
+    expect(revertedStatus.isDedicatedProjectKey).toBe(false);
+    expect(revertedStatus.source).toBe("workspace");
+    expect(revertedStatus.passphrase).toBe("company-workspace-passphrase");
+  });
 });

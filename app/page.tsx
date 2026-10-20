@@ -458,12 +458,13 @@ function Navbar() {
       </Link>
 
       {/* Desktop Nav */}
-      <ul className="hidden md:flex items-center gap-1 list-none">
+      <ul className="hidden md:flex items-center gap-1 list-none p-0 m-0">
         {NAV_LINKS.map((l) => (
           <li key={l.href}>
             <button
               onClick={() => handleNav(l.href)}
-              className="px-4 py-2 rounded-lg text-sm font-semibold text-slate-400 hover:text-white hover:bg-white/[0.06] transition-all cursor-pointer bg-transparent border-none font-[inherit]"
+              className="px-3.5 py-1.5 rounded-lg text-[13.5px] font-medium text-slate-300 hover:text-white hover:bg-white/[0.08] active:scale-[0.98] transition-all duration-200 cursor-pointer bg-transparent border-none tracking-normal font-sans"
+              style={{ fontFamily: "var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
             >
               {l.label}
             </button>
@@ -521,7 +522,8 @@ function Navbar() {
               <button
                 key={l.href}
                 onClick={() => handleNav(l.href)}
-                className="px-4 py-3 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.06] text-left transition-all cursor-pointer bg-transparent border-none font-[inherit]"
+                className="px-4 py-2.5 rounded-lg text-sm font-medium text-slate-300 hover:text-white hover:bg-white/[0.08] text-left transition-all cursor-pointer bg-transparent border-none font-sans"
+                style={{ fontFamily: "var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
               >
                 {l.label}
               </button>
@@ -1602,7 +1604,8 @@ function Footer() {
               <button
                 key={l.href}
                 onClick={() => handleNav(l.href)}
-                className="px-3 py-2 text-sm text-slate-500 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none font-[inherit]"
+                className="px-3 py-1.5 text-xs font-medium text-slate-400 hover:text-slate-200 transition-colors cursor-pointer bg-transparent border-none font-sans"
+                style={{ fontFamily: "var(--font-inter), system-ui, -apple-system, BlinkMacSystemFont, sans-serif" }}
               >
                 {l.label}
               </button>
