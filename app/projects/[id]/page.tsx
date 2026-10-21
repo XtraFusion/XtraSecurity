@@ -537,21 +537,40 @@ const VaultManager: React.FC = () => {
     return false;
   });
 
+  // Check if workspace master key already exists across storage & context
+  const existingWorkspaceKey = React.useMemo(() => {
+    if (typeof window === "undefined") return "";
+    const wsId = project?.workspaceId || selectedWorkspace?.id || selectedWorkspace?.value;
+    if (wsId) {
+      const wsKey = sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`);
+      if (wsKey) return wsKey;
+    }
+    return (
+      workspacePassphrase ||
+      sessionStorage.getItem("xtra_global_vault_passphrase") ||
+      localStorage.getItem("xtra_global_vault_passphrase") ||
+      ""
+    );
+  }, [project?.workspaceId, selectedWorkspace, workspacePassphrase]);
+
   // Sync with workspace master key if individual project key not explicitly set
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const hasProjKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
       if (hasProjKey) {
+        setVaultPassphrase(hasProjKey);
+        setIsVaultUnlocked(true);
         setIsDedicatedProjectKey(true);
         setIsUnlockedViaWorkspace(false);
-      } else if (workspacePassphrase) {
-        setVaultPassphrase(workspacePassphrase);
+      } else if (existingWorkspaceKey) {
+        // Automatic unlock via existing Workspace Master Key for new and existing projects!
+        setVaultPassphrase(existingWorkspaceKey);
         setIsVaultUnlocked(true);
         setIsUnlockedViaWorkspace(true);
         setIsDedicatedProjectKey(false);
       }
     }
-  }, [workspacePassphrase, projectId]);
+  }, [existingWorkspaceKey, projectId]);
 
   const [isUnlockModalOpen, setIsUnlockModalOpen] = React.useState(false);
   const [isRotateKeyModalOpen, setIsRotateKeyModalOpen] = React.useState(false);
@@ -895,9 +914,9 @@ const VaultManager: React.FC = () => {
           setIsDedicatedProjectKey(true);
           setIsUnlockedViaWorkspace(false);
         } else {
-          // Apply as Workspace Master Key
-          setProjectPassphrase(projectId as string, inputKey, rememberDevice);
-          const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+          // Apply as Workspace Master Key: clear any project override so it seamlessly tracks the workspace key
+          clearProjectPassphrase(projectId as string);
+          const wsId = selectedWorkspace?.id || selectedWorkspace?.value || project?.workspaceId;
           if (wsId) {
             sessionStorage.setItem(`xtra_ws_vault_${wsId}`, inputKey);
             if (rememberDevice) {
@@ -1690,16 +1709,14 @@ const VaultManager: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={() => {
-                  setPassphraseScope("project");
-                  setUnlockInputPassphrase("");
-                  setUnlockError(null);
-                  setIsUnlockModalOpen(true);
+                  setRotateInitialPhrase("");
+                  setIsRotateKeyModalOpen(true);
                 }}
-                className="text-xs text-purple-600 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/10"
-                title="Assign a dedicated passphrase for this project only"
+                className="text-xs text-purple-600 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/10 font-medium"
+                title="Decouple this project from the Workspace Master Key and assign a dedicated project key"
               >
                 <Key className="h-3.5 w-3.5 mr-1.5" />
-                Set Project Key
+                Decouple to Project Key
               </Button>
             )}
 
@@ -1719,7 +1736,7 @@ const VaultManager: React.FC = () => {
                 variant="outline"
                 onClick={() => {
                   setUnlockError(null);
-                  setPassphraseScope("project");
+                  setPassphraseScope(existingWorkspaceKey ? "project" : "workspace");
                   setIsUnlockModalOpen(true);
                 }}
                 className="border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 font-medium"
@@ -1952,6 +1969,7 @@ const VaultManager: React.FC = () => {
                 size="sm"
                 onClick={() => {
                   setUnlockError(null);
+                  setPassphraseScope(existingWorkspaceKey ? "project" : "workspace");
                   setIsUnlockModalOpen(true);
                 }}
                 className="bg-amber-600 hover:bg-amber-700 text-white shrink-0"
@@ -1988,6 +2006,7 @@ const VaultManager: React.FC = () => {
                         isCopied={copiedSecret === secret.id}
                         onUnlockVault={() => {
                           setUnlockError(null);
+                          setPassphraseScope(existingWorkspaceKey ? "project" : "workspace");
                           setIsUnlockModalOpen(true);
                         }}
                         onEdit={() => {
@@ -2064,6 +2083,7 @@ const VaultManager: React.FC = () => {
                                   className="h-8 text-xs border-amber-500/40 text-amber-600 bg-amber-500/10 hover:bg-amber-500/20"
                                   onClick={() => {
                                     setUnlockError(null);
+                                    setPassphraseScope(existingWorkspaceKey ? "project" : "workspace");
                                     setIsUnlockModalOpen(true);
                                   }}
                                 >
@@ -3036,6 +3056,25 @@ const VaultManager: React.FC = () => {
         className="max-w-lg"
       >
         <div className="space-y-4 mt-2">
+          {existingWorkspaceKey && (
+            <div className="flex items-center justify-between p-3 rounded-lg border border-blue-500/30 bg-blue-500/10 text-blue-950 dark:text-blue-200">
+              <div className="flex items-center gap-2.5">
+                <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
+                <div>
+                  <p className="text-xs font-semibold">Active Workspace Master Key Detected</p>
+                  <p className="text-[11px] text-muted-foreground">This workspace already has a Master Key configured.</p>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="h-7 text-xs bg-blue-600 hover:bg-blue-700 text-white shrink-0 font-medium"
+                onClick={() => handleUnlockVault(existingWorkspaceKey)}
+              >
+                <Unlock className="h-3.5 w-3.5 mr-1" /> Use Workspace Key
+              </Button>
+            </div>
+          )}
+
           <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
             <ShieldCheck className="h-6 w-6 text-amber-500 shrink-0" />
             <p className="text-xs leading-relaxed">
@@ -3101,7 +3140,7 @@ const VaultManager: React.FC = () => {
                 <label
                   className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
                     passphraseScope === "project"
-                      ? "border-primary bg-primary/5 text-foreground"
+                      ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
                       : "border-border hover:border-primary/40 text-muted-foreground"
                   }`}
                 >
@@ -3124,7 +3163,7 @@ const VaultManager: React.FC = () => {
                 <label
                   className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
                     passphraseScope === "workspace"
-                      ? "border-primary bg-primary/5 text-foreground"
+                      ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
                       : "border-border hover:border-primary/40 text-muted-foreground"
                   }`}
                 >
@@ -3140,7 +3179,9 @@ const VaultManager: React.FC = () => {
                     <span className="font-semibold text-foreground">Workspace Master</span>
                   </div>
                   <span className="text-[11px] text-muted-foreground mt-1 ml-5">
-                    Applies as master key for all projects in this workspace.
+                    {existingWorkspaceKey 
+                      ? "Applies to all projects in this workspace (Active key already exists)." 
+                      : "Applies as master key for all projects in this workspace."}
                   </span>
                 </label>
               </div>
@@ -3216,27 +3257,34 @@ const VaultManager: React.FC = () => {
 
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 border-t gap-2">
             <div className="flex items-center gap-1.5 flex-wrap">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={() => {
-                  const result = generateRecoveryMnemonic();
-                  setRecoveryMnemonic(result.mnemonic);
-                  setUnlockInputPassphrase(result.mnemonic);
-                  downloadRecoveryKit({
-                    passphrase: result.mnemonic,
-                    projectName: project?.name || "Project",
-                    projectId,
-                    workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
-                    scope: passphraseScope === "workspace" ? "workspace" : "project"
-                  });
-                  setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
-                }}
-              >
-                <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
-              </Button>
+              {!(passphraseScope === "workspace" && existingWorkspaceKey) ? (
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={() => {
+                    const result = generateRecoveryMnemonic();
+                    setRecoveryMnemonic(result.mnemonic);
+                    setUnlockInputPassphrase(result.mnemonic);
+                    downloadRecoveryKit({
+                      passphrase: result.mnemonic,
+                      projectName: project?.name || "Project",
+                      projectId,
+                      workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+                      scope: passphraseScope === "workspace" ? "workspace" : "project"
+                    });
+                    setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
+                  }}
+                >
+                  <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
+                </Button>
+              ) : (
+                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
+                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                  Workspace key active. To update it, use Rotate Key.
+                </span>
+              )}
             </div>
             <div className="flex gap-2 justify-end">
               <Button
@@ -3280,10 +3328,22 @@ const VaultManager: React.FC = () => {
         projectId={projectId as string}
         projectName={project?.name || "Project"}
         initialNewPassphrase={rotateInitialPhrase}
-        onSuccess={(newPassphrase) => {
+        initialScope={isDedicatedProjectKey ? "project" : "workspace"}
+        currentVaultPassphrase={vaultPassphrase}
+        isUnlockedViaWorkspace={isUnlockedViaWorkspace}
+        isDedicatedProjectKey={isDedicatedProjectKey}
+        onSuccess={(newPassphrase, scope = "project") => {
           setVaultPassphrase(newPassphrase);
           setIsVaultUnlocked(true);
-          setIsDedicatedProjectKey(true);
+          if (scope === "workspace") {
+            setIsDedicatedProjectKey(false);
+            setIsUnlockedViaWorkspace(true);
+            unlockWorkspace(newPassphrase, rememberDevice);
+          } else {
+            setIsDedicatedProjectKey(true);
+            setIsUnlockedViaWorkspace(false);
+            setProjectPassphrase(projectId as string, newPassphrase, rememberDevice);
+          }
           loadProject(true);
         }}
       />

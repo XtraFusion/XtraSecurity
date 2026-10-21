@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, RefreshCw, AlertCircle, Check, Loader2, Download, Copy, CheckCircle2 } from "lucide-react";
+import { Key, RefreshCw, AlertCircle, Check, Loader2, Download, Copy, CheckCircle2, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
 import { deriveProjectKey, decryptSecretValue, encryptSecretValueWebCrypto, generateRecoveryMnemonic, validateProjectPassphrase, downloadRecoveryKit } from "@/lib/crypto/e2ee";
@@ -17,7 +17,11 @@ interface RotateMasterKeyModalProps {
   projectId: string;
   projectName?: string;
   initialNewPassphrase?: string;
-  onSuccess: (newPassphrase: string) => void;
+  initialScope?: "project" | "workspace";
+  currentVaultPassphrase?: string;
+  isUnlockedViaWorkspace?: boolean;
+  isDedicatedProjectKey?: boolean;
+  onSuccess: (newPassphrase: string, scope?: "project" | "workspace") => void;
 }
 
 export function RotateMasterKeyModal({
@@ -26,12 +30,16 @@ export function RotateMasterKeyModal({
   projectId,
   projectName = "this project",
   initialNewPassphrase = "",
+  initialScope = "project",
+  currentVaultPassphrase = "",
+  isUnlockedViaWorkspace = false,
+  isDedicatedProjectKey = false,
   onSuccess
 }: RotateMasterKeyModalProps) {
   const [currentPassphrase, setCurrentPassphrase] = useState("");
   const [newPassphrase, setNewPassphrase] = useState(initialNewPassphrase);
   const [confirmPassphrase, setConfirmPassphrase] = useState(initialNewPassphrase);
-  const [targetScope, setTargetScope] = useState<"project" | "workspace">("project");
+  const [targetScope, setTargetScope] = useState<"project" | "workspace">(initialScope);
   const [rememberDevice, setRememberDevice] = useState(true);
   const [isRotating, setIsRotating] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,13 +50,21 @@ export function RotateMasterKeyModal({
 
   const { selectedWorkspace } = useGlobalContext();
 
-  // Sync initial phrase if passed
+  // Sync initial state on modal open
   React.useEffect(() => {
-    if (initialNewPassphrase) {
-      setNewPassphrase(initialNewPassphrase);
-      setConfirmPassphrase(initialNewPassphrase);
+    if (isOpen) {
+      if (initialNewPassphrase) {
+        setNewPassphrase(initialNewPassphrase);
+        setConfirmPassphrase(initialNewPassphrase);
+      }
+      if (initialScope) {
+        setTargetScope(initialScope);
+      }
+      if (currentVaultPassphrase) {
+        setCurrentPassphrase(currentVaultPassphrase);
+      }
     }
-  }, [initialNewPassphrase]);
+  }, [isOpen, initialNewPassphrase, initialScope, currentVaultPassphrase]);
 
   const handleGenerate = () => {
     const result = generateRecoveryMnemonic();
@@ -112,7 +128,7 @@ export function RotateMasterKeyModal({
       if (rawSecrets.length === 0) {
         setProgress("No secrets found. Updating master key...");
         persistRotatedKey(newPassphrase);
-        onSuccess(newPassphrase);
+        onSuccess(newPassphrase, targetScope);
         onClose();
         setIsRotating(false);
         return;
@@ -223,7 +239,7 @@ export function RotateMasterKeyModal({
 
       persistRotatedKey(newPassphrase);
       
-      onSuccess(newPassphrase);
+      onSuccess(newPassphrase, targetScope);
       onClose();
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || "Failed to rotate master key.");
@@ -235,15 +251,7 @@ export function RotateMasterKeyModal({
   const persistRotatedKey = (pass: string) => {
     if (typeof window === "undefined") return;
 
-    // Save project-specific key
-    sessionStorage.setItem(`xtra_vault_${projectId}`, pass);
-    if (rememberDevice) {
-      localStorage.setItem(`xtra_vault_${projectId}`, pass);
-    } else {
-      localStorage.removeItem(`xtra_vault_${projectId}`);
-    }
-
-    // If workspace scope chosen, also apply as workspace master key
+    // If workspace scope chosen, apply as workspace master key and remove project override
     if (targetScope === "workspace") {
       const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
       if (wsId) {
@@ -255,8 +263,18 @@ export function RotateMasterKeyModal({
           localStorage.removeItem(`xtra_ws_vault_${wsId}`);
         }
       }
+      // Remove project-specific override so this project tracks workspace master key
+      sessionStorage.removeItem(`xtra_vault_${projectId}`);
+      localStorage.removeItem(`xtra_vault_${projectId}`);
       window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { workspaceId: wsId, scope: "workspace" } }));
     } else {
+      // Save dedicated project-specific key (isolated)
+      sessionStorage.setItem(`xtra_vault_${projectId}`, pass);
+      if (rememberDevice) {
+        localStorage.setItem(`xtra_vault_${projectId}`, pass);
+      } else {
+        localStorage.removeItem(`xtra_vault_${projectId}`);
+      }
       window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { projectId, scope: "project" } }));
     }
   };
@@ -281,9 +299,46 @@ export function RotateMasterKeyModal({
           </Alert>
         )}
 
+        {isUnlockedViaWorkspace && (
+          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-xs flex items-center gap-2.5 text-blue-900 dark:text-blue-200">
+            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
+            <div>
+              <p className="font-semibold">Currently Unlocked via Workspace Master Key</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Select <strong>Project Only (Isolated)</strong> below to decouple this project from the workspace master key and give it an independent key.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {isDedicatedProjectKey && (
+          <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg text-xs flex items-center gap-2.5 text-purple-900 dark:text-purple-200">
+            <Key className="h-5 w-5 text-purple-500 shrink-0" />
+            <div>
+              <p className="font-semibold">Currently Using Dedicated Project Key</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                This project has an isolated key separate from other workspace projects.
+              </p>
+            </div>
+          </div>
+        )}
+
         <form onSubmit={handleRotate} className="space-y-4 py-2">
           <div className="space-y-2">
-            <Label className="text-xs font-semibold">Current Master Passphrase</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Current Master Passphrase</Label>
+              {currentVaultPassphrase && currentPassphrase !== currentVaultPassphrase && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCurrentPassphrase(currentVaultPassphrase)}
+                  className="h-5 text-[11px] px-1.5 text-primary hover:text-primary hover:bg-primary/10"
+                >
+                  Use Active Session Key
+                </Button>
+              )}
+            </div>
             <Input
               type="password"
               placeholder="Enter current passphrase to decrypt existing secrets..."
@@ -291,7 +346,7 @@ export function RotateMasterKeyModal({
               onChange={(e) => setCurrentPassphrase(e.target.value)}
               required
               className="font-mono text-sm"
-              autoFocus
+              autoFocus={!currentVaultPassphrase}
             />
           </div>
 

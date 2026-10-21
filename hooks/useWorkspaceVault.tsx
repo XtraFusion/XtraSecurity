@@ -36,10 +36,14 @@ export const WorkspaceVaultProvider: React.FC<{ children: React.ReactNode }> = (
   const currentWorkspaceId = selectedWorkspace?.id || selectedWorkspace?.value || null;
 
   const getStoredWorkspacePassphrase = useCallback((wsId: string | null): string => {
-    if (!wsId || typeof window === "undefined") return "";
+    if (typeof window === "undefined") return "";
+    if (wsId) {
+      const wsKey =
+        sessionStorage.getItem(`${STORAGE_PREFIX.WORKSPACE}${wsId}`) ||
+        localStorage.getItem(`${STORAGE_PREFIX.WORKSPACE}${wsId}`);
+      if (wsKey) return wsKey;
+    }
     return (
-      sessionStorage.getItem(`${STORAGE_PREFIX.WORKSPACE}${wsId}`) ||
-      localStorage.getItem(`${STORAGE_PREFIX.WORKSPACE}${wsId}`) ||
       sessionStorage.getItem(STORAGE_PREFIX.GLOBAL) ||
       localStorage.getItem(STORAGE_PREFIX.GLOBAL) ||
       ""
