@@ -2,6 +2,8 @@ import { redis } from '@/lib/redis';
 import { NextRequest } from 'next/server';
 import { Tier, DAILY_LIMITS, RateLimitResult as ConfigRateLimitResult } from './rate-limit-config';
 
+export type { Tier };
+
 export interface RateLimitResult {
   success: boolean;
   limit: number;

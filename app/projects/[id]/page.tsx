@@ -9,7 +9,9 @@ import {
   deriveProjectKey,
   generateRecoveryMnemonic,
   validateProjectPassphrase,
-  downloadRecoveryKit
+  downloadRecoveryKit,
+  verifyVaultSentinel,
+  createVaultSentinelWebCrypto
 } from "@/lib/crypto/e2ee";
 import {
   Search,
@@ -556,6 +558,9 @@ const VaultManager: React.FC = () => {
   // Sync with workspace master key if individual project key not explicitly set
   React.useEffect(() => {
     if (typeof window !== "undefined") {
+      const isLockedByUser = sessionStorage.getItem(`xtra_vault_locked_${projectId}`) === "true";
+      if (isLockedByUser) return;
+
       const hasProjKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
       if (hasProjKey) {
         setVaultPassphrase(hasProjKey);
@@ -563,6 +568,12 @@ const VaultManager: React.FC = () => {
         setIsDedicatedProjectKey(true);
         setIsUnlockedViaWorkspace(false);
       } else if (existingWorkspaceKey) {
+        const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
+        if (storedScope === "project") {
+          setIsDedicatedProjectKey(true);
+          setIsUnlockedViaWorkspace(false);
+          return;
+        }
         // Automatic unlock via existing Workspace Master Key for new and existing projects!
         setVaultPassphrase(existingWorkspaceKey);
         setIsVaultUnlocked(true);
@@ -575,12 +586,23 @@ const VaultManager: React.FC = () => {
   const [isUnlockModalOpen, setIsUnlockModalOpen] = React.useState(false);
   const [isRotateKeyModalOpen, setIsRotateKeyModalOpen] = React.useState(false);
   const [rotateInitialPhrase, setRotateInitialPhrase] = React.useState("");
+  const [rotateInitialScope, setRotateInitialScope] = React.useState<"project" | "workspace">("project");
   const [unlockInputPassphrase, setUnlockInputPassphrase] = React.useState("");
   const [unlockError, setUnlockError] = React.useState<string | null>(null);
   const [recoveryMnemonic, setRecoveryMnemonic] = React.useState<string | null>(null);
   const [isUnlockingVault, setIsUnlockingVault] = React.useState(false);
   const [rememberDevice, setRememberDevice] = React.useState(true);
   const [passphraseScope, setPassphraseScope] = React.useState<"project" | "workspace">("project");
+
+  const handleOpenScopeSwitch = (targetScope: "project" | "workspace") => {
+    setRotateInitialScope(targetScope);
+    if (targetScope === "workspace") {
+      setRotateInitialPhrase(workspacePassphrase || "");
+    } else {
+      setRotateInitialPhrase("");
+    }
+    setIsRotateKeyModalOpen(true);
+  };
 
   const [notification, setNotification] = React.useState<{ type: "default" | "destructive"; message: string } | null>(null);
 
@@ -662,7 +684,10 @@ const VaultManager: React.FC = () => {
       const projectKey = activePassphrase ? deriveProjectKey(pId, activePassphrase) : null;
       const legacyKey = deriveProjectKey(pId); // Legacy Level 2 fallback test
 
-      return rawSecrets.map((secret) => {
+      // Filter out internal cryptographic verification sentinel from UI list
+      const userSecrets = rawSecrets.filter((s: any) => s.key !== "__xtra_vault_sentinel__");
+
+      return userSecrets.map((secret) => {
         let val = secret.value;
         if (Array.isArray(val) && val.length > 0) {
           val = val[0];
@@ -847,12 +872,32 @@ const VaultManager: React.FC = () => {
       const derivedKey = deriveProjectKey(projectId as string, inputKey);
       const legacyKey = deriveProjectKey(projectId as string);
 
-      // Check if branch has any encrypted secrets to validate against
+      // Check if branch or storage has vault verification sentinel or encrypted secrets
       const branchSecrets = selectedBranch?.secrets || [];
       let foundEncrypted = false;
       let matched = false;
       let legacyMatched = false;
       const secretsToReencrypt: Array<{ secret: any; plaintext: string }> = [];
+
+      // 1. Strict Vault Sentinel Check (Prevents old rotated keys or wrong keys from unlocking empty or non-empty projects)
+      if (typeof window !== "undefined") {
+        const localSentinelStr = localStorage.getItem(`xtra_vault_sentinel_${projectId}`);
+        if (localSentinelStr) {
+          try {
+            const parsedSentinel = JSON.parse(localSentinelStr);
+            foundEncrypted = true;
+            if (verifyVaultSentinel(parsedSentinel, derivedKey)) {
+              matched = true;
+            } else {
+              setUnlockError(
+                "Authentication tag mismatch. The entered passphrase cannot decrypt this project's vault. If you recently rotated your key, please use your new master passphrase."
+              );
+              setIsUnlockingVault(false);
+              return;
+            }
+          } catch (_) {}
+        }
+      }
 
       for (const s of branchSecrets) {
         let val = s.value;
@@ -860,6 +905,19 @@ const VaultManager: React.FC = () => {
         if (typeof val === "string") {
           try {
             const parsed = JSON.parse(val);
+            if (s.key === "__xtra_vault_sentinel__") {
+              foundEncrypted = true;
+              if (verifyVaultSentinel(parsed, derivedKey)) {
+                matched = true;
+              } else {
+                setUnlockError(
+                  "Authentication tag mismatch. The entered passphrase is invalid for this project. If this key was rotated, please use your new master passphrase."
+                );
+                setIsUnlockingVault(false);
+                return;
+              }
+              continue;
+            }
             if (parsed.ciphertext && parsed.iv) {
               foundEncrypted = true;
               if (validateProjectPassphrase(parsed, derivedKey)) {
@@ -899,8 +957,7 @@ const VaultManager: React.FC = () => {
 
       if (foundEncrypted && !matched) {
         setUnlockError(
-          "Authentication tag mismatch. Incorrect passphrase for this project. " +
-          "If you generated a brand-new passphrase and want to re-encrypt this project's existing secrets with it, click 'Rotate Existing Secrets to this Key' below."
+          "Authentication tag mismatch. Incorrect passphrase for this project. If you recently rotated your key, please use your new master passphrase."
         );
         return;
       }
@@ -909,6 +966,7 @@ const VaultManager: React.FC = () => {
       setVaultPassphrase(inputKey);
       setIsVaultUnlocked(true);
       if (typeof window !== "undefined") {
+        sessionStorage.removeItem(`xtra_vault_locked_${projectId}`);
         if (passphraseScope === "project") {
           setProjectPassphrase(projectId as string, inputKey, rememberDevice);
           setIsDedicatedProjectKey(true);
@@ -919,6 +977,7 @@ const VaultManager: React.FC = () => {
           const wsId = selectedWorkspace?.id || selectedWorkspace?.value || project?.workspaceId;
           if (wsId) {
             sessionStorage.setItem(`xtra_ws_vault_${wsId}`, inputKey);
+            sessionStorage.setItem("xtra_global_vault_passphrase", inputKey);
             if (rememberDevice) {
               localStorage.setItem(`xtra_ws_vault_${wsId}`, inputKey);
               localStorage.setItem("xtra_global_vault_passphrase", inputKey);
@@ -956,6 +1015,7 @@ const VaultManager: React.FC = () => {
     setIsVaultUnlocked(false);
     setIsUnlockedViaWorkspace(false);
     if (typeof window !== "undefined") {
+      sessionStorage.setItem(`xtra_vault_locked_${projectId}`, "true");
       sessionStorage.removeItem(`xtra_vault_${projectId}`);
       localStorage.removeItem(`xtra_vault_${projectId}`);
     }
@@ -1691,34 +1751,31 @@ const VaultManager: React.FC = () => {
               </>
             )}
 
-            {/* Scope Switchers: Revert to Workspace Key OR Decouple to Project Key */}
-            {isVaultUnlocked && isDedicatedProjectKey && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleResetToWorkspaceKey}
-                className="text-xs text-muted-foreground hover:text-foreground border-dashed"
-                title="Clear dedicated project key and revert to Workspace Master Key"
-              >
-                <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
-                Revert to Workspace Key
-              </Button>
-            )}
-            {isVaultUnlocked && isUnlockedViaWorkspace && !isDedicatedProjectKey && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => {
-                  setRotateInitialPhrase("");
-                  setIsRotateKeyModalOpen(true);
-                }}
-                className="text-xs text-purple-600 dark:text-purple-400 border-purple-500/30 hover:bg-purple-500/10 font-medium"
-                title="Decouple this project from the Workspace Master Key and assign a dedicated project key"
-              >
-                <Key className="h-3.5 w-3.5 mr-1.5" />
-                Decouple to Project Key
-              </Button>
-            )}
+            {/* Key Scope Indicator & Quick Level Switcher */}
+            <div className="flex items-center gap-1.5 p-1 px-2.5 rounded-lg border bg-background/80 shadow-xs text-xs">
+              <span className="text-muted-foreground font-medium text-[11px]">Key Scope:</span>
+              {isDedicatedProjectKey ? (
+                <Badge variant="outline" className="text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/30 text-[11px] font-semibold py-0.5 px-2 flex items-center gap-1">
+                  <Key className="h-3 w-3" /> Project Key (Isolated)
+                </Badge>
+              ) : (
+                <Badge variant="outline" className="text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/30 text-[11px] font-semibold py-0.5 px-2 flex items-center gap-1">
+                  <ShieldCheck className="h-3 w-3" /> Workspace Master
+                </Badge>
+              )}
+              {(project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin') && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleOpenScopeSwitch(isDedicatedProjectKey ? "workspace" : "project")}
+                  className="h-6 text-[11px] px-2 text-primary hover:text-primary hover:bg-primary/10 ml-0.5 font-medium"
+                  title={isDedicatedProjectKey ? "Switch this project to use Workspace Master Key" : "Decouple this project to an independent Dedicated Project Key"}
+                >
+                  <RefreshCw className="h-3 w-3 mr-1" />
+                  {isDedicatedProjectKey ? "Switch to Workspace Key" : "Switch to Project Key"}
+                </Button>
+              )}
+            </div>
 
             {/* Strict Zero-Knowledge Vault Lock / Unlock Button */}
             {isVaultUnlocked ? (
@@ -3274,7 +3331,15 @@ const VaultManager: React.FC = () => {
                       workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
                       scope: passphraseScope === "workspace" ? "workspace" : "project"
                     });
-                    setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
+                    if ((selectedBranch?.secrets?.length || 0) > 0) {
+                      setIsUnlockModalOpen(false);
+                      setRotateInitialPhrase(result.mnemonic);
+                      setRotateInitialScope(passphraseScope);
+                      setIsRotateKeyModalOpen(true);
+                      setNotification({ type: "default", message: "⚡ Generated passphrase! Ready to auto-rotate existing secrets." });
+                    } else {
+                      setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
+                    }
                   }}
                 >
                   <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
@@ -3328,13 +3393,14 @@ const VaultManager: React.FC = () => {
         projectId={projectId as string}
         projectName={project?.name || "Project"}
         initialNewPassphrase={rotateInitialPhrase}
-        initialScope={isDedicatedProjectKey ? "project" : "workspace"}
+        initialScope={rotateInitialScope || (isDedicatedProjectKey ? "project" : "workspace")}
         currentVaultPassphrase={vaultPassphrase}
         isUnlockedViaWorkspace={isUnlockedViaWorkspace}
         isDedicatedProjectKey={isDedicatedProjectKey}
         onSuccess={(newPassphrase, scope = "project") => {
           setVaultPassphrase(newPassphrase);
           setIsVaultUnlocked(true);
+          sessionStorage.removeItem(`xtra_vault_locked_${projectId}`);
           if (scope === "workspace") {
             setIsDedicatedProjectKey(false);
             setIsUnlockedViaWorkspace(true);

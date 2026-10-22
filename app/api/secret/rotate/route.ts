@@ -29,18 +29,74 @@ export const POST = withSecurity(async (request, context, session) => {
     }
 
     // Process updates in a transaction
-    await prisma.$transaction(
-      updates.map((update: any) =>
-        prisma.secret.update({
-          where: { id: update.id, projectId: projectId },
+    if (updates.length > 0) {
+      await prisma.$transaction(
+        updates.map((update: any) =>
+          prisma.secret.update({
+            where: { id: update.id },
+            data: {
+              value: update.value,
+              history: update.history, // Overwrite history with re-encrypted history
+              updatedBy: session.email || "system",
+            },
+          })
+        )
+      );
+    }
+
+    // Persist or update the vault verification sentinel
+    const { sentinel } = body;
+    if (sentinel) {
+      const sentinelIdentifier = "__xtra_vault_sentinel__";
+      const sentinelStr = typeof sentinel === "string" ? sentinel : JSON.stringify(sentinel);
+      const existingSentinel = await prisma.secret.findFirst({
+        where: { projectId, ['key']: sentinelIdentifier }
+      });
+
+      if (existingSentinel) {
+        await prisma.secret.update({
+          where: { id: existingSentinel.id },
           data: {
-            value: update.value,
-            history: update.history, // Overwrite history with re-encrypted history
+            value: [sentinelStr],
             updatedBy: session.email || "system",
-          },
-        })
-      )
-    );
+            history: [
+              ...(Array.isArray(existingSentinel.history) ? existingSentinel.history : []),
+              {
+                version: String(Number(existingSentinel.version || 1) + 1),
+                value: [sentinelStr],
+                description: "Rotated vault sentinel",
+                updatedAt: new Date().toISOString(),
+                updatedBy: session.email || "system",
+              }
+            ]
+          }
+        });
+      } else {
+        await prisma.secret.create({
+          data: {
+            ['key']: sentinelIdentifier,
+            value: [sentinelStr],
+            description: "Zero-Knowledge Vault Verification Sentinel",
+            environmentType: "system",
+            version: "1",
+            type: "Sentinel",
+            rotationPolicy: "manual",
+            projectId,
+            branchId: null,
+            updatedBy: session.email || "system",
+            history: [
+              {
+                version: "1",
+                value: [sentinelStr],
+                description: "Initial vault sentinel",
+                updatedAt: new Date().toISOString(),
+                updatedBy: session.email || "system",
+              }
+            ]
+          }
+        });
+      }
+    }
 
     // Audit Logging
     const project = await prisma.project.findUnique({ where: { id: projectId } });

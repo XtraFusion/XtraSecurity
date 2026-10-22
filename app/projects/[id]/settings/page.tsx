@@ -13,7 +13,10 @@ import {
   Unlock,
   RefreshCw,
   Plus,
-  ChevronRight
+  ChevronRight,
+  ShieldCheck,
+  Key,
+  Zap
 } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useParams, useRouter } from 'next/navigation';
@@ -22,6 +25,8 @@ import { BranchController } from '@/util/BranchController';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { RotateMasterKeyModal } from '@/components/RotateMasterKeyModal';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Switch } from '@/components/ui/switch';
@@ -131,6 +136,54 @@ export default function ProjectSettings() {
     blockProject: false,
     deleteProject: false
   });
+
+  // Zero-Knowledge Vault & Scope state
+  const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
+  const [rotateInitialScope, setRotateInitialScope] = useState<"project" | "workspace">("project");
+  const [isDedicatedProjectKey, setIsDedicatedProjectKey] = useState(false);
+  const [currentVaultKey, setCurrentVaultKey] = useState<string>("");
+
+  const refreshVaultStatus = () => {
+    if (typeof window === "undefined") return;
+    const projectPass =
+      sessionStorage.getItem(`xtra_vault_${id}`) ||
+      localStorage.getItem(`xtra_vault_${id}`);
+    const scope =
+      sessionStorage.getItem(`xtra_vault_scope_${id}`) ||
+      localStorage.getItem(`xtra_vault_scope_${id}`);
+
+    if (scope === "project") {
+      setIsDedicatedProjectKey(true);
+      setCurrentVaultKey(projectPass || "");
+    } else if (scope === "workspace") {
+      setIsDedicatedProjectKey(false);
+      const wsId = (project as any)?.workspaceId || (project as any)?.workspace;
+      const wsPass =
+        (wsId && (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`))) ||
+        sessionStorage.getItem("xtra_global_vault_passphrase") ||
+        localStorage.getItem("xtra_global_vault_passphrase") ||
+        "";
+      setCurrentVaultKey(wsPass);
+    } else {
+      if (projectPass) {
+        setIsDedicatedProjectKey(true);
+        setCurrentVaultKey(projectPass);
+      } else {
+        setIsDedicatedProjectKey(false);
+        const wsId = (project as any)?.workspaceId || (project as any)?.workspace;
+        const wsPass =
+          (wsId && (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`))) ||
+          sessionStorage.getItem("xtra_global_vault_passphrase") ||
+          localStorage.getItem("xtra_global_vault_passphrase") ||
+          "";
+        setCurrentVaultKey(wsPass);
+      }
+    }
+  };
+
+  useEffect(() => {
+    refreshVaultStatus();
+  }, [id, project]);
 
   // Fetch initial data
   useEffect(() => {
@@ -601,6 +654,127 @@ export default function ProjectSettings() {
 
         <TabsContent value="security">
           <div className="space-y-4">
+            {/* Zero-Knowledge Master Vault & Key Scope Configuration */}
+            <Card className="border-border shadow-xs">
+              <CardHeader>
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <div>
+                    <CardTitle className="flex items-center gap-2 text-base">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      Zero-Knowledge Master Vault & Key Scope
+                    </CardTitle>
+                    <CardDescription className="mt-1">
+                      Control whether this project uses the shared Workspace Master Key or an isolated Dedicated Project Key.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isDedicatedProjectKey ? (
+                      <Badge variant="outline" className="text-purple-600 dark:text-purple-400 bg-purple-500/10 border-purple-500/30 font-semibold py-1 px-3 flex items-center gap-1.5">
+                        <Key className="h-3.5 w-3.5" /> Project Key (Isolated)
+                      </Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-blue-600 dark:text-blue-400 bg-blue-500/10 border-blue-500/30 font-semibold py-1 px-3 flex items-center gap-1.5">
+                        <ShieldCheck className="h-3.5 w-3.5" /> Workspace Master Key
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Option 1: Workspace Master */}
+                  <div className={`p-4 rounded-xl border transition-all ${!isDedicatedProjectKey ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:bg-muted/30'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 font-medium text-sm">
+                        <ShieldCheck className="w-4 h-4 text-blue-500" />
+                        Workspace Master Key
+                      </div>
+                      {!isDedicatedProjectKey && (
+                        <span className="text-[11px] font-semibold text-primary uppercase tracking-wider bg-primary/10 px-2 py-0.5 rounded-full">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                      Secrets in this project inherit the Workspace Master Key. Team members who unlock the workspace master vault automatically have access.
+                    </p>
+                    {isDedicatedProjectKey && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 w-full text-xs font-medium"
+                        onClick={() => {
+                          setRotateInitialScope("workspace");
+                          setIsRotateModalOpen(true);
+                        }}
+                      >
+                        <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                        Switch to Workspace Key
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Option 2: Dedicated Project Key */}
+                  <div className={`p-4 rounded-xl border transition-all ${isDedicatedProjectKey ? 'border-primary/50 bg-primary/5 ring-1 ring-primary/20' : 'border-border bg-card hover:bg-muted/30'}`}>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-center gap-2 font-medium text-sm">
+                        <Key className="w-4 h-4 text-purple-500" />
+                        Dedicated Project Key (Isolated)
+                      </div>
+                      {isDedicatedProjectKey && (
+                        <span className="text-[11px] font-semibold text-purple-600 dark:text-purple-400 uppercase tracking-wider bg-purple-500/10 px-2 py-0.5 rounded-full">
+                          Active
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2 leading-relaxed">
+                      Secrets are encrypted with a unique, decoupled master key. Workspace-wide unlocks will not expose this project without entering its dedicated passphrase.
+                    </p>
+                    {!isDedicatedProjectKey && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="mt-4 w-full text-xs font-medium border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10"
+                        onClick={() => {
+                          setRotateInitialScope("project");
+                          setIsRotateModalOpen(true);
+                        }}
+                      >
+                        <Key className="w-3.5 h-3.5 mr-1.5" />
+                        Switch to Dedicated Project Key
+                      </Button>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-4 border-t border-border/60">
+                  <div className="space-y-0.5">
+                    <div className="text-sm font-medium flex items-center gap-1.5">
+                      <RefreshCw className="w-4 h-4 text-muted-foreground" />
+                      Rotate Master Passphrase & Auto-Re-encrypt Secrets
+                    </div>
+                    <p className="text-xs text-muted-foreground">
+                      Generate a brand-new 24-word cryptographic phrase or switch keys. Secrets are automatically decrypted with your current key and re-encrypted with your new key.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="default"
+                      size="sm"
+                      className="text-xs"
+                      onClick={() => {
+                        setRotateInitialScope(isDedicatedProjectKey ? "project" : "workspace");
+                        setIsRotateModalOpen(true);
+                      }}
+                    >
+                      <Zap className="w-3.5 h-3.5 mr-1.5 text-amber-300" />
+                      Rotate Master Passphrase
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             <Card>
               <CardHeader>
                 <CardTitle>Security Settings</CardTitle>
@@ -936,6 +1110,43 @@ export default function ProjectSettings() {
           <WebhooksTab />
         </TabsContent>
       </Tabs>
+
+      <RotateMasterKeyModal
+        isOpen={isRotateModalOpen}
+        onClose={() => setIsRotateModalOpen(false)}
+        projectId={id as string}
+        projectName={project?.name || "Project"}
+        initialScope={rotateInitialScope}
+        currentVaultPassphrase={currentVaultKey}
+        isDedicatedProjectKey={isDedicatedProjectKey}
+        onSuccess={(newPassphrase, scope = "project") => {
+          setCurrentVaultKey(newPassphrase);
+          if (scope === "workspace") {
+            setIsDedicatedProjectKey(false);
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(`xtra_vault_scope_${id}`, "workspace");
+              localStorage.setItem(`xtra_vault_scope_${id}`, "workspace");
+              sessionStorage.removeItem(`xtra_vault_${id}`);
+              localStorage.removeItem(`xtra_vault_${id}`);
+              sessionStorage.setItem("xtra_global_vault_passphrase", newPassphrase);
+              localStorage.setItem("xtra_global_vault_passphrase", newPassphrase);
+            }
+          } else {
+            setIsDedicatedProjectKey(true);
+            if (typeof window !== "undefined") {
+              sessionStorage.setItem(`xtra_vault_scope_${id}`, "project");
+              localStorage.setItem(`xtra_vault_scope_${id}`, "project");
+              sessionStorage.setItem(`xtra_vault_${id}`, newPassphrase);
+              localStorage.setItem(`xtra_vault_${id}`, newPassphrase);
+            }
+          }
+          refreshVaultStatus();
+          toast({
+            title: "Passphrase Rotated & Key Scope Updated",
+            description: `All secrets were re-encrypted under the ${scope === 'workspace' ? 'Workspace Master Key' : 'Dedicated Project Key'}.`,
+          });
+        }}
+      />
       </div>
     </DashboardLayout>
   );

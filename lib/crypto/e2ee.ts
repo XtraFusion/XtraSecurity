@@ -658,3 +658,35 @@ export function downloadRecoveryKit({
     return false;
   }
 }
+
+/**
+ * Vault Sentinel for Zero-Knowledge Key Verification
+ * Provides cryptographic proof of passphrase validity even when no secrets exist.
+ */
+export const VAULT_SENTINEL_MAGIC = "xtra_vault_sentinel_token_v3_authenticated";
+
+export function createVaultSentinel(projectKeyHex: string): EncryptedPayload {
+  return encryptSecretValue(VAULT_SENTINEL_MAGIC, projectKeyHex);
+}
+
+export function verifyVaultSentinel(sentinelPayload: EncryptedPayload, projectKeyHex: string): boolean {
+  try {
+    const decrypted = decryptSecretValue(sentinelPayload, projectKeyHex);
+    return decrypted === VAULT_SENTINEL_MAGIC;
+  } catch {
+    return false;
+  }
+}
+
+export async function createVaultSentinelWebCrypto(projectKeyHex: string): Promise<EncryptedPayload> {
+  return encryptSecretValueWebCrypto(VAULT_SENTINEL_MAGIC, projectKeyHex);
+}
+
+export async function verifyVaultSentinelWebCrypto(sentinelPayload: EncryptedPayload, projectKeyHex: string): Promise<boolean> {
+  try {
+    const decrypted = await decryptSecretValueWebCrypto(sentinelPayload, projectKeyHex);
+    return decrypted === VAULT_SENTINEL_MAGIC;
+  } catch {
+    return false;
+  }
+}

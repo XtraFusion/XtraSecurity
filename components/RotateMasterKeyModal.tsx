@@ -5,10 +5,19 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Key, RefreshCw, AlertCircle, Check, Loader2, Download, Copy, CheckCircle2, ShieldCheck } from "lucide-react";
+import { Key, RefreshCw, AlertCircle, Check, Loader2, Download, Copy, CheckCircle2, ShieldCheck, Zap } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import axios from "axios";
-import { deriveProjectKey, decryptSecretValue, encryptSecretValueWebCrypto, generateRecoveryMnemonic, validateProjectPassphrase, downloadRecoveryKit } from "@/lib/crypto/e2ee";
+import {
+  deriveProjectKey,
+  decryptSecretValue,
+  encryptSecretValueWebCrypto,
+  generateRecoveryMnemonic,
+  validateProjectPassphrase,
+  downloadRecoveryKit,
+  createVaultSentinelWebCrypto,
+  verifyVaultSentinel
+} from "@/lib/crypto/e2ee";
 import { useGlobalContext } from "@/hooks/useUser";
 
 interface RotateMasterKeyModalProps {
@@ -63,6 +72,8 @@ export function RotateMasterKeyModal({
       if (currentVaultPassphrase) {
         setCurrentPassphrase(currentVaultPassphrase);
       }
+      setError(null);
+      setProgress(null);
     }
   }, [isOpen, initialNewPassphrase, initialScope, currentVaultPassphrase]);
 
@@ -99,11 +110,210 @@ export function RotateMasterKeyModal({
     }
   };
 
-  const handleRotate = async (e: React.FormEvent) => {
-    e.preventDefault();
+  /**
+   * Core rotation execution routine
+   */
+  const executeRotate = async (currPass: string, newPass: string, scope: "project" | "workspace") => {
     setError(null);
     setProgress(null);
 
+    const activeCurrent = currPass.trim();
+    const activeNew = newPass.trim();
+
+    if (!activeCurrent || !activeNew) {
+      setError("Please fill in both current and new passphrases.");
+      return;
+    }
+
+    setIsRotating(true);
+    setProgress("Deriving cryptographic keys...");
+
+    try {
+      const oldKey = deriveProjectKey(projectId, activeCurrent);
+      const newKey = deriveProjectKey(projectId, activeNew);
+
+      // 1. Check existing sentinel if stored locally or in DB
+      if (typeof window !== "undefined") {
+        const localSentinelStr = localStorage.getItem(`xtra_vault_sentinel_${projectId}`);
+        if (localSentinelStr) {
+          try {
+            const parsedSentinel = JSON.parse(localSentinelStr);
+            if (!verifyVaultSentinel(parsedSentinel, oldKey)) {
+              throw new Error("Authentication tag mismatch. The current master passphrase entered is incorrect.");
+            }
+          } catch (sentinelErr: any) {
+            if (sentinelErr.message && sentinelErr.message.includes("Authentication tag")) {
+              throw sentinelErr;
+            }
+          }
+        }
+      }
+
+      setProgress("Fetching project secrets...");
+      const res = await axios.get(`/api/secret?projectId=${projectId}`);
+      const rawSecrets = Array.isArray(res.data) ? res.data : (res.data.data || []);
+
+      // Generate new cryptographic sentinel for project
+      const newSentinelPayload = await createVaultSentinelWebCrypto(newKey);
+
+      const updates: Array<{ id: string; value: string[]; history: any[] }> = [];
+
+      // Filter out system sentinel secrets from user updates
+      const userSecrets = rawSecrets.filter((s: any) => s.key !== "__xtra_vault_sentinel__");
+
+      if (userSecrets.length > 0) {
+        setProgress(`Re-encrypting ${userSecrets.length} secrets and audit trail...`);
+
+        for (const secret of userSecrets) {
+          let val = secret.value;
+          if (Array.isArray(val) && val.length > 0) val = val[0];
+
+          // Decrypt current value
+          let plainValue = "";
+          if (typeof val === "string" && val.startsWith("{")) {
+            try {
+              const parsed = JSON.parse(val);
+              if (parsed.ciphertext && parsed.iv) {
+                if (!validateProjectPassphrase(parsed, oldKey)) {
+                  throw new Error(`Authentication tag mismatch on secret '${secret.key}'. The current passphrase is incorrect.`);
+                }
+                plainValue = decryptSecretValue(parsed, oldKey);
+              } else {
+                plainValue = val;
+              }
+            } catch (e: any) {
+              throw new Error(`Failed to decrypt secret '${secret.key}': ${e.message}`);
+            }
+          } else {
+            plainValue = val;
+          }
+
+          // Encrypt with new key
+          let newValueStr = plainValue;
+          if (plainValue !== undefined && plainValue !== null) {
+            const newEnc = await encryptSecretValueWebCrypto(plainValue, newKey);
+            newValueStr = JSON.stringify(newEnc);
+          }
+
+          // Decrypt and re-encrypt history
+          const newHistory = [];
+          if (Array.isArray(secret.history)) {
+            for (const hist of secret.history) {
+              let hVal = hist.value;
+              if (Array.isArray(hVal) && hVal.length > 0) hVal = hVal[0];
+
+              let hPlain = "";
+              if (typeof hVal === "string" && hVal.startsWith("{")) {
+                try {
+                  const hParsed = JSON.parse(hVal);
+                  if (hParsed.ciphertext && hParsed.iv) {
+                    hPlain = decryptSecretValue(hParsed, oldKey);
+                  } else {
+                    hPlain = hVal;
+                  }
+                } catch (_) {
+                  hPlain = hVal;
+                }
+              } else {
+                hPlain = hVal;
+              }
+
+              let newHStr = hPlain;
+              if (hPlain && typeof hPlain === "string" && !hPlain.startsWith("{") && !hPlain.startsWith("[")) {
+                const newHEnc = await encryptSecretValueWebCrypto(hPlain, newKey);
+                newHStr = JSON.stringify(newHEnc);
+              } else {
+                newHStr = hPlain;
+              }
+
+              newHistory.push({
+                ...hist,
+                value: [newHStr]
+              });
+            }
+          }
+
+          updates.push({
+            id: secret.id,
+            value: [newValueStr],
+            history: newHistory
+          });
+        }
+      }
+
+      setProgress("Saving rotated secrets and cryptographic sentinel to the cloud...");
+      await axios.post("/api/secret/rotate", {
+        projectId,
+        updates,
+        sentinel: newSentinelPayload,
+        targetScope: scope
+      });
+
+      setProgress("Rotation successful!");
+
+      // Auto-download recovery kit for the new passphrase if not already downloaded
+      if (lastDownloadedKey !== activeNew) {
+        downloadRecoveryKit({
+          passphrase: activeNew,
+          projectName,
+          projectId,
+          workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+          scope
+        });
+        setAutoDownloaded(true);
+        setLastDownloadedKey(activeNew);
+      }
+
+      // Save sentinel to storage
+      if (typeof window !== "undefined") {
+        localStorage.setItem(`xtra_vault_sentinel_${projectId}`, JSON.stringify(newSentinelPayload));
+      }
+
+      persistRotatedKey(activeNew, scope);
+
+      onSuccess(activeNew, scope);
+      onClose();
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || "Failed to rotate master key.");
+    } finally {
+      setIsRotating(false);
+    }
+  };
+
+  /**
+   * "Once key is generated, auto rotate":
+   * Generates a new 24-word phrase, downloads recovery kit, and immediately triggers rotation!
+   */
+  const handleGenerateAndAutoRotate = async () => {
+    const activeCurrent = (currentPassphrase || currentVaultPassphrase).trim();
+    if (!activeCurrent) {
+      setError("Please enter your Current Master Passphrase first to decrypt existing secrets before auto-rotating.");
+      return;
+    }
+
+    const result = generateRecoveryMnemonic();
+    setNewPassphrase(result.mnemonic);
+    setConfirmPassphrase(result.mnemonic);
+
+    downloadRecoveryKit({
+      passphrase: result.mnemonic,
+      projectName,
+      projectId,
+      workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
+      scope: targetScope
+    });
+    setAutoDownloaded(true);
+    setLastDownloadedKey(result.mnemonic);
+
+    if (!currentPassphrase && currentVaultPassphrase) {
+      setCurrentPassphrase(currentVaultPassphrase);
+    }
+
+    await executeRotate(activeCurrent, result.mnemonic, targetScope);
+  };
+
+  const handleRotate = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!currentPassphrase || !newPassphrase || !confirmPassphrase) {
       setError("Please fill in all fields.");
       return;
@@ -114,162 +324,35 @@ export function RotateMasterKeyModal({
       return;
     }
 
-    setIsRotating(true);
-    setProgress("Deriving cryptographic keys...");
-
-    try {
-      const oldKey = deriveProjectKey(projectId, currentPassphrase);
-      const newKey = deriveProjectKey(projectId, newPassphrase);
-
-      setProgress("Fetching project secrets...");
-      const res = await axios.get(`/api/secret?projectId=${projectId}`);
-      const rawSecrets = Array.isArray(res.data) ? res.data : (res.data.data || []);
-
-      if (rawSecrets.length === 0) {
-        setProgress("No secrets found. Updating master key...");
-        persistRotatedKey(newPassphrase);
-        onSuccess(newPassphrase, targetScope);
-        onClose();
-        setIsRotating(false);
-        return;
-      }
-
-      setProgress(`Re-encrypting ${rawSecrets.length} secrets and their history...`);
-      
-      const updates = [];
-
-      for (const secret of rawSecrets) {
-        let val = secret.value;
-        if (Array.isArray(val) && val.length > 0) val = val[0];
-
-        // Decrypt current value
-        let plainValue = "";
-        if (typeof val === "string" && val.startsWith("{")) {
-          try {
-            const parsed = JSON.parse(val);
-            if (parsed.ciphertext && parsed.iv) {
-              if (!validateProjectPassphrase(parsed, oldKey)) {
-                throw new Error(`Authentication tag mismatch on secret '${secret.key}'. The current passphrase is incorrect.`);
-              }
-              plainValue = decryptSecretValue(parsed, oldKey);
-            } else {
-              plainValue = val; // Might be server encrypted or plain
-            }
-          } catch (e: any) {
-            throw new Error(`Failed to decrypt secret '${secret.key}': ${e.message}`);
-          }
-        } else {
-           plainValue = val;
-        }
-
-        // Encrypt with new key
-        let newValueStr = plainValue;
-        if (plainValue !== undefined && plainValue !== null) {
-            const newEnc = await encryptSecretValueWebCrypto(plainValue, newKey);
-            newValueStr = JSON.stringify(newEnc);
-        }
-
-        // Decrypt and re-encrypt history
-        const newHistory = [];
-        if (Array.isArray(secret.history)) {
-          for (const hist of secret.history) {
-            let hVal = hist.value;
-            if (Array.isArray(hVal) && hVal.length > 0) hVal = hVal[0];
-            
-            let hPlain = "";
-            if (typeof hVal === "string" && hVal.startsWith("{")) {
-               try {
-                 const hParsed = JSON.parse(hVal);
-                 if (hParsed.ciphertext && hParsed.iv) {
-                    hPlain = decryptSecretValue(hParsed, oldKey);
-                 } else {
-                    hPlain = hVal;
-                 }
-               } catch (e) {
-                 // Skip un-decryptable history items silently rather than failing entire rotation
-                 hPlain = hVal;
-               }
-            } else {
-               hPlain = hVal;
-            }
-
-            let newHStr = hPlain;
-            if (hPlain && hPlain.startsWith && !hPlain.startsWith("{") && !hPlain.startsWith("[")) {
-               const newHEnc = await encryptSecretValueWebCrypto(hPlain, newKey);
-               newHStr = JSON.stringify(newHEnc);
-            } else if (hPlain && !hPlain.startsWith) {
-               // Fallback if not string
-               newHStr = hPlain;
-            }
-
-            newHistory.push({
-              ...hist,
-              value: [newHStr]
-            });
-          }
-        }
-
-        updates.push({
-          id: secret.id,
-          value: [newValueStr],
-          history: newHistory
-        });
-      }
-
-      setProgress("Saving rotated secrets to the cloud...");
-      await axios.post("/api/secret/rotate", {
-        projectId,
-        updates
-      });
-
-      setProgress("Rotation successful!");
-      
-      // Auto-download recovery kit for the new passphrase if not already downloaded
-      if (lastDownloadedKey !== newPassphrase) {
-        downloadRecoveryKit({
-          passphrase: newPassphrase,
-          projectName,
-          projectId,
-          workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
-          scope: targetScope
-        });
-        setAutoDownloaded(true);
-        setLastDownloadedKey(newPassphrase);
-      }
-
-      persistRotatedKey(newPassphrase);
-      
-      onSuccess(newPassphrase, targetScope);
-      onClose();
-    } catch (err: any) {
-      setError(err.response?.data?.message || err.message || "Failed to rotate master key.");
-    } finally {
-      setIsRotating(false);
-    }
+    await executeRotate(currentPassphrase, newPassphrase, targetScope);
   };
 
-  const persistRotatedKey = (pass: string) => {
+  const persistRotatedKey = (pass: string, scope: "project" | "workspace") => {
     if (typeof window === "undefined") return;
 
-    // If workspace scope chosen, apply as workspace master key and remove project override
-    if (targetScope === "workspace") {
-      const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+    const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+
+    if (scope === "workspace") {
       if (wsId) {
         sessionStorage.setItem(`xtra_ws_vault_${wsId}`, pass);
+        sessionStorage.setItem("xtra_global_vault_passphrase", pass);
         if (rememberDevice) {
           localStorage.setItem(`xtra_ws_vault_${wsId}`, pass);
           localStorage.setItem("xtra_global_vault_passphrase", pass);
         } else {
           localStorage.removeItem(`xtra_ws_vault_${wsId}`);
+          localStorage.removeItem("xtra_global_vault_passphrase");
         }
       }
       // Remove project-specific override so this project tracks workspace master key
       sessionStorage.removeItem(`xtra_vault_${projectId}`);
       localStorage.removeItem(`xtra_vault_${projectId}`);
+      localStorage.setItem(`xtra_vault_scope_${projectId}`, "workspace");
       window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { workspaceId: wsId, scope: "workspace" } }));
     } else {
       // Save dedicated project-specific key (isolated)
       sessionStorage.setItem(`xtra_vault_${projectId}`, pass);
+      localStorage.setItem(`xtra_vault_scope_${projectId}`, "project");
       if (rememberDevice) {
         localStorage.setItem(`xtra_vault_${projectId}`, pass);
       } else {
@@ -281,14 +364,14 @@ export function RotateMasterKeyModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <RefreshCw className="h-5 w-5 text-primary" />
-            Rotate Master Passphrase
+            Rotate Master Passphrase & Scope
           </DialogTitle>
           <DialogDescription>
-            This action will decrypt all secrets in {projectName} and re-encrypt them with your new master passphrase.
+            This action decrypts all secrets in {projectName} and re-encrypts them with your new master passphrase.
           </DialogDescription>
         </DialogHeader>
 
@@ -299,32 +382,36 @@ export function RotateMasterKeyModal({
           </Alert>
         )}
 
-        {isUnlockedViaWorkspace && (
-          <div className="p-3 bg-blue-500/10 border border-blue-500/30 rounded-lg text-xs flex items-center gap-2.5 text-blue-900 dark:text-blue-200">
-            <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
-            <div>
-              <p className="font-semibold">Currently Unlocked via Workspace Master Key</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                Select <strong>Project Only (Isolated)</strong> below to decouple this project from the workspace master key and give it an independent key.
-              </p>
+        {/* Current State Badges */}
+        <div className="flex flex-wrap gap-2 text-xs">
+          {isUnlockedViaWorkspace && (
+            <div className="p-2.5 bg-blue-500/10 border border-blue-500/30 rounded-lg flex items-center gap-2 text-blue-900 dark:text-blue-200 w-full">
+              <ShieldCheck className="h-4 w-4 text-blue-500 shrink-0" />
+              <div>
+                <p className="font-semibold">Currently using: Workspace Master Key</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  Select <strong>Project Only (Isolated)</strong> below to decouple this project with an independent passphrase.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {isDedicatedProjectKey && (
-          <div className="p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg text-xs flex items-center gap-2.5 text-purple-900 dark:text-purple-200">
-            <Key className="h-5 w-5 text-purple-500 shrink-0" />
-            <div>
-              <p className="font-semibold">Currently Using Dedicated Project Key</p>
-              <p className="text-[11px] text-muted-foreground mt-0.5">
-                This project has an isolated key separate from other workspace projects.
-              </p>
+          {isDedicatedProjectKey && (
+            <div className="p-2.5 bg-purple-500/10 border border-purple-500/30 rounded-lg flex items-center gap-2 text-purple-900 dark:text-purple-200 w-full">
+              <Key className="h-4 w-4 text-purple-500 shrink-0" />
+              <div>
+                <p className="font-semibold">Currently using: Dedicated Project Key</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">
+                  This project has an isolated key separate from other workspace projects. Select <strong>Workspace Master</strong> to unify it with the workspace.
+                </p>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
 
         <form onSubmit={handleRotate} className="space-y-4 py-2">
-          <div className="space-y-2">
+          {/* Current Passphrase Field */}
+          <div className="space-y-1.5">
             <div className="flex items-center justify-between">
               <Label className="text-xs font-semibold">Current Master Passphrase</Label>
               {currentVaultPassphrase && currentPassphrase !== currentVaultPassphrase && (
@@ -350,23 +437,36 @@ export function RotateMasterKeyModal({
             />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
+          {/* New Passphrase Field with Instant Auto-Rotate */}
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between flex-wrap gap-1">
               <Label className="text-xs font-semibold">New Master Passphrase or Mnemonic</Label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={handleGenerate}
-                className="h-6 text-xs px-2 text-primary font-medium hover:text-primary hover:bg-primary/10 transition-colors"
-                title="Generate secure 24-word phrase and auto-download recovery kit"
-              >
-                <Key className="h-3 w-3 mr-1" /> Generate Secure Phrase
-              </Button>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleGenerate}
+                  className="h-6 text-xs px-2 text-primary font-medium hover:text-primary hover:bg-primary/10 transition-colors"
+                  title="Generate secure 24-word phrase"
+                >
+                  <Key className="h-3 w-3 mr-1" /> Generate Phrase
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleGenerateAndAutoRotate}
+                  disabled={isRotating}
+                  className="h-6 text-[11px] px-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-medium shadow-sm transition-all"
+                  title="Generate key and immediately auto-rotate secrets in one click"
+                >
+                  <Zap className="h-3 w-3 mr-1" /> Generate & Auto-Rotate
+                </Button>
+              </div>
             </div>
             <Input
               type="password"
-              placeholder="Enter or paste new passphrase..."
+              placeholder="Enter, paste, or click 'Generate & Auto-Rotate'..."
               value={newPassphrase}
               onChange={(e) => setNewPassphrase(e.target.value)}
               onPaste={handleNewPassphrasePaste}
@@ -420,13 +520,10 @@ export function RotateMasterKeyModal({
               <p className="font-mono text-[11px] text-muted-foreground break-all bg-background/90 p-2 rounded border border-border/50 select-all">
                 {newPassphrase}
               </p>
-              <p className="text-[10px] text-muted-foreground">
-                Your recovery kit has been automatically downloaded to your computer as a text file. Please store it securely in your password manager.
-              </p>
             </div>
           )}
 
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             <Label className="text-xs font-semibold">Confirm New Passphrase</Label>
             <Input
               type="password"
@@ -438,14 +535,19 @@ export function RotateMasterKeyModal({
             />
           </div>
 
-          {/* Key Scope Selection */}
+          {/* Key Scope Selection: Option to change from workspace level key to project level key or vice versa */}
           <div className="space-y-2 pt-2 border-t">
-            <Label className="text-xs font-semibold">Passphrase Scope</Label>
+            <div className="flex items-center justify-between">
+              <Label className="text-xs font-semibold">Passphrase Scope (Switch Level)</Label>
+              <span className="text-[11px] text-muted-foreground">
+                Target: <strong>{targetScope === "project" ? "Dedicated Project Key" : "Workspace Master Key"}</strong>
+              </span>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
               <label
-                className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${
                   targetScope === "project"
-                    ? "border-primary bg-primary/5 text-foreground"
+                    ? "border-primary bg-primary/5 text-foreground shadow-sm"
                     : "border-border hover:border-primary/40 text-muted-foreground"
                 }`}
               >
@@ -458,17 +560,20 @@ export function RotateMasterKeyModal({
                     onChange={() => setTargetScope("project")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span className="font-semibold text-foreground">Project Only (Isolated)</span>
+                  <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                    <Key className="h-3.5 w-3.5 text-primary" />
+                    <span>Project Only (Isolated)</span>
+                  </div>
                 </div>
-                <span className="text-[11px] text-muted-foreground mt-1 ml-5">
-                  Re-encrypts this project. Other projects in the workspace remain unaffected.
+                <span className="text-[11px] text-muted-foreground mt-1.5 ml-5 leading-normal">
+                  Decouples this project with an independent passphrase. Other workspace projects remain unaffected.
                 </span>
               </label>
 
               <label
-                className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
+                className={`flex flex-col p-2.5 rounded-lg border-2 cursor-pointer transition-all ${
                   targetScope === "workspace"
-                    ? "border-primary bg-primary/5 text-foreground"
+                    ? "border-primary bg-primary/5 text-foreground shadow-sm"
                     : "border-border hover:border-primary/40 text-muted-foreground"
                 }`}
               >
@@ -481,13 +586,31 @@ export function RotateMasterKeyModal({
                     onChange={() => setTargetScope("workspace")}
                     className="text-primary focus:ring-primary"
                   />
-                  <span className="font-semibold text-foreground">Workspace Master</span>
+                  <div className="flex items-center gap-1.5 font-semibold text-foreground">
+                    <ShieldCheck className="h-3.5 w-3.5 text-blue-500" />
+                    <span>Workspace Master</span>
+                  </div>
                 </div>
-                <span className="text-[11px] text-muted-foreground mt-1 ml-5">
-                  Applies this key as the Workspace Master Key for all projects in this workspace.
+                <span className="text-[11px] text-muted-foreground mt-1.5 ml-5 leading-normal">
+                  Unifies this project under the Workspace Master Key shared across all projects in this workspace.
                 </span>
               </label>
             </div>
+
+            {/* Scope Transition Notice */}
+            {isUnlockedViaWorkspace && targetScope === "project" && (
+              <div className="p-2 bg-purple-500/10 border border-purple-500/20 rounded-md text-[11px] text-purple-700 dark:text-purple-300 flex items-center gap-2 mt-1">
+                <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                <span>Converting: This decouples this project from the workspace master key to an isolated key.</span>
+              </div>
+            )}
+
+            {isDedicatedProjectKey && targetScope === "workspace" && (
+              <div className="p-2 bg-blue-500/10 border border-blue-500/20 rounded-md text-[11px] text-blue-700 dark:text-blue-300 flex items-center gap-2 mt-1">
+                <RefreshCw className="h-3.5 w-3.5 shrink-0" />
+                <span>Converting: This removes the dedicated project key and adopts the Workspace Master Key.</span>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center space-x-2 pt-1">
@@ -507,7 +630,7 @@ export function RotateMasterKeyModal({
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isRotating}>
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={isRotating}>
+            <Button type="submit" size="sm" disabled={isRotating} className="bg-primary hover:bg-primary/90">
               {isRotating ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />

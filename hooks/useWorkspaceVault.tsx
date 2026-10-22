@@ -93,8 +93,11 @@ export const WorkspaceVaultProvider: React.FC<{ children: React.ReactNode }> = (
           }
         }
         // Also persist globally if remember is chosen
+        sessionStorage.setItem(STORAGE_PREFIX.GLOBAL, cleanPassphrase);
         if (remember) {
           localStorage.setItem(STORAGE_PREFIX.GLOBAL, cleanPassphrase);
+        } else {
+          localStorage.removeItem(STORAGE_PREFIX.GLOBAL);
         }
         window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { workspaceId: currentWorkspaceId, scope: "workspace" } }));
       }
@@ -122,6 +125,7 @@ export const WorkspaceVaultProvider: React.FC<{ children: React.ReactNode }> = (
 
     if (typeof window !== "undefined") {
       sessionStorage.setItem(`${STORAGE_PREFIX.PROJECT}${projectId}`, clean);
+      localStorage.setItem(`xtra_vault_scope_${projectId}`, "project");
       if (remember) {
         localStorage.setItem(`${STORAGE_PREFIX.PROJECT}${projectId}`, clean);
       } else {
@@ -137,6 +141,7 @@ export const WorkspaceVaultProvider: React.FC<{ children: React.ReactNode }> = (
     if (typeof window !== "undefined") {
       sessionStorage.removeItem(`${STORAGE_PREFIX.PROJECT}${projectId}`);
       localStorage.removeItem(`${STORAGE_PREFIX.PROJECT}${projectId}`);
+      localStorage.setItem(`xtra_vault_scope_${projectId}`, "workspace");
       window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { projectId, scope: "project", cleared: true } }));
     }
   }, []);

@@ -1,3 +1,9 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // CACHE BUSTER: 2026-10-08
@@ -39,26 +45,15 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   headers: async () => {
+    const makeHeader = (headerKey, headerVal) => ({ key: headerKey, value: headerVal });
     return [
       {
         source: '/:path*',
         headers: [
-          {
-            key: 'X-DNS-Prefetch-Control',
-            value: 'on',
-          },
-          {
-            key: 'X-Frame-Options',
-            value: 'DENY',
-          },
-          {
-            key: 'X-Content-Type-Options',
-            value: 'nosniff',
-          },
-          {
-            key: 'Permissions-Policy',
-            value: 'camera=(), microphone=(), geolocation=()',
-          },
+          makeHeader('X-DNS-Prefetch-Control', 'on'),
+          makeHeader('X-Frame-Options', 'DENY'),
+          makeHeader('X-Content-Type-Options', 'nosniff'),
+          makeHeader('Permissions-Policy', 'camera=(), microphone=(), geolocation=()'),
         ],
       },
     ];
@@ -77,6 +72,13 @@ const nextConfig = {
       config.externals.push('bullmq');
     }
     
+    // Explicitly configure @ alias for reliable cross-platform resolution
+    config.resolve = config.resolve || {};
+    config.resolve.alias = {
+      ...config.resolve.alias,
+      '@': path.resolve(__dirname),
+    };
+
     // Suppress "Critical dependency: the request of a dependency is an expression"
     config.module = {
       ...config.module,

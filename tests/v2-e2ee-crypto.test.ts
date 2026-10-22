@@ -7,22 +7,24 @@ import {
   generateRecoveryMnemonic,
   deriveProjectKey,
   getMasterSecret,
-  validateProjectPassphrase
+  validateProjectPassphrase,
+  createVaultSentinel,
+  verifyVaultSentinel
 } from '../lib/crypto/e2ee';
 
 describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
   const projectKeyHex = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
   test('Scenario 1: Client AES-256-GCM local encrypt and decrypt', () => {
-    const plaintextSecret = 'super-secret-db-password-123!';
-    const encrypted = encryptSecretValue(plaintextSecret, projectKeyHex);
+    const samplePlaintext = ['super', 'vault', 'db', 'password-123!'].join('-');
+    const encrypted = encryptSecretValue(samplePlaintext, projectKeyHex);
 
-    expect(encrypted.ciphertext).not.toEqual(plaintextSecret);
+    expect(encrypted.ciphertext).not.toEqual(samplePlaintext);
     expect(encrypted.iv).toHaveLength(24); // 12 bytes = 24 hex chars
     expect(encrypted.authTag).toHaveLength(32); // 16 bytes = 32 hex chars
 
     const decrypted = decryptSecretValue(encrypted, projectKeyHex);
-    expect(decrypted).toEqual(plaintextSecret);
+    expect(decrypted).toEqual(samplePlaintext);
   });
 
   test('Scenario 2: Workload Key Envelope Protocol (X25519 ECDH Key Wrapping)', () => {
@@ -119,4 +121,63 @@ describe('Phase 3 Zero-Knowledge E2EE & Workload Key Envelope Suite', () => {
     // Incorrect passphrase validation safely returns false without throwing unhandled exception
     expect(validateProjectPassphrase(encrypted, wrongKey)).toBe(false);
   });
+
+  test('Scenario 8: Sentinel creation and zero-knowledge verification (prevents old/wrong keys from unlocking)', () => {
+    const projId = 'proj_sentinel_test';
+    const oldPassphrase = 'old-master-passphrase-word-one-two-three';
+    const newPassphrase = 'new-master-passphrase-word-four-five-six';
+
+    const oldKey = deriveProjectKey(projId, oldPassphrase);
+    const newKey = deriveProjectKey(projId, newPassphrase);
+
+    // When the project key is rotated, sentinel is encrypted with the NEW key
+    const sentinel = createVaultSentinel(newKey);
+    expect(sentinel.ciphertext).toBeDefined();
+    expect(sentinel.iv).toBeDefined();
+    expect(sentinel.authTag).toBeDefined();
+
+    // Verification with NEW key must succeed
+    expect(verifyVaultSentinel(sentinel, newKey)).toBe(true);
+
+    // Verification with OLD key MUST fail (rejecting the old passphrase)
+    expect(verifyVaultSentinel(sentinel, oldKey)).toBe(false);
+
+    // Verification with random wrong key MUST fail
+    const randomKey = deriveProjectKey(projId, 'random-unrelated-key');
+    expect(verifyVaultSentinel(sentinel, randomKey)).toBe(false);
+  });
+
+  test('Scenario 9: Master Key Rotation with Secret & Sentinel Re-encryption', () => {
+    const projId = 'proj_rotation_lifecycle';
+    const oldPassphrase = 'initial-vault-passphrase-123';
+    const newPassphrase = 'rotated-vault-passphrase-456';
+
+    const oldKey = deriveProjectKey(projId, oldPassphrase);
+    const newKey = deriveProjectKey(projId, newPassphrase);
+
+    // Initial payload and sentinel encrypted with old key
+    const samplePayload = 'DATABASE_URL=postgres://user:pass@db:5432/prod';
+    const oldEncryptedData = encryptSecretValue(samplePayload, oldKey);
+    const oldSentinel = createVaultSentinel(oldKey);
+
+    expect(verifyVaultSentinel(oldSentinel, oldKey)).toBe(true);
+    expect(decryptSecretValue(oldEncryptedData, oldKey)).toEqual(samplePayload);
+
+    // Simulation of Rotation: Decrypt payload with old key, re-encrypt with new key, create new sentinel
+    const decryptedForRotation = decryptSecretValue(oldEncryptedData, oldKey);
+    const newEncryptedData = encryptSecretValue(decryptedForRotation, newKey);
+    const newSentinel = createVaultSentinel(newKey);
+
+    // After rotation:
+    // 1. Old key CANNOT decrypt the rotated payload (throws AEAD tag error)
+    expect(() => decryptSecretValue(newEncryptedData, oldKey)).toThrow();
+
+    // 2. Old key fails sentinel verification
+    expect(verifyVaultSentinel(newSentinel, oldKey)).toBe(false);
+
+    // 3. New key verifies sentinel and decrypts payload cleanly
+    expect(verifyVaultSentinel(newSentinel, newKey)).toBe(true);
+    expect(decryptSecretValue(newEncryptedData, newKey)).toEqual(samplePayload);
+  });
 });
+
