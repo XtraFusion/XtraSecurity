@@ -20,18 +20,24 @@ import (
 
 // XtraClientOptions represents options for initializing the Go XtraSecurity Client.
 type XtraClientOptions struct {
-	Token           string
-	ProjectID       string
-	APIURL          string
-	Timeout         time.Duration
-	VaultPassphrase string
+	Token               string
+	ProjectID           string
+	WorkspaceID         string
+	APIURL              string
+	Timeout             time.Duration
+	VaultPassphrase     string
+	WorkspacePassphrase string
+	Scope               string
 }
 
 // XtraClient is the idiomatic developer-friendly wrapper for the Go SDK.
 type XtraClient struct {
-	apiClient       *APIClient
-	projectID       string
-	vaultPassphrase string
+	apiClient           *APIClient
+	projectID           string
+	workspaceID         string
+	vaultPassphrase     string
+	workspacePassphrase string
+	scope               string
 }
 
 // NewXtraClient initializes a new XtraClient with token and API configuration.
@@ -57,11 +63,35 @@ func NewXtraClient(opts XtraClientOptions) (*XtraClient, error) {
 		projectID = os.Getenv("XTRA_PROJECT_ID")
 	}
 
+	workspaceID := opts.WorkspaceID
+	if workspaceID == "" {
+		workspaceID = os.Getenv("XTRA_WORKSPACE_ID")
+	}
+
+	scope := opts.Scope
+	if scope == "" {
+		scope = os.Getenv("XTRA_VAULT_SCOPE")
+	}
+	if scope == "" {
+		scope = "workspace"
+	}
+
 	cfg := NewConfiguration()
 	cfg.Host = apiURL
 	cfg.DefaultHeader["Authorization"] = "Bearer " + token
 
+	workspacePassphrase := opts.WorkspacePassphrase
+	if workspacePassphrase == "" {
+		workspacePassphrase = os.Getenv("XTRA_WORKSPACE_PASSPHRASE")
+	}
+
 	vaultPassphrase := opts.VaultPassphrase
+	if vaultPassphrase == "" {
+		vaultPassphrase = os.Getenv("XTRA_PROJECT_PASSPHRASE")
+	}
+	if vaultPassphrase == "" {
+		vaultPassphrase = workspacePassphrase
+	}
 	if vaultPassphrase == "" {
 		vaultPassphrase = os.Getenv("XTRA_VAULT_PASSPHRASE")
 	}
@@ -71,13 +101,22 @@ func NewXtraClient(opts XtraClientOptions) (*XtraClient, error) {
 
 	client := NewAPIClient(cfg)
 	return &XtraClient{
-		apiClient:       client,
-		projectID:       projectID,
-		vaultPassphrase: vaultPassphrase,
+		apiClient:           client,
+		projectID:           projectID,
+		workspaceID:         workspaceID,
+		vaultPassphrase:     vaultPassphrase,
+		workspacePassphrase: workspacePassphrase,
+		scope:               scope,
 	}, nil
 }
 
 func DeriveProjectKey(projectID, passphrase string) []byte {
+	if passphrase == "" {
+		passphrase = os.Getenv("XTRA_PROJECT_PASSPHRASE")
+	}
+	if passphrase == "" {
+		passphrase = os.Getenv("XTRA_WORKSPACE_PASSPHRASE")
+	}
 	if passphrase == "" {
 		passphrase = os.Getenv("XTRA_VAULT_PASSPHRASE")
 	}
@@ -94,6 +133,118 @@ func DeriveProjectKey(projectID, passphrase string) []byte {
 	key := make([]byte, 32)
 	io.ReadFull(kdf, key)
 	return key
+}
+
+func DeriveWorkspaceKey(workspaceID, passphrase string) []byte {
+	if passphrase == "" {
+		passphrase = os.Getenv("XTRA_WORKSPACE_PASSPHRASE")
+	}
+	if passphrase == "" {
+		passphrase = os.Getenv("XTRA_VAULT_PASSPHRASE")
+	}
+	if passphrase == "" {
+		passphrase = os.Getenv("XTRA_MASTER_SECRET")
+	}
+	if passphrase == "" {
+		panic("Workspace Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.")
+	}
+	salt := []byte(fmt.Sprintf("workspace_salt_%s", workspaceID))
+	info := []byte("xtra-e2ee-workspace-key-v1")
+	hash := sha256.New
+	kdf := hkdf.New(hash, []byte(passphrase), salt, info)
+	key := make([]byte, 32)
+	io.ReadFull(kdf, key)
+	return key
+}
+
+const VaultSentinelMagic = "xtra_vault_sentinel_token_v3_authenticated"
+
+func CreateVaultSentinel(projectKey []byte) (*EncryptedPayload, error) {
+	return EncryptSecretValue(VaultSentinelMagic, projectKey)
+}
+
+func VerifyVaultSentinel(payload EncryptedPayload, projectKey []byte) bool {
+	decrypted, err := DecryptSecretValue(payload, projectKey)
+	if err != nil {
+		return false
+	}
+	return decrypted == VaultSentinelMagic
+}
+
+func CreateWorkspaceVaultSentinel(workspaceID, passphrase string) (*EncryptedPayload, error) {
+	wsKey := DeriveWorkspaceKey(workspaceID, passphrase)
+	return EncryptSecretValue(VaultSentinelMagic, wsKey)
+}
+
+func VerifyWorkspaceVaultSentinel(payload EncryptedPayload, workspaceID, passphrase string) bool {
+	wsKey := DeriveWorkspaceKey(workspaceID, passphrase)
+	decrypted, err := DecryptSecretValue(payload, wsKey)
+	if err != nil {
+		return false
+	}
+	return decrypted == VaultSentinelMagic
+}
+
+var bip39Words = []string{
+	"abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+	"access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+	"action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+	"adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+	"agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+	"alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+	"always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+	"angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+	"anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
+	"area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest",
+	"arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset",
+	"assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction",
+	"audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake",
+	"aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge",
+	"bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain",
+	"barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become",
+	"beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit",
+	"best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology",
+	"bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless",
+	"blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body",
+	"boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss",
+	"bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread",
+	"breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze",
+	"broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb",
+	"bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy",
+	"butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call",
+	"calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas",
+	"canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry",
+	"cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category",
+	"cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century",
+	"cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase",
+	"chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child",
+	"chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle",
+	"citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk",
+	"clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close",
+	"cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut",
+	"code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort",
+	"comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control",
+	"convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost",
+	"cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle",
+	"craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek",
+	"crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial",
+	"cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup",
+}
+
+func GenerateRecoveryMnemonic() (string, string) {
+	entropy := make([]byte, 32)
+	io.ReadFull(rand.Reader, entropy)
+	entropyHex := hex.EncodeToString(entropy)
+
+	var words []string
+	for i := 0; i < 24; i++ {
+		byteIndex := (i * 4) % 32
+		chunkHex := entropyHex[byteIndex : byteIndex+4]
+		var val int
+		fmt.Sscanf(chunkHex, "%x", &val)
+		words = append(words, bip39Words[val%len(bip39Words)])
+	}
+	return strings.Join(words, " "), entropyHex
 }
 
 type EncryptedPayload struct {

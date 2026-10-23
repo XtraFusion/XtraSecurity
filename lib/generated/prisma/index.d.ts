@@ -8498,6 +8498,7 @@ export namespace Prisma {
     subscriptionPlan: string | null
     projectLimit: number | null
     subscriptionEnd: Date | null
+    vaultSentinel: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -8512,6 +8513,7 @@ export namespace Prisma {
     subscriptionPlan: string | null
     projectLimit: number | null
     subscriptionEnd: Date | null
+    vaultSentinel: string | null
     createdAt: Date | null
     updatedAt: Date | null
   }
@@ -8526,6 +8528,7 @@ export namespace Prisma {
     subscriptionPlan: number
     projectLimit: number
     subscriptionEnd: number
+    vaultSentinel: number
     createdAt: number
     updatedAt: number
     _all: number
@@ -8550,6 +8553,7 @@ export namespace Prisma {
     subscriptionPlan?: true
     projectLimit?: true
     subscriptionEnd?: true
+    vaultSentinel?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8564,6 +8568,7 @@ export namespace Prisma {
     subscriptionPlan?: true
     projectLimit?: true
     subscriptionEnd?: true
+    vaultSentinel?: true
     createdAt?: true
     updatedAt?: true
   }
@@ -8578,6 +8583,7 @@ export namespace Prisma {
     subscriptionPlan?: true
     projectLimit?: true
     subscriptionEnd?: true
+    vaultSentinel?: true
     createdAt?: true
     updatedAt?: true
     _all?: true
@@ -8679,6 +8685,7 @@ export namespace Prisma {
     subscriptionPlan: string
     projectLimit: number
     subscriptionEnd: Date | null
+    vaultSentinel: string | null
     createdAt: Date
     updatedAt: Date
     _count: WorkspaceCountAggregateOutputType | null
@@ -8712,6 +8719,7 @@ export namespace Prisma {
     subscriptionPlan?: boolean
     projectLimit?: boolean
     subscriptionEnd?: boolean
+    vaultSentinel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
     user?: boolean | UserDefaultArgs<ExtArgs>
@@ -8731,11 +8739,12 @@ export namespace Prisma {
     subscriptionPlan?: boolean
     projectLimit?: boolean
     subscriptionEnd?: boolean
+    vaultSentinel?: boolean
     createdAt?: boolean
     updatedAt?: boolean
   }
 
-  export type WorkspaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "icon" | "workspaceType" | "createdBy" | "subscriptionPlan" | "projectLimit" | "subscriptionEnd" | "createdAt" | "updatedAt", ExtArgs["result"]["workspace"]>
+  export type WorkspaceOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "name" | "description" | "icon" | "workspaceType" | "createdBy" | "subscriptionPlan" | "projectLimit" | "subscriptionEnd" | "vaultSentinel" | "createdAt" | "updatedAt", ExtArgs["result"]["workspace"]>
   export type WorkspaceInclude<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     user?: boolean | UserDefaultArgs<ExtArgs>
     projects?: boolean | Workspace$projectsArgs<ExtArgs>
@@ -8758,6 +8767,7 @@ export namespace Prisma {
       subscriptionPlan: string
       projectLimit: number
       subscriptionEnd: Date | null
+      vaultSentinel: string | null
       createdAt: Date
       updatedAt: Date
     }, ExtArgs["result"]["workspace"]>
@@ -9163,6 +9173,7 @@ export namespace Prisma {
     readonly subscriptionPlan: FieldRef<"Workspace", 'String'>
     readonly projectLimit: FieldRef<"Workspace", 'Int'>
     readonly subscriptionEnd: FieldRef<"Workspace", 'DateTime'>
+    readonly vaultSentinel: FieldRef<"Workspace", 'String'>
     readonly createdAt: FieldRef<"Workspace", 'DateTime'>
     readonly updatedAt: FieldRef<"Workspace", 'DateTime'>
   }
@@ -44108,6 +44119,7 @@ export namespace Prisma {
     subscriptionPlan: 'subscriptionPlan',
     projectLimit: 'projectLimit',
     subscriptionEnd: 'subscriptionEnd',
+    vaultSentinel: 'vaultSentinel',
     createdAt: 'createdAt',
     updatedAt: 'updatedAt'
   };
@@ -45137,6 +45149,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFilter<"Workspace"> | string
     projectLimit?: IntFilter<"Workspace"> | number
     subscriptionEnd?: DateTimeNullableFilter<"Workspace"> | Date | string | null
+    vaultSentinel?: StringNullableFilter<"Workspace"> | string | null
     createdAt?: DateTimeFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeFilter<"Workspace"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -45153,6 +45166,7 @@ export namespace Prisma {
     subscriptionPlan?: SortOrder
     projectLimit?: SortOrder
     subscriptionEnd?: SortOrder
+    vaultSentinel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     user?: UserOrderByWithRelationInput
@@ -45172,6 +45186,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFilter<"Workspace"> | string
     projectLimit?: IntFilter<"Workspace"> | number
     subscriptionEnd?: DateTimeNullableFilter<"Workspace"> | Date | string | null
+    vaultSentinel?: StringNullableFilter<"Workspace"> | string | null
     createdAt?: DateTimeFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeFilter<"Workspace"> | Date | string
     user?: XOR<UserScalarRelationFilter, UserWhereInput>
@@ -45188,6 +45203,7 @@ export namespace Prisma {
     subscriptionPlan?: SortOrder
     projectLimit?: SortOrder
     subscriptionEnd?: SortOrder
+    vaultSentinel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
     _count?: WorkspaceCountOrderByAggregateInput
@@ -45210,6 +45226,7 @@ export namespace Prisma {
     subscriptionPlan?: StringWithAggregatesFilter<"Workspace"> | string
     projectLimit?: IntWithAggregatesFilter<"Workspace"> | number
     subscriptionEnd?: DateTimeNullableWithAggregatesFilter<"Workspace"> | Date | string | null
+    vaultSentinel?: StringNullableWithAggregatesFilter<"Workspace"> | string | null
     createdAt?: DateTimeWithAggregatesFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeWithAggregatesFilter<"Workspace"> | Date | string
   }
@@ -48302,6 +48319,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutWorkspacesInput
@@ -48318,6 +48336,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     projects?: ProjectUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -48331,6 +48350,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWorkspacesNestedInput
@@ -48346,6 +48366,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     projects?: ProjectUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -48361,6 +48382,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -48373,6 +48395,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -48386,6 +48409,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -51685,6 +51709,7 @@ export namespace Prisma {
     subscriptionPlan?: SortOrder
     projectLimit?: SortOrder
     subscriptionEnd?: SortOrder
+    vaultSentinel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -51703,6 +51728,7 @@ export namespace Prisma {
     subscriptionPlan?: SortOrder
     projectLimit?: SortOrder
     subscriptionEnd?: SortOrder
+    vaultSentinel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -51717,6 +51743,7 @@ export namespace Prisma {
     subscriptionPlan?: SortOrder
     projectLimit?: SortOrder
     subscriptionEnd?: SortOrder
+    vaultSentinel?: SortOrder
     createdAt?: SortOrder
     updatedAt?: SortOrder
   }
@@ -55881,6 +55908,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     projects?: ProjectCreateNestedManyWithoutWorkspaceInput
@@ -55895,6 +55923,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     projects?: ProjectUncheckedCreateNestedManyWithoutWorkspaceInput
@@ -56426,6 +56455,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFilter<"Workspace"> | string
     projectLimit?: IntFilter<"Workspace"> | number
     subscriptionEnd?: DateTimeNullableFilter<"Workspace"> | Date | string | null
+    vaultSentinel?: StringNullableFilter<"Workspace"> | string | null
     createdAt?: DateTimeFilter<"Workspace"> | Date | string
     updatedAt?: DateTimeFilter<"Workspace"> | Date | string
   }
@@ -57255,6 +57285,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
     user: UserCreateNestedOneWithoutWorkspacesInput
@@ -57270,6 +57301,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -57678,6 +57710,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     user?: UserUpdateOneRequiredWithoutWorkspacesNestedInput
@@ -57692,6 +57725,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }
@@ -62878,6 +62912,7 @@ export namespace Prisma {
     subscriptionPlan?: string
     projectLimit?: number
     subscriptionEnd?: Date | string | null
+    vaultSentinel?: string | null
     createdAt?: Date | string
     updatedAt?: Date | string
   }
@@ -63153,6 +63188,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     projects?: ProjectUpdateManyWithoutWorkspaceNestedInput
@@ -63166,6 +63202,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
     projects?: ProjectUncheckedUpdateManyWithoutWorkspaceNestedInput
@@ -63179,6 +63216,7 @@ export namespace Prisma {
     subscriptionPlan?: StringFieldUpdateOperationsInput | string
     projectLimit?: IntFieldUpdateOperationsInput | number
     subscriptionEnd?: NullableDateTimeFieldUpdateOperationsInput | Date | string | null
+    vaultSentinel?: NullableStringFieldUpdateOperationsInput | string | null
     createdAt?: DateTimeFieldUpdateOperationsInput | Date | string
     updatedAt?: DateTimeFieldUpdateOperationsInput | Date | string
   }

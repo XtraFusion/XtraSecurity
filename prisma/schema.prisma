@@ -140,6 +140,7 @@ model Workspace {
   projectLimit     Int       @default(5) // Free plan allows 5 projects
   subscriptionEnd  DateTime?
   projects         Project[]
+  vaultSentinel    String? // Zero-Knowledge Workspace Master Verification Sentinel (JSON string)
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
 }

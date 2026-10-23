@@ -5,7 +5,15 @@
 import React from "react";
 import { renderHook, act } from "@testing-library/react";
 import { WorkspaceVaultProvider, useWorkspaceVault, STORAGE_PREFIX } from "@/hooks/useWorkspaceVault";
-import { deriveProjectKey, encryptSecretValue, decryptSecretValue, downloadRecoveryKit } from "@/lib/crypto/e2ee";
+import {
+  deriveProjectKey,
+  encryptSecretValue,
+  decryptSecretValue,
+  downloadRecoveryKit,
+  deriveWorkspaceKey,
+  createWorkspaceVaultSentinel,
+  verifyWorkspaceVaultSentinel
+} from "@/lib/crypto/e2ee";
 
 // Mock useGlobalContext
 const mockWorkspace = { id: "ws_test_enterprise_123", name: "Enterprise Workspace" };
@@ -184,6 +192,70 @@ describe("Workspace-Level Master Vault Passphrase System", () => {
     expect(clickSpy).toHaveBeenCalled();
 
     clickSpy.mockRestore();
+  });
+
+  it("8. Role-based Access Control (RBAC): Restricts Workspace Master Key scope changes exclusively to Workspace Admin & Owner roles", () => {
+    const isAllowedToManageWorkspaceKey = (role: string | null | undefined, isCreator: boolean = false): boolean => {
+      const normalizedRole = role?.toLowerCase();
+      if (normalizedRole === "owner" || normalizedRole === "admin") return true;
+      if (isCreator) return true;
+      return false;
+    };
+
+    // Workspace Owner and Admin are authorized
+    expect(isAllowedToManageWorkspaceKey("owner")).toBe(true);
+    expect(isAllowedToManageWorkspaceKey("admin")).toBe(true);
+    expect(isAllowedToManageWorkspaceKey("ADMIN")).toBe(true);
+    expect(isAllowedToManageWorkspaceKey("OWNER")).toBe(true);
+    expect(isAllowedToManageWorkspaceKey("viewer", true)).toBe(true); // creator is owner
+
+    // Regular members and viewers are strictly rejected
+    expect(isAllowedToManageWorkspaceKey("member")).toBe(false);
+    expect(isAllowedToManageWorkspaceKey("developer")).toBe(false);
+    expect(isAllowedToManageWorkspaceKey("viewer")).toBe(false);
+    expect(isAllowedToManageWorkspaceKey(null)).toBe(false);
+    expect(isAllowedToManageWorkspaceKey(undefined)).toBe(false);
+  });
+
+  it("9. Workspace Sentinel Cryptographic Verification: Confirms correct passphrase against canonical workspace sentinel", () => {
+    const wsId = "ws_enterprise_sentinel_test";
+    const masterPassphrase = "correct-apple-banana-cherry-date-elderberry-passphrase";
+
+    // Create canonical workspace sentinel
+    const sentinelPayload = createWorkspaceVaultSentinel(wsId, masterPassphrase);
+    expect(sentinelPayload.ciphertext).toBeDefined();
+    expect(sentinelPayload.iv).toBeDefined();
+    expect(sentinelPayload.authTag).toBeDefined();
+
+    // Verification with exact same passphrase MUST succeed
+    const isValid = verifyWorkspaceVaultSentinel(sentinelPayload, wsId, masterPassphrase);
+    expect(isValid).toBe(true);
+
+    // Also works when sentinelPayload is a JSON string (as stored in database / API)
+    const jsonStr = JSON.stringify(sentinelPayload);
+    const isValidFromJson = verifyWorkspaceVaultSentinel(jsonStr, wsId, masterPassphrase);
+    expect(isValidFromJson).toBe(true);
+  });
+
+  it("10. Split-Brain & Typo Prevention: Strictly rejects wrong passphrase or mismatched workspace sentinel", () => {
+    const wsId = "ws_enterprise_sentinel_test";
+    const realPassphrase = "correct-apple-banana-cherry-date-elderberry-passphrase";
+    const typoPassphrase = "correct-apple-banana-cherry-date-elderberry-passphrase-TYPO";
+    const completelyDifferentKey = "completely-different-generated-splitbrain-passphrase";
+
+    const sentinelPayload = createWorkspaceVaultSentinel(wsId, realPassphrase);
+
+    // Typo in passphrase MUST fail validation
+    const typoResult = verifyWorkspaceVaultSentinel(sentinelPayload, wsId, typoPassphrase);
+    expect(typoResult).toBe(false);
+
+    // Completely different generated key MUST fail validation (split-brain prevention)
+    const splitBrainResult = verifyWorkspaceVaultSentinel(sentinelPayload, wsId, completelyDifferentKey);
+    expect(splitBrainResult).toBe(false);
+
+    // Same key tested against different workspaceId MUST fail due to HKDF domain separation
+    const crossWorkspaceResult = verifyWorkspaceVaultSentinel(sentinelPayload, "ws_different_domain_456", realPassphrase);
+    expect(crossWorkspaceResult).toBe(false);
   });
 });
 

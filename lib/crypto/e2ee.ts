@@ -692,3 +692,41 @@ export async function verifyVaultSentinelWebCrypto(sentinelPayload: EncryptedPay
     return false;
   }
 }
+
+/**
+ * Derive a unique 256-bit AES Workspace Symmetric Key dynamically for workspace-level operations and sentinels.
+ */
+export function deriveWorkspaceKey(workspaceId: string, userSecret?: string): string {
+  const secret = userSecret || getMasterSecret();
+  if (typeof window === 'undefined' && typeof crypto !== 'undefined' && crypto.hkdfSync) {
+    const salt = Buffer.from(`workspace_salt_${workspaceId}`);
+    const info = Buffer.from('xtra-e2ee-workspace-key-v1');
+    const derived = crypto.hkdfSync('sha256', Buffer.from(secret), salt, info, 32);
+    return Buffer.from(derived).toString('hex');
+  }
+
+  const derivedBytes = rawHkdfSha256(secret, `workspace_salt_${workspaceId}`, 'xtra-e2ee-workspace-key-v1');
+  return bytesToHex(derivedBytes);
+}
+
+export function createWorkspaceVaultSentinel(workspaceId: string, userSecret?: string): EncryptedPayload {
+  const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+  return encryptSecretValue(VAULT_SENTINEL_MAGIC, wsKey);
+}
+
+export function verifyWorkspaceVaultSentinel(
+  sentinelPayload: EncryptedPayload | string,
+  workspaceId: string,
+  userSecret?: string
+): boolean {
+  try {
+    const parsedPayload: EncryptedPayload =
+      typeof sentinelPayload === 'string' ? JSON.parse(sentinelPayload) : sentinelPayload;
+    const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+    const decrypted = decryptSecretValue(parsedPayload, wsKey);
+    return decrypted === VAULT_SENTINEL_MAGIC;
+  } catch {
+    return false;
+  }
+}
+

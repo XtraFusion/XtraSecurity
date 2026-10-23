@@ -461,7 +461,14 @@ const VaultManager: React.FC = () => {
   const { id: projectId } = useParams<{ id: string }>();
   const router = useRouter(); // Import needed
   const searchParams = useSearchParams(); // Import needed
-  const { user, selectedWorkspace, setSelectedWorkspace, workspaces } = useGlobalContext();
+  const { user, selectedWorkspace, setSelectedWorkspace, workspaces, workspaceRole } = useGlobalContext();
+
+  const isWorkspaceAdminOrOwner = React.useMemo(() => {
+    const role = workspaceRole?.toLowerCase();
+    if (role === "owner" || role === "admin") return true;
+    if (selectedWorkspace?.createdBy && user?.id && String(selectedWorkspace.createdBy) === String(user.id)) return true;
+    return false;
+  }, [workspaceRole, selectedWorkspace, user]);
 
   const [project, setProject] = React.useState<Project | null>(null);
   const [branches, setBranches] = React.useState<Branch[]>([]);
@@ -496,8 +503,16 @@ const VaultManager: React.FC = () => {
   // Level 3 Strict Zero-Knowledge Vault State
   const [vaultPassphrase, setVaultPassphrase] = React.useState<string>(() => {
     if (typeof window !== "undefined") {
+      const isLockedByUser = sessionStorage.getItem(`xtra_vault_locked_${projectId}`) === "true";
+      if (isLockedByUser) return "";
+
+      const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
       const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
       if (projKey) return projKey;
+
+      // Dedicated project key MUST NOT fall back to workspace key!
+      if (storedScope === "project") return "";
+
       const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
       if (wsId) {
         const wsKey = sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`);
@@ -510,6 +525,9 @@ const VaultManager: React.FC = () => {
 
   const [isDedicatedProjectKey, setIsDedicatedProjectKey] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
+      const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
+      if (storedScope === "project") return true;
+      if (storedScope === "workspace") return false;
       return Boolean(sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`));
     }
     return false;
@@ -517,6 +535,12 @@ const VaultManager: React.FC = () => {
 
   const [isUnlockedViaWorkspace, setIsUnlockedViaWorkspace] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
+      const isLockedByUser = sessionStorage.getItem(`xtra_vault_locked_${projectId}`) === "true";
+      if (isLockedByUser) return false;
+
+      const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
+      if (storedScope === "project") return false;
+
       const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
       if (!projKey) {
         const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
@@ -530,11 +554,19 @@ const VaultManager: React.FC = () => {
 
   const [isVaultUnlocked, setIsVaultUnlocked] = React.useState<boolean>(() => {
     if (typeof window !== "undefined") {
+      const isLockedByUser = sessionStorage.getItem(`xtra_vault_locked_${projectId}`) === "true";
+      if (isLockedByUser) return false;
+
+      const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
       const projKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+      if (projKey) return true;
+
+      if (storedScope === "project") return false;
+
       const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
       const wsKey = wsId ? (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`)) : null;
       const globalKey = sessionStorage.getItem("xtra_global_vault_passphrase") || localStorage.getItem("xtra_global_vault_passphrase");
-      return Boolean(projKey || wsKey || globalKey);
+      return Boolean(wsKey || globalKey);
     }
     return false;
   });
@@ -559,26 +591,40 @@ const VaultManager: React.FC = () => {
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       const isLockedByUser = sessionStorage.getItem(`xtra_vault_locked_${projectId}`) === "true";
-      if (isLockedByUser) return;
+      const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
 
-      const hasProjKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
-      if (hasProjKey) {
-        setVaultPassphrase(hasProjKey);
-        setIsVaultUnlocked(true);
+      if (storedScope === "project") {
         setIsDedicatedProjectKey(true);
         setIsUnlockedViaWorkspace(false);
-      } else if (existingWorkspaceKey) {
-        const storedScope = localStorage.getItem(`xtra_vault_scope_${projectId}`);
-        if (storedScope === "project") {
-          setIsDedicatedProjectKey(true);
-          setIsUnlockedViaWorkspace(false);
+        if (isLockedByUser) {
+          setIsVaultUnlocked(false);
+          setVaultPassphrase("");
           return;
         }
-        // Automatic unlock via existing Workspace Master Key for new and existing projects!
+        const hasProjKey = sessionStorage.getItem(`xtra_vault_${projectId}`) || localStorage.getItem(`xtra_vault_${projectId}`);
+        if (hasProjKey) {
+          setVaultPassphrase(hasProjKey);
+          setIsVaultUnlocked(true);
+        } else {
+          setIsVaultUnlocked(false);
+          setVaultPassphrase("");
+        }
+        return;
+      }
+
+      // Workspace scope
+      setIsDedicatedProjectKey(false);
+      if (isLockedByUser) {
+        setIsVaultUnlocked(false);
+        setIsUnlockedViaWorkspace(false);
+        setVaultPassphrase("");
+        return;
+      }
+
+      if (existingWorkspaceKey) {
         setVaultPassphrase(existingWorkspaceKey);
         setIsVaultUnlocked(true);
         setIsUnlockedViaWorkspace(true);
-        setIsDedicatedProjectKey(false);
       }
     }
   }, [existingWorkspaceKey, projectId]);
@@ -600,7 +646,7 @@ const VaultManager: React.FC = () => {
     setRotateModalMode("switch_scope");
     setRotateInitialScope(targetScope);
     if (targetScope === "workspace") {
-      setRotateInitialPhrase(workspacePassphrase || "");
+      setRotateInitialPhrase(existingWorkspaceKey || workspacePassphrase || "");
     } else {
       setRotateInitialPhrase("");
     }
@@ -968,13 +1014,14 @@ const VaultManager: React.FC = () => {
       // Success - persist in sessionStorage / localStorage and state
       setVaultPassphrase(inputKey);
       setIsVaultUnlocked(true);
+      const effectiveScope = (forcedPassphrase && forcedPassphrase === existingWorkspaceKey) || (!isDedicatedProjectKey && inputKey === existingWorkspaceKey)
+        ? "workspace"
+        : isDedicatedProjectKey
+        ? "project"
+        : (passphraseScope || (existingWorkspaceKey ? "workspace" : "project"));
+
       if (typeof window !== "undefined") {
         sessionStorage.removeItem(`xtra_vault_locked_${projectId}`);
-        const effectiveScope = (forcedPassphrase && forcedPassphrase === existingWorkspaceKey) || (!isDedicatedProjectKey && inputKey === existingWorkspaceKey)
-          ? "workspace"
-          : isDedicatedProjectKey
-          ? "project"
-          : (passphraseScope || (existingWorkspaceKey ? "workspace" : "project"));
 
         if (effectiveScope === "project") {
           setProjectPassphrase(projectId as string, inputKey, rememberDevice);
@@ -1773,16 +1820,29 @@ const VaultManager: React.FC = () => {
                 </Badge>
               )}
               {(project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin') && (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => handleOpenScopeSwitch(isDedicatedProjectKey ? "workspace" : "project")}
-                  className="h-6 text-[11px] px-2 text-primary hover:text-primary hover:bg-primary/10 ml-0.5 font-medium"
-                  title={isDedicatedProjectKey ? "Switch this project to use Workspace Master Key" : "Decouple this project to an independent Dedicated Project Key"}
-                >
-                  <RefreshCw className="h-3 w-3 mr-1" />
-                  {isDedicatedProjectKey ? "Switch to Workspace Key" : "Switch to Project Key"}
-                </Button>
+                isDedicatedProjectKey && !isWorkspaceAdminOrOwner ? (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled
+                    className="h-6 text-[11px] px-2 text-muted-foreground opacity-60 cursor-not-allowed ml-0.5 font-medium"
+                    title="Only Workspace Admins and Owners can switch a project to Workspace Master Key"
+                  >
+                    <Lock className="h-3 w-3 mr-1" />
+                    Workspace Key (Admin Only)
+                  </Button>
+                ) : (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => handleOpenScopeSwitch(isDedicatedProjectKey ? "workspace" : "project")}
+                    className="h-6 text-[11px] px-2 text-primary hover:text-primary hover:bg-primary/10 ml-0.5 font-medium"
+                    title={isDedicatedProjectKey ? "Switch this project to use Workspace Master Key" : "Decouple this project to an independent Dedicated Project Key"}
+                  >
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    {isDedicatedProjectKey ? "Switch to Workspace Key" : "Switch to Project Key"}
+                  </Button>
+                )
               )}
             </div>
 
@@ -3257,6 +3317,7 @@ const VaultManager: React.FC = () => {
         initialNewPassphrase={rotateInitialPhrase}
         initialScope={rotateInitialScope || (isDedicatedProjectKey ? "project" : "workspace")}
         currentVaultPassphrase={vaultPassphrase}
+        existingWorkspacePassphrase={existingWorkspaceKey}
         isUnlockedViaWorkspace={isUnlockedViaWorkspace}
         isDedicatedProjectKey={isDedicatedProjectKey}
         onSuccess={(newPassphrase, scope = "project") => {

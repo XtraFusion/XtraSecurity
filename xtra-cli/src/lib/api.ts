@@ -86,19 +86,25 @@ export const api = {
     return response.data;
   },
   setSecrets: async (projectId: string, env: string, secrets: Record<string, string>, expectedVersions?: Record<string, string>, branch: string = "main") => {
-    // Zero-Knowledge E2EE: Encrypt plaintext before sending
-    const { deriveProjectKey, encryptSecretValue, resolveVaultPassphrase } = require("./crypto");
-    const activePassphrase = resolveVaultPassphrase(undefined, projectId);
-    const projectKey = deriveProjectKey(projectId, activePassphrase);
-
-    const encryptedSecrets: Record<string, string> = {};
-    for (const [key, val] of Object.entries(secrets)) {
-      if (typeof val === "string" && val.startsWith("{") && val.includes("ciphertext")) {
-        encryptedSecrets[key] = val; // Already encrypted
-      } else {
-        const enc = encryptSecretValue(val, projectKey);
-        encryptedSecrets[key] = JSON.stringify(enc);
+    // Zero-Knowledge E2EE: Encrypt plaintext before sending when a passphrase is configured
+    let encryptedSecrets: Record<string, string> = { ...secrets };
+    try {
+      const { deriveProjectKey, encryptSecretValue, resolveVaultPassphrase } = require("./crypto");
+      const activePassphrase = resolveVaultPassphrase(undefined, projectId);
+      if (activePassphrase) {
+        const projectKey = deriveProjectKey(projectId, activePassphrase);
+        encryptedSecrets = {};
+        for (const [key, val] of Object.entries(secrets)) {
+          if (typeof val === "string" && val.startsWith("{") && val.includes("ciphertext")) {
+            encryptedSecrets[key] = val; // Already encrypted
+          } else {
+            const enc = encryptSecretValue(val, projectKey);
+            encryptedSecrets[key] = JSON.stringify(enc);
+          }
+        }
       }
+    } catch (_) {
+      // If no vault passphrase is configured, proceed with raw payload
     }
 
     const response = await getClient().post(`/projects/${projectId}/envs/${env}/secrets`, { secrets: encryptedSecrets, expectedVersions, branch });

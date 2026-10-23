@@ -28,6 +28,25 @@ export const POST = withSecurity(async (request, context, session) => {
       return NextResponse.json({ error: "Only project owners or admins can rotate the master key" }, { status: 403 });
     }
 
+    // Enforce workspace-level authorization when targeting workspace scope
+    const targetScope = body.targetScope || "project";
+    if (targetScope === "workspace") {
+      const { getUserWorkspaceRole } = await import("@/lib/permissions");
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { workspaceId: true }
+      });
+      if (project?.workspaceId) {
+        const wsRole = await getUserWorkspaceRole(session.userId, project.workspaceId);
+        if (!wsRole || (wsRole !== "owner" && wsRole !== "admin")) {
+          return NextResponse.json(
+            { error: "Forbidden: Only workspace owners and admins can configure or switch to workspace master keys" },
+            { status: 403 }
+          );
+        }
+      }
+    }
+
     // Process updates in a transaction
     if (updates.length > 0) {
       await prisma.$transaction(
@@ -95,6 +114,32 @@ export const POST = withSecurity(async (request, context, session) => {
             ]
           }
         });
+      }
+    }
+
+    // Persist or initialize workspace-level sentinel if targeting workspace
+    if (targetScope === "workspace" && body.workspaceSentinel) {
+      const project = await prisma.project.findUnique({
+        where: { id: projectId },
+        select: { workspaceId: true }
+      });
+      if (project?.workspaceId) {
+        const wsSentinelStr = typeof body.workspaceSentinel === "string" 
+          ? body.workspaceSentinel 
+          : JSON.stringify(body.workspaceSentinel);
+        
+        const existingWs = await prisma.workspace.findUnique({
+          where: { id: project.workspaceId },
+          select: { vaultSentinel: true }
+        });
+
+        // Initialize if not already present
+        if (!existingWs?.vaultSentinel) {
+          await prisma.workspace.update({
+            where: { id: project.workspaceId },
+            data: { vaultSentinel: wsSentinelStr }
+          });
+        }
       }
     }
 

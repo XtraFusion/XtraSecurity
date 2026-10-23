@@ -144,7 +144,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                                 {group.label}
                             </h4>
                             {group.items.map((item) => {
-                                const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname.startsWith(item.href));
+                                const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
                                 // Filter restricted links for non-admins in shared workspaces
                                 if (!hasAdminAccess && ["Settings"].includes(item.name)) {
                                     return null;

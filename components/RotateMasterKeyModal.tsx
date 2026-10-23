@@ -16,7 +16,9 @@ import {
   validateProjectPassphrase,
   downloadRecoveryKit,
   createVaultSentinelWebCrypto,
-  verifyVaultSentinel
+  verifyVaultSentinel,
+  createWorkspaceVaultSentinel,
+  verifyWorkspaceVaultSentinel
 } from "@/lib/crypto/e2ee";
 import { useGlobalContext } from "@/hooks/useUser";
 
@@ -29,6 +31,7 @@ export interface RotateMasterKeyModalProps {
   initialNewPassphrase?: string;
   initialScope?: "project" | "workspace";
   currentVaultPassphrase?: string;
+  existingWorkspacePassphrase?: string;
   isUnlockedViaWorkspace?: boolean;
   isDedicatedProjectKey?: boolean;
   onSuccess: (newPassphrase: string, scope?: "project" | "workspace") => void;
@@ -43,6 +46,7 @@ export function RotateMasterKeyModal({
   initialNewPassphrase = "",
   initialScope = "project",
   currentVaultPassphrase = "",
+  existingWorkspacePassphrase = "",
   isUnlockedViaWorkspace = false,
   isDedicatedProjectKey = false,
   onSuccess
@@ -60,19 +64,66 @@ export function RotateMasterKeyModal({
   const [showConfirmPass, setShowConfirmPass] = useState(false);
   const [copied, setCopied] = useState<boolean>(false);
   const [generatedMnemonic, setGeneratedMnemonic] = useState<string | null>(null);
+  const [wsKeyMode, setWsKeyMode] = useState<"existing" | "new">("existing");
+  const [workspaceSentinel, setWorkspaceSentinel] = useState<string | null>(null);
+  const [isCheckingWsSentinel, setIsCheckingWsSentinel] = useState<boolean>(false);
+  const [hasAcknowledgedKeySaved, setHasAcknowledgedKeySaved] = useState<boolean>(false);
 
-  const { selectedWorkspace } = useGlobalContext();
+  const { selectedWorkspace, workspaceRole, user } = useGlobalContext();
+
+  const isWorkspaceAdminOrOwner = React.useMemo(() => {
+    const role = workspaceRole?.toLowerCase();
+    if (role === "owner" || role === "admin") return true;
+    if (selectedWorkspace?.createdBy && user?.id && String(selectedWorkspace.createdBy) === String(user.id)) return true;
+    return false;
+  }, [workspaceRole, selectedWorkspace, user]);
+
+  // Fetch latest workspace sentinel on open to guarantee split-brain prevention
+  useEffect(() => {
+    if (isOpen) {
+      setHasAcknowledgedKeySaved(false);
+      const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+      if (wsId) {
+        if (selectedWorkspace.vaultSentinel) {
+          setWorkspaceSentinel(selectedWorkspace.vaultSentinel);
+        } else {
+          setIsCheckingWsSentinel(true);
+          axios.get(`/api/workspace?id=${wsId}`)
+            .then((res) => {
+              if (res.data?.vaultSentinel) {
+                setWorkspaceSentinel(res.data.vaultSentinel);
+              } else {
+                setWorkspaceSentinel(null);
+              }
+            })
+            .catch(() => setWorkspaceSentinel(null))
+            .finally(() => setIsCheckingWsSentinel(false));
+        }
+      }
+    }
+  }, [isOpen, selectedWorkspace]);
+
+  const hasWorkspaceSentinel = Boolean(workspaceSentinel);
+
+  const sentinelValidationResult = React.useMemo(() => {
+    if (mode !== "switch_scope" || targetScope !== "workspace" || !workspaceSentinel) return null;
+    const clean = newPassphrase.trim();
+    if (!clean) return null;
+    const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+    if (!wsId) return null;
+    return verifyWorkspaceVaultSentinel(workspaceSentinel, wsId, clean);
+  }, [mode, targetScope, workspaceSentinel, newPassphrase, selectedWorkspace]);
 
   // Sync initial state on modal open
   useEffect(() => {
     if (isOpen) {
-      if (initialNewPassphrase) {
-        setNewPassphrase(initialNewPassphrase);
-        setConfirmPassphrase(initialNewPassphrase);
-      } else {
-        setNewPassphrase("");
-        setConfirmPassphrase("");
-      }
+      const isTargetingWs = initialScope === "workspace";
+      const targetPass = (mode === "switch_scope" && isTargetingWs && existingWorkspacePassphrase)
+        ? existingWorkspacePassphrase
+        : (initialNewPassphrase || "");
+
+      setNewPassphrase(targetPass);
+      setConfirmPassphrase(targetPass);
       if (initialScope) {
         setTargetScope(initialScope);
       }
@@ -88,14 +139,18 @@ export function RotateMasterKeyModal({
       setShowNewPass(false);
       setShowConfirmPass(false);
     }
-  }, [isOpen, initialNewPassphrase, initialScope, currentVaultPassphrase]);
+  }, [isOpen, initialNewPassphrase, initialScope, currentVaultPassphrase, existingWorkspacePassphrase, mode]);
 
   // Generates 24-word phrase without auto-downloading immediately to avoid annoying file spam
   const handleGenerate = () => {
+    if (mode === "switch_scope" && targetScope === "workspace" && hasWorkspaceSentinel) {
+      return; // Strictly forbidden to generate a conflicting key over an established workspace sentinel
+    }
     const result = generateRecoveryMnemonic();
     setNewPassphrase(result.mnemonic);
     setConfirmPassphrase(result.mnemonic);
     setGeneratedMnemonic(result.mnemonic);
+    setHasAcknowledgedKeySaved(false);
     setError(null);
   };
 
@@ -108,6 +163,22 @@ export function RotateMasterKeyModal({
 
     const activeCurrent = currPass.trim();
     const activeNew = newPass.trim();
+
+    if (isScopeSwitch && scope === "workspace" && !isWorkspaceAdminOrOwner) {
+      setError("Forbidden: Only Workspace Admins and Owners can switch a project to the Workspace Master Key.");
+      return;
+    }
+
+    const wsId = selectedWorkspace?.id || selectedWorkspace?.value;
+
+    // Cryptographic validation against workspace sentinel (preventing split-brain and typos)
+    if (isScopeSwitch && scope === "workspace" && wsId && workspaceSentinel) {
+      const matches = verifyWorkspaceVaultSentinel(workspaceSentinel, wsId, activeNew);
+      if (!matches) {
+        setError("Authentication tag mismatch. The entered passphrase does not match your workspace's established master key.");
+        return;
+      }
+    }
 
     if (!activeCurrent || !activeNew) {
       setError("Please fill in both current and new passphrases.");
@@ -149,6 +220,11 @@ export function RotateMasterKeyModal({
 
       // Generate new cryptographic sentinel for project
       const newSentinelPayload = await createVaultSentinelWebCrypto(newKey);
+
+      let newWsSentinelPayload: any = null;
+      if (isScopeSwitch && scope === "workspace" && wsId && !workspaceSentinel) {
+        newWsSentinelPayload = createWorkspaceVaultSentinel(wsId, activeNew);
+      }
 
       const updates: Array<{ id: string; value: string[]; history: any[] }> = [];
 
@@ -240,8 +316,14 @@ export function RotateMasterKeyModal({
         projectId,
         updates,
         sentinel: newSentinelPayload,
+        workspaceSentinel: newWsSentinelPayload,
         targetScope: scope
       });
+
+      if (newWsSentinelPayload && selectedWorkspace) {
+        selectedWorkspace.vaultSentinel = JSON.stringify(newWsSentinelPayload);
+        setWorkspaceSentinel(JSON.stringify(newWsSentinelPayload));
+      }
 
       setProgress("Rotation successful!");
 
@@ -325,29 +407,29 @@ export function RotateMasterKeyModal({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2 text-base font-semibold">
+      <DialogContent className="w-full max-w-[calc(100vw-2rem)] sm:max-w-md max-h-[90vh] overflow-y-auto overflow-x-hidden p-4 sm:p-6 min-w-0">
+        <DialogHeader className="space-y-1.5 min-w-0">
+          <DialogTitle className="flex flex-wrap items-center gap-2 text-base font-semibold min-w-0">
             {isScopeSwitch ? (
               isTargetingWorkspace ? (
                 <>
                   <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
-                  Switch to Workspace Master Key
+                  <span className="truncate">Switch to Workspace Master Key</span>
                 </>
               ) : (
                 <>
                   <Key className="h-5 w-5 text-purple-500 shrink-0" />
-                  Switch to Dedicated Project Key
+                  <span className="truncate">Switch to Dedicated Project Key</span>
                 </>
               )
             ) : (
               <>
                 <RefreshCw className="h-5 w-5 text-primary shrink-0" />
-                Rotate Master Key
+                <span className="truncate">Rotate Master Key</span>
               </>
             )}
           </DialogTitle>
-          <DialogDescription className="text-xs text-muted-foreground">
+          <DialogDescription className="text-xs text-muted-foreground leading-relaxed">
             {isScopeSwitch ? (
               isTargetingWorkspace ? (
                 `Re-encrypt secrets in ${projectName} under the Workspace Master Key to share access with workspace members.`
@@ -361,52 +443,87 @@ export function RotateMasterKeyModal({
         </DialogHeader>
 
         {error && (
-          <Alert variant="destructive" className="py-2 px-3">
+          <Alert variant="destructive" className="py-2 px-3 min-w-0">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            <AlertDescription className="text-xs ml-2">{error}</AlertDescription>
+            <AlertDescription className="text-xs ml-2 break-words">{error}</AlertDescription>
           </Alert>
         )}
 
         {/* Current State / Transition Banner */}
         {isScopeSwitch ? (
-          <div className="p-3 bg-muted/50 rounded-lg border border-border/70 text-xs space-y-1.5">
-            <div className="flex items-center gap-2 font-medium">
-              <span className="text-muted-foreground">Scope Conversion:</span>
-              <span className="inline-flex items-center gap-1 font-semibold text-foreground">
-                {isDedicatedProjectKey ? "Project Key" : "Workspace Master"}
-                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground" />
-                {isTargetingWorkspace ? "Workspace Master" : "Dedicated Project Key"}
+          <div className="p-3 bg-muted/50 rounded-lg border border-border/70 text-xs space-y-1.5 w-full min-w-0 overflow-hidden">
+            <div className="flex flex-wrap items-center gap-1.5 font-medium">
+              <span className="text-muted-foreground shrink-0">Scope Conversion:</span>
+              <span className="inline-flex items-center gap-1 font-semibold text-foreground flex-wrap">
+                <span>{isDedicatedProjectKey ? "Project Key" : "Workspace Master"}</span>
+                <ArrowRight className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                <span>{isTargetingWorkspace ? "Workspace Master" : "Dedicated Project Key"}</span>
               </span>
             </div>
             <p className="text-[11px] text-muted-foreground leading-relaxed">
               {isTargetingWorkspace
-                ? "This project will adopt the shared workspace key. Enter your current project passphrase and target workspace key below."
+                ? "This project will adopt the shared workspace master key. Enter your current project passphrase to re-encrypt."
                 : "This project will be decoupled from the workspace key. Generate or enter an isolated project key below."}
             </p>
           </div>
         ) : (
-          <div className="flex items-center gap-2 p-2 bg-muted/40 border border-border/60 rounded-lg text-xs">
+          <div className="flex flex-wrap items-center gap-2 p-2 bg-muted/40 border border-border/60 rounded-lg text-xs w-full min-w-0">
             {isDedicatedProjectKey ? (
               <>
                 <Key className="h-3.5 w-3.5 text-purple-500 shrink-0" />
-                <span className="text-muted-foreground">Current Scope:</span>
-                <span className="font-semibold text-purple-600 dark:text-purple-400">Dedicated Project Key (Isolated)</span>
+                <span className="text-muted-foreground shrink-0">Current Scope:</span>
+                <span className="font-semibold text-purple-600 dark:text-purple-400 truncate">Dedicated Project Key (Isolated)</span>
               </>
             ) : (
               <>
                 <ShieldCheck className="h-3.5 w-3.5 text-blue-500 shrink-0" />
-                <span className="text-muted-foreground">Current Scope:</span>
-                <span className="font-semibold text-blue-600 dark:text-blue-400">Workspace Master Key</span>
+                <span className="text-muted-foreground shrink-0">Current Scope:</span>
+                <span className="font-semibold text-blue-600 dark:text-blue-400 truncate">Workspace Master Key</span>
               </>
             )}
           </div>
         )}
 
-        <form onSubmit={handleRotateSubmit} className="space-y-3.5 py-1">
+        {/* Workspace Key Adoption Notice & Admin Access Enforcement */}
+        {isScopeSwitch && isTargetingWorkspace && (
+          !isWorkspaceAdminOrOwner ? (
+            <div className="p-3 bg-destructive/10 border border-destructive/20 rounded-lg text-xs space-y-1.5 w-full min-w-0">
+              <div className="flex items-center gap-1.5 font-semibold text-destructive text-[11px]">
+                <AlertCircle className="h-4 w-4 shrink-0" />
+                <span>Workspace Admin or Owner Access Required</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Only Workspace Admins and Owners have permission to configure or switch a project to the Workspace Master Key. You currently hold the role <strong>'{workspaceRole || "member"}'</strong> in this workspace.
+              </p>
+            </div>
+          ) : hasWorkspaceSentinel ? (
+            <div className="p-2.5 bg-blue-500/10 border border-blue-500/20 rounded-lg text-xs space-y-1.5 w-full min-w-0">
+              <div className="flex items-center gap-1.5 font-semibold text-blue-600 dark:text-blue-400 text-[11px]">
+                <ShieldCheck className="h-4 w-4 shrink-0" />
+                <span>Workspace Master Key Established</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                Other projects in this workspace are already encrypted under the Workspace Master Key. Please paste or enter the matching 24-word recovery passphrase to join this project to the shared vault.
+              </p>
+            </div>
+          ) : (
+            <div className="p-2.5 bg-purple-500/10 border border-purple-500/20 rounded-lg text-xs space-y-1.5 w-full min-w-0">
+              <div className="flex items-center gap-1.5 font-semibold text-purple-600 dark:text-purple-400 text-[11px]">
+                <Zap className="h-4 w-4 shrink-0" />
+                <span>First-Time Workspace Master Key Setup</span>
+              </div>
+              <p className="text-[11px] text-muted-foreground leading-relaxed">
+                This workspace does not have an active master key yet. You are initializing the master key that all workspace projects will share.
+              </p>
+            </div>
+          )
+        )}
+
+        <form onSubmit={handleRotateSubmit} className="space-y-3.5 py-1 w-full min-w-0 overflow-hidden">
           {/* Current Passphrase Field */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">
+          <div className="space-y-1.5 w-full min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 min-w-0">
+              <Label className="text-xs font-semibold shrink-0">
                 {isScopeSwitch && !isDedicatedProjectKey ? "Current Workspace Passphrase" : "Current Master Passphrase"}
               </Label>
               {currentVaultPassphrase && currentPassphrase !== currentVaultPassphrase && (
@@ -415,20 +532,20 @@ export function RotateMasterKeyModal({
                   variant="ghost"
                   size="sm"
                   onClick={() => setCurrentPassphrase(currentVaultPassphrase)}
-                  className="h-5 text-[11px] px-1.5 text-primary hover:text-primary hover:bg-primary/10"
+                  className="h-5 text-[11px] px-1.5 text-primary hover:text-primary hover:bg-primary/10 shrink-0"
                 >
                   Use Active Session Key
                 </Button>
               )}
             </div>
-            <div className="relative">
+            <div className="relative w-full min-w-0">
               <Input
                 type={showCurrentPass ? "text" : "password"}
                 placeholder="Enter current passphrase to decrypt..."
                 value={currentPassphrase}
                 onChange={(e) => setCurrentPassphrase(e.target.value)}
                 required
-                className="font-mono text-xs pr-9"
+                className="font-mono text-xs pr-9 w-full min-w-0"
                 autoFocus={!currentVaultPassphrase}
               />
               <button
@@ -443,32 +560,51 @@ export function RotateMasterKeyModal({
           </div>
 
           {/* New Passphrase Field */}
-          <div className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <Label className="text-xs font-semibold">
-                {isScopeSwitch && isTargetingWorkspace ? "Target Workspace Master Passphrase" : "New Master Passphrase"}
+          <div className="space-y-1.5 w-full min-w-0">
+            <div className="flex flex-wrap items-center justify-between gap-1 min-w-0">
+              <Label className="text-xs font-semibold shrink-0">
+                {isScopeSwitch && isTargetingWorkspace
+                  ? hasWorkspaceSentinel
+                    ? "Existing Workspace Master Passphrase"
+                    : "New Workspace Master Passphrase"
+                  : "New Master Passphrase"}
               </Label>
-              {(!isScopeSwitch || !isTargetingWorkspace) && (
+              {/* If workspace sentinel already exists, DO NOT allow Generate Key to prevent Split-Brain! */}
+              {(!isScopeSwitch || !isTargetingWorkspace || !hasWorkspaceSentinel) && (
                 <Button
                   type="button"
                   variant="ghost"
                   size="sm"
                   onClick={handleGenerate}
-                  className="h-5 text-xs px-2 text-primary font-medium hover:text-primary hover:bg-primary/10"
+                  disabled={isScopeSwitch && isTargetingWorkspace && !isWorkspaceAdminOrOwner}
+                  className="h-5 text-xs px-2 text-primary font-medium hover:text-primary hover:bg-primary/10 shrink-0"
                   title="Generate a secure 24-word recovery phrase"
                 >
                   <Key className="h-3 w-3 mr-1" /> Generate Key
                 </Button>
               )}
             </div>
-            <div className="relative">
+            <div className="relative w-full min-w-0">
               <Input
                 type={showNewPass ? "text" : "password"}
-                placeholder={isScopeSwitch && isTargetingWorkspace ? "Enter workspace master key..." : "Enter or click 'Generate Key'..."}
+                placeholder={
+                  isScopeSwitch && isTargetingWorkspace
+                    ? hasWorkspaceSentinel
+                      ? "Paste team's 24-word workspace master key..."
+                      : "Enter or click 'Generate Key'..."
+                    : "Enter or click 'Generate Key'..."
+                }
                 value={newPassphrase}
                 onChange={(e) => setNewPassphrase(e.target.value)}
                 required
-                className="font-mono text-xs pr-9"
+                disabled={isScopeSwitch && isTargetingWorkspace && !isWorkspaceAdminOrOwner}
+                className={`font-mono text-xs pr-9 w-full min-w-0 ${
+                  sentinelValidationResult === false
+                    ? "border-destructive focus-visible:ring-destructive"
+                    : sentinelValidationResult === true
+                    ? "border-emerald-500 focus-visible:ring-emerald-500"
+                    : ""
+                }`}
               />
               <button
                 type="button"
@@ -479,17 +615,34 @@ export function RotateMasterKeyModal({
                 {showNewPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
               </button>
             </div>
+
+            {/* Real-time Workspace Sentinel Verification Feedback */}
+            {isScopeSwitch && isTargetingWorkspace && hasWorkspaceSentinel && sentinelValidationResult !== null && (
+              <div className="pt-0.5">
+                {sentinelValidationResult ? (
+                  <div className="flex items-center gap-1.5 text-[11px] text-emerald-600 dark:text-emerald-400 font-semibold">
+                    <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                    <span>Cryptographically verified against Workspace Master Sentinel.</span>
+                  </div>
+                ) : (
+                  <div className="flex items-center gap-1.5 text-[11px] text-destructive font-medium">
+                    <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                    <span>Authentication tag mismatch. This key does not match your workspace master key.</span>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Generated phrase preview (if user generated one) */}
           {generatedMnemonic && newPassphrase === generatedMnemonic && (
-            <div className="p-2.5 bg-muted/60 border border-border/80 rounded-lg space-y-1.5 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-emerald-500 flex items-center gap-1.5 text-[11px]">
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                  Key Generated (Recovery Kit will download on rotate)
+            <div className="p-2.5 bg-muted/60 border border-border/80 rounded-lg space-y-2 text-xs w-full min-w-0 overflow-hidden">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 min-w-0">
+                <span className="font-semibold text-emerald-500 flex items-center gap-1.5 text-[11px] min-w-0">
+                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">Key Generated (Recovery Kit will download on rotate)</span>
                 </span>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1 shrink-0">
                   <Button
                     type="button"
                     size="sm"
@@ -523,23 +676,39 @@ export function RotateMasterKeyModal({
                   </Button>
                 </div>
               </div>
-              <p className="font-mono text-[11px] text-muted-foreground break-all bg-background/90 p-1.5 rounded border border-border/40 select-all">
+              <p className="font-mono text-[11px] text-muted-foreground break-all bg-background/90 p-2 rounded border border-border/40 select-all max-w-full overflow-hidden">
                 {newPassphrase}
               </p>
             </div>
           )}
 
+          {/* Mandatory Recovery Key Backup Acknowledgment */}
+          {(generatedMnemonic || (isScopeSwitch && isTargetingWorkspace && !hasWorkspaceSentinel)) && (
+            <div className="flex items-start space-x-2 p-2.5 bg-amber-500/10 border border-amber-500/20 rounded-lg text-xs">
+              <input
+                type="checkbox"
+                id="ack-saved-ws-key"
+                checked={hasAcknowledgedKeySaved}
+                onChange={(e) => setHasAcknowledgedKeySaved(e.target.checked)}
+                className="h-3.5 w-3.5 mt-0.5 rounded border-gray-300 text-amber-600 focus:ring-amber-500 cursor-pointer shrink-0"
+              />
+              <label htmlFor="ack-saved-ws-key" className="text-[11px] text-amber-800 dark:text-amber-200 cursor-pointer select-none leading-relaxed">
+                <strong>Mandatory Confirmation:</strong> I have copied and safely saved this recovery passphrase. I understand that lost master passphrases cannot be recovered by administrators or support.
+              </label>
+            </div>
+          )}
+
           {/* Confirm Passphrase Field */}
-          <div className="space-y-1.5">
+          <div className="space-y-1.5 w-full min-w-0">
             <Label className="text-xs font-semibold">Confirm Passphrase</Label>
-            <div className="relative">
+            <div className="relative w-full min-w-0">
               <Input
                 type={showConfirmPass ? "text" : "password"}
                 placeholder="Confirm passphrase..."
                 value={confirmPassphrase}
                 onChange={(e) => setConfirmPassphrase(e.target.value)}
                 required
-                className="font-mono text-xs pr-9"
+                className="font-mono text-xs pr-9 w-full min-w-0"
               />
               <button
                 type="button"
@@ -565,11 +734,30 @@ export function RotateMasterKeyModal({
             </label>
           </div>
 
-          <DialogFooter className="pt-2 gap-2 sm:gap-0">
+          <DialogFooter className="pt-2 flex flex-row items-center justify-end gap-2 sm:gap-2">
             <Button type="button" variant="ghost" size="sm" onClick={onClose} disabled={isRotating}>
               Cancel
             </Button>
-            <Button type="submit" size="sm" disabled={isRotating} className="bg-primary hover:bg-primary/90">
+            <Button
+              type="submit"
+              size="sm"
+              disabled={
+                isRotating ||
+                (isScopeSwitch && isTargetingWorkspace && !isWorkspaceAdminOrOwner) ||
+                (isScopeSwitch && isTargetingWorkspace && hasWorkspaceSentinel && sentinelValidationResult === false) ||
+                ((generatedMnemonic || (isScopeSwitch && isTargetingWorkspace && !hasWorkspaceSentinel)) && !hasAcknowledgedKeySaved)
+              }
+              className="bg-primary hover:bg-primary/90"
+              title={
+                isScopeSwitch && isTargetingWorkspace && !isWorkspaceAdminOrOwner
+                  ? "Only Workspace Admins and Owners can switch to Workspace Master Key"
+                  : isScopeSwitch && isTargetingWorkspace && hasWorkspaceSentinel && sentinelValidationResult === false
+                  ? "Passphrase does not match workspace master key sentinel"
+                  : (generatedMnemonic || (isScopeSwitch && isTargetingWorkspace && !hasWorkspaceSentinel)) && !hasAcknowledgedKeySaved
+                  ? "Please confirm that you have safely saved your recovery passphrase"
+                  : undefined
+              }
+            >
               {isRotating ? (
                 <>
                   <Loader2 className="mr-2 h-3.5 w-3.5 animate-spin" />

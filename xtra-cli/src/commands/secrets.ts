@@ -45,7 +45,10 @@ Examples:
 
     const spinner = ora(`Fetching secrets for ${env} (branch: ${branch})...`).start();
     try {
-        const secrets = await api.getSecrets(project, env, branch, options.passphrase || parentOpts.passphrase);
+        const pass = options.passphrase || parentOpts.passphrase;
+        const secrets = pass
+          ? await api.getSecrets(project, env, branch, pass)
+          : await api.getSecrets(project, env, branch);
         spinner.stop();
 
         if (!secrets || Object.keys(secrets).length === 0) {

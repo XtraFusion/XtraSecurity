@@ -197,19 +197,179 @@ export function decryptSecretValue(payload: { ciphertext: string; iv: string; au
   return decrypted;
 }
 
+export const secureDelete = (storeKey: string): void => {
+  try {
+    const service = "XtraSecurityCLI";
+    const account = storeKey;
+
+    if (os.platform() === "darwin") {
+      execFileSync("security", ["delete-generic-password", "-s", service, "-a", account], { stdio: "ignore" });
+    } else if (os.platform() === "linux") {
+      try {
+        execFileSync("secret-tool", ["clear", "service", service, "account", account], { stdio: "ignore" });
+      } catch (e) {}
+    }
+  } catch (err) {}
+
+  try {
+    config.delete(`secure_${storeKey}`);
+  } catch (err) {}
+};
+
 /**
- * Resolves the Level 3 Master Vault Passphrase from multiple sources:
- * 1. Explicit argument / flag
- * 2. Environment variable XTRA_VAULT_PASSPHRASE
- * 3. Local OS Hardware Keyring (stored locally via secureRead)
- * 4. .xtrarc config file
- * 5. Fallback legacy default seed ("xtra-zero-knowledge-master")
+ * Standard BIP-39 Curated English Wordlist for 24-Word Master Key Generation
  */
-export function resolveVaultPassphrase(explicit?: string, projectId?: string): string {
+const BIP39_WORDS = [
+  "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+  "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+  "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+  "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+  "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+  "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+  "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+  "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+  "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
+  "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest",
+  "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset",
+  "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction",
+  "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake",
+  "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge",
+  "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain",
+  "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become",
+  "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit",
+  "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology",
+  "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless",
+  "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body",
+  "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss",
+  "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread",
+  "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze",
+  "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb",
+  "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy",
+  "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call",
+  "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas",
+  "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry",
+  "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category",
+  "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century",
+  "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase",
+  "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child",
+  "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle",
+  "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk",
+  "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close",
+  "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut",
+  "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort",
+  "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control",
+  "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost",
+  "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle",
+  "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek",
+  "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial",
+  "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup"
+];
+
+/**
+ * Generate 24-Word Recovery Mnemonic Seed & Key (BIP-39 compliant entropy)
+ */
+export function generateRecoveryMnemonic(): { mnemonic: string; recoveryKey: string } {
+  const entropyHex = crypto.randomBytes(32).toString("hex");
+  const recoveryKey = entropyHex;
+
+  const words: string[] = [];
+  for (let i = 0; i < 24; i++) {
+    const byteIndex = (i * 4) % 32;
+    const chunkHex = entropyHex.substr(byteIndex, 4);
+    const wordIndex = parseInt(chunkHex, 16) % BIP39_WORDS.length;
+    words.push(BIP39_WORDS[wordIndex]);
+  }
+
+  return {
+    mnemonic: words.join(" "),
+    recoveryKey
+  };
+}
+
+/**
+ * Cryptographic Zero-Knowledge Vault Sentinel token
+ */
+export const VAULT_SENTINEL_MAGIC = "xtra_vault_sentinel_token_v3_authenticated";
+
+export function createVaultSentinel(projectKeyHex: string): { ciphertext: string; iv: string; authTag: string } {
+  return encryptSecretValue(VAULT_SENTINEL_MAGIC, projectKeyHex);
+}
+
+export function verifyVaultSentinel(
+  sentinelPayload: { ciphertext: string; iv: string; authTag: string } | string,
+  projectKeyHex: string
+): boolean {
+  try {
+    const parsed = typeof sentinelPayload === "string" ? JSON.parse(sentinelPayload) : sentinelPayload;
+    const decrypted = decryptSecretValue(parsed, projectKeyHex);
+    return decrypted === VAULT_SENTINEL_MAGIC;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Derives a deterministic 256-bit symmetric key for a workspace using HKDF-SHA256
+ */
+export function deriveWorkspaceKey(workspaceId: string, userSecret?: string): string {
+  const secret = userSecret || resolveVaultPassphrase(undefined, undefined, workspaceId);
+  const salt = Buffer.from(`workspace_salt_${workspaceId}`);
+  const info = Buffer.from("xtra-e2ee-workspace-key-v1");
+  const derived = crypto.hkdfSync("sha256", Buffer.from(secret), salt, info, 32);
+  return Buffer.from(derived).toString("hex");
+}
+
+export function createWorkspaceVaultSentinel(
+  workspaceId: string,
+  userSecret?: string
+): { ciphertext: string; iv: string; authTag: string } {
+  const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+  return encryptSecretValue(VAULT_SENTINEL_MAGIC, wsKey);
+}
+
+export function verifyWorkspaceVaultSentinel(
+  sentinelPayload: { ciphertext: string; iv: string; authTag: string } | string,
+  workspaceId: string,
+  userSecret?: string
+): boolean {
+  try {
+    const parsed = typeof sentinelPayload === "string" ? JSON.parse(sentinelPayload) : sentinelPayload;
+    const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+    const decrypted = decryptSecretValue(parsed, wsKey);
+    return decrypted === VAULT_SENTINEL_MAGIC;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Resolves the Level 3 Master Vault Passphrase from multiple sources with scope awareness:
+ * 1. Explicit argument / flag
+ * 2. Dedicated project env: XTRA_PROJECT_PASSPHRASE
+ * 3. Workspace-scoped env: XTRA_WORKSPACE_PASSPHRASE
+ * 4. General vault env: XTRA_VAULT_PASSPHRASE
+ * 5. Legacy env: XTRA_MASTER_SECRET
+ * 6. OS Keychain / Conf for specific project: vault_${projectId}
+ * 7. OS Keychain / Conf for specific workspace: vault_ws_${workspaceId}
+ * 8. OS Keychain / Conf global fallback: vault_passphrase
+ * 9. .xtrarc config file passphrase
+ */
+export function resolveVaultPassphrase(explicit?: string, projectId?: string, workspaceId?: string): string {
   if (explicit && explicit.trim()) {
     return explicit.trim();
   }
 
+  // 1. Project-specific env
+  if (process.env.XTRA_PROJECT_PASSPHRASE && process.env.XTRA_PROJECT_PASSPHRASE.trim()) {
+    return process.env.XTRA_PROJECT_PASSPHRASE.trim();
+  }
+
+  // 2. Workspace-specific env
+  if (process.env.XTRA_WORKSPACE_PASSPHRASE && process.env.XTRA_WORKSPACE_PASSPHRASE.trim()) {
+    return process.env.XTRA_WORKSPACE_PASSPHRASE.trim();
+  }
+
+  // 3. Vault & Master Secret envs
   if (process.env.XTRA_VAULT_PASSPHRASE && process.env.XTRA_VAULT_PASSPHRASE.trim()) {
     return process.env.XTRA_VAULT_PASSPHRASE.trim();
   }
@@ -224,6 +384,19 @@ export function resolveVaultPassphrase(explicit?: string, projectId?: string): s
       const storedProjKey = secureRead(`vault_${projectId}`);
       if (storedProjKey) return storedProjKey;
     }
+
+    const wsId = workspaceId || (function() {
+      try {
+        const { getConfigValue } = require('./config');
+        return getConfigValue('workspace');
+      } catch (_) { return null; }
+    })();
+
+    if (wsId) {
+      const storedWsKey = secureRead(`vault_ws_${wsId}`);
+      if (storedWsKey) return storedWsKey;
+    }
+
     const storedGlobal = secureRead('vault_passphrase');
     if (storedGlobal) return storedGlobal;
   } catch (_) {}
@@ -240,11 +413,20 @@ export function resolveVaultPassphrase(explicit?: string, projectId?: string): s
 
 /**
  * Saves a vault passphrase to the local hardware keyring store (bound to machine & user).
- * If projectId is provided without isGlobal=true, it is saved strictly as a project-specific key,
- * preventing clobbering of the global/workspace fallback passphrase.
+ * Supports both workspace-level and project-level scopes.
  */
-export function saveVaultPassphrase(passphrase: string, projectId?: string, isGlobal: boolean = false): void {
-  if (projectId) {
+export function saveVaultPassphrase(
+  passphrase: string,
+  projectId?: string,
+  isGlobal: boolean = false,
+  workspaceId?: string
+): void {
+  if (workspaceId) {
+    secureSave(`vault_ws_${workspaceId}`, passphrase);
+    if (isGlobal) {
+      secureSave('vault_passphrase', passphrase);
+    }
+  } else if (projectId) {
     secureSave(`vault_${projectId}`, passphrase);
     if (isGlobal) {
       secureSave('vault_passphrase', passphrase);

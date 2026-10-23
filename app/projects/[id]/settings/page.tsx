@@ -43,6 +43,7 @@ import { AccessLevel, SecurityLevel, IpRestriction } from '@/util/ProjectControl
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { useToast } from '@/hooks/use-toast';
+import { useGlobalContext } from "@/hooks/useUser";
 import axios from '@/lib/axios';
 import { ServiceAccountsTab } from './service-accounts-tab';
 import { AgentsTab } from './agents-tab';
@@ -115,7 +116,20 @@ export default function ProjectSettings() {
   const router = useRouter();
   const { id } = useParams();
   const { toast } = useToast();
+  const { user, selectedWorkspace, workspaceRole } = useGlobalContext();
+
+  const isWorkspaceAdminOrOwner = Boolean(
+    workspaceRole?.toLowerCase() === "owner" ||
+    workspaceRole?.toLowerCase() === "admin" ||
+    (selectedWorkspace?.createdBy && user?.id && String(selectedWorkspace.createdBy) === String(user.id))
+  );
+
   const [project, setProject] = useState<Project | null>(null);
+
+  const wsId = (project as any)?.workspaceId || (project as any)?.workspace || selectedWorkspace?.id || selectedWorkspace?.value;
+  const existingWsKey = typeof window !== "undefined" && wsId
+    ? (sessionStorage.getItem(`xtra_ws_vault_${wsId}`) || localStorage.getItem(`xtra_ws_vault_${wsId}`) || sessionStorage.getItem("xtra_global_vault_passphrase") || localStorage.getItem("xtra_global_vault_passphrase") || "")
+    : "";
   const [teams, setTeams] = useState<Team[]>([]);
   const [branches, setBranches] = useState<Branch[]>([]);
   const [projectTeams, setProjectTeams] = useState<TeamProject[]>([]);
@@ -700,19 +714,32 @@ export default function ProjectSettings() {
                       Secrets in this project inherit the Workspace Master Key. Team members who unlock the workspace master vault automatically have access.
                     </p>
                     {isDedicatedProjectKey && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="mt-4 w-full text-xs font-medium"
-                        onClick={() => {
-                          setRotateModalMode("switch_scope");
-                          setRotateInitialScope("workspace");
-                          setIsRotateModalOpen(true);
-                        }}
-                      >
-                        <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
-                        Switch to Workspace Key
-                      </Button>
+                      isWorkspaceAdminOrOwner ? (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="mt-4 w-full text-xs font-medium"
+                          onClick={() => {
+                            setRotateModalMode("switch_scope");
+                            setRotateInitialScope("workspace");
+                            setIsRotateModalOpen(true);
+                          }}
+                        >
+                          <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
+                          Switch to Workspace Key
+                        </Button>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="mt-4 w-full text-xs font-medium opacity-60 cursor-not-allowed"
+                          title="Only Workspace Admins and Owners can switch a project to Workspace Master Key"
+                        >
+                          <Lock className="w-3.5 h-3.5 mr-1.5" />
+                          Switch to Workspace Key (Admin Only)
+                        </Button>
+                      )
                     )}
                   </div>
 
@@ -1123,6 +1150,7 @@ export default function ProjectSettings() {
         projectName={project?.name || "Project"}
         initialScope={rotateInitialScope}
         currentVaultPassphrase={currentVaultKey}
+        existingWorkspacePassphrase={existingWsKey}
         isDedicatedProjectKey={isDedicatedProjectKey}
         onSuccess={(newPassphrase, scope = "project") => {
           setCurrentVaultKey(newPassphrase);

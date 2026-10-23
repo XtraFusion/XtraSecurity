@@ -125,4 +125,62 @@ describe('XtraClient Node.js SDK', () => {
             expect(process.env.API_KEY).toBe('sk_test_12345');
         });
     });
+
+    describe('Zero-Knowledge E2EE, Scopes & Sentinels', () => {
+        const testKey = 'abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon abandon art';
+
+        it('generates a 24-word BIP-39 recovery mnemonic', () => {
+            const { generateRecoveryMnemonic } = require('./wrapper');
+            const { mnemonic, recoveryKey } = generateRecoveryMnemonic();
+            const words = mnemonic.split(' ');
+            expect(words.length).toBe(24);
+            expect(recoveryKey).toBeDefined();
+            expect(recoveryKey.length).toBe(64);
+        });
+
+        it('derives deterministic workspace key via HKDF', () => {
+            const { deriveWorkspaceKey } = require('./wrapper');
+            const key1 = deriveWorkspaceKey('ws-123', testKey);
+            const key2 = deriveWorkspaceKey('ws-123', testKey);
+            expect(key1).toEqual(key2);
+            expect(key1.length).toBe(64);
+
+            const otherKey = deriveWorkspaceKey('ws-456', testKey);
+            expect(key1).not.toEqual(otherKey);
+        });
+
+        it('supports workspace scope and passphrase options in XtraClient', () => {
+            const client = new XtraClient({
+                token: 'valid-token',
+                projectId: 'proj-1',
+                workspaceId: 'ws-abc',
+                workspacePassphrase: 'ws-passphrase',
+                scope: 'workspace'
+            });
+
+            expect(client.workspaceId).toBe('ws-abc');
+            expect(client.scope).toBe('workspace');
+            expect(client.getVaultPassphrase()).toBe('ws-passphrase');
+        });
+
+        it('creates and verifies vault sentinel with derived project key', () => {
+            const { deriveProjectKey, createVaultSentinel, verifyVaultSentinel } = require('./wrapper');
+            const projectKey = deriveProjectKey('proj-1', testKey);
+            const sentinel = createVaultSentinel(projectKey);
+
+            expect(sentinel.ciphertext).toBeDefined();
+            expect(verifyVaultSentinel(sentinel, projectKey)).toBe(true);
+
+            const wrongKey = deriveProjectKey('proj-1', 'wrong_passphrase');
+            expect(verifyVaultSentinel(sentinel, wrongKey)).toBe(false);
+        });
+
+        it('creates and verifies workspace vault sentinel', () => {
+            const { createWorkspaceVaultSentinel, verifyWorkspaceVaultSentinel } = require('./wrapper');
+            const wsSentinel = createWorkspaceVaultSentinel('ws-abc', testKey);
+
+            expect(verifyWorkspaceVaultSentinel(wsSentinel, 'ws-abc', testKey)).toBe(true);
+            expect(verifyWorkspaceVaultSentinel(wsSentinel, 'ws-abc', 'invalid_key')).toBe(false);
+        });
+    });
 });

@@ -82,7 +82,10 @@ Examples:
         }
 
         // 1. Fetch Secrets
-        secrets = await api.getSecrets(project, env, branch, options.passphrase, ephemeralAuthToken, workloadEnvelope);
+        const hasExtraArgs = Boolean(options.passphrase || ephemeralAuthToken || workloadEnvelope);
+        secrets = hasExtraArgs
+          ? await api.getSecrets(project, env, branch, options.passphrase, ephemeralAuthToken, workloadEnvelope)
+          : await api.getSecrets(project, env, branch);
 
         if (!secrets || Object.keys(secrets).length === 0) {
           spinner.warn(chalk.yellow("No secrets found for this environment."));

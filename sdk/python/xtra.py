@@ -43,13 +43,19 @@ class XtraClient:
         offline_disk_cache: bool = True,
         max_retries: int = 3,
         on_telemetry: Optional[Callable[[Dict[str, Any]], None]] = None,
-        vault_passphrase: Optional[str] = None
+        vault_passphrase: Optional[str] = None,
+        workspace_id: Optional[str] = None,
+        workspace_passphrase: Optional[str] = None,
+        scope: Optional[str] = None
     ):
         self.token = token or os.getenv("XTRA_TOKEN")
         if not self.token:
             raise XtraError("XtraSecurity API token is required. Pass token or set XTRA_TOKEN environment variable.")
 
         self.project_id = project_id or os.getenv("XTRA_PROJECT_ID")
+        self.workspace_id = workspace_id or os.getenv("XTRA_WORKSPACE_ID")
+        self.workspace_passphrase = workspace_passphrase or os.getenv("XTRA_WORKSPACE_PASSPHRASE")
+        self.scope = scope or os.getenv("XTRA_VAULT_SCOPE", "workspace")
         self.api_url = api_url or os.getenv("XTRA_API_URL", "https://www.xtrasecurity.in/api")
         self.use_cache = cache
         self.cache_ttl = cache_ttl
@@ -57,7 +63,13 @@ class XtraClient:
         self.offline_disk_cache = offline_disk_cache
         self.max_retries = max_retries
         self.on_telemetry = on_telemetry
-        self.vault_passphrase = vault_passphrase or os.getenv("XTRA_VAULT_PASSPHRASE") or os.getenv("XTRA_MASTER_SECRET")
+        self.vault_passphrase = (
+            vault_passphrase
+            or os.getenv("XTRA_PROJECT_PASSPHRASE")
+            or self.workspace_passphrase
+            or os.getenv("XTRA_VAULT_PASSPHRASE")
+            or os.getenv("XTRA_MASTER_SECRET")
+        )
 
         config = Configuration(host=self.api_url)
         config.api_key['BearerAuth'] = f"Bearer {self.token}"
@@ -84,12 +96,40 @@ class XtraClient:
         decrypted = bytes([b ^ key[i % len(key)] for i, b in enumerate(encrypted)])
         return json.loads(decrypted.decode("utf-8"))
 
-    def derive_project_key(self, project_id: str) -> bytes:
-        user_secret = self.vault_passphrase or os.getenv("XTRA_VAULT_PASSPHRASE") or os.getenv("XTRA_MASTER_SECRET")
+    def derive_project_key(self, project_id: Optional[str] = None) -> bytes:
+        pid = project_id or self.project_id
+        if not pid:
+            raise XtraError("Project ID is required.")
+        user_secret = (
+            self.vault_passphrase
+            or os.getenv("XTRA_PROJECT_PASSPHRASE")
+            or self.workspace_passphrase
+            or os.getenv("XTRA_WORKSPACE_PASSPHRASE")
+            or os.getenv("XTRA_VAULT_PASSPHRASE")
+            or os.getenv("XTRA_MASTER_SECRET")
+        )
         if not user_secret:
             raise XtraError("Vault Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.")
-        salt = f"project_salt_{project_id}".encode("utf-8")
+        salt = f"project_salt_{pid}".encode("utf-8")
         info = b"xtra-e2ee-project-key-v2"
+        hkdf = HKDF(algorithm=hashes.SHA256(), length=32, salt=salt, info=info)
+        return hkdf.derive(user_secret.encode("utf-8"))
+
+    def derive_workspace_key(self, workspace_id: Optional[str] = None) -> bytes:
+        ws_id = workspace_id or self.workspace_id
+        if not ws_id:
+            raise XtraError("Workspace ID is required.")
+        user_secret = (
+            self.workspace_passphrase
+            or self.vault_passphrase
+            or os.getenv("XTRA_WORKSPACE_PASSPHRASE")
+            or os.getenv("XTRA_VAULT_PASSPHRASE")
+            or os.getenv("XTRA_MASTER_SECRET")
+        )
+        if not user_secret:
+            raise XtraError("Workspace Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.")
+        salt = f"workspace_salt_{ws_id}".encode("utf-8")
+        info = b"xtra-e2ee-workspace-key-v1"
         hkdf = HKDF(algorithm=hashes.SHA256(), length=32, salt=salt, info=info)
         return hkdf.derive(user_secret.encode("utf-8"))
 
@@ -107,6 +147,86 @@ class XtraClient:
         ciphertext = bytes.fromhex(payload["ciphertext"])
         auth_tag = bytes.fromhex(payload.get("authTag", payload.get("tag", "")))
         return aesgcm.decrypt(iv, ciphertext + auth_tag, None).decode("utf-8")
+
+    VAULT_SENTINEL_MAGIC = "xtra_vault_sentinel_token_v3_authenticated"
+
+    def create_vault_sentinel(self, project_id: Optional[str] = None) -> Dict[str, str]:
+        key = self.derive_project_key(project_id)
+        return self.encrypt_secret_value(self.VAULT_SENTINEL_MAGIC, key)
+
+    def verify_vault_sentinel(self, sentinel_payload: Dict[str, Any], project_id: Optional[str] = None) -> bool:
+        try:
+            key = self.derive_project_key(project_id)
+            decrypted = self.decrypt_secret_value(sentinel_payload, key)
+            return decrypted == self.VAULT_SENTINEL_MAGIC
+        except Exception:
+            return False
+
+    def create_workspace_vault_sentinel(self, workspace_id: Optional[str] = None) -> Dict[str, str]:
+        ws_key = self.derive_workspace_key(workspace_id)
+        return self.encrypt_secret_value(self.VAULT_SENTINEL_MAGIC, ws_key)
+
+    def verify_workspace_vault_sentinel(self, sentinel_payload: Dict[str, Any], workspace_id: Optional[str] = None) -> bool:
+        try:
+            ws_key = self.derive_workspace_key(workspace_id)
+            decrypted = self.decrypt_secret_value(sentinel_payload, ws_key)
+            return decrypted == self.VAULT_SENTINEL_MAGIC
+        except Exception:
+            return False
+
+    def generate_recovery_mnemonic(self) -> Dict[str, str]:
+        words_list = [
+            "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+            "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+            "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+            "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+            "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+            "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+            "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+            "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+            "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
+            "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest",
+            "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset",
+            "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction",
+            "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake",
+            "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge",
+            "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain",
+            "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become",
+            "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit",
+            "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology",
+            "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless",
+            "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body",
+            "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss",
+            "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread",
+            "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze",
+            "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb",
+            "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy",
+            "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call",
+            "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas",
+            "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry",
+            "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category",
+            "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century",
+            "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase",
+            "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child",
+            "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle",
+            "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk",
+            "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close",
+            "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut",
+            "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort",
+            "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control",
+            "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost",
+            "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle",
+            "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek",
+            "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial",
+            "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup"
+        ]
+        entropy = os.urandom(32).hex()
+        mnemonic = []
+        for i in range(24):
+            chunk = entropy[(i * 4) % 32 : ((i * 4) % 32) + 4]
+            idx = int(chunk, 16) % len(words_list)
+            mnemonic.append(words_list[idx])
+        return {"mnemonic": " ".join(mnemonic), "recoveryKey": entropy}
 
     def _get_disk_cache_path(self, pid: str, env: str) -> str:
         home_dir = os.path.expanduser("~")

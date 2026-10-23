@@ -61,28 +61,46 @@ const updateConfigs = (projectId: string, projectName: string) => {
 // SET
 projectCommand
   .command("set")
-  .description("Set the default project ID")
+  .description("Set the default project ID and optional vault passphrase")
   .argument("[projectId]", "Project ID to set as default (optional - will show list if not provided)")
   .option("--passphrase <passphrase>", "Save vault passphrase to hardware keyring for this project")
+  .option("--generate", "Automatically generate a 24-word recovery phrase", false)
+  .option("--scope <scope>", "Vault scope: 'workspace' or 'project'", "project")
+  .option("-w, --workspace <id>", "Workspace ID for workspace-scoped key")
   .action(async (projectId, options) => {
+    let { passphrase: pphrase, generate: shouldGenerate, scope, workspace } = options;
+
+    if (shouldGenerate) {
+      const { generateRecoveryMnemonic } = require("../lib/crypto");
+      const mnemonicData = generateRecoveryMnemonic();
+      pphrase = mnemonicData.mnemonic;
+      console.log(chalk.bold("\n🔐 Generated 24-Word Master Passphrase:\n"));
+      console.log(chalk.greenBright(`  ${pphrase}\n`));
+      console.log(chalk.yellow("  Please record this recovery phrase safely.\n"));
+    }
+
     // If projectId is provided, set it directly
     if (projectId) {
         updateConfigs(projectId, projectId);
         
-        let pphrase = options.passphrase;
         if (!pphrase && process.stdout.isTTY) {
             const answer = await inquirer.prompt([{
                 type: "password",
                 name: "passphrase",
-                message: `Enter the Master Passphrase for project '${projectId}' to enable Zero-Knowledge Decryption:`
+                message: `Enter the Master Passphrase for project '${projectId}' to enable Zero-Knowledge Decryption (or press Enter to skip):`
             }]);
             pphrase = answer.passphrase;
         }
 
-        if (pphrase) {
+        if (pphrase && pphrase.trim()) {
             const { saveVaultPassphrase } = require("../lib/crypto");
-            saveVaultPassphrase(pphrase, projectId);
-            console.log(chalk.green("✔ Vault passphrase saved securely to local hardware keyring."));
+            if (scope === "workspace" && workspace) {
+              saveVaultPassphrase(pphrase.trim(), undefined, false, workspace);
+              console.log(chalk.green(`✔ Workspace Master Key for '${workspace}' saved securely to local hardware keyring.`));
+            } else {
+              saveVaultPassphrase(pphrase.trim(), projectId);
+              console.log(chalk.green("✔ Vault passphrase saved securely to local hardware keyring."));
+            }
         }
         return;
     }
@@ -114,20 +132,24 @@ projectCommand
         const selectedName = projects.find((p: any) => p.id === selectedProject)?.name || selectedProject;
         updateConfigs(selectedProject, selectedName);
 
-        let pphrase = options.passphrase;
         if (!pphrase && process.stdout.isTTY) {
             const answer = await inquirer.prompt([{
                 type: "password",
                 name: "passphrase",
-                message: `Enter the Master Passphrase for '${selectedName}' to enable Zero-Knowledge Decryption:`
+                message: `Enter the Master Passphrase for '${selectedName}' to enable Zero-Knowledge Decryption (or press Enter to skip):`
             }]);
             pphrase = answer.passphrase;
         }
 
-        if (pphrase) {
+        if (pphrase && pphrase.trim()) {
             const { saveVaultPassphrase } = require("../lib/crypto");
-            saveVaultPassphrase(pphrase, selectedProject);
-            console.log(chalk.green("✔ Vault passphrase saved securely to local hardware keyring."));
+            if (scope === "workspace" && workspace) {
+              saveVaultPassphrase(pphrase.trim(), undefined, false, workspace);
+              console.log(chalk.green(`✔ Workspace Master Key for '${workspace}' saved securely to local hardware keyring.`));
+            } else {
+              saveVaultPassphrase(pphrase.trim(), selectedProject);
+              console.log(chalk.green("✔ Vault passphrase saved securely to local hardware keyring."));
+            }
         }
 
     } catch (error: any) {

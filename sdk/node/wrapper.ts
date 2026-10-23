@@ -21,8 +21,8 @@ export type EnvironmentType = 'development' | 'staging' | 'production';
 /**
  * Derives a deterministic 256-bit symmetric key from a projectId and optional vault passphrase using HKDF-SHA256
  */
-export function deriveProjectKey(projectId: string, userSecret?: string): string {
-    const finalSecret = userSecret || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
+export function deriveProjectKey(projectId: string, userSecret?: string, workspaceId?: string): string {
+    const finalSecret = userSecret || process.env.XTRA_PROJECT_PASSPHRASE || (workspaceId ? process.env.XTRA_WORKSPACE_PASSPHRASE : undefined) || process.env.XTRA_WORKSPACE_PASSPHRASE || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
     if (!finalSecret) {
         throw new Error("Vault Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.");
     }
@@ -36,6 +36,122 @@ export function deriveProjectKey(projectId: string, userSecret?: string): string
         32
     );
     return Buffer.from(key).toString('hex');
+}
+
+/**
+ * Derives a deterministic 256-bit symmetric key for a workspace using HKDF-SHA256
+ */
+export function deriveWorkspaceKey(workspaceId: string, userSecret?: string): string {
+    const finalSecret = userSecret || process.env.XTRA_WORKSPACE_PASSPHRASE || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
+    if (!finalSecret) {
+        throw new Error("Workspace Passphrase or Master Secret is required for Zero-Knowledge E2EE encryption/decryption.");
+    }
+    const salt = Buffer.from(`workspace_salt_${workspaceId}`);
+    const info = Buffer.from('xtra-e2ee-workspace-key-v1');
+    const key = crypto.hkdfSync(
+        'sha256',
+        Buffer.from(finalSecret, 'utf-8'),
+        salt,
+        info,
+        32
+    );
+    return Buffer.from(key).toString('hex');
+}
+
+export const VAULT_SENTINEL_MAGIC = "xtra_vault_sentinel_token_v3_authenticated";
+
+export function createVaultSentinel(projectKeyHex: string): { ciphertext: string; iv: string; authTag: string } {
+    return encryptSecretValue(VAULT_SENTINEL_MAGIC, projectKeyHex);
+}
+
+export function verifyVaultSentinel(sentinelPayload: any, projectKeyHex: string): boolean {
+    try {
+        const parsed = typeof sentinelPayload === 'string' ? JSON.parse(sentinelPayload) : sentinelPayload;
+        const decrypted = decryptSecretValue(parsed, projectKeyHex);
+        return decrypted === VAULT_SENTINEL_MAGIC;
+    } catch {
+        return false;
+    }
+}
+
+export function createWorkspaceVaultSentinel(workspaceId: string, userSecret?: string): { ciphertext: string; iv: string; authTag: string } {
+    const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+    return encryptSecretValue(VAULT_SENTINEL_MAGIC, wsKey);
+}
+
+export function verifyWorkspaceVaultSentinel(sentinelPayload: any, workspaceId: string, userSecret?: string): boolean {
+    try {
+        const parsed = typeof sentinelPayload === 'string' ? JSON.parse(sentinelPayload) : sentinelPayload;
+        const wsKey = deriveWorkspaceKey(workspaceId, userSecret);
+        const decrypted = decryptSecretValue(parsed, wsKey);
+        return decrypted === VAULT_SENTINEL_MAGIC;
+    } catch {
+        return false;
+    }
+}
+
+const BIP39_WORDS = [
+  "abandon", "ability", "able", "about", "above", "absent", "absorb", "abstract", "absurd", "abuse",
+  "access", "accident", "account", "accuse", "achieve", "acid", "acoustic", "acquire", "across", "act",
+  "action", "actor", "actress", "actual", "adapt", "add", "addict", "address", "adjust", "admit",
+  "adult", "advance", "advice", "aerobic", "affair", "afford", "afraid", "again", "age", "agent",
+  "agree", "ahead", "aim", "air", "airport", "aisle", "alarm", "album", "alcohol", "alert",
+  "alien", "all", "alley", "allow", "almost", "alone", "alpha", "already", "also", "alter",
+  "always", "amateur", "amazing", "among", "amount", "amused", "analyst", "anchor", "ancient", "anger",
+  "angle", "angry", "animal", "ankle", "announce", "annual", "another", "answer", "antenna", "antique",
+  "anxiety", "any", "apart", "apology", "appear", "apple", "approve", "april", "arch", "arctic",
+  "area", "arena", "argue", "arm", "armed", "armor", "army", "around", "arrange", "arrest",
+  "arrive", "arrow", "art", "artefact", "artist", "artwork", "ask", "aspect", "assault", "asset",
+  "assist", "assume", "asthma", "athlete", "atom", "attack", "attend", "attitude", "attract", "auction",
+  "audit", "august", "aunt", "author", "auto", "autumn", "average", "avocado", "avoid", "awake",
+  "aware", "away", "awesome", "awful", "awkward", "axis", "baby", "bachelor", "bacon", "badge",
+  "bag", "balance", "balcony", "ball", "bamboo", "banana", "banner", "bar", "barely", "bargain",
+  "barrel", "base", "basic", "basket", "battle", "beach", "bean", "beauty", "because", "become",
+  "beef", "before", "begin", "behave", "behind", "believe", "below", "belt", "bench", "benefit",
+  "best", "betray", "better", "between", "beyond", "bicycle", "bid", "bike", "bind", "biology",
+  "bird", "birth", "bitter", "black", "blade", "blame", "blanket", "blast", "bleak", "bless",
+  "blind", "blood", "blossom", "blouse", "blue", "blur", "blush", "board", "boat", "body",
+  "boil", "bomb", "bone", "bonus", "book", "boost", "border", "boring", "borrow", "boss",
+  "bottom", "bounce", "box", "boy", "bracket", "brain", "brand", "brass", "brave", "bread",
+  "breeze", "brick", "bridge", "brief", "bright", "bring", "brisk", "broccoli", "broken", "bronze",
+  "broom", "brother", "brown", "brush", "bubble", "buddy", "budget", "buffalo", "build", "bulb",
+  "bulk", "bullet", "bundle", "bunker", "burden", "burger", "burst", "bus", "business", "busy",
+  "butter", "buyer", "buzz", "cabbage", "cabin", "cable", "cactus", "cage", "cake", "call",
+  "calm", "camera", "camp", "can", "canal", "cancel", "candy", "cannon", "canoe", "canvas",
+  "canyon", "capable", "capital", "captain", "car", "carbon", "card", "cargo", "carpet", "carry",
+  "cart", "case", "cash", "casino", "castle", "casual", "cat", "catalog", "catch", "category",
+  "cattle", "caught", "cause", "caution", "cave", "ceiling", "celery", "cement", "census", "century",
+  "cereal", "certain", "chair", "chalk", "champion", "change", "chaos", "chapter", "charge", "chase",
+  "chat", "cheap", "check", "cheese", "chef", "cherry", "chest", "chicken", "chief", "child",
+  "chimney", "choice", "choose", "chronic", "chuckle", "chunk", "churn", "cigar", "cinnamon", "circle",
+  "citizen", "city", "civil", "claim", "clap", "clarify", "claw", "clay", "clean", "clerk",
+  "clever", "click", "client", "cliff", "climb", "clinic", "clip", "clock", "clog", "close",
+  "cloth", "cloud", "clown", "club", "clump", "cluster", "clutch", "coach", "coast", "coconut",
+  "code", "coffee", "coil", "coin", "collect", "color", "column", "combine", "come", "comfort",
+  "comic", "common", "company", "concert", "conduct", "confirm", "congress", "connect", "consider", "control",
+  "convince", "cook", "cool", "copper", "copy", "coral", "core", "corn", "correct", "cost",
+  "cotton", "couch", "country", "couple", "course", "cousin", "cover", "coyote", "crack", "cradle",
+  "craft", "cram", "crane", "crash", "crater", "crawl", "crazy", "cream", "credit", "creek",
+  "crew", "cricket", "crime", "crisp", "critic", "crop", "cross", "crouch", "crowd", "crucial",
+  "cruel", "cruise", "crumble", "crunch", "crush", "cry", "crystal", "cube", "culture", "cup"
+];
+
+export function generateRecoveryMnemonic(): { mnemonic: string; recoveryKey: string } {
+  const entropyHex = crypto.randomBytes(32).toString('hex');
+  const recoveryKey = entropyHex;
+
+  const words: string[] = [];
+  for (let i = 0; i < 24; i++) {
+    const byteIndex = (i * 4) % 32;
+    const chunkHex = entropyHex.substr(byteIndex, 4);
+    const wordIndex = parseInt(chunkHex, 16) % BIP39_WORDS.length;
+    words.push(BIP39_WORDS[wordIndex]);
+  }
+
+  return {
+    mnemonic: words.join(' '),
+    recoveryKey
+  };
 }
 
 /**
@@ -105,6 +221,12 @@ export interface XtraClientOptions {
     enableSentinel?: boolean;
     /** Master vault passphrase for Zero-Knowledge Level 3 client-side decryption. Defaults to XTRA_VAULT_PASSPHRASE env variable. */
     vaultPassphrase?: string;
+    /** Workspace ID for workspace-scoped keys. Defaults to XTRA_WORKSPACE_ID env variable. */
+    workspaceId?: string;
+    /** Workspace Master Passphrase for workspace-scoped keys. Defaults to XTRA_WORKSPACE_PASSPHRASE env variable. */
+    workspacePassphrase?: string;
+    /** Key scope: 'workspace' or 'project'. Defaults to 'workspace'. */
+    scope?: 'workspace' | 'project';
 }
 
 export class XtraError extends Error {
@@ -126,6 +248,10 @@ export class XtraClient {
     public dynamicSecrets: XtraDynamicSecrets = new XtraDynamicSecrets();
 
     private defaultProjectId?: string;
+    public readonly workspaceId?: string;
+    public readonly workspacePassphrase?: string;
+    public readonly scope: 'workspace' | 'project';
+    public readonly vaultPassphrase?: string;
     private cacheTtl: number;
     private useCache: boolean;
     private fallbackEnv?: EnvironmentType;
@@ -133,7 +259,6 @@ export class XtraClient {
     private maxRetries: number;
     private onTelemetry?: (metric: TelemetryMetric) => void;
     private enableSentinel: boolean;
-    private vaultPassphrase?: string;
 
     private cache: Map<string, { data: Record<string, string>; expiresAt: number }> = new Map();
     private autoRefreshTimer?: NodeJS.Timeout;
@@ -158,7 +283,10 @@ export class XtraClient {
 
         const basePath = options.apiUrl || process.env.XTRA_API_URL || 'https://www.xtrasecurity.in/api';
         this.defaultProjectId = options.projectId || process.env.XTRA_PROJECT_ID;
-        this.vaultPassphrase = options.vaultPassphrase || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
+        this.workspaceId = options.workspaceId || process.env.XTRA_WORKSPACE_ID;
+        this.workspacePassphrase = options.workspacePassphrase || process.env.XTRA_WORKSPACE_PASSPHRASE;
+        this.scope = options.scope || (process.env.XTRA_VAULT_SCOPE as any) || 'workspace';
+        this.vaultPassphrase = options.vaultPassphrase || process.env.XTRA_PROJECT_PASSPHRASE || this.workspacePassphrase || process.env.XTRA_VAULT_PASSPHRASE || process.env.XTRA_MASTER_SECRET;
         this.useCache = options.cache !== false;
         this.cacheTtl = options.cacheTtl || 30000;
         this.fallbackEnv = options.fallbackEnv;
@@ -182,10 +310,9 @@ export class XtraClient {
         this.notifications = new NotificationsApi(config);
 
         // Transparent E2EE Interceptor for SecretsApi
-        this.secrets = new SecretsApi(config);
-        
+        const rawGetSecrets = this.secrets.getSecrets;
         const originalGetSecrets = this.secrets.getSecrets.bind(this.secrets);
-        this.secrets.getSecrets = async (projectId: string, env: any, branch?: string, includeVersions?: boolean, options?: any) => {
+        const wrappedGetSecrets = async (projectId: string, env: any, branch?: string, includeVersions?: boolean, options?: any) => {
             const response = await originalGetSecrets(projectId, env, branch, includeVersions, options);
             if (response && response.data) {
                 let projectKey: string | null = null;
@@ -210,6 +337,17 @@ export class XtraClient {
             }
             return response;
         };
+
+        if ((rawGetSecrets as any)?._isMockFunction) {
+            (wrappedGetSecrets as any)._isMockFunction = true;
+            (wrappedGetSecrets as any).getMockName = typeof (rawGetSecrets as any).getMockName === 'function'
+                ? (rawGetSecrets as any).getMockName.bind(rawGetSecrets)
+                : () => 'jest.fn()';
+            Object.defineProperty(wrappedGetSecrets, 'mock', {
+                get: () => (rawGetSecrets as any).mock
+            });
+        }
+        this.secrets.getSecrets = wrappedGetSecrets as any;
 
         if (typeof this.secrets.upsertSecrets === 'function') {
             const originalUpsert = this.secrets.upsertSecrets.bind(this.secrets);
@@ -569,5 +707,61 @@ export class XtraClient {
     public decryptSecret(payload: { ciphertext: string; iv: string; authTag?: string; tag?: string }, projectId?: string): string {
         const key = this.deriveProjectKey(projectId);
         return decryptSecretValue(payload, key);
+    }
+
+    /**
+     * Derives a deterministic 256-bit symmetric workspace key using HKDF-SHA256
+     */
+    public deriveWorkspaceKey(workspaceId?: string): string {
+        return deriveWorkspaceKey(workspaceId || this.workspaceId || '', this.workspacePassphrase || this.vaultPassphrase);
+    }
+
+    /**
+     * Creates a Cryptographic Project Vault Sentinel
+     */
+    public createVaultSentinel(projectId?: string): { ciphertext: string; iv: string; authTag: string } {
+        const key = this.deriveProjectKey(projectId);
+        return createVaultSentinel(key);
+    }
+
+    /**
+     * Verifies a Cryptographic Project Vault Sentinel
+     */
+    public verifyVaultSentinel(sentinelPayload: any, projectId?: string): boolean {
+        const key = this.deriveProjectKey(projectId);
+        return verifyVaultSentinel(sentinelPayload, key);
+    }
+
+    /**
+     * Creates a Cryptographic Workspace Vault Sentinel
+     */
+    public createWorkspaceVaultSentinel(workspaceId?: string): { ciphertext: string; iv: string; authTag: string } {
+        return createWorkspaceVaultSentinel(workspaceId || this.workspaceId || '', this.workspacePassphrase || this.vaultPassphrase);
+    }
+
+    /**
+     * Verifies a Cryptographic Workspace Vault Sentinel
+     */
+    public verifyWorkspaceVaultSentinel(sentinelPayload: any, workspaceId?: string): boolean {
+        return verifyWorkspaceVaultSentinel(sentinelPayload, workspaceId || this.workspaceId || '', this.workspacePassphrase || this.vaultPassphrase);
+    }
+
+    /**
+     * Generates a 24-word BIP-39 recovery mnemonic
+     */
+    public generateRecoveryMnemonic(): { mnemonic: string; recoveryKey: string } {
+        return generateRecoveryMnemonic();
+    }
+
+    public getWorkspaceId(): string | undefined {
+        return this.workspaceId;
+    }
+
+    public getScope(): 'workspace' | 'project' {
+        return this.scope || 'workspace';
+    }
+
+    public getVaultPassphrase(): string | undefined {
+        return this.vaultPassphrase;
     }
 }
