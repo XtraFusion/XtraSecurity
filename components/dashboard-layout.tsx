@@ -9,6 +9,7 @@ import { AuthDebug } from "./auth-debug";
 
 import { DashboardSidebar } from "./dashboard-sidebar";
 import { DashboardHeader } from "./dashboard-header";
+import { PlatformTourModal } from "./PlatformTourModal";
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -40,6 +41,7 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
         <DashboardHeader setSidebarOpen={setSidebarOpen} />
         <main className="p-6 sm:p-8 lg:p-10 max-w-7xl mx-auto">{children}</main>
       </div>
+      <PlatformTourModal />
       <AuthDebug />
     </div>
   );

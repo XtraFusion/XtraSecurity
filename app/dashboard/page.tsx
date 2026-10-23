@@ -34,6 +34,7 @@ import {
   Clock,
   ArrowRight,
   Loader2,
+  Sparkles,
 } from "lucide-react";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { DashboardSkeleton } from "@/components/loading-skeleton";
@@ -43,6 +44,7 @@ import { ProjectController } from "@/util/ProjectController";
 import { Project } from "@/util/Interface";
 import { formatDate } from "@/util/formatDate";
 import { toast } from "sonner";
+import { openPlatformTour } from "@/components/PlatformTourModal";
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -178,7 +180,16 @@ export default function DashboardPage() {
               Overview of your security posture and projects for <span className="font-semibold text-foreground">{selectedWorkspace?.label}</span>.
             </p>
           </div>
-          <div className="flex gap-3">
+          <div className="flex gap-3 items-center">
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={openPlatformTour}
+              className="border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-sm"
+            >
+              <Sparkles className="mr-2 h-4 w-4 text-amber-400" />
+              Platform Tour
+            </Button>
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <DialogTrigger asChild>
                 <Button size="lg" className="shadow-lg shadow-primary/20 transition-all hover:scale-105">

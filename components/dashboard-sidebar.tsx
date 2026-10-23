@@ -24,8 +24,10 @@ import {
     Activity,
     ShieldCheck,
     BarChart3,
-    Type
+    Type,
+    Sparkles
 } from "lucide-react";
+import { openPlatformTour } from "./PlatformTourModal";
 
 import { Button } from "./ui/button";
 import { ScrollArea } from "./ui/scroll-area";
@@ -171,6 +173,19 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                             })}
                         </div>
                     ))}
+                    <div className="pt-2">
+                        <button
+                            type="button"
+                            onClick={() => {
+                                onClose?.();
+                                openPlatformTour();
+                            }}
+                            className="flex w-full items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors text-muted-foreground hover:bg-muted hover:text-foreground group"
+                        >
+                            <Sparkles className="h-4 w-4 text-amber-400 group-hover:scale-110 transition-transform" />
+                            <span>Platform Tour</span>
+                        </button>
+                    </div>
                     {user?.role === 'admin' && (
                         <div className="space-y-1 mt-6">
                             <h4 className="px-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">

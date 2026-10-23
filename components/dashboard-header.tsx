@@ -1,10 +1,11 @@
 "use client";
 
-import { Menu, Shield, LogOut } from "lucide-react";
+import { Menu, Shield, LogOut, Sparkles } from "lucide-react";
 import { Button } from "./ui/button";
 import { NotificationsPopover } from "./notifications-popover";
 import { UserAvatar } from "./ui/user-avatar";
 import { useUser } from "@/hooks/useUser";
+import { openPlatformTour } from "./PlatformTourModal";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -40,6 +41,17 @@ export function DashboardHeader({ setSidebarOpen }: { setSidebarOpen: (open: boo
                     {/* Add Search here if needed */}
                 </div>
 
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    onClick={openPlatformTour} 
+                    className="hidden sm:flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground h-8 px-2.5 rounded-full border border-border/40"
+                    title="Take the interactive platform tour"
+                >
+                    <Sparkles className="h-3.5 w-3.5 text-amber-400" />
+                    <span>Platform Tour</span>
+                </Button>
+
                 <NotificationsPopover />
 
                 {!user ? (
@@ -66,6 +78,9 @@ export function DashboardHeader({ setSidebarOpen }: { setSidebarOpen: (open: boo
                             </DropdownMenuItem>
                             <DropdownMenuItem asChild>
                                 <Link href="/settings">Settings</Link>
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={openPlatformTour} className="cursor-pointer">
+                                <Sparkles className="mr-2 h-4 w-4 text-amber-400" /> Platform Tour
                             </DropdownMenuItem>
                             <DropdownMenuSeparator />
                             <DropdownMenuItem
