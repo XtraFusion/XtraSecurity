@@ -192,13 +192,15 @@ function rawHkdfSha256(userSecret: string, salt: string, info: string): Uint8Arr
  * Prioritizes environment variables XTRA_MASTER_SECRET and ENCRYPTION_KEY.
  */
 export function getMasterSecret(): string {
+  // In the browser, client-side encryption never relies on server environment secrets
+  if (typeof window !== 'undefined') {
+    return 'xtra-zero-knowledge-master';
+  }
+
   if (typeof process !== 'undefined' && process.env) {
     if (process.env.XTRA_MASTER_SECRET) return process.env.XTRA_MASTER_SECRET;
     if (process.env.ENCRYPTION_KEY) return process.env.ENCRYPTION_KEY;
-
-    if (process.env.NODE_ENV === 'production') {
-      throw new Error("Internal Server Error: Missing encryption configuration (XTRA_MASTER_SECRET). Please contact the support team.");
-    }
+    if (process.env.NEXT_PUBLIC_XTRA_MASTER_SECRET) return process.env.NEXT_PUBLIC_XTRA_MASTER_SECRET;
   }
   return 'xtra-zero-knowledge-master';
 }

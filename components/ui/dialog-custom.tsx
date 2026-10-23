@@ -49,7 +49,7 @@ export function Dialog({ isOpen, onClose, title, description, className, noPaddi
             {/* Dialog Content */}
             <div
                 className={cn(
-                    "relative z-50 w-full max-w-lg mx-4 bg-[#0a0d14] rounded-xl border border-white/5 shadow-2xl flex flex-col max-h-[90vh]",
+                    "relative z-50 w-full max-w-lg mx-4 bg-[#0a0d14] rounded-xl border border-white/5 shadow-2xl flex flex-col max-h-[90vh] overflow-hidden",
                     "animate-in fade-in-0 zoom-in-95 slide-in-from-bottom-4 duration-200",
                     className
                 )}
@@ -61,7 +61,7 @@ export function Dialog({ isOpen, onClose, title, description, className, noPaddi
                 {/* Close Button */}
                 <button
                     onClick={onClose}
-                    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-10"
+                    className="absolute right-4 top-4 rounded-sm opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-10 text-white"
                     aria-label="Close"
                 >
                     <X className="h-4 w-4" />
@@ -69,7 +69,7 @@ export function Dialog({ isOpen, onClose, title, description, className, noPaddi
 
                 {/* Content */}
                 <div className={cn(
-                    "overflow-y-auto [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]",
+                    "overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] w-full",
                     !noPadding && "p-6",
                     noPadding && "p-0"
                 )}>

@@ -139,6 +139,7 @@ export default function ProjectSettings() {
 
   // Zero-Knowledge Vault & Scope state
   const [isRotateModalOpen, setIsRotateModalOpen] = useState(false);
+  const [rotateModalMode, setRotateModalMode] = useState<"rotate" | "switch_scope">("rotate");
   const [rotateInitialScope, setRotateInitialScope] = useState<"project" | "workspace">("project");
   const [isDedicatedProjectKey, setIsDedicatedProjectKey] = useState(false);
   const [currentVaultKey, setCurrentVaultKey] = useState<string>("");
@@ -704,6 +705,7 @@ export default function ProjectSettings() {
                         size="sm"
                         className="mt-4 w-full text-xs font-medium"
                         onClick={() => {
+                          setRotateModalMode("switch_scope");
                           setRotateInitialScope("workspace");
                           setIsRotateModalOpen(true);
                         }}
@@ -736,6 +738,7 @@ export default function ProjectSettings() {
                         size="sm"
                         className="mt-4 w-full text-xs font-medium border-purple-500/30 text-purple-600 dark:text-purple-400 hover:bg-purple-500/10"
                         onClick={() => {
+                          setRotateModalMode("switch_scope");
                           setRotateInitialScope("project");
                           setIsRotateModalOpen(true);
                         }}
@@ -763,6 +766,7 @@ export default function ProjectSettings() {
                       size="sm"
                       className="text-xs"
                       onClick={() => {
+                        setRotateModalMode("rotate");
                         setRotateInitialScope(isDedicatedProjectKey ? "project" : "workspace");
                         setIsRotateModalOpen(true);
                       }}
@@ -1114,6 +1118,7 @@ export default function ProjectSettings() {
       <RotateMasterKeyModal
         isOpen={isRotateModalOpen}
         onClose={() => setIsRotateModalOpen(false)}
+        mode={rotateModalMode}
         projectId={id as string}
         projectName={project?.name || "Project"}
         initialScope={rotateInitialScope}

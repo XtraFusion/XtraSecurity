@@ -585,9 +585,11 @@ const VaultManager: React.FC = () => {
 
   const [isUnlockModalOpen, setIsUnlockModalOpen] = React.useState(false);
   const [isRotateKeyModalOpen, setIsRotateKeyModalOpen] = React.useState(false);
+  const [rotateModalMode, setRotateModalMode] = React.useState<"rotate" | "switch_scope">("rotate");
   const [rotateInitialPhrase, setRotateInitialPhrase] = React.useState("");
   const [rotateInitialScope, setRotateInitialScope] = React.useState<"project" | "workspace">("project");
   const [unlockInputPassphrase, setUnlockInputPassphrase] = React.useState("");
+  const [showUnlockPassphrase, setShowUnlockPassphrase] = React.useState(false);
   const [unlockError, setUnlockError] = React.useState<string | null>(null);
   const [recoveryMnemonic, setRecoveryMnemonic] = React.useState<string | null>(null);
   const [isUnlockingVault, setIsUnlockingVault] = React.useState(false);
@@ -595,6 +597,7 @@ const VaultManager: React.FC = () => {
   const [passphraseScope, setPassphraseScope] = React.useState<"project" | "workspace">("project");
 
   const handleOpenScopeSwitch = (targetScope: "project" | "workspace") => {
+    setRotateModalMode("switch_scope");
     setRotateInitialScope(targetScope);
     if (targetScope === "workspace") {
       setRotateInitialPhrase(workspacePassphrase || "");
@@ -967,7 +970,13 @@ const VaultManager: React.FC = () => {
       setIsVaultUnlocked(true);
       if (typeof window !== "undefined") {
         sessionStorage.removeItem(`xtra_vault_locked_${projectId}`);
-        if (passphraseScope === "project") {
+        const effectiveScope = (forcedPassphrase && forcedPassphrase === existingWorkspaceKey) || (!isDedicatedProjectKey && inputKey === existingWorkspaceKey)
+          ? "workspace"
+          : isDedicatedProjectKey
+          ? "project"
+          : (passphraseScope || (existingWorkspaceKey ? "workspace" : "project"));
+
+        if (effectiveScope === "project") {
           setProjectPassphrase(projectId as string, inputKey, rememberDevice);
           setIsDedicatedProjectKey(true);
           setIsUnlockedViaWorkspace(false);
@@ -998,9 +1007,9 @@ const VaultManager: React.FC = () => {
       if (!legacyMatched) {
         setNotification({
           type: "default",
-          message: passphraseScope === "workspace"
-            ? "✓ Vault unlocked & set as Workspace Master Key for all projects."
-            : "✓ Vault unlocked with dedicated Project Master Key."
+          message: effectiveScope === "workspace"
+            ? "✓ Vault unlocked using Workspace Master Key."
+            : "✓ Vault unlocked with Dedicated Project Key."
         });
       }
     } catch (err: any) {
@@ -1793,7 +1802,7 @@ const VaultManager: React.FC = () => {
                 variant="outline"
                 onClick={() => {
                   setUnlockError(null);
-                  setPassphraseScope(existingWorkspaceKey ? "project" : "workspace");
+                  setShowUnlockPassphrase(false);
                   setIsUnlockModalOpen(true);
                 }}
                 className="border-amber-500/40 bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 font-medium"
@@ -1806,7 +1815,12 @@ const VaultManager: React.FC = () => {
             {project?.currentUserRole === 'owner' || project?.currentUserRole === 'admin' ? (
               <Button 
                 variant="outline" 
-                onClick={() => setIsRotateKeyModalOpen(true)}
+                onClick={() => {
+                  setRotateModalMode("rotate");
+                  setRotateInitialScope(isDedicatedProjectKey ? "project" : "workspace");
+                  setRotateInitialPhrase("");
+                  setIsRotateKeyModalOpen(true);
+                }}
                 className="text-primary hover:text-primary hover:bg-primary/10"
               >
                 <RefreshCw className="h-4 w-4 mr-2" />
@@ -3109,8 +3123,8 @@ const VaultManager: React.FC = () => {
           setUnlockError(null);
         }}
         title="Unlock Project Vault"
-        description="Strict Zero-Knowledge: Your project encryption key is derived directly in your browser using PBKDF2 with 100,000 iterations and AES-256-GCM. Your passphrase never touches the server."
-        className="max-w-lg"
+        description="Enter your master vault passphrase to decrypt secrets locally on this device. Strict Zero-Knowledge: Your passphrase never touches the server."
+        className="max-w-md"
       >
         <div className="space-y-4 mt-2">
           {existingWorkspaceKey && (
@@ -3118,8 +3132,8 @@ const VaultManager: React.FC = () => {
               <div className="flex items-center gap-2.5">
                 <ShieldCheck className="h-5 w-5 text-blue-500 shrink-0" />
                 <div>
-                  <p className="text-xs font-semibold">Active Workspace Master Key Detected</p>
-                  <p className="text-[11px] text-muted-foreground">This workspace already has a Master Key configured.</p>
+                  <p className="text-xs font-semibold">Active Workspace Key Available</p>
+                  <p className="text-[11px] text-muted-foreground">Unlock instantly with your workspace master key.</p>
                 </div>
               </div>
               <Button
@@ -3132,52 +3146,42 @@ const VaultManager: React.FC = () => {
             </div>
           )}
 
-          <div className="flex items-center gap-3 p-3 rounded-lg border border-amber-500/30 bg-amber-500/10 text-amber-900 dark:text-amber-200">
-            <ShieldCheck className="h-6 w-6 text-amber-500 shrink-0" />
-            <p className="text-xs leading-relaxed">
-              Enter your master vault passphrase to decrypt secrets locally on this device. The decrypted keys will remain active for this browser session only.
-            </p>
-          </div>
-
           {unlockError && (
             <Alert variant="destructive" className="py-2.5">
-              <AlertCircle className="h-4 w-4" />
+              <AlertCircle className="h-4 w-4 shrink-0" />
               <AlertDescription className="text-xs">{unlockError}</AlertDescription>
             </Alert>
           )}
 
           <div className="space-y-2">
             <Label htmlFor="vault-passphrase" className="text-xs font-semibold">Master Vault Passphrase or Mnemonic</Label>
-            <Input
-              id="vault-passphrase"
-              type="password"
-              placeholder="Enter or paste your master passphrase..."
-              value={unlockInputPassphrase}
-              onChange={(e) => {
-                setUnlockInputPassphrase(e.target.value);
-                setUnlockError(null);
-              }}
-              onPaste={(e) => {
-                const pasted = e.clipboardData.getData("text")?.trim();
-                if (pasted && pasted.length >= 6) {
-                  downloadRecoveryKit({
-                    passphrase: pasted,
-                    projectName: project?.name || "Project",
-                    projectId,
-                    workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
-                    scope: passphraseScope === "workspace" ? "workspace" : "project"
-                  });
-                  setNotification({ type: "default", message: "✓ Pasted key detected — recovery kit auto-downloaded (.txt)" });
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  handleUnlockVault();
-                }
-              }}
-              className="font-mono text-sm"
-              autoFocus
-            />
+            <div className="relative">
+              <Input
+                id="vault-passphrase"
+                type={showUnlockPassphrase ? "text" : "password"}
+                placeholder="Enter or paste your master passphrase..."
+                value={unlockInputPassphrase}
+                onChange={(e) => {
+                  setUnlockInputPassphrase(e.target.value);
+                  setUnlockError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    handleUnlockVault();
+                  }
+                }}
+                className="font-mono text-xs pr-9"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowUnlockPassphrase(!showUnlockPassphrase)}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                aria-label={showUnlockPassphrase ? "Hide passphrase" : "Show passphrase"}
+              >
+                {showUnlockPassphrase ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+              </button>
+            </div>
             <div className="flex items-center space-x-2 pt-1">
               <input
                 type="checkbox"
@@ -3190,168 +3194,25 @@ const VaultManager: React.FC = () => {
                 Remember on this device (stay unlocked across browser sessions)
               </label>
             </div>
-            {/* Passphrase Scope Selector */}
-            <div className="pt-2 border-t space-y-1.5">
-              <Label className="text-xs font-semibold">Passphrase Scope</Label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                <label
-                  className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
-                    passphraseScope === "project"
-                      ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
-                      : "border-border hover:border-primary/40 text-muted-foreground"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="passphraseScope"
-                      value="project"
-                      checked={passphraseScope === "project"}
-                      onChange={() => setPassphraseScope("project")}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="font-semibold text-foreground">Project Only (Isolated)</span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground mt-1 ml-5">
-                    Unlocks only {project?.name || "this project"}. Other projects remain unaffected.
-                  </span>
-                </label>
-
-                <label
-                  className={`flex flex-col p-2.5 rounded-lg border cursor-pointer transition-colors ${
-                    passphraseScope === "workspace"
-                      ? "border-primary bg-primary/5 text-foreground ring-1 ring-primary"
-                      : "border-border hover:border-primary/40 text-muted-foreground"
-                  }`}
-                >
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="radio"
-                      name="passphraseScope"
-                      value="workspace"
-                      checked={passphraseScope === "workspace"}
-                      onChange={() => setPassphraseScope("workspace")}
-                      className="text-primary focus:ring-primary"
-                    />
-                    <span className="font-semibold text-foreground">Workspace Master</span>
-                  </div>
-                  <span className="text-[11px] text-muted-foreground mt-1 ml-5">
-                    {existingWorkspaceKey 
-                      ? "Applies to all projects in this workspace (Active key already exists)." 
-                      : "Applies as master key for all projects in this workspace."}
-                  </span>
-                </label>
-              </div>
-            </div>
           </div>
 
-          {recoveryMnemonic && (
-            <div className="p-3 bg-muted rounded-lg border space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-primary">Generated 24-Word Recovery Phrase:</span>
-                <div className="flex items-center gap-1">
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs"
-                    onClick={() => {
-                      navigator.clipboard.writeText(recoveryMnemonic);
-                      setNotification({ type: "default", message: "✓ Recovery phrase copied to clipboard" });
-                    }}
-                  >
-                    <Copy className="h-3 w-3 mr-1" /> Copy
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    className="h-7 text-xs text-primary"
-                    onClick={() => {
-                      downloadRecoveryKit({
-                        passphrase: recoveryMnemonic,
-                        projectName: project?.name || "Project",
-                        projectId,
-                        workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
-                        scope: passphraseScope === "workspace" ? "workspace" : "project"
-                      });
-                      setNotification({ type: "default", message: "✓ Recovery kit downloaded (.txt)" });
-                    }}
-                  >
-                    <Download className="h-3 w-3 mr-1" /> Download (.txt)
-                  </Button>
-                </div>
-              </div>
-              <p className="font-mono text-xs p-2 bg-background rounded border text-muted-foreground break-all select-all">
-                {recoveryMnemonic}
-              </p>
-              
-              {/* Existing Secrets Guidance */}
-              {(selectedBranch?.secrets?.length || 0) > 0 && (
-                <div className="p-2.5 bg-amber-500/10 border border-amber-500/30 rounded text-amber-900 dark:text-amber-200 text-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
-                  <p className="leading-snug">
-                    <strong>Existing encrypted secrets found:</strong> A newly generated passphrase cannot decrypt earlier secrets. Re-encrypt them with this key to adopt it:
-                  </p>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant="outline"
-                    className="shrink-0 h-7 text-xs border-amber-500/50 hover:bg-amber-500/20 text-amber-800 dark:text-amber-200"
-                    onClick={() => {
-                      setIsUnlockModalOpen(false);
-                      setRotateInitialPhrase(recoveryMnemonic);
-                      setIsRotateKeyModalOpen(true);
-                    }}
-                  >
-                    <RefreshCw className="h-3 w-3 mr-1" /> Rotate to this Key
-                  </Button>
-                </div>
-              )}
-
-              <p className="text-[11px] text-muted-foreground">
-                Store this phrase in a secure password manager. If lost, your Level 3 zero-knowledge secrets cannot be recovered.
-              </p>
-            </div>
-          )}
-
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between pt-2 border-t gap-2">
-            <div className="flex items-center gap-1.5 flex-wrap">
-              {!(passphraseScope === "workspace" && existingWorkspaceKey) ? (
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="text-xs text-muted-foreground hover:text-foreground"
-                  onClick={() => {
-                    const result = generateRecoveryMnemonic();
-                    setRecoveryMnemonic(result.mnemonic);
-                    setUnlockInputPassphrase(result.mnemonic);
-                    downloadRecoveryKit({
-                      passphrase: result.mnemonic,
-                      projectName: project?.name || "Project",
-                      projectId,
-                      workspaceName: selectedWorkspace?.name || selectedWorkspace?.value || "Workspace",
-                      scope: passphraseScope === "workspace" ? "workspace" : "project"
-                    });
-                    if ((selectedBranch?.secrets?.length || 0) > 0) {
-                      setIsUnlockModalOpen(false);
-                      setRotateInitialPhrase(result.mnemonic);
-                      setRotateInitialScope(passphraseScope);
-                      setIsRotateKeyModalOpen(true);
-                      setNotification({ type: "default", message: "⚡ Generated passphrase! Ready to auto-rotate existing secrets." });
-                    } else {
-                      setNotification({ type: "default", message: "✓ Generated passphrase & auto-downloaded recovery kit (.txt)" });
-                    }
-                  }}
-                >
-                  <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Passphrase
-                </Button>
-              ) : (
-                <span className="text-[11px] text-amber-600 dark:text-amber-400 font-medium flex items-center gap-1">
-                  <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  Workspace key active. To update it, use Rotate Key.
-                </span>
-              )}
-            </div>
-            <div className="flex gap-2 justify-end">
+          <div className="flex items-center justify-between pt-3 border-t">
+            <Button
+              type="button"
+              variant="link"
+              size="sm"
+              onClick={() => {
+                setIsUnlockModalOpen(false);
+                setRotateModalMode("rotate");
+                setRotateInitialScope(isDedicatedProjectKey ? "project" : "workspace");
+                setRotateInitialPhrase("");
+                setIsRotateKeyModalOpen(true);
+              }}
+              className="text-xs text-muted-foreground hover:text-primary p-0 h-auto font-normal"
+            >
+              Need to rotate or generate a new key?
+            </Button>
+            <div className="flex gap-2">
               <Button
                 variant="ghost"
                 size="sm"
@@ -3383,13 +3244,14 @@ const VaultManager: React.FC = () => {
         </div>
       </CustomDialog>
 
-      {/* Rotate Master Key Modal */}
+      {/* Rotate Master Key & Scope Switch Modal */}
       <RotateMasterKeyModal
         isOpen={isRotateKeyModalOpen}
         onClose={() => {
           setIsRotateKeyModalOpen(false);
           setRotateInitialPhrase("");
         }}
+        mode={rotateModalMode}
         projectId={projectId as string}
         projectName={project?.name || "Project"}
         initialNewPassphrase={rotateInitialPhrase}
