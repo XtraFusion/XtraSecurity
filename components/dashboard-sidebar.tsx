@@ -132,7 +132,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
             </div>
 
             {/* Team Switcher */}
-            <div className="p-4 pb-2">
+            <div className="p-4 pb-2" data-tour="workspace-switcher">
                 <MainTeamSwitcher />
             </div>
 
@@ -161,6 +161,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                                         key={item.href}
                                         href={item.href}
                                         onClick={onClose}
+                                        data-tour={`sidebar-${item.name.toLowerCase().replace(/\s+/g, '-')}`}
                                         className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${isActive
                                             ? "bg-primary/10 text-primary"
                                             : "text-muted-foreground hover:bg-muted hover:text-foreground"
@@ -176,6 +177,7 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
                     <div className="pt-2">
                         <button
                             type="button"
+                            data-tour="sidebar-tour"
                             onClick={() => {
                                 onClose?.();
                                 openPlatformTour();

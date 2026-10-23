@@ -108,7 +108,23 @@ export default function DashboardPage() {
     if (selectedWorkspace) {
       loadData();
     }
-  }, [selectedWorkspace]); // Removed router and isCreateModalOpen from deps to avoid loop
+  }, [selectedWorkspace]);
+
+  useEffect(() => {
+    const handleTourOpenCreate = () => {
+      setIsCreateModalOpen(true);
+    };
+    const handleTourCloseCreate = () => {
+      setIsCreateModalOpen(false);
+    };
+
+    window.addEventListener("tour-open-create-project", handleTourOpenCreate);
+    window.addEventListener("tour-close-create-project", handleTourCloseCreate);
+    return () => {
+      window.removeEventListener("tour-open-create-project", handleTourOpenCreate);
+      window.removeEventListener("tour-close-create-project", handleTourCloseCreate);
+    };
+  }, []);
 
   const filteredProjects = projects.filter(
     (project) =>
@@ -184,6 +200,7 @@ export default function DashboardPage() {
             <Button
               variant="outline"
               size="lg"
+              data-tour="platform-tour-btn"
               onClick={openPlatformTour}
               className="border-primary/20 hover:border-primary/50 hover:bg-primary/5 transition-all shadow-sm"
             >
@@ -192,12 +209,19 @@ export default function DashboardPage() {
             </Button>
             <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
               <DialogTrigger asChild>
-                <Button size="lg" className="shadow-lg shadow-primary/20 transition-all hover:scale-105">
+                <Button 
+                  size="lg" 
+                  data-tour="new-project-btn"
+                  onClick={() => {
+                    window.dispatchEvent(new CustomEvent("tour-project-btn-clicked"));
+                  }}
+                  className="shadow-lg shadow-primary/20 transition-all hover:scale-105"
+                >
                   <Plus className="mr-2 h-5 w-5" />
                   New Project
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-md">
+              <DialogContent className="sm:max-w-md" data-tour="create-project-dialog">
                 <DialogHeader>
                   <DialogTitle>Create New Project</DialogTitle>
                   <DialogDescription>
