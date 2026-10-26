@@ -6,6 +6,7 @@ import { Check, ChevronsUpDown, PlusCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/hooks/use-toast";
+import { generateRecoveryMnemonic, downloadRecoveryKit } from "@/lib/crypto/e2ee";
 import {
   Command,
   CommandEmpty,
@@ -84,6 +85,26 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
       }
       const w = await res.json();
       const mapped: Workspace & { icon?: string } = { id: w.id, label: w.name, value: w.id, icon: w.icon };
+
+      // Auto-initialize Zero-Knowledge Workspace Master Key & trigger recovery kit download
+      try {
+        const mnemonicData = generateRecoveryMnemonic();
+        const newPassphrase = mnemonicData.mnemonic;
+        if (typeof window !== "undefined") {
+          sessionStorage.setItem(`xtra_ws_vault_${w.id}`, newPassphrase);
+          localStorage.setItem(`xtra_ws_vault_${w.id}`, newPassphrase);
+          sessionStorage.setItem("xtra_global_vault_passphrase", newPassphrase);
+          localStorage.setItem("xtra_global_vault_passphrase", newPassphrase);
+          window.dispatchEvent(new CustomEvent("xtra-vault-change", { detail: { workspaceId: w.id, scope: "workspace" } }));
+        }
+        downloadRecoveryKit({
+          passphrase: newPassphrase,
+          workspaceName: w.name,
+          scope: "workspace"
+        });
+      } catch (vaultErr) {
+        console.warn("Could not auto-generate workspace recovery phrase:", vaultErr);
+      }
 
       // Refetch workspaces from database to ensure consistency
       await refreshWorkspaces();

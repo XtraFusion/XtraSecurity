@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import {
-  Shield,
   Key,
   FolderOpen,
   Users,
@@ -15,11 +14,8 @@ import {
   ArrowRight,
   ArrowLeft,
   X,
-  CheckCircle2,
   Layers,
-  ShieldCheck,
   PlusCircle,
-  HelpCircle
 } from "lucide-react";
 import confetti from "canvas-confetti";
 import { toast } from "sonner";
@@ -43,7 +39,6 @@ export interface SpotlightStep {
   id: string;
   badge: string;
   title: string;
-  subtitle: string;
   description: string;
   targetSelector: string;
   preferredPlacement?: "top" | "bottom" | "left" | "right" | "auto";
@@ -62,19 +57,17 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "new-project-btn",
     badge: "Step 1 of 7 • Quick Start",
     title: "Click to Create Your Project",
-    subtitle: "Initialize a Zero-Knowledge Project Vault",
     description:
-      "This square highlights the 'New Project' button. Click on it to open the Project Configuration Dialog and initialize an isolated cryptographically protected environment.",
+      "Click this button to open the project creator. XtraSecurity will initialize an isolated Zero-Knowledge vault for your credentials.",
     targetSelector: '[data-tour="new-project-btn"]',
     preferredPlacement: "bottom",
     actionPrompt:
-      "Click the highlighted 'New Project' button above, or use 'Open Project Creator' below to proceed!",
+      "Click the highlighted 'New Project' button above, or 'Open Project Creator' below!",
     actionButtonText: "Open Project Creator",
     highlightTag: "CLICK TO CREATE",
     icon: PlusCircle,
     color: "from-blue-600 to-indigo-600",
     onLeave: () => {
-      // If advancing, open the dialog
       if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("tour-open-create-project"));
       }
@@ -86,13 +79,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "create-project-dialog",
     badge: "Step 2 of 7 • Project Setup",
     title: "Project Configuration Dialog",
-    subtitle: "Isolated Development, Staging & Production",
     description:
-      "Here you specify your project name and description. XtraSecurity automatically provisions separated Development, Staging, and Production environments with client-side Zero-Knowledge AES-256-GCM encryption.",
+      "Configure your project name and description. Development, Staging, and Production environments are provisioned with client-side encryption.",
     targetSelector: '[data-tour="create-project-dialog"]',
-    preferredPlacement: "bottom",
+    preferredPlacement: "right",
     actionPrompt:
-      "Review the project setup parameters. Secrets in each environment will be sealed using workspace-derived key sentinels.",
+      "Review parameters. Secrets are sealed client-side before syncing to the cloud.",
     actionButtonText: "Next: Workspace Sentinel",
     highlightTag: "PROJECT DIALOG",
     icon: FolderOpen,
@@ -114,13 +106,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "workspace-switcher",
     badge: "Step 3 of 7 • Master Key & Vault",
     title: "Workspace Master Key & Sentinels",
-    subtitle: "Level 3 Zero-Knowledge Cryptographic Isolation",
     description:
-      "Switch between personal and organization workspaces. All project secrets in this workspace are unlocked using your 256-bit Master Key stored client-side. The server never has access to plaintext secrets.",
+      "Switch workspaces anytime. All secrets are unlocked using your 256-bit Master Key stored client-side. The server never sees plaintext.",
     targetSelector: '[data-tour="workspace-switcher"]',
     preferredPlacement: "right",
     actionPrompt:
-      "Your 24-Word BIP-39 Recovery Mnemonic guarantees full cryptographic sovereignty even if infrastructure is compromised.",
+      "Your 24-Word BIP-39 Recovery Mnemonic guarantees full cryptographic sovereignty.",
     actionButtonText: "Next: Secrets & Environments",
     highlightTag: "WORKSPACE VAULT",
     icon: Key,
@@ -132,13 +123,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "sidebar-projects",
     badge: "Step 4 of 7 • Environments & Sync",
     title: "Project Creation & Environments",
-    subtitle: "Staging, Production & Zero-Knowledge Sync",
     description:
-      "Access all your projects, manage environment variables across Development, Staging, and Production, and sync encrypted secrets to GitHub Actions, Vercel, and AWS pipelines.",
+      "Manage environment variables across Dev, Staging, and Production. Sync securely to GitHub Actions, Vercel, and AWS pipelines.",
     targetSelector: '[data-tour="sidebar-projects"]',
     preferredPlacement: "right",
     actionPrompt:
-      "Manage real-time synchronization, versioned snapshots, and rollback trees with zero plaintext leak risks.",
+      "Encrypted sync, versioned snapshots, and rollbacks with zero plaintext leaks.",
     actionButtonText: "Next: Team Access Control",
     highlightTag: "PROJECTS HUB",
     icon: Layers,
@@ -150,13 +140,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "sidebar-teams",
     badge: "Step 5 of 7 • Access Control",
     title: "Team Creation & Assigning Roles",
-    subtitle: "Granular Role-Based Access Control (RBAC)",
     description:
-      "Create teams, invite colleagues, and delegate granular role privileges (Owner, Admin, Member, Auditor). Asymmetric key wrapping ensures team members only decrypt environments they are authorized to access.",
+      "Invite team members with role-based access (Owner, Admin, Member, Auditor). Asymmetric key wrapping prevents master key exposure.",
     targetSelector: '[data-tour="sidebar-teams"]',
     preferredPlacement: "right",
     actionPrompt:
-      "Configure team permissions, review role privileges, and enforce strict least-privilege policies across all workspaces.",
+      "Enforce least-privilege policies across all workspaces and environments.",
     actionButtonText: "Next: Secret Rotation",
     highlightTag: "TEAMS & RBAC",
     icon: Users,
@@ -168,13 +157,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "sidebar-secret-rotation",
     badge: "Step 6 of 7 • Automation & Audit",
     title: "Secret Rotation & Security Health",
-    subtitle: "Automated rotation schedules & audit trail",
     description:
-      "Schedule zero-downtime secret rotations, configure automated sentinels, and review tamper-evident audit logs. Maintain continuous SOC2 and ISO-27001 readiness with instant revocation.",
+      "Schedule automated secret rotations with zero downtime, monitor sentinel health, and review immutable audit logs for compliance.",
     targetSelector: '[data-tour="sidebar-secret-rotation"]',
     preferredPlacement: "right",
     actionPrompt:
-      "Automated dual-phase rotations keep databases and external APIs online while refreshing credentials seamlessly.",
+      "Dual-phase rotations keep databases online while refreshing credentials.",
     actionButtonText: "Next: Final Overview",
     highlightTag: "AUTOMATED ROTATION",
     icon: RotateCcw,
@@ -186,13 +174,12 @@ export const TOUR_STEPS: SpotlightStep[] = [
     id: "sidebar-tour",
     badge: "Step 7 of 7 • Ready to Build!",
     title: "You're Ready to Build Securely!",
-    subtitle: "Developer CLI, SDKs & Continuous Help",
     description:
-      "You can restart this interactive spotlight tour anytime by clicking 'Platform Tour' right here. Use our Developer CLI (`xtra run -- app`) and multi-language SDKs to inject secrets directly into your workflows.",
+      "Use our Developer CLI (`xtra run -- app`) and SDKs to inject secrets into your terminal. Relaunch this tour anytime right here!",
     targetSelector: '[data-tour="sidebar-tour"]',
     preferredPlacement: "right",
     actionPrompt:
-      "Terminal workflows, pre-commit scanners, and zero-knowledge synchronization are configured and ready.",
+      "Terminal workflows, scanners, and encrypted sync are configured and ready.",
     actionButtonText: "Get Started & Celebrate",
     highlightTag: "TOUR ACCESS",
     icon: Sparkles,
@@ -215,7 +202,8 @@ export function PlatformTourModal() {
   const [isOpen, setIsOpen] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [targetRect, setTargetRect] = useState<TargetRect | null>(null);
-  const [elementFound, setElementFound] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
+  const [popoverDimensions, setPopoverDimensions] = useState({ width: 330, height: 210 });
   const retryTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const storageKey = user?.id
@@ -260,7 +248,6 @@ export function PlatformTourModal() {
   useEffect(() => {
     const handleProjectBtnClicked = () => {
       if (isOpen && currentStepIndex === 0) {
-        // Automatically advance to step 1 (dialog spotlight)
         setCurrentStepIndex(1);
       }
     };
@@ -272,6 +259,16 @@ export function PlatformTourModal() {
         handleProjectBtnClicked
       );
   }, [isOpen, currentStepIndex]);
+
+  // Measure popover real size dynamically to prevent off-screen cutoffs
+  useLayoutEffect(() => {
+    if (popoverRef.current) {
+      const rect = popoverRef.current.getBoundingClientRect();
+      if (rect.width > 0 && rect.height > 0) {
+        setPopoverDimensions({ width: rect.width, height: rect.height });
+      }
+    }
+  }, [currentStepIndex, isOpen]);
 
   // Measure and locate target element
   const measureTarget = useCallback(() => {
@@ -290,10 +287,8 @@ export function PlatformTourModal() {
         right: rect.right,
         bottom: rect.bottom
       });
-      setElementFound(true);
     } else {
       setTargetRect(null);
-      setElementFound(false);
     }
   }, [isOpen, currentStep.targetSelector]);
 
@@ -304,7 +299,6 @@ export function PlatformTourModal() {
       return;
     }
 
-    // Call onEnter lifecycle hook
     currentStep.onEnter?.();
 
     let retries = 0;
@@ -327,13 +321,11 @@ export function PlatformTourModal() {
           right: rect.right,
           bottom: rect.bottom
         });
-        setElementFound(true);
       } else if (retries < maxRetries) {
         retries++;
         retryTimeoutRef.current = setTimeout(findAndScroll, 80);
       } else {
         setTargetRect(null);
-        setElementFound(false);
       }
     };
 
@@ -409,7 +401,6 @@ export function PlatformTourModal() {
 
   const handleSpecialAction = () => {
     if (currentStep.id === "new-project-btn") {
-      // Dispatches open dialog and advances to step 1
       window.dispatchEvent(new CustomEvent("tour-open-create-project"));
       setCurrentStepIndex(1);
     } else {
@@ -422,7 +413,7 @@ export function PlatformTourModal() {
   // Padding around target element spotlight square
   const pad = currentStep.id === "create-project-dialog" ? 8 : 6;
 
-  // Calculate coordinates for hole
+  // Calculate coordinates for cutout hole
   const holeTop = targetRect ? Math.max(0, targetRect.top - pad) : 0;
   const holeBottom = targetRect ? targetRect.bottom + pad : 0;
   const holeLeft = targetRect ? Math.max(0, targetRect.left - pad) : 0;
@@ -430,55 +421,84 @@ export function PlatformTourModal() {
   const holeWidth = targetRect ? targetRect.width + pad * 2 : 0;
   const holeHeight = targetRect ? targetRect.height + pad * 2 : 0;
 
-  // Calculate Popover Position
-  const popoverWidth = 420;
-  const popoverHeight = 310;
-  const margin = 16;
+  // Compact Popover Dimensions
+  const popoverWidth = Math.min(330, typeof window !== "undefined" ? window.innerWidth - 32 : 330);
+  const popoverHeight = Math.max(180, popoverDimensions.height);
+  const margin = 14;
   const vw = typeof window !== "undefined" ? window.innerWidth : 1280;
   const vh = typeof window !== "undefined" ? window.innerHeight : 800;
 
   let popoverTop = (vh - popoverHeight) / 2;
   let popoverLeft = (vw - popoverWidth) / 2;
   let arrowDirection: "top" | "bottom" | "left" | "right" | "none" = "none";
+  let arrowOffset: { x?: number; y?: number } = {};
 
   if (targetRect) {
-    const preferred = currentStep.preferredPlacement || "auto";
+    const isLargeModal = currentStep.id === "create-project-dialog" || (holeWidth > 320 && holeHeight > 200);
 
-    if (preferred === "bottom" || (preferred === "auto" && holeBottom + popoverHeight + margin < vh)) {
-      if (holeBottom + popoverHeight + margin < vh) {
-        popoverTop = holeBottom + margin;
-        popoverLeft = holeLeft + holeWidth / 2 - popoverWidth / 2;
-        arrowDirection = "top";
-      } else {
-        popoverTop = Math.max(margin, holeTop - popoverHeight - margin);
-        popoverLeft = holeLeft + holeWidth / 2 - popoverWidth / 2;
-        arrowDirection = "bottom";
-      }
-    } else if (preferred === "right" || (preferred === "auto" && holeRight + popoverWidth + margin < vw)) {
-      if (holeRight + popoverWidth + margin < vw) {
+    if (isLargeModal) {
+      // Large modal (like Create Project Dialog): place strictly beside the dialog to avoid overlapping it
+      const spaceRight = vw - holeRight;
+      const spaceLeft = holeLeft;
+
+      if (spaceRight >= popoverWidth + margin) {
+        // Place to the right of the dialog
         popoverLeft = holeRight + margin;
-        popoverTop = holeTop + holeHeight / 2 - popoverHeight / 2;
+        popoverTop = Math.max(margin, Math.min(holeTop + 30, vh - popoverHeight - margin));
         arrowDirection = "left";
-      } else if (holeLeft - popoverWidth - margin > 0) {
+        arrowOffset.y = Math.max(14, Math.min(popoverHeight - 14, (holeTop + 50) - popoverTop));
+      } else if (spaceLeft >= popoverWidth + margin) {
+        // Place to the left of the dialog
         popoverLeft = holeLeft - popoverWidth - margin;
-        popoverTop = holeTop + holeHeight / 2 - popoverHeight / 2;
+        popoverTop = Math.max(margin, Math.min(holeTop + 30, vh - popoverHeight - margin));
         arrowDirection = "right";
+        arrowOffset.y = Math.max(14, Math.min(popoverHeight - 14, (holeTop + 50) - popoverTop));
       } else {
+        // Fallback for smaller screens: below dialog clamped to screen
         popoverTop = Math.min(vh - popoverHeight - margin, holeBottom + margin);
         popoverLeft = Math.max(margin, (vw - popoverWidth) / 2);
         arrowDirection = "none";
       }
-    } else if (preferred === "top") {
-      popoverTop = Math.max(margin, holeTop - popoverHeight - margin);
-      popoverLeft = holeLeft + holeWidth / 2 - popoverWidth / 2;
-      arrowDirection = "bottom";
     } else {
-      popoverLeft = holeRight + margin;
-      popoverTop = holeTop + holeHeight / 2 - popoverHeight / 2;
-      arrowDirection = "left";
+      const preferred = currentStep.preferredPlacement || "auto";
+
+      if (preferred === "bottom") {
+        popoverTop = holeBottom + margin;
+        // Align horizontally with target
+        popoverLeft = holeLeft + holeWidth / 2 - popoverWidth / 2;
+        arrowDirection = "top";
+
+        // If overflows bottom, flip to top or beside
+        if (popoverTop + popoverHeight > vh - margin) {
+          if (holeTop - popoverHeight - margin > margin) {
+            popoverTop = holeTop - popoverHeight - margin;
+            arrowDirection = "bottom";
+          } else {
+            popoverTop = Math.max(margin, vh - popoverHeight - margin);
+          }
+        }
+        arrowOffset.x = Math.max(14, Math.min(popoverWidth - 14, (holeLeft + holeWidth / 2) - popoverLeft));
+      } else if (preferred === "right" || preferred === "auto") {
+        popoverLeft = holeRight + margin;
+        popoverTop = holeTop + holeHeight / 2 - popoverHeight / 2;
+        arrowDirection = "left";
+
+        // Flip to left if overflows right edge
+        if (popoverLeft + popoverWidth > vw - margin) {
+          popoverLeft = Math.max(margin, holeLeft - popoverWidth - margin);
+          arrowDirection = "right";
+        }
+
+        // Clamp popoverTop strictly so footer buttons never get pushed off-screen
+        popoverTop = Math.max(margin, Math.min(popoverTop, vh - popoverHeight - margin));
+
+        // Dynamically point arrow at target's vertical center even when clamped
+        const targetCenterY = holeTop + holeHeight / 2;
+        arrowOffset.y = Math.max(14, Math.min(popoverHeight - 14, targetCenterY - popoverTop));
+      }
     }
 
-    // Clamp inside viewport
+    // Final safety boundary clamp
     popoverLeft = Math.max(margin, Math.min(popoverLeft, vw - popoverWidth - margin));
     popoverTop = Math.max(margin, Math.min(popoverTop, vh - popoverHeight - margin));
   }
@@ -559,8 +579,9 @@ export function PlatformTourModal() {
         />
       )}
 
-      {/* Floating Action Popover Card */}
+      {/* Floating Action Popover Card - Compact & Sleek */}
       <div
+        ref={popoverRef}
         style={{
           position: "fixed",
           top: `${popoverTop}px`,
@@ -568,86 +589,93 @@ export function PlatformTourModal() {
           width: `${popoverWidth}px`
         }}
         data-testid="spotlight-popover-card"
-        className="z-[9995] rounded-2xl border border-primary/40 bg-card/95 p-6 text-card-foreground shadow-[0_20px_60px_-15px_rgba(0,0,0,0.8),0_0_35px_rgba(59,130,246,0.25)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
+        className="z-[9995] rounded-xl border border-primary/40 bg-card/95 p-3.5 sm:p-4 text-card-foreground shadow-[0_16px_40px_-10px_rgba(0,0,0,0.8),0_0_25px_rgba(59,130,246,0.2)] backdrop-blur-xl animate-in fade-in zoom-in-95 duration-200"
       >
         {/* Directional Arrow pointing towards the spotlighted square */}
         {arrowDirection === "top" && (
-          <div className="absolute -top-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-l border-t border-primary/40 bg-card/95" />
+          <div
+            style={{ left: arrowOffset.x ? `${arrowOffset.x}px` : "50%" }}
+            className="absolute -top-1.5 -translate-x-1/2 w-3 h-3 rotate-45 border-l border-t border-primary/40 bg-card/95"
+          />
         )}
         {arrowDirection === "bottom" && (
-          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-4 h-4 rotate-45 border-r border-b border-primary/40 bg-card/95" />
+          <div
+            style={{ left: arrowOffset.x ? `${arrowOffset.x}px` : "50%" }}
+            className="absolute -bottom-1.5 -translate-x-1/2 w-3 h-3 rotate-45 border-r border-b border-primary/40 bg-card/95"
+          />
         )}
         {arrowDirection === "left" && (
-          <div className="absolute top-1/2 -left-2 -translate-y-1/2 w-4 h-4 rotate-45 border-l border-b border-primary/40 bg-card/95" />
+          <div
+            style={{ top: arrowOffset.y ? `${arrowOffset.y}px` : "50%" }}
+            className="absolute -left-1.5 -translate-y-1/2 w-3 h-3 rotate-45 border-l border-b border-primary/40 bg-card/95"
+          />
         )}
         {arrowDirection === "right" && (
-          <div className="absolute top-1/2 -right-2 -translate-y-1/2 w-4 h-4 rotate-45 border-r border-t border-primary/40 bg-card/95" />
+          <div
+            style={{ top: arrowOffset.y ? `${arrowOffset.y}px` : "50%" }}
+            className="absolute -right-1.5 -translate-y-1/2 w-3 h-3 rotate-45 border-r border-t border-primary/40 bg-card/95"
+          />
         )}
 
         {/* Card Header: Step Badge & Close */}
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-2">
           <Badge
             variant="outline"
-            className="flex items-center gap-1.5 border-primary/30 bg-primary/10 px-2.5 py-1 text-xs font-semibold text-primary"
+            className="flex items-center gap-1.5 border-primary/30 bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary"
           >
-            <span className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
             {currentStep.badge}
           </Badge>
           <Button
             variant="ghost"
             size="icon"
             onClick={handleSkip}
-            className="h-7 w-7 text-muted-foreground hover:bg-muted hover:text-foreground rounded-full"
+            className="h-6 w-6 text-muted-foreground hover:bg-muted hover:text-foreground rounded-full"
             aria-label="Close Tour"
             data-testid="spotlight-close-btn"
           >
-            <X className="h-4 w-4" />
+            <X className="h-3.5 w-3.5" />
           </Button>
         </div>
 
         {/* Title & Icon */}
-        <div className="mt-3.5 flex items-start gap-3">
-          <div className={`p-2.5 rounded-xl bg-gradient-to-br ${currentStep.color} text-white shadow-md shadow-primary/25 shrink-0`}>
-            <StepIcon className="h-5 w-5" />
+        <div className="mt-2.5 flex items-center gap-2.5">
+          <div className={`p-1.5 rounded-lg bg-gradient-to-br ${currentStep.color} text-white shadow-sm shadow-primary/25 shrink-0`}>
+            <StepIcon className="h-4 w-4" />
           </div>
-          <div>
-            <h3 className="text-base font-bold text-foreground tracking-tight leading-snug">
-              {currentStep.title}
-            </h3>
-            <p className="text-xs font-medium text-primary mt-0.5">
-              {currentStep.subtitle}
-            </p>
-          </div>
+          <h3 className="text-sm font-bold text-foreground tracking-tight leading-snug">
+            {currentStep.title}
+          </h3>
         </div>
 
         {/* Description */}
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
           {currentStep.description}
         </p>
 
         {/* Action Prompt Callout */}
         {currentStep.actionPrompt && (
-          <div className="mt-3.5 flex items-start gap-2.5 rounded-lg border border-primary/20 bg-primary/5 p-3">
-            <Sparkles className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
-            <p className="text-xs font-medium text-foreground/90 leading-snug">
+          <div className="mt-2.5 flex items-start gap-2 rounded-md border border-primary/20 bg-primary/5 p-2">
+            <Sparkles className="h-3.5 w-3.5 text-amber-400 shrink-0 mt-0.5" />
+            <p className="text-[11px] font-medium text-foreground/90 leading-tight">
               {currentStep.actionPrompt}
             </p>
           </div>
         )}
 
-        {/* Progress Bar */}
-        <div className="mt-4 space-y-1.5">
-          <div className="flex justify-between text-[11px] text-muted-foreground font-medium">
-            <span>Platform Onboarding</span>
+        {/* Compact Progress Bar */}
+        <div className="mt-2.5 space-y-1">
+          <div className="flex justify-between text-[10px] text-muted-foreground font-medium">
+            <span>Platform Tour</span>
             <span>{Math.round(progressPercent)}%</span>
           </div>
-          <Progress value={progressPercent} className="h-1.5 bg-muted" />
+          <Progress value={progressPercent} className="h-1 bg-muted" />
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-5 flex items-center justify-between border-t border-border/50 pt-4">
+        <div className="mt-3 flex items-center justify-between border-t border-border/40 pt-2.5">
           {/* Step dots */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1">
             {TOUR_STEPS.map((_, idx) => (
               <button
                 key={idx}
@@ -655,25 +683,25 @@ export function PlatformTourModal() {
                   currentStep.onLeave?.();
                   setCurrentStepIndex(idx);
                 }}
-                className={`h-2 rounded-full transition-all ${
+                className={`h-1.5 rounded-full transition-all ${
                   idx === currentStepIndex
-                    ? "w-5 bg-primary"
+                    ? "w-4 bg-primary"
                     : idx < currentStepIndex
-                    ? "w-2 bg-primary/40"
-                    : "w-2 bg-muted-foreground/30"
+                    ? "w-1.5 bg-primary/40"
+                    : "w-1.5 bg-muted-foreground/30"
                 }`}
                 title={`Jump to Step ${idx + 1}`}
               />
             ))}
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5">
             {currentStepIndex > 0 ? (
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePrev}
-                className="h-8 gap-1 text-xs"
+                className="h-7 px-2 text-xs gap-1"
               >
                 <ArrowLeft className="h-3 w-3" /> Back
               </Button>
@@ -682,7 +710,7 @@ export function PlatformTourModal() {
                 variant="ghost"
                 size="sm"
                 onClick={handleSkip}
-                className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                className="h-7 px-2 text-xs text-muted-foreground hover:text-foreground"
               >
                 Skip Tour
               </Button>
@@ -691,7 +719,7 @@ export function PlatformTourModal() {
             <Button
               size="sm"
               onClick={handleSpecialAction}
-              className="h-8 gap-1.5 text-xs font-semibold shadow-md shadow-primary/25"
+              className="h-7 px-2.5 gap-1 text-xs font-semibold shadow-sm shadow-primary/25"
             >
               {currentStep.actionButtonText ? (
                 <>

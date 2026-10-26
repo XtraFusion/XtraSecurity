@@ -180,7 +180,14 @@ export function RotateMasterKeyModal({
       }
     }
 
-    if (!activeCurrent || !activeNew) {
+    const isInitializing = !currentVaultPassphrase && !existingWorkspacePassphrase;
+
+    if (!activeNew) {
+      setError("Please fill in a new passphrase.");
+      return;
+    }
+
+    if (!isInitializing && !activeCurrent) {
       setError("Please fill in both current and new passphrases.");
       return;
     }
@@ -194,11 +201,11 @@ export function RotateMasterKeyModal({
     setProgress("Deriving cryptographic keys...");
 
     try {
-      const oldKey = deriveProjectKey(projectId, activeCurrent);
+      const oldKey = activeCurrent ? deriveProjectKey(projectId, activeCurrent) : null;
       const newKey = deriveProjectKey(projectId, activeNew);
 
       // 1. Check existing sentinel if stored locally or in DB
-      if (typeof window !== "undefined") {
+      if (oldKey && typeof window !== "undefined") {
         const localSentinelStr = localStorage.getItem(`xtra_vault_sentinel_${projectId}`);
         if (localSentinelStr) {
           try {
@@ -232,6 +239,9 @@ export function RotateMasterKeyModal({
       const userSecrets = rawSecrets.filter((s: any) => s.key !== "__xtra_vault_sentinel__");
 
       if (userSecrets.length > 0) {
+        if (!oldKey) {
+          throw new Error("Current master passphrase is required to decrypt existing secrets.");
+        }
         setProgress(`Re-encrypting ${userSecrets.length} secrets and audit trail...`);
 
         for (const secret of userSecrets) {
@@ -404,6 +414,7 @@ export function RotateMasterKeyModal({
 
   const isScopeSwitch = mode === "switch_scope";
   const isTargetingWorkspace = targetScope === "workspace";
+  const isInitializing = !currentVaultPassphrase && !existingWorkspacePassphrase;
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -520,44 +531,46 @@ export function RotateMasterKeyModal({
         )}
 
         <form onSubmit={handleRotateSubmit} className="space-y-3.5 py-1 w-full min-w-0 overflow-hidden">
-          {/* Current Passphrase Field */}
-          <div className="space-y-1.5 w-full min-w-0">
-            <div className="flex flex-wrap items-center justify-between gap-1 min-w-0">
-              <Label className="text-xs font-semibold shrink-0">
-                {isScopeSwitch && !isDedicatedProjectKey ? "Current Workspace Passphrase" : "Current Master Passphrase"}
-              </Label>
-              {currentVaultPassphrase && currentPassphrase !== currentVaultPassphrase && (
-                <Button
+          {/* Current Passphrase Field - Only required if vault already initialized */}
+          {!isInitializing && (
+            <div className="space-y-1.5 w-full min-w-0">
+              <div className="flex flex-wrap items-center justify-between gap-1 min-w-0">
+                <Label className="text-xs font-semibold shrink-0">
+                  {isScopeSwitch && !isDedicatedProjectKey ? "Current Workspace Passphrase" : "Current Master Passphrase"}
+                </Label>
+                {currentVaultPassphrase && currentPassphrase !== currentVaultPassphrase && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setCurrentPassphrase(currentVaultPassphrase)}
+                    className="h-5 text-[11px] px-1.5 text-primary hover:text-primary hover:bg-primary/10 shrink-0"
+                  >
+                    Use Active Session Key
+                  </Button>
+                )}
+              </div>
+              <div className="relative w-full min-w-0">
+                <Input
+                  type={showCurrentPass ? "text" : "password"}
+                  placeholder="Enter current passphrase to decrypt..."
+                  value={currentPassphrase}
+                  onChange={(e) => setCurrentPassphrase(e.target.value)}
+                  required={!isInitializing}
+                  className="font-mono text-xs pr-9 w-full min-w-0"
+                  autoFocus={!currentVaultPassphrase}
+                />
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCurrentPassphrase(currentVaultPassphrase)}
-                  className="h-5 text-[11px] px-1.5 text-primary hover:text-primary hover:bg-primary/10 shrink-0"
+                  onClick={() => setShowCurrentPass(!showCurrentPass)}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  aria-label={showCurrentPass ? "Hide passphrase" : "Show passphrase"}
                 >
-                  Use Active Session Key
-                </Button>
-              )}
+                  {showCurrentPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                </button>
+              </div>
             </div>
-            <div className="relative w-full min-w-0">
-              <Input
-                type={showCurrentPass ? "text" : "password"}
-                placeholder="Enter current passphrase to decrypt..."
-                value={currentPassphrase}
-                onChange={(e) => setCurrentPassphrase(e.target.value)}
-                required
-                className="font-mono text-xs pr-9 w-full min-w-0"
-                autoFocus={!currentVaultPassphrase}
-              />
-              <button
-                type="button"
-                onClick={() => setShowCurrentPass(!showCurrentPass)}
-                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                aria-label={showCurrentPass ? "Hide passphrase" : "Show passphrase"}
-              >
-                {showCurrentPass ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-              </button>
-            </div>
-          </div>
+          )}
 
           {/* New Passphrase Field */}
           <div className="space-y-1.5 w-full min-w-0">
