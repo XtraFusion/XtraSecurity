@@ -97,6 +97,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useGlobalContext } from "@/hooks/useUser";
 import { useWorkspaceVault } from "@/hooks/useWorkspaceVault";
+import { ProjectController } from "@/util/ProjectController";
 import axios from "axios";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -827,14 +828,23 @@ const VaultManager: React.FC = () => {
       if (!silent) setIsLoading(true);
       else setIsRefreshing(true);
 
-      // Simulate API calls
+      if (!projectId) return;
+
+      // Fetch project & branches in parallel with graceful fallback
       const [projectRes, branchesRes] = await Promise.all([
-        ProjectController.fetchProjects(projectId),
-        axios.get(`/api/branch?projectId=${projectId}`),
+        ProjectController.fetchProjects(projectId).catch(async (err) => {
+          console.warn("ProjectController.fetchProjects failed, falling back to direct API:", err);
+          const fallback = await axios.get(`/api/project?id=${projectId}`);
+          return fallback.data;
+        }),
+        axios.get(`/api/branch?projectId=${projectId}`).catch((err) => {
+          console.warn("Failed to fetch branches:", err);
+          return { data: [] };
+        }),
       ]);
 
       // Auto-switch workspace if needed
-      if (projectRes && selectedWorkspace && projectRes.workspaceId !== selectedWorkspace.id) {
+      if (projectRes && selectedWorkspace && projectRes.workspaceId && projectRes.workspaceId !== selectedWorkspace.id) {
         console.log("Auto-switching workspace context:", projectRes.workspaceId);
         const targetWorkspace = workspaces.find((w: any) => w.id === projectRes.workspaceId);
         if (targetWorkspace) {
@@ -844,8 +854,7 @@ const VaultManager: React.FC = () => {
 
       console.log("FETCHED BRANCHES:", branchesRes.data);
 
-      
-      const branchData = Array.isArray(branchesRes.data) ? branchesRes.data : (branchesRes.data.data || []);
+      const branchData = Array.isArray(branchesRes.data) ? branchesRes.data : (branchesRes.data?.data || []);
       setBranches(branchData);
 
       if (branchData.length > 0) {
@@ -867,13 +876,15 @@ const VaultManager: React.FC = () => {
         currentUserRole: projectRes?.currentUserRole,
         workspaceId: projectRes?.workspaceId,
       });
-    } catch (error) {
-      setNotification({ type: "destructive", message: "Failed to load project data" });
+    } catch (error: any) {
+      console.error("Error loading project data:", error);
+      const errMsg = error?.response?.data?.error || error?.message || "Failed to load project data";
+      setNotification({ type: "destructive", message: errMsg });
     } finally {
       setIsLoading(false);
       setIsRefreshing(false);
     }
-  }, [projectId, searchParams, selectedWorkspace, workspaces, setSelectedWorkspace, selectedBranch, decryptClientSecretList]); // Added dependencies
+  }, [projectId, searchParams, selectedWorkspace, workspaces, setSelectedWorkspace, selectedBranch, decryptClientSecretList]);
 
   // Initial Load - minimal dependency
   React.useEffect(() => {
