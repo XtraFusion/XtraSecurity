@@ -56,9 +56,17 @@ export default function IntegrationsPage() {
   }, [connectedProviders, syncProvider]);
   const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
 
-  const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
-  const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
   const { workspaceRole } = useGlobalContext();
+  const isWorkspaceOwner =
+    selectedWorkspace?.createdBy === user?.id ||
+    workspaceRole === "owner" ||
+    selectedWorkspace?.role === "owner";
+  const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
+  const hasAdminAccess =
+    isPersonalWorkspace ||
+    isWorkspaceOwner ||
+    workspaceRole === "admin" ||
+    selectedWorkspace?.role === "admin";
 
   const categories = [
     { id: "all", label: "All" },
@@ -97,9 +105,9 @@ export default function IntegrationsPage() {
   // Improved access check: Only show Access Denied if session is authenticated AND user is loaded AND we are NOT integrations-loading
   const isProfileLoading = sessionStatus === "loading" || (!user && sessionStatus === "authenticated");
   
-  // Explicitly block "viewer" role, or fallback to owner-only check
+  // Explicitly block "viewer" role, or non-admin/non-owner
   const isViewer = workspaceRole === "viewer";
-  const isAccessDenied = !isProfileLoading && !integrationsLoading && (isViewer || !(isPersonalWorkspace || isWorkspaceOwner));
+  const isAccessDenied = !isProfileLoading && !integrationsLoading && (isViewer || !hasAdminAccess);
 
   if (isAccessDenied) {
     return (

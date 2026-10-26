@@ -85,8 +85,16 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
           return; // The effect will re-run with the valid workspace
         }
 
-        // Keep selected workspace in sync with latest db data (e.g. icon updates)
-        if (exists.icon !== selectedWorkspace.icon || exists.name !== selectedWorkspace.label) {
+        // Keep selected workspace in sync with latest db data (e.g. role, createdBy, workspaceType, icon, name)
+        const isOutOfSync =
+          !selectedWorkspace.createdBy ||
+          !selectedWorkspace.workspaceType ||
+          !selectedWorkspace.role ||
+          exists.icon !== selectedWorkspace.icon ||
+          exists.name !== selectedWorkspace.label ||
+          (exists.role && exists.role !== selectedWorkspace.role);
+
+        if (isOutOfSync) {
           setSelectedWorkspace({ ...exists, label: exists.name, value: exists.id });
           return; // The effect will re-run with synced data
         }
@@ -98,12 +106,14 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
       const ws = workspaces.find(w => w.id === selectedWorkspace.id || w.id === selectedWorkspace.value);
       if (ws?.role) {
         setWorkspaceRole(ws.role);
+      } else if (selectedWorkspace.createdBy && (selectedWorkspace.createdBy === user?.id || selectedWorkspace.createdBy === (session?.user as any)?.id)) {
+        setWorkspaceRole("owner");
       } else {
         // Fallback: If not in list yet, it might be the owner (personal workspace)
-        setWorkspaceRole(selectedWorkspace.role || null);
+        setWorkspaceRole(selectedWorkspace.role || (selectedWorkspace.workspaceType === "personal" ? "owner" : null));
       }
     }
-  }, [selectedWorkspace, workspaces]);
+  }, [selectedWorkspace, workspaces, user, session]);
 
   const [userStatus, setUserStatus] = useState<boolean | string>(false);
   const [loading, setLoading] = useState<boolean>(false);

@@ -84,7 +84,12 @@ export default function WorkspaceSwitcher({ className }: { className?: string })
         return;
       }
       const w = await res.json();
-      const mapped: Workspace & { icon?: string } = { id: w.id, label: w.name, value: w.id, icon: w.icon };
+      const mapped = {
+        ...w,
+        label: w.name,
+        value: w.id,
+        role: "owner",
+      };
 
       // Auto-initialize Zero-Knowledge Workspace Master Key & trigger recovery kit download
       try {

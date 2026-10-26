@@ -66,7 +66,7 @@ import { ForceKeyResetModal } from "@/components/ForceKeyResetModal";
 type SettingsTab = "general" | "security" | "notifications" | "billing" | "workspace";
 
 export default function SettingsPage() {
-    const { user: globalUser, selectedWorkspace } = useUser();
+    const { user: globalUser, selectedWorkspace, workspaceRole } = useUser();
     const { theme, setTheme } = useTheme();
     const [activeTab, setActiveTab] = useState<SettingsTab>("general");
     const [loading, setLoading] = useState(true);
@@ -194,9 +194,16 @@ export default function SettingsPage() {
         toast({ title: "ID Copied", description: "Workspace ID copied to clipboard." });
     };
 
-    const isWorkspaceOwner = selectedWorkspace?.createdBy === globalUser?.id;
+    const isWorkspaceOwner =
+        selectedWorkspace?.createdBy === globalUser?.id ||
+        workspaceRole === "owner" ||
+        selectedWorkspace?.role === "owner";
     const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
-    const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
+    const hasAdminAccess =
+        isPersonalWorkspace ||
+        isWorkspaceOwner ||
+        workspaceRole === "admin" ||
+        selectedWorkspace?.role === "admin";
 
     // Sidebar Items
     const sideNav = useMemo(() => {

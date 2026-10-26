@@ -117,9 +117,16 @@ export function DashboardSidebar({ className, mobile, onClose }: SidebarProps) {
         }
     }, [pathname]);
 
-    const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
+    const isWorkspaceOwner =
+        selectedWorkspace?.createdBy === user?.id ||
+        workspaceRole === "owner" ||
+        selectedWorkspace?.role === "owner";
     const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
-    const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
+    const hasAdminAccess =
+        isPersonalWorkspace ||
+        isWorkspaceOwner ||
+        workspaceRole === "admin" ||
+        selectedWorkspace?.role === "admin";
 
     return (
         <div className={`flex flex-col h-full bg-card text-card-foreground border-r border-border ${className}`}>

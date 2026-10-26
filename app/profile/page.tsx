@@ -43,7 +43,7 @@ interface ApiKey {
 }
 
 export default function ProfilePage() {
-  const { data: session } = useSession();
+  const { data: session, status: sessionStatus } = useSession();
   const router = useRouter();
   const [keys, setKeys] = useState<ApiKey[]>([]);
   const [loading, setLoading] = useState(true);
@@ -56,6 +56,12 @@ export default function ProfilePage() {
   const [expirationDays, setExpirationDays] = useState("30");
 
   const { user, selectedWorkspace, loading: userLoading } = useGlobalContext();
+
+  useEffect(() => {
+    if (sessionStatus === "unauthenticated") {
+      router.push("/login");
+    }
+  }, [sessionStatus, router]);
 
   useEffect(() => {
     if (selectedWorkspace) {
@@ -122,21 +128,12 @@ export default function ProfilePage() {
     toast.success("Copied to clipboard");
   };
 
-  const isWorkspaceOwner = selectedWorkspace?.createdBy === user?.id;
-  const isPersonalWorkspace = selectedWorkspace?.workspaceType === "personal";
-  const hasAdminAccess = isPersonalWorkspace || isWorkspaceOwner;
-
-  if (!hasAdminAccess) {
+  if (sessionStatus === "loading" || (userLoading && !user && !session?.user)) {
     return (
       <DashboardLayout>
         <div className="flex flex-col items-center justify-center h-[60vh] space-y-4">
-          <div className="p-4 rounded-full bg-destructive/10">
-            <Shield className="h-10 w-10 text-destructive" />
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight">Access Denied</h2>
-          <p className="text-muted-foreground max-w-md text-center">
-            You do not have permission to view this profile. This page is restricted to workspace admins and owners.
-          </p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-muted-foreground text-sm">Loading profile...</p>
         </div>
       </DashboardLayout>
     );
