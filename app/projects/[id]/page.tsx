@@ -108,6 +108,7 @@ import { BreakGlassModal } from "@/components/BreakGlassModal";
 import { SyncTargetsModal } from "@/components/SyncTargetsModal";
 import { ShareSecretModal } from "@/components/ShareSecretModal";
 import { RotateMasterKeyModal } from "@/components/RotateMasterKeyModal";
+import { ForceKeyResetModal } from "@/components/ForceKeyResetModal";
 
 // --- Types ---
 
@@ -641,6 +642,7 @@ const VaultManager: React.FC = () => {
   const [isUnlockingVault, setIsUnlockingVault] = React.useState(false);
   const [rememberDevice, setRememberDevice] = React.useState(true);
   const [passphraseScope, setPassphraseScope] = React.useState<"project" | "workspace">("project");
+  const [isForceResetModalOpen, setIsForceResetModalOpen] = React.useState(false);
 
   const handleOpenScopeSwitch = (targetScope: "project" | "workspace") => {
     setRotateModalMode("switch_scope");
@@ -3401,6 +3403,18 @@ const VaultManager: React.FC = () => {
               >
                 Need to rotate?
               </Button>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                onClick={() => {
+                  setIsUnlockModalOpen(false);
+                  setIsForceResetModalOpen(true);
+                }}
+                className="text-xs text-destructive hover:text-destructive/80 p-0 h-auto font-normal"
+              >
+                Lost key? Force Reset
+              </Button>
             </div>
             <div className="flex gap-2">
               <Button
@@ -3498,6 +3512,19 @@ const VaultManager: React.FC = () => {
           vaultPassphrase={vaultPassphrase}
         />
       )}
+
+      {/* Force Key Reset Modal */}
+      <ForceKeyResetModal
+        isOpen={isForceResetModalOpen}
+        onClose={() => setIsForceResetModalOpen(false)}
+        workspaceId={selectedWorkspace?.id || selectedWorkspace?.value || (project?.workspaceId as string) || ""}
+        workspaceName={selectedWorkspace?.name || selectedWorkspace?.label || "Workspace"}
+        onSuccess={() => {
+          setTimeout(() => {
+            window.location.href = "/projects";
+          }, 1500);
+        }}
+      />
     </DashboardLayout>
   );
 };

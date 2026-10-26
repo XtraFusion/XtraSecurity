@@ -36,6 +36,7 @@ import {
 } from "lucide-react";
 import { useWorkspaceVault } from "@/hooks/useWorkspaceVault";
 import { generateRecoveryMnemonic, downloadRecoveryKit } from "@/lib/crypto/e2ee";
+import { ForceKeyResetModal } from "@/components/ForceKeyResetModal";
 import { DashboardLayout } from "@/components/dashboard-layout";
 import { Skeleton } from "@/components/ui/skeleton";
 import Link from "next/link";
@@ -89,6 +90,7 @@ export default function ProjectsPage() {
   const [wsRememberDevice, setWsRememberDevice] = useState(true);
   const [wsRecoveryMnemonic, setWsRecoveryMnemonic] = useState<string | null>(null);
   const [wsUnlockError, setWsUnlockError] = useState<string | null>(null);
+  const [isForceResetModalOpen, setIsForceResetModalOpen] = useState(false);
 
   const loadProjects = async () => {
     setIsLoading(true);
@@ -479,6 +481,18 @@ export default function ProjectsPage() {
                   >
                     <Key className="h-3.5 w-3.5 mr-1 text-primary" /> Generate Phrase
                   </Button>
+                  <Button
+                    type="button"
+                    variant="link"
+                    size="sm"
+                    className="text-xs text-destructive hover:text-destructive/80 p-0 h-auto font-normal ml-2"
+                    onClick={() => {
+                      setIsWsUnlockModalOpen(false);
+                      setIsForceResetModalOpen(true);
+                    }}
+                  >
+                    Lost key? Force Reset
+                  </Button>
                 </div>
 
                 <div className="flex gap-2 justify-end">
@@ -675,6 +689,16 @@ export default function ProjectsPage() {
           </div>
         )}
       </div>
+
+      <ForceKeyResetModal
+        isOpen={isForceResetModalOpen}
+        onClose={() => setIsForceResetModalOpen(false)}
+        workspaceId={selectedWorkspace?.id || selectedWorkspace?.value || ""}
+        workspaceName={selectedWorkspace?.name || selectedWorkspace?.label || "Workspace"}
+        onSuccess={() => {
+          setTimeout(() => window.location.reload(), 1500);
+        }}
+      />
     </DashboardLayout>
   );
 }

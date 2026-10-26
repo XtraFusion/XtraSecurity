@@ -59,6 +59,7 @@ import { Badge } from "@/components/ui/badge";
 import apiClient from "@/lib/axios";
 import { logout } from "@/lib/auth";
 import { OtpVerificationModal } from "@/components/settings/OtpVerificationModal";
+import { ForceKeyResetModal } from "@/components/ForceKeyResetModal";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
@@ -92,6 +93,7 @@ export default function SettingsPage() {
     }, [selectedWorkspace]);
 
     const [isDeletingWorkspace, setIsDeletingWorkspace] = useState(false);
+    const [isForceResetModalOpen, setIsForceResetModalOpen] = useState(false);
 
     const handleDeleteWorkspace = async () => {
         if (!selectedWorkspace?.id) return;
@@ -497,14 +499,47 @@ export default function SettingsPage() {
                                                 <Shield className="w-5 h-5" /> Danger Zone
                                             </CardTitle>
                                             <CardDescription>
-                                                Destroying this workspace will permanently vaporize all secrets and audit logs. This action is irreversible.
+                                                Emergency cryptographic resets and permanent workspace deletion.
                                             </CardDescription>
                                         </CardHeader>
-                                        <CardContent>
-                                            <Button variant="destructive" onClick={handleDeleteWorkspace} disabled={isDeletingWorkspace} className="font-semibold">
-                                                {isDeletingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin mr-2" />}
-                                                Delete Workspace
-                                            </Button>
+                                        <CardContent className="space-y-4">
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-destructive/30 bg-destructive/5">
+                                                <div className="space-y-1">
+                                                    <h4 className="font-bold text-sm text-destructive flex items-center gap-1.5">
+                                                        <Zap className="h-4 w-4" /> Force Key Reset & Wipe Workspace Data
+                                                    </h4>
+                                                    <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                                                        Emergency Zero-Knowledge reset: Generates a brand-new 24-word recovery master key and permanently deletes all existing projects, branches, and secrets in this workspace. Use if your key was lost or compromised.
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="destructive"
+                                                    onClick={() => setIsForceResetModalOpen(true)}
+                                                    className="font-semibold shrink-0"
+                                                >
+                                                    Force Key Reset
+                                                </Button>
+                                            </div>
+
+                                            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 p-4 rounded-xl border border-border/40 bg-muted/10">
+                                                <div className="space-y-1">
+                                                    <h4 className="font-bold text-sm text-foreground">
+                                                        Delete Workspace
+                                                    </h4>
+                                                    <p className="text-xs text-muted-foreground max-w-xl leading-relaxed">
+                                                        Permanently destroy this workspace and all associated resources. This action cannot be undone.
+                                                    </p>
+                                                </div>
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={handleDeleteWorkspace}
+                                                    disabled={isDeletingWorkspace}
+                                                    className="font-semibold text-destructive border-destructive/30 hover:bg-destructive/10 shrink-0"
+                                                >
+                                                    {isDeletingWorkspace && <Loader2 className="mr-2 h-4 w-4 animate-spin mr-2" />}
+                                                    Delete Workspace
+                                                </Button>
+                                            </div>
                                         </CardContent>
                                     </Card>
                                 </>
@@ -519,6 +554,16 @@ export default function SettingsPage() {
                 onClose={() => setIsOtpModalOpen(false)}
                 onSuccess={handleOtpSuccess}
                 mfaEnabled={pendingMfaStatus}
+            />
+
+            <ForceKeyResetModal
+                isOpen={isForceResetModalOpen}
+                onClose={() => setIsForceResetModalOpen(false)}
+                workspaceId={selectedWorkspace?.id || ""}
+                workspaceName={selectedWorkspace?.name || selectedWorkspace?.label || "Workspace"}
+                onSuccess={() => {
+                    setTimeout(() => window.location.reload(), 1500);
+                }}
             />
         </DashboardLayout>
     );
